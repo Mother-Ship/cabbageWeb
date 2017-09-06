@@ -1,6 +1,6 @@
 package top.mothership.cabbage.pojo;
 
-public class Map {
+public class Beatmap {
     private Integer approved;
 
 

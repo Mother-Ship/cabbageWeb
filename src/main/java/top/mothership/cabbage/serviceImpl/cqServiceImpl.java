@@ -1,4 +1,6 @@
 package top.mothership.cabbage.serviceImpl;
 
-public class cqServiceImpl {
+import top.mothership.cabbage.service.cqService;
+
+public class cqServiceImpl implements cqService {
 }
