@@ -18,7 +18,7 @@ http://java.sun.com/xml/ns/j2ee/web-app_3_1.xsd">
   </servlet>
   <servlet-mapping>
     <servlet-name>springmvc</servlet-name>
-    <url-pattern>*.do</url-pattern>
+    <url-pattern>/</url-pattern>
   </servlet-mapping>
   <!-- shiro -->
   <!-- The filter-name matches name of a 'shiroFilter' bean inside applicationContext.xml -->

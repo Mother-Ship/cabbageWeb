@@ -2,7 +2,7 @@ package top.mothership.cabbage.pojo;
 
 import java.util.Date;
 
-public class BP {
+public class Score {
     private Integer beatmap_id;
 
     private String beatmap_name;
