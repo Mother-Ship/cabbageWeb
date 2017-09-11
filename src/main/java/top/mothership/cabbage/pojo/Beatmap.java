@@ -2,8 +2,6 @@ package top.mothership.cabbage.pojo;
 
 public class Beatmap {
     private Integer approved;
-
-
     private String artist;
     private String title;
     private String version;

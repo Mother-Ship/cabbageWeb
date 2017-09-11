@@ -3,13 +3,13 @@ package top.mothership.cabbage.pojo;
 import java.util.Date;
 
 public class Score {
-    private Integer beatmap_id;
+    private Integer beatmapId;
 
-    private String beatmap_name;
+    private String beatmapName;
 
     private Long score;
 
-    private Integer maxcombo;
+    private Integer maxCombo;
 
     private Integer count50;
 
@@ -17,15 +17,15 @@ public class Score {
 
     private Integer count300;
 
-    private Integer countmiss;
+    private Integer countMiss;
 
-    private Integer countkatu;
+    private Integer countKatu;
 
-    private Integer countgeki;
+    private Integer countGeki;
 
     private Integer perfect;
 
-    private Integer enabled_mods;
+    private Integer enabledMods;
 
     private Date date;
 
@@ -33,20 +33,20 @@ public class Score {
 
     private Float pp;
 
-    public String getBeatmap_name() {
-        return beatmap_name;
+    public Integer getBeatmapId() {
+        return beatmapId;
     }
 
-    public void setBeatmap_name(String beatmap_name) {
-        this.beatmap_name = beatmap_name;
+    public void setBeatmapId(Integer beatmapId) {
+        this.beatmapId = beatmapId;
     }
 
-    public Integer getBeatmap_id() {
-        return beatmap_id;
+    public String getBeatmapName() {
+        return beatmapName;
     }
 
-    public void setBeatmap_id(Integer beatmap_id) {
-        this.beatmap_id = beatmap_id;
+    public void setBeatmapName(String beatmapName) {
+        this.beatmapName = beatmapName;
     }
 
     public Long getScore() {
@@ -57,12 +57,12 @@ public class Score {
         this.score = score;
     }
 
-    public Integer getMaxcombo() {
-        return maxcombo;
+    public Integer getMaxCombo() {
+        return maxCombo;
     }
 
-    public void setMaxcombo(Integer maxcombo) {
-        this.maxcombo = maxcombo;
+    public void setMaxCombo(Integer maxCombo) {
+        this.maxCombo = maxCombo;
     }
 
     public Integer getCount50() {
@@ -89,28 +89,28 @@ public class Score {
         this.count300 = count300;
     }
 
-    public Integer getCountmiss() {
-        return countmiss;
+    public Integer getCountMiss() {
+        return countMiss;
     }
 
-    public void setCountmiss(Integer countmiss) {
-        this.countmiss = countmiss;
+    public void setCountMiss(Integer countMiss) {
+        this.countMiss = countMiss;
     }
 
-    public Integer getCountkatu() {
-        return countkatu;
+    public Integer getCountKatu() {
+        return countKatu;
     }
 
-    public void setCountkatu(Integer countkatu) {
-        this.countkatu = countkatu;
+    public void setCountKatu(Integer countKatu) {
+        this.countKatu = countKatu;
     }
 
-    public Integer getCountgeki() {
-        return countgeki;
+    public Integer getCountGeki() {
+        return countGeki;
     }
 
-    public void setCountgeki(Integer countgeki) {
-        this.countgeki = countgeki;
+    public void setCountGeki(Integer countGeki) {
+        this.countGeki = countGeki;
     }
 
     public Integer getPerfect() {
@@ -121,12 +121,12 @@ public class Score {
         this.perfect = perfect;
     }
 
-    public Integer getEnabled_mods() {
-        return enabled_mods;
+    public Integer getEnabledMods() {
+        return enabledMods;
     }
 
-    public void setEnabled_mods(Integer enabled_mods) {
-        this.enabled_mods = enabled_mods;
+    public void setEnabledMods(Integer enabledMods) {
+        this.enabledMods = enabledMods;
     }
 
     public Date getDate() {
@@ -152,7 +152,4 @@ public class Score {
     public void setPp(Float pp) {
         this.pp = pp;
     }
-
-
-
 }

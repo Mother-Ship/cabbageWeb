@@ -35,7 +35,8 @@ public interface BaseMapper {
             "<when test=\"user_id != null\">" +
             "WHERE`user_id` = #{userId}" +
             "</when>" +
-            "</choose>")
+            "</choose>" +
+            "</script>")
     User getUser(@Param("QQ") String QQ, @Param("userId") Integer userId);
 
     @Select("SELECT `user_id` FROM `userrole` WHERE `role` = #{role}")

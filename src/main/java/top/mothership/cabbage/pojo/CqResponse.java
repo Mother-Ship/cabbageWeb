@@ -5,34 +5,31 @@ public class CqResponse {
 
     private String status;
 
-    private int retcode;
+    private int retCode;
 
-    private RespData RespData;
+    private RespData respData;
+
+    public String getStatus() {
+        return status;
+    }
 
     public void setStatus(String status) {
         this.status = status;
     }
 
-    public String getStatus() {
-        return this.status;
+    public int getRetCode() {
+        return retCode;
+    }
+
+    public void setRetCode(int retCode) {
+        this.retCode = retCode;
     }
 
     public RespData getRespData() {
-        return RespData;
+        return respData;
     }
 
-    public void setRespData(RespData RespData) {
-        this.RespData = RespData;
+    public void setRespData(RespData respData) {
+        this.respData = respData;
     }
-
-    public void setRetcode(int retcode) {
-        this.retcode = retcode;
-    }
-
-    public int getRetcode() {
-        return this.retcode;
-    }
-
-
-
 }

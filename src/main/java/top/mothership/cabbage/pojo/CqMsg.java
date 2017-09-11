@@ -2,7 +2,7 @@ package top.mothership.cabbage.pojo;
 
 import com.google.gson.annotations.SerializedName;
 //酷Q收到消息之后通过HTTPAPI给白菜的POST请求体
-public class CqRequest {
+public class CqMsg {
     @SerializedName("post_type")
     private String postType;
     private String event;
@@ -13,12 +13,13 @@ public class CqRequest {
     @SerializedName("sub_type")
     private String subType;
     @SerializedName("group_id")
-    private String groupId;
+    private Integer groupId;
     @SerializedName("user_id")
-    private String userId;
+    private Integer userId;
     private String message;
     @SerializedName("operator_id")
-    private String operator_id;
+    private Integer operator_id;
+    private Integer duration;
 
     public String getPostType() {
         return postType;
@@ -60,19 +61,19 @@ public class CqRequest {
         this.subType = subType;
     }
 
-    public String getGroupId() {
+    public Integer getGroupId() {
         return groupId;
     }
 
-    public void setGroupId(String groupId) {
+    public void setGroupId(Integer groupId) {
         this.groupId = groupId;
     }
 
-    public String getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 
@@ -84,11 +85,19 @@ public class CqRequest {
         this.message = message;
     }
 
-    public String getOperator_id() {
+    public Integer getOperator_id() {
         return operator_id;
     }
 
-    public void setOperator_id(String operator_id) {
+    public void setOperator_id(Integer operator_id) {
         this.operator_id = operator_id;
+    }
+
+    public Integer getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Integer duration) {
+        this.duration = duration;
     }
 }
