@@ -1,9 +1,12 @@
 package top.mothership.cabbage.util;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.Beatmap;
 import top.mothership.cabbage.pojo.Score;
 import top.mothership.cabbage.pojo.Userinfo;
@@ -14,7 +17,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
-
+@Component
 public class ApiUtil {
     private final String getUserURL = "https://osu.ppy.sh/api/get_user";
     private final String getBPURL = "https://osu.ppy.sh/api/get_user_best";
@@ -25,25 +28,25 @@ public class ApiUtil {
 
     public Userinfo getUser(String username, String userId) {
         String result = praseUid("user", username, userId);
-        return new Gson().fromJson(result, Userinfo.class);
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Userinfo.class);
     }
 
     public Beatmap getBeatmap(String bid) {
         String result = accessAPI("beatmap", null, null, bid);
-        return new Gson().fromJson(result, Beatmap.class);
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Beatmap.class);
     }
 
     public List<Score> getBP(String username, String userId) {
         String result = praseUid("bp", username, userId);
         //由于这里用到List，手动补上双括号
         result = "["+result+"]";
-        return new Gson().fromJson(result, new TypeToken<List<Score>>() {
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, new TypeToken<List<Score>>() {
         }.getType());
     }
 
     public Score getRecent(String username, String userId) {
         String result = praseUid("recent", username, userId);
-        return new Gson().fromJson(result, Score.class);
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Score.class);
     }
 
 

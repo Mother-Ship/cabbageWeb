@@ -2,30 +2,32 @@ package top.mothership.cabbage.util;
 
 import com.google.gson.Gson;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.pojo.CqMsg;
 import top.mothership.cabbage.pojo.CqResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 //将CQ的HTTP API封装为接口，并托管到Spring
 @Component
 public class CqUtil {
-    private final String baseURL = "htto://localhost:5700";
+    private final String baseURL = "http://localhost:5700";
 
-    public CqResponse sendMsg(String msgType, String msg, String groupId, String qq, String duration) {
+    public CqResponse sendMsg(CqMsg cqMsg) {
         String URL;
-        switch (msgType) {
+        switch (cqMsg.getMessageType()) {
             case "group":
-                URL = baseURL + "/send_group_msg?group_id=" + groupId + "&message=" + msg;
+                URL = baseURL + "/send_group_msg";
                 break;
             case "private":
-                URL = baseURL + "/send_private_msg?user_id=" + qq + "&message=" + msg;
+                URL = baseURL + "/send_private_msg";
                 break;
             case "smoke":
-                URL = baseURL + "/set_group_ban?group_id=" + groupId + "&user_id=" + qq + "&duration=" + duration;
+                URL = baseURL + "/set_group_ban";
                 break;
             default:
                 return null;
@@ -34,8 +36,15 @@ public class CqUtil {
         try {
             httpConnection =
                     (HttpURLConnection) new URL(URL).openConnection();
-            httpConnection.setRequestMethod("GET");
+            httpConnection.setRequestMethod("POST");
             httpConnection.setRequestProperty("Accept", "application/json");
+            httpConnection.setRequestProperty("Content-Type", "application/json");
+            httpConnection.setDoOutput(true);
+
+            OutputStream os = httpConnection.getOutputStream();
+            os.write(new Gson().toJson(cqMsg).getBytes());
+            os.flush();
+            os.close();
             BufferedReader responseBuffer =
                     new BufferedReader(new InputStreamReader((httpConnection.getInputStream())));
             StringBuilder tmp2 = new StringBuilder();
