@@ -30,8 +30,8 @@ public class ApiUtil {
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Userinfo.class);
     }
 
-    public Beatmap getBeatmap(String bid) {
-        String result = accessAPI("beatmap", null, null, bid);
+    public Beatmap getBeatmap(Integer bid) {
+        String result = accessAPI("beatmap", null, null, String.valueOf(bid));
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Beatmap.class);
     }
 

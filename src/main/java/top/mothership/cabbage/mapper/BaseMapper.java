@@ -71,7 +71,7 @@ public interface BaseMapper {
             "</script>")
     Integer addUserInfo(@Param("userInfo") List<Userinfo> list);
 
-    @Select("SELECT * , abs(UNIX_TIMESTAMP(queryDate) - UNIX_TIMESTAMP(#{queryDate})) AS ds FROM `userinfo`  WHERE `user_id` = #{userId} ORDER BY ds ASC")
+    @Select("SELECT * , abs(UNIX_TIMESTAMP(queryDate) - UNIX_TIMESTAMP(#{queryDate})) AS ds FROM `userinfo`  WHERE `user_id` = #{userId} ORDER BY ds ASC LIMIT 1")
     Userinfo getNearestUserInfo(@Param("queryDate") Date queryDate, @Param("userId") Integer userId);
 
     @Select("SELECT * FROM `userinfo` WHERE `user_id` = #{userId} AND `queryDate` = #{queryDate}")
