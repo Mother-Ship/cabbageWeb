@@ -1,6 +1,7 @@
 package top.mothership.cabbage.util;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.CqMsg;
 import top.mothership.cabbage.pojo.CqResponse;
@@ -42,7 +43,8 @@ public class CqUtil {
             httpConnection.setDoOutput(true);
 
             OutputStream os = httpConnection.getOutputStream();
-            os.write(new Gson().toJson(cqMsg).getBytes());
+            //防止转义
+            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes());
             os.flush();
             os.close();
             BufferedReader responseBuffer =

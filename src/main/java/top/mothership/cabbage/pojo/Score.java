@@ -1,5 +1,7 @@
 package top.mothership.cabbage.pojo;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Date;
 
 public class Score {
@@ -8,7 +10,7 @@ public class Score {
     private String beatmapName;
 
     private Long score;
-
+@SerializedName("maxcombo")
     private Integer maxCombo;
 
     private Integer count50;
@@ -16,11 +18,11 @@ public class Score {
     private Integer count100;
 
     private Integer count300;
-
+@SerializedName("countmiss")
     private Integer countMiss;
-
+@SerializedName("countkatu")
     private Integer countKatu;
-
+@SerializedName("countgeki")
     private Integer countGeki;
 
     private Integer perfect;

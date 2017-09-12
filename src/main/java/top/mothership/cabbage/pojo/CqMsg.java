@@ -13,13 +13,24 @@ public class CqMsg {
     @SerializedName("sub_type")
     private String subType;
     @SerializedName("group_id")
-    private Integer groupId;
+    private Long groupId;
     @SerializedName("user_id")
-    private Integer userId;
+    private Long userId;
     private String message;
     @SerializedName("operator_id")
-    private Integer operator_id;
+    private Long operatorId;
     private Integer duration;
+    @SerializedName("discuss_id")
+    private Long discussId;
+    private String flag;
+
+    public String getFlag() {
+        return flag;
+    }
+
+    public void setFlag(String flag) {
+        this.flag = flag;
+    }
 
     public String getPostType() {
         return postType;
@@ -61,19 +72,19 @@ public class CqMsg {
         this.subType = subType;
     }
 
-    public Integer getGroupId() {
+    public Long getGroupId() {
         return groupId;
     }
 
-    public void setGroupId(Integer groupId) {
+    public void setGroupId(Long groupId) {
         this.groupId = groupId;
     }
 
-    public Integer getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(Integer userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
@@ -85,12 +96,20 @@ public class CqMsg {
         this.message = message;
     }
 
-    public Integer getOperator_id() {
-        return operator_id;
+    public Long getOperatorId() {
+        return operatorId;
     }
 
-    public void setOperator_id(Integer operator_id) {
-        this.operator_id = operator_id;
+    public void setOperatorId(Long operatorId) {
+        this.operatorId = operatorId;
+    }
+
+    public Long getDiscussId() {
+        return discussId;
+    }
+
+    public void setDiscussId(Long discussId) {
+        this.discussId = discussId;
     }
 
     public Integer getDuration() {

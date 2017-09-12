@@ -1,13 +1,17 @@
 package top.mothership.cabbage.pojo;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Date;
 
 public class Userinfo {
+    @SerializedName("username")
     private String userName;
     private int userId;
     private int count300;
     private int count100;
     private int count50;
+    @SerializedName("playcount")
     private int playCount;
     private float accuracy;
     private float ppRaw;

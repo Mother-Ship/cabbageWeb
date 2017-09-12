@@ -14,10 +14,9 @@ import top.mothership.cabbage.pojo.Userinfo;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
+import java.io.*;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -303,9 +302,9 @@ public class ImgUtil {
         int Width = images.get(rb.getString("bptop")).getWidth();
         for (Score aList : map.keySet()) {
             if (aList.getBeatmapName().length() <= Integer.valueOf(rb.getString("bplimit"))) {
-                Height = Height + images.get(rb.getString("bpmid3")).getHeight();
-            } else {
                 Height = Height + images.get(rb.getString("bpmid2")).getHeight();
+            } else {
+                Height = Height + images.get(rb.getString("bpmid3")).getHeight();
             }
         }
         BufferedImage result = new BufferedImage(Width, Height, BufferedImage.TYPE_INT_RGB);
@@ -329,10 +328,12 @@ public class ImgUtil {
         HeightPoint = HeightPoint + bpTop.getHeight();
 
         //开始绘制每行的bp
+        // new DecimalFormat("###.00").format(100.0 * (6 * bp.getCount300() + 2 * bp.getCount100() + bp.getCount50())
+        // / (6 * (bp.getCount50() + bp.getCount100() + bp.getCount300() + bp.getCountmiss())));
         for (Score aList : map.keySet()) {
             String acc = new DecimalFormat("###.00").format(
                     100.0 * (6 * aList.getCount300() + 2 * aList.getCount100() + aList.getCount50())
-                            / (6 * aList.getCount50() + aList.getCount100() + aList.getCount300() + aList.getCountMiss()));
+                            / (6 * (aList.getCount50() + aList.getCount100() + aList.getCount300() + aList.getCountMiss())));
 
             String mods = convertMOD(aList.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "");
             int a;
@@ -341,10 +342,11 @@ public class ImgUtil {
             } else {
                 a = 3;
             }
-            //小图标
+
             BufferedImage bpMid = getCopyImage(images.get(rb.getString("bpmid" + a)));
             Graphics2D g3 = bpMid.createGraphics();
-            g3.drawImage(getCopyImage(images.get(aList.getRank() + "_small.png")), Integer.decode(rb.getString("bp" + a + "Rankx")), Integer.decode(rb.getString("bp" + a + "Ranky")), null);
+            //小图标
+            g3.drawImage(images.get(aList.getRank() + "_small.png"), Integer.decode(rb.getString("bp" + a + "Rankx")), Integer.decode(rb.getString("bp" + a + "Ranky")), null);
             //绘制文字
             g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             //绘制日期(给的就是北京时间，不转)
@@ -375,8 +377,9 @@ public class ImgUtil {
                     break;
             }
             g3.dispose();
-            HeightPoint = HeightPoint + bpMid.getWidth();
+            bpMid.flush();
             g.drawImage(bpMid, 0, HeightPoint, null);
+            HeightPoint = HeightPoint + bpMid.getHeight();
         }
         g.dispose();
         //因为这个方法只需要一个username……
@@ -563,6 +566,8 @@ public class ImgUtil {
             }
         }
         //写字
+
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         //指定颜色
         g2.setPaint(Color.decode("#FFFFFF"));
         //指定字体
@@ -683,8 +688,20 @@ public class ImgUtil {
     }
 
 
-    private BufferedImage getCopyImage(BufferedImage image) {
-        return image.getSubimage(0, 0, image.getWidth(), image.getHeight());
+    private BufferedImage getCopyImage(BufferedImage bi) {
+//        return bi.getSubimage(0, 0, bi.getWidth(), bi.getHeight());
+
+        ColorModel cm = bi.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = bi.copyData(null);
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+        //这他妈不就是自己重写了getSubimage方法吗……为什么getSubimage返回的是原图，这个就能复制一份woc
+        //不采用这套方案（会抹掉透明通道
+//        BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.SCALE_SMOOTH);
+//        Graphics g = b.getGraphics();
+//        g.drawImage(source, 0, 0, null);
+//        g.dispose();
+//        return b;
     }
 
 
@@ -719,40 +736,42 @@ public class ImgUtil {
         if (bp != 0) {
             for (int i = c.length - 1; i >= 0; i--) {
                 //字符串中第i个字符是1,意味着第i+1个mod被开启了
-                switch (i) {
-                    case 0:
-                        mods.put("NF", "nofail");
-                        break;
-                    case 1:
-                        mods.put("EZ", "easy");
-                        break;
-                    case 3:
-                        mods.put("HD", "hidden");
-                        break;
-                    case 4:
-                        mods.put("HR", "hardrock");
-                        break;
-                    case 5:
-                        mods.put("SD", "suddendeath");
-                        break;
-                    case 6:
-                        mods.put("DT", "doubletime");
-                        break;
-                    case 8:
-                        mods.put("HT", "halftime");
-                        break;
-                    case 9:
-                        mods.put("NC", "nightcore");
-                        break;
-                    case 10:
-                        mods.put("FL", "flashlight");
-                        break;
-                    case 12:
-                        mods.put("SO", "spunout");
-                        break;
-                    case 14:
-                        mods.put("PF", "perfect");
-                        break;
+                if (c[i] == '1') {
+                    switch (i) {
+                        case 0:
+                            mods.put("NF", "nofail");
+                            break;
+                        case 1:
+                            mods.put("EZ", "easy");
+                            break;
+                        case 3:
+                            mods.put("HD", "hidden");
+                            break;
+                        case 4:
+                            mods.put("HR", "hardrock");
+                            break;
+                        case 5:
+                            mods.put("SD", "suddendeath");
+                            break;
+                        case 6:
+                            mods.put("DT", "doubletime");
+                            break;
+                        case 8:
+                            mods.put("HT", "halftime");
+                            break;
+                        case 9:
+                            mods.put("NC", "nightcore");
+                            break;
+                        case 10:
+                            mods.put("FL", "flashlight");
+                            break;
+                        case 12:
+                            mods.put("SO", "spunout");
+                            break;
+                        case 14:
+                            mods.put("PF", "perfect");
+                            break;
+                    }
                 }
             }
             if (mods.keySet().contains("NC")) {

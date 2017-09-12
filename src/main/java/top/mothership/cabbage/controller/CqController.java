@@ -17,22 +17,29 @@ public class CqController {
     private CqServiceImpl cqService;
     private Logger logger = LogManager.getLogger(this.getClass());
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
-    public void cqMsgPrase(@RequestBody CqMsg cqMsg){
+    public String cqMsgPrase(@RequestBody CqMsg cqMsg){
         //待整理业务逻辑
         switch (cqMsg.getPostType()){
             case "message":
                 cqService.praseMsg(cqMsg);
                 break;
             case "event":
-                cqService.praseNewsPaper(cqMsg);
+                if(cqMsg.getEvent().equals("group_increase")) {
+                    cqService.praseNewsPaper(cqMsg);
+                }
                 break;
             case "request":
-                cqService.praseGroupInvite(cqMsg);
+                if(cqMsg.getRequestType().equals("group")&&cqMsg.getSubType().equals("invite")){
+                    logger.info("已将"+cqMsg.getUserId()+"将白菜邀请入"+cqMsg.getGroupId()+"的请求进行暂存");
+                    cqService.stashInviteRequest(cqMsg);
+                }
                 break;
             default:
                 logger.error("传入无法识别的Request，可能是HTTPAPI插件已经更新");
 
         }
+        //先写返回null吧，如果以后有直接返回的逻辑也可以直接return
+        return null;
     }
 
 }

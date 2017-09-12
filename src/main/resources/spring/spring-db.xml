@@ -53,6 +53,11 @@
 
         <!-- 验证连接有效与否的SQL，不同的数据配置不同 -->
         <property name="validationQuery" value="select 1 " />
+        <!-- ******重要的配置：监控统计拦截的filters,日志记录 *start* ******-->
+        <!-- 并在filters属性中配置了log4j，ref中的bean是下面拦截器的配置 -->
+        <!-- proxyFilters和filters是组合关系,前者是根据bean配置,后者根据别名配置的-->
+        <!-- stat是statfilter的别名,log4j是logFilter的别名-->
+        <!-- 监控统计拦截的filters,日志记录,这里开启了stat,wall（sql翻过墙过滤监控）,log4j（log4j的监控）配置 -->
         <property name="filters" value="stat" />
         <property name="proxyFilters">
             <list>
@@ -61,14 +66,18 @@
         </property>
     </bean>
 
+    <!-- 上面的druid的配置 -->
+    <bean id="logFilter" class="com.alibaba.druid.filter.logging.Slf4jLogFilter">
+        <property name="statementExecutableSqlLogEnable" value="false" />
+    </bean>
     <!-- 3.配置SqlSessionFactory对象 -->
     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
         <!-- 注入数据库连接池 -->
         <property name="dataSource" ref="dataSource"/>
         <!--指定bean包-->
         <property name="typeAliasesPackage" value="top.mothership.cabbage.pojo"/>
-        <!-- 扫描sql配置文件:mapper需要的xml文件 -->
-        <!--<property name="mapperLocations" value="classpath:mapper/*.xml"/>-->
+        <!--还是需要一个配置的-->
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
     </bean>
 
     <!-- 4.配置扫描Dao接口包，动态实现Dao接口，注入到spring容器中 -->
@@ -80,13 +89,13 @@
     </bean>
 
     <!-- 指定要进行事务管理的数据源，并且注入txAdvice -->
-    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
-          p:dataSource-ref="dataSource"/>
+    <!--<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"-->
+          <!--p:dataSource-ref="dataSource"/>-->
 
 
     <!-- 事务管理 通知 ，采用XML而不是注解来管理事务-->
-    <tx:advice id="txAdvice" transaction-manager="transactionManager">
-        <tx:attributes>
+    <!--<tx:advice id="txAdvice" transaction-manager="transactionManager">-->
+        <!--<tx:attributes>-->
             <!--
           propagation:事务传播行为
           isolation：事务隔离
@@ -96,30 +105,27 @@
           timeout:过期信息
        -->
             <!-- 对修改数据的方法进行事务管理,只要有异常就回滚 -->
-            <tx:method name="add*" propagation="REQUIRED" rollback-for="java.lang.Throwable"/>
-            <tx:method name="edit*" propagation="REQUIRED" rollback-for="java.lang.Throwable"/>
+            <!--<tx:method name="add*" propagation="REQUIRED" rollback-for="java.lang.Throwable"/>-->
+            <!--<tx:method name="edit*" propagation="REQUIRED" rollback-for="java.lang.Throwable"/>-->
             <!-- 获取数据的方法开启只读,提高数据库访问性能 -->
-            <tx:method name="get*" read-only="true"/>
-            <tx:method name="list*" read-only="true"/>
+            <!--<tx:method name="get*" read-only="true"/>-->
+            <!--<tx:method name="list*" read-only="true"/>-->
             <!-- 对其他方法 使用默认的事务管理 -->
-            <tx:method name="*"/>
-        </tx:attributes>
-    </tx:advice>
+            <!--<tx:method name="*"/>-->
+        <!--</tx:attributes>-->
+    <!--</tx:advice>-->
 
     <!-- 事务 aop 配置 -->
-    <aop:config>
+    <!--<aop:config>-->
         <!--1、execution(): 表达式主体。-->
         <!--2、第一个*号：表示返回类型，*号表示所有的类型。-->
         <!--3、包名：表示需要拦截的包名，后面的两个句点表示当前包和当前包的所有子包下所有类的方法。-->
         <!--4、第二个*号：表示类名，*号表示所有的类。-->
         <!--5、*(..):最后这个星号表示方法名，*号表示所有的方法，后面括弧里面表示方法的参数，两个句点表示任何参数。-->
-        <aop:pointcut id="serviceMethods" expression="execution(* top.mothership.cabbage.serviceImpl.*.*(..))"/>
-        <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethods"/>
-    </aop:config>
+        <!--<aop:pointcut id="serviceMethods" expression="execution(* top.mothership.cabbage.serviceImpl.*.*(..))"/>-->
+        <!--<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethods"/>-->
+    <!--</aop:config>-->
 
 
-    <!-- 上面的druid的配置 -->
-    <bean id="logFilter" class="com.alibaba.druid.filter.logging.Slf4jLogFilter">
-        <property name="statementExecutableSqlLogEnable" value="false" />
-    </bean>
+
 </beans>
