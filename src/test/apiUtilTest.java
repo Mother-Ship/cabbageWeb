@@ -34,14 +34,15 @@ public class apiUtilTest {
 
     @Test
     public void Test() {
-
-        CqMsg cqMsg = new CqMsg();
-        cqMsg.setPostType("event");
-        cqMsg.setMessageType("group");
-        cqMsg.setGroupId(532783765L);
-        cqMsg.setUserId(1335734657L);
-        cqMsg.setMessage("[CQ:at,qq="+cqMsg.getUserId()+"]，欢迎加入本群。");
-        cqUtil.sendMsg(cqMsg);
+//        String json = "{\"post_type\":\"event\",\"event\":\"group_increase\",\"message_type\":\"group\",\"sub_type\":\"approve\",\"group_id\":532783765,\"user_id\":1335734657,\"message\":\"[CQ:at,qq=147577398]，欢迎加入本群。\",\"operator_id\":1335734657}";
+//        CqMsg cqMsg = new Gson().fromJson(json,CqMsg.class);
+//        CqMsg cqMsg = new CqMsg();
+//        cqMsg.setPostType("event");
+//        cqMsg.setMessageType("group");
+//        cqMsg.setGroupId(615346135L);
+//        cqMsg.setUserId(0L);
+//        cqMsg.setMessage("[CQ:at,qq="+cqMsg.getUserId()+"]，欢迎加入本群。+Test");
+//        cqUtil.sendMsg(cqMsg);
 
 //        Userinfo u1 = baseMapper.getNearestUserInfo(Date.valueOf("2017-9-11"), 2545898);
 //        Userinfo u = apiUtil.getUser("Mother Ship", null);

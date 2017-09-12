@@ -23,8 +23,8 @@ public class CqServiceImpl implements CqService {
     private Matcher m;
     private Date start;
 
-    private final MsgUtil msgUtil;
-    private final CqUtil cqUtil;
+    private MsgUtil msgUtil;
+    private CqUtil cqUtil;
     @Autowired
     public CqServiceImpl(MsgUtil msgUtil, CqUtil cqUtil) {
         this.msgUtil = msgUtil;
@@ -91,6 +91,7 @@ public class CqServiceImpl implements CqService {
     @Override
     public void praseNewsPaper(CqMsg cqMsg) {
         start = Calendar.getInstance().getTime();
+        logger.info("开始处理"+cqMsg.getUserId()+"在"+cqMsg.getGroupId()+"群的加群请求");
         String resp;
         switch (String.valueOf(cqMsg.getGroupId())){
             case "201872650":
@@ -112,8 +113,7 @@ public class CqServiceImpl implements CqService {
         }
 
         cqMsg.setMessageType("group");
-        cqMsg.setUserId(1335734657L);
-        cqMsg.setMessage("[CQ:at,qq="+cqMsg.getUserId()+"]，欢迎加入本群。");
+        cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
     }
