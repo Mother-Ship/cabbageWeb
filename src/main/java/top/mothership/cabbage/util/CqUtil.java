@@ -2,6 +2,8 @@ package top.mothership.cabbage.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.CqMsg;
 import top.mothership.cabbage.pojo.CqResponse;
@@ -17,7 +19,7 @@ import java.net.URL;
 @Component
 public class CqUtil {
     private final String baseURL = "http://localhost:5700";
-
+    private Logger logger = LogManager.getLogger(this.getClass());
     public CqResponse sendMsg(CqMsg cqMsg) {
         String URL;
         switch (cqMsg.getMessageType()) {
@@ -44,7 +46,8 @@ public class CqUtil {
 
             OutputStream os = httpConnection.getOutputStream();
             //防止转义
-            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes());
+            //折腾了半天最后是少了UTF-8………………我tm想给自己一巴掌
+            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes("UTF-8"));
             os.flush();
             os.close();
             BufferedReader responseBuffer =
