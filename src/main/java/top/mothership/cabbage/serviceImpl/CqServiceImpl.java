@@ -110,11 +110,11 @@ public class CqServiceImpl implements CqService {
                 resp = "[CQ:at,qq="+cqMsg.getUserId()+"]，欢迎加入本群。";
                 break;
         }
-        CqMsg respo = new CqMsg();
-        respo.setMessageType("group");
-        respo.setGroupId(cqMsg.getGroupId());
-        respo.setMessage(resp);
-        cqUtil.sendMsg(respo);
+
+        cqMsg.setMessageType("group");
+        cqMsg.setUserId(1335734657L);
+        cqMsg.setMessage("[CQ:at,qq="+cqMsg.getUserId()+"]，欢迎加入本群。");
+        cqUtil.sendMsg(cqMsg);
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
     }
 
