@@ -717,7 +717,7 @@ public class ImgUtil {
 
     private void drawImage(BufferedImage img, String filename) {
         try {
-            logger.info("开始将" + filename + "写入硬盘");
+            logger.info("开始将" + filename + ".png写入硬盘");
             ImageIO.write(img, "png", new File(rb.getString("path") + "\\data\\image\\" + filename + ".png"));
             img.flush();
         } catch (IOException e) {

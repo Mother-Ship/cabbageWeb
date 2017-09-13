@@ -19,7 +19,6 @@ import java.net.URL;
 @Component
 public class CqUtil {
     private final String baseURL = "http://localhost:5700";
-    private Logger logger = LogManager.getLogger(this.getClass());
     public CqResponse sendMsg(CqMsg cqMsg) {
         String URL;
         switch (cqMsg.getMessageType()) {

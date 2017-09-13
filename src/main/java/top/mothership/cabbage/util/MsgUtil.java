@@ -7,162 +7,49 @@ import org.springframework.stereotype.Component;
 import top.mothership.cabbage.mapper.BaseMapper;
 import top.mothership.cabbage.pojo.CqMsg;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
 public class MsgUtil {
-    private static String adminCmdRegex = "[!！]sudo ([^ ]*)(.*)";
-    private static String cmdRegex = "[!！]([^ ]+)(.*)";
-    private static String cmdRegexWithNum = "[!！]([^ ]+)([^#]*) #(.+)";
-    private static String singleImgRegex = "\\[CQ:image,file=(.+)\\]";
-    private static String[] msgs = new String[100];
-    private static int start = 0;
-    private static int end = 0;
-    private static int len = 0;
-    private static List<Long> mp5Admin = Arrays.asList(2643555740L, 290514894L, 2307282906L, 2055805091L, 735862173L,
-            1142592265L, 263202941L, 992931505L, 1335734657L, 526942417L, 1012621328L);
-    private static List<Long> mp4Admin = Arrays.asList(89217167L, 295539897L, 290514894L, 2307282906L,
-            2643555740L, 2055805091L, 954176984L, 879804833L, 526942417L);
-    private static List<CqMsg> inviteRequests = new ArrayList<>();
-    private final ApiUtil apiUtil;
     private final CqUtil cqUtil;
-    private final ImgUtil imgUtil;
-    private final WebPageUtil webPageUtil;
-    private BaseMapper baseMapper;
     private Logger logger = LogManager.getLogger(this.getClass());
-
     @Autowired
-    public MsgUtil(ApiUtil apiUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, BaseMapper baseMapper) {
-        this.apiUtil = apiUtil;
+    public MsgUtil(CqUtil cqUtil) {
         this.cqUtil = cqUtil;
-        this.imgUtil = imgUtil;
-        this.webPageUtil = webPageUtil;
-        this.baseMapper = baseMapper;
     }
 
-    public void AdminCmd(CqMsg cqMsg) {
-        String msg = cqMsg.getMessage();
-        Matcher m = Pattern.compile(cmdRegex).matcher(msg);
-        m.find();
-        switch (m.group(1)) {
-            case "stat":
-                break;
-            case "bp":
-                break;
-            case "setid":
-                break;
-            case "statme":
-                break;
-            case "bpme":
-                break;
-            case "recent":
-                break;
-            case "help":
-                break;
-        }
-
-    }
-
-    public void CommonCmd(CqMsg cqMsg) {
-        String msg = cqMsg.getMessage();
-        Matcher m = Pattern.compile(adminCmdRegex).matcher(msg);
-        m.find();
-        switch (m.group(1)) {
-            case "add":
-                break;
-            case "del":
-                break;
-            case "check":
-                break;
-            case "褪裙": case "退群":
-                break;
-            case "bg":
-                break;
-            case "recent":
-                break;
-            case "afk":
-                break;
-            case "smoke":
-                break;
-            case "invite":
-                break;
-
-        }
-
-
-    }
-
-    public void stashInviteRequest(CqMsg cqMsg) {
-        //等待日后调用
-        inviteRequests.add(cqMsg);
-    }
-
-    public void Smoke(CqMsg cqMsg) {
-        //这里拿到的是没有刮去图片的
-        int count = 0;
-        String msg = cqMsg.getMessage();
-        if (msg.matches(singleImgRegex)) {
-            msg = "Image";
-        }
-        //刮掉除了中文英文数字之外的东西
-        msg = msg.replaceAll("[^\\u4e00-\\u9fa5a-zA-Z0-9]", "");
-        //循环数组
-        if (cqMsg.getGroupId() == 201872650 || cqMsg.getGroupId() == 564679329 || cqMsg.getGroupId() == 532783765) {
-            len++;
-            if (len >= 100) {
-                len = 100;
-                start++;
+    public boolean CheckDayParam(CqMsg cqMsg) {
+        try {
+            //此处传入的Message必须是切好的#后面的数据
+            int day = Integer.valueOf(cqMsg.getMessage());
+            if (day > (int) ((new java.util.Date().getTime() - new SimpleDateFormat("yyyy-MM-dd").parse("2007-09-16").getTime()) / 1000 / 60 / 60 / 24)) {
+                cqMsg.setMessage("你要找史前时代的数据吗。");
+                cqUtil.sendMsg(cqMsg);
+                logger.info("指定的日期早于osu!首次发布日期");
+                return false;
             }
-            if (end == 100) {
-                end = 0;
+            if (day < 0) {
+                cqMsg.setMessage("白菜不会预知未来。");
+                cqUtil.sendMsg(cqMsg);
+                logger.info("天数不能为负值");
+                return false;
             }
-            if (start == 100) {
-                start = 0;
-            }
-            //把群号拼在字符串上
-            msgs[end] = cqMsg.getGroupId() + msg;
-            end++;
-            if (start < end) {
-                //复读不抓三个字以下的和纯图片
-                for (int i = 0; i < end; i++) {
-                    if ((cqMsg.getGroupId() + msg).equals(msgs[i]) && !msg.equals("Image") && msg.length() >= 3) {
-                        count++;
-                    }
-                }
-            } else {
-                for (int i = 0; i < start - 1; i++) {
-                    if ((cqMsg.getGroupId() + msg).equals(msgs[i]) && !msg.equals("Image") && msg.length() >= 3) {
-                        count++;
-                    }
-                }
-                for (int i = end; i < msgs.length; i++) {
-                    if ((cqMsg.getGroupId() + msg).equals(msgs[i]) && !msg.equals("Image") && msg.length() >= 3) {
-                        count++;
-                    }
-                }
-            }
-
-        }
-        if (count >= 6) {
-            String resp;
-            if (mp5Admin.contains(cqMsg.getUserId()) && cqMsg.getGroupId() == 201872650) {
-                logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
-                cqMsg.setMessage("[CQ:at,qq=2643555740] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
-
-            } else if (mp4Admin.contains(cqMsg.getUserId()) && cqMsg.getGroupId() == 564679329) {
-                logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
-                cqMsg.setMessage("[CQ:at,qq=1012621328] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
-            } else {
-                logger.info("正在尝试禁言" + cqMsg.getUserId());
-                cqMsg.setDuration(600);
-                cqMsg.setMessageType("smoke");
-            }
+        } catch (java.lang.NumberFormatException e) {
+            cqMsg.setMessage("假使这些完全……不能用的参数，你再给他传一遍，你等于……你也等于……你也有泽任吧？");
             cqUtil.sendMsg(cqMsg);
+            logger.info("给的天数不是int值");
+            return false;
+        } catch (ParseException e) {
+            //由于解析的是固定字符串，不会出异常，无视
         }
+        return true;
     }
 
 }

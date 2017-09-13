@@ -1,6 +1,7 @@
 package top.mothership.cabbage.mapper;
 
 import org.apache.ibatis.annotations.*;
+import org.springframework.stereotype.Repository;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.Userinfo;
 
@@ -25,6 +26,7 @@ import java.util.List;
 "DELETE FROM `userinfo` WHERE `queryDate` = ?"
  */
 @Mapper
+@Repository
 public interface BaseMapper {
     @Select("<script>" +
             "SELECT * FROM `userrole` " +
@@ -32,7 +34,7 @@ public interface BaseMapper {
             "<when test=\"QQ != null\">" +
             "WHERE `QQ` = #{QQ}" +
             "</when>" +
-            "<when test=\"user_id != null\">" +
+            "<when test=\"userId != null\">" +
             "WHERE`user_id` = #{userId}" +
             "</when>" +
             "</choose>" +
@@ -72,10 +74,10 @@ public interface BaseMapper {
     Integer addUserInfo(@Param("userInfo") List<Userinfo> list);
 
     @Select("SELECT * , abs(UNIX_TIMESTAMP(queryDate) - UNIX_TIMESTAMP(#{queryDate})) AS ds FROM `userinfo`  WHERE `user_id` = #{userId} ORDER BY ds ASC LIMIT 1")
-    Userinfo getNearestUserInfo(@Param("queryDate") Date queryDate, @Param("userId") Integer userId);
+    Userinfo getNearestUserInfo( @Param("userId") Integer userId,@Param("queryDate") Date queryDate);
 
     @Select("SELECT * FROM `userinfo` WHERE `user_id` = #{userId} AND `queryDate` = #{queryDate}")
-    Userinfo getUserInfo(@Param("queryDate") Date queryDate, @Param("userId") Integer userId);
+    Userinfo getUserInfo(@Param("userId") Integer userId,@Param("queryDate") Date queryDate);
 
     @Delete("DELETE FROM `userinfo` WHERE `queryDate` = #{queryDate}")
     void clearTodayInfo(@Param("queryDate") Date queryDate);
