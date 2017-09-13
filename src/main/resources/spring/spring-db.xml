@@ -67,7 +67,7 @@
     </bean>
 
     <!-- 上面的druid的配置 -->
-    <bean id="logFilter" class="com.alibaba.druid.filter.logging.Slf4jLogFilter">
+    <bean id="logFilter" class="com.alibaba.druid.filter.logging.Log4j2Filter">
         <property name="statementExecutableSqlLogEnable" value="false" />
     </bean>
     <!-- 3.配置SqlSessionFactory对象 -->
