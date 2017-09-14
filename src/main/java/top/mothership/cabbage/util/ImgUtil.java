@@ -291,10 +291,10 @@ public class ImgUtil {
             }
         }
         g2.dispose();
-        drawImage(bg, userFromAPI.getUserName());
+        drawImage(bg, userFromAPI.getUserName()+"stat");
     }
 
-    public void drawUserBP(String userName, Map<Score, Integer> map) {
+    public void drawUserBP(String userName, LinkedHashMap<Score, Integer> map) {
         logger.info("开始绘制" + userName + "的今日BP信息");
         //计算最终宽高
         int Height = images.get(rb.getString("bptop")).getHeight();
@@ -328,8 +328,6 @@ public class ImgUtil {
         HeightPoint = HeightPoint + bpTop.getHeight();
 
         //开始绘制每行的bp
-        // new DecimalFormat("###.00").format(100.0 * (6 * bp.getCount300() + 2 * bp.getCount100() + bp.getCount50())
-        // / (6 * (bp.getCount50() + bp.getCount100() + bp.getCount300() + bp.getCountmiss())));
         for (Score aList : map.keySet()) {
             String acc = new DecimalFormat("###.00").format(
                     100.0 * (6 * aList.getCount300() + 2 * aList.getCount100() + aList.getCount50())
@@ -383,7 +381,7 @@ public class ImgUtil {
         }
         g.dispose();
         //因为这个方法只需要一个username……
-        drawImage(result, userName);
+        drawImage(result, userName+"BP");
 
     }
 
@@ -401,10 +399,10 @@ public class ImgUtil {
         try {
             bg = webPageUtil.getBG(score.getBeatmapId(), beatmap);
         } catch (NullPointerException e) {
-            logger.error("从血猫抓取谱面背景失败，使用默认背景");
-            logger.error(e.getMessage());
+            logger.error("从血猫抓取谱面背景失败,错误原因："+e.getMessage()+"，使用默认背景");
             //随机抽取一个bg
-            bg = getCopyImage(images.get("defaultBG" + new Random().nextInt(3) + 2));
+            String RandomBG = "defaultBG1" + ((int)(Math.random() * 2)+2)+".png";
+            bg = getCopyImage(images.get(RandomBG));
             defaultBG = true;
         }
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
@@ -469,7 +467,7 @@ public class ImgUtil {
             g2.drawImage(images.get("score-" + String.valueOf(Combo[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 30 - 7, 576 - 55 + 10, null);
         }
         //画上结尾的x
-        g2.drawImage(images.get("score-x.png"), 37 * Combo.length + 30 - 7, 576 - 55 + 10, null);
+        g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * Combo.length + 30 - 7, 576 - 55 + 10, null);
 
         //300 这些图片应该缩小到一半大小
         g2.drawImage(images.get("hit300.png"), 40 - 4, 263 - 27, null);
@@ -577,7 +575,6 @@ public class ImgUtil {
         g2.setFont(new Font("Ubuntu", 0, 20));
         g2.drawString("Beatmap by " + beatmap.getCreator(), 7, 52);
         g2.drawString("Played by " + userName + " on " + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ".", 7, 74);
-        g2.dispose();
 
         if (oppaiResult != null) {
 
@@ -594,7 +591,7 @@ public class ImgUtil {
             //底端PP面板
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             if ((int) (Math.random() * 20) == 1) {
-                g2.drawImage(images.get("zPPTrick"), 540, 200, null);
+                g2.drawImage(images.get("zPPTrick.png"), 540, 200, null);
                 g2.setFont(new Font("Ubuntu Bold", Font.BOLD, 14));
                 g2.setPaint(Color.decode("#000000"));
                 g2.drawString(" " + String.valueOf(Math.round(oppaiResult.getPp())), 210 + 540, 76 + 200);
@@ -614,7 +611,7 @@ public class ImgUtil {
                 g2.drawString("ACC: " + accS + "%", 253 + 540, 284 + 200);
                 g2.drawString("Spd Star: " + String.valueOf(oppaiResult.getSpeedStars()).substring(0, 4), 253 + 540, 241 + 200);
             } else {
-                g2.drawImage(images.get("zPP"), 570, 700, null);
+                g2.drawImage(images.get("zpp.png"), 570, 700, null);
 
                 g2.setPaint(Color.decode("#ff66a9"));
                 g2.setFont(new Font("Gayatri", 0, 60));

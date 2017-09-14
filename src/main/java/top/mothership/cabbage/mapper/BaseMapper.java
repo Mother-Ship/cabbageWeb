@@ -39,6 +39,7 @@ public interface BaseMapper {
             "</when>" +
             "</choose>" +
             "</script>")
+    //只能传一个，不能同时处理两个
     User getUser(@Param("QQ") String QQ, @Param("userId") Integer userId);
 
     @Select("SELECT `user_id` FROM `userrole` WHERE `role` = #{role}")
