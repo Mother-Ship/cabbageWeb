@@ -52,4 +52,22 @@ public class MsgUtil {
         return true;
     }
 
+    public boolean CheckNumParam(CqMsg cqMsg){
+        try {
+            int num = Integer.valueOf(cqMsg.getMessage());
+            if (num < 0 || num > 100) {
+                cqMsg.setMessage("其他人看不到的东西，白菜也看不到啦。");
+                cqUtil.sendMsg(cqMsg);
+                logger.info("BP不能大于100或者小于0");
+                return false;
+            } else {
+                return true;
+            }
+        } catch (java.lang.NumberFormatException e) {
+            cqMsg.setMessage("Ай-ай-ай-ай-ай, что сейчас произошло!");
+            cqUtil.sendMsg(cqMsg);
+            logger.info("给的BP数目不是int");
+            return false;
+        }
+    }
 }
