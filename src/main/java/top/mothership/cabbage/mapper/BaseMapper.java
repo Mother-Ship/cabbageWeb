@@ -50,7 +50,7 @@ public interface BaseMapper {
             + "<if test=\"user.role != null\">role=#{user.role},</if>"
             + "<if test=\"user.QQ != null\">QQ=#{user.QQ},</if>"
             + "</set>"
-            + " where id = #{user.userId}" + "</script>")
+            + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);
 
     @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.QQ})")

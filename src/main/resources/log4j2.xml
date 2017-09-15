@@ -41,6 +41,8 @@
         </logger>
         <logger name="org.mybatis.spring.SqlSessionUtils" level="info">
         </logger>
+        <logger name="org.apache.ibatis.io" level="info">
+        </logger>
          <!--Root Logger -->
         <root level="info">
             <appender-ref ref="DevLog"/>

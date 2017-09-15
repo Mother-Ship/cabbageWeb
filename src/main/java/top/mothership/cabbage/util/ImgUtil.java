@@ -294,8 +294,8 @@ public class ImgUtil {
         drawImage(bg, userFromAPI.getUserName()+"stat");
     }
 
-    public void drawUserBP(String userName, LinkedHashMap<Score, Integer> map) {
-        logger.info("开始绘制" + userName + "的今日BP信息");
+    public void drawUserBP(Userinfo userFromAPI, LinkedHashMap<Score, Integer> map) {
+        logger.info("开始绘制" + userFromAPI.getUserName() + "的今日BP信息");
         //计算最终宽高
         int Height = images.get(rb.getString("bptop")).getHeight();
         int HeightPoint = 0;
@@ -314,7 +314,7 @@ public class ImgUtil {
         BufferedImage bpTop = getCopyImage(images.get(rb.getString("bptop")));
         Graphics2D g2 = (Graphics2D) bpTop.getGraphics();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        draw(g2, "bpUnameColor", "bpUnameFont", "bpUnameSize", "Best Performance of " + userName, "bpUnamex", "bpUnamey");
+        draw(g2, "bpUnameColor", "bpUnameFont", "bpUnameSize", "Best Performance of " + userFromAPI.getUserName(), "bpUnamex", "bpUnamey");
         Calendar c = Calendar.getInstance();
         //日期补丁
         if (c.get(Calendar.HOUR_OF_DAY) < 4) {
@@ -380,13 +380,13 @@ public class ImgUtil {
             HeightPoint = HeightPoint + bpMid.getHeight();
         }
         g.dispose();
-        //因为这个方法只需要一个username……
-        drawImage(result, userName+"BP");
+        //不，文件名最好还是数字
+        drawImage(result, userFromAPI.getUserId()+"BP");
 
     }
 
-    public void drawResult(String userName, Score score, Beatmap beatmap) {
-        logger.info("开始绘制" + userName + "在" + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]的结算界面");
+    public void drawResult(Userinfo userFromAPI, Score score, Beatmap beatmap) {
+        logger.info("开始绘制" + userFromAPI.getUserName() + "在" + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]的结算界面");
         String accS = new DecimalFormat("###.00").format(100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50()) / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())));
         float acc = Float.valueOf(accS);
         BufferedImage bg;
@@ -574,7 +574,7 @@ public class ImgUtil {
         g2.drawString(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]", 7, 26);
         g2.setFont(new Font("Ubuntu", 0, 20));
         g2.drawString("Beatmap by " + beatmap.getCreator(), 7, 52);
-        g2.drawString("Played by " + userName + " on " + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ".", 7, 74);
+        g2.drawString("Played by " + userFromAPI.getUserName() + " on " + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ".", 7, 74);
 
         if (oppaiResult != null) {
 
@@ -640,6 +640,10 @@ public class ImgUtil {
             bg.flush();
         }
         drawImage(result, score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()));
+    }
+
+    public void drawFirstRank(Score score){
+        //TODO
     }
 
     private OppaiResult calcPP(Score score, Beatmap beatmap, float acc) {

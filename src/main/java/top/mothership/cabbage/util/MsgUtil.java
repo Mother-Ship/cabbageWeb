@@ -52,7 +52,7 @@ public class MsgUtil {
         return true;
     }
 
-    public boolean CheckNumParam(CqMsg cqMsg){
+    public boolean CheckBPNumParam(CqMsg cqMsg){
         try {
             int num = Integer.valueOf(cqMsg.getMessage());
             if (num < 0 || num > 100) {
@@ -67,6 +67,17 @@ public class MsgUtil {
             cqMsg.setMessage("Ай-ай-ай-ай-ай, что сейчас произошло!");
             cqUtil.sendMsg(cqMsg);
             logger.info("给的BP数目不是int");
+            return false;
+        }
+    }
+    public boolean CheckBidParam(CqMsg cqMsg){
+        try {
+            int bid = Integer.valueOf(cqMsg.getMessage());
+            return true;
+        } catch (java.lang.NumberFormatException e) {
+            cqMsg.setMessage("It's a disastah!!");
+            cqUtil.sendMsg(cqMsg);
+            logger.info("给的bid不是int");
             return false;
         }
     }

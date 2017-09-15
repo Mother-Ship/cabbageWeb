@@ -31,6 +31,9 @@ public class CqUtil {
             case "smoke":
                 URL = baseURL + "/set_group_ban";
                 break;
+            case "handleInvite":
+                URL = baseURL +"/set_group_add_request";
+                break;
             default:
                 return null;
         }
