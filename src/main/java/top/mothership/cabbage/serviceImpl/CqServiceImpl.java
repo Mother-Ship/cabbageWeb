@@ -4,11 +4,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import sun.rmi.server.InactiveGroupException;
 import top.mothership.cabbage.mapper.BaseMapper;
 import top.mothership.cabbage.pojo.*;
 import top.mothership.cabbage.service.CqService;
 import top.mothership.cabbage.util.*;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -18,7 +24,7 @@ import java.util.regex.Pattern;
 @Service
 public class CqServiceImpl implements CqService {
     private CqMsg cqMsg;
-    private ResourceBundle rb = ResourceBundle.getBundle("cabbage");
+    private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
     private static String adminCmdRegex = "[!！]sudo ([^ ]*)(.*)";
     private static String cmdRegex = "[!！]([^ ]+)(.*)";
     private static String cmdRegexWithNum = "[!！]([^ ]+)([^#]*) #(.+)";
@@ -39,7 +45,7 @@ public class CqServiceImpl implements CqService {
     private final WebPageUtil webPageUtil;
     private BaseMapper baseMapper;
     private Logger logger = LogManager.getLogger(this.getClass());
-
+    private static List<String> admin = Arrays.asList(rb.getString("admin").split(","));
 
     @Autowired
     public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, BaseMapper baseMapper) {
@@ -97,7 +103,7 @@ public class CqServiceImpl implements CqService {
                 m = Pattern.compile(cmdRegexWithNum).matcher(msg);
                 if (m.find()) {
                     cqMsg.setMessage(m.group(3));
-                    if (!msgUtil.CheckNumParam(cqMsg)) {
+                    if (!msgUtil.CheckBPNumParam(cqMsg)) {
                         return;
                     }
                     num = Integer.valueOf(m.group(3));
@@ -132,7 +138,7 @@ public class CqServiceImpl implements CqService {
                 m = Pattern.compile(cmdRegexWithNum).matcher(msg);
                 if (m.find()) {
                     cqMsg.setMessage(m.group(3));
-                    if (!msgUtil.CheckNumParam(cqMsg)) {
+                    if (!msgUtil.CheckDayParam(cqMsg)) {
                         return;
                     }
                     day = Integer.valueOf(m.group(3));
@@ -163,7 +169,7 @@ public class CqServiceImpl implements CqService {
                 m = Pattern.compile(cmdRegexWithNum).matcher(msg);
                 if (m.find()) {
                     cqMsg.setMessage(m.group(3));
-                    if (!msgUtil.CheckNumParam(cqMsg)) {
+                    if (!msgUtil.CheckBPNumParam(cqMsg)) {
                         return;
                     }
                     num = Integer.valueOf(m.group(3));
@@ -179,24 +185,11 @@ public class CqServiceImpl implements CqService {
                 }
                 userFromAPI = apiUtil.getUser(null, String.valueOf(user.getUserId()));
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("API没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
+                    cqMsg.setMessage("API没有获取到QQ" + cqMsg.getUserId() + "绑定的" + user.getUserId() + "玩家的信息。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
-                Score score = apiUtil.getRecent(null, userFromAPI.getUserName());
-                if (score == null) {
-                    cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有游戏记录。");
-                    return;
-                }
-                Beatmap beatmap = apiUtil.getBeatmap(score.getBeatmapId());
-                if (beatmap == null) {
-                    cqMsg.setMessage("网络错误：没有获取到Bid为" + score.getBeatmapId() + "的谱面信息。");
-                    return;
-                }
-                imgUtil.drawResult(userFromAPI.getUserName(), score, beatmap);
-                cqMsg.setMessage("[CQ:image,file=" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + ".png]");
-                cqUtil.sendMsg(cqMsg);
+                getRecent(userFromAPI);
                 break;
             case "help":
                 if ((int) (Math.random() * 10) == 1) {
@@ -207,61 +200,193 @@ public class CqServiceImpl implements CqService {
                 }
                 cqUtil.sendMsg(cqMsg);
                 break;
+            case "fp":
+                cqMsg.setMessage(m.group(2).substring(1));
+                if (!msgUtil.CheckBidParam(cqMsg)) {
+                    return;
+                }
+                Score score = apiUtil.getFirstScore(Integer.valueOf(m.group(2).substring(1)));
+                if (score == null) {
+                    cqMsg.setMessage("提供的bid没有找到#1成绩。");
+                }
+                imgUtil.drawFirstRank(score);
+                break;
+
         }
     }
 
     @Override
     public void praseAdminCmd(CqMsg cqMsg) {
+        this.cqMsg = cqMsg;
+        if (!admin.contains(String.valueOf(cqMsg.getUserId()))) {
+            //如果没有权限
+            cqMsg.setMessage("[CQ:face,id=14]？");
+            cqUtil.sendMsg(cqMsg);
+            return;
+        }
         String msg = cqMsg.getMessage();
         Matcher m = Pattern.compile(adminCmdRegex).matcher(msg);
         m.find();
-//        private static String adminCmdRegex = "[!！]sudo ([^ ]*)(.*)";
+        int day;
+        int sec;
+        String username;
+        String target;
+        String URL;
         String[] usernames;
         String role = null;
+        String QQ;
         int index;
         switch (m.group(1)) {
             case "add":
-            case "del":
 
-                index = msg.indexOf(":");
+
+                index = m.group(2).indexOf(":");
                 if (index == -1) {
                     //如果拿不到
                     cqMsg.setMessage("没有指定用户组。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                usernames = m.group(2).substring(0, index).split(",");
-                switch (m.group(1)) {
-                    case "add":
-                        role = m.group(2).substring(index + 1);
-                        break;
-                    case "del":
-                        role = "creep";
-                        break;
-                }
+                usernames = m.group(2).substring(1, index).split(",");
+                role = m.group(2).substring(index + 1);
                 logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：" + role);
-                modifyUserRole(usernames,role);
+                modifyUserRole(usernames, role);
+                break;
+            case "del":
+                usernames = m.group(2).substring(1).split(",");
+                role = "creep";
+                logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：" + role);
+                modifyUserRole(usernames, role);
                 break;
             case "check":
-
+                username = m.group(2).substring(1);
+                Userinfo userFromAPI = apiUtil.getUser(username, null);
+                if (userFromAPI == null) {
+                    cqMsg.setMessage("API没有获取到玩家" + username + "的信息。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                User user = baseMapper.getUser(null, userFromAPI.getUserId());
+                if (user == null) {
+                    cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "没有使用过白菜。请先用add命令添加。");
+                } else {
+                    cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "的用户组是" + user.getRole() + "。");
+                }
+                cqUtil.sendMsg(cqMsg);
                 break;
+
             case "褪裙":
             case "退群":
-
+                role = m.group(2).substring(1);
+                checkPPOverflow(role);
                 break;
             case "bg":
+                try {
+                    URL = m.group(2).substring(m.group(2).indexOf("http"));
+                    target = m.group(2).substring(1, m.group(2).indexOf("http") - 1);
+                } catch (IndexOutOfBoundsException e) {
+                    cqMsg.setMessage("字符串处理异常。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                downloadBG(URL, target);
                 break;
             case "recent":
+                username = m.group(2).substring(1);
+                userFromAPI = apiUtil.getUser(username, null);
+                if (userFromAPI == null) {
+                    cqMsg.setMessage("API没有获取到玩家" + username + "的信息。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                getRecent(userFromAPI);
                 break;
             case "afk":
+                try {
+                    index = m.group(2).substring(1).indexOf(":");
+                    if (index == -1) {
+                        role = "mp5";
+                        day = Integer.valueOf(m.group(2).substring(1));
+                    } else {
+                        //这里因为字符串最前面有个空格，所以得是index+2
+                        role = m.group(2).substring(index + 2);
+                        day = Integer.valueOf(m.group(2).substring(1).substring(0, index));
+                    }
+                } catch (IndexOutOfBoundsException e) {
+                    cqMsg.setMessage("字符串处理异常。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                logger.info("检测到管理员对" + role + "用户组" + day + "天前的AFK玩家查询");
+                checkAfkPlayer(role, day);
                 break;
             case "smoke":
+                try {
+                    index = msg.indexOf(":");
+                    if (index == -1) {
+                        sec = 600;
+                        QQ = msg.substring(12);
+                    } else {
+                        sec = Integer.valueOf(msg.substring(index + 1));
+                        QQ = msg.substring(12, index);
+                    }
+
+                } catch (IndexOutOfBoundsException e) {
+                    cqMsg.setMessage("字符串处理异常。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+            logger.info(QQ+"被"+cqMsg.getUserId()+"禁言"+sec+"秒。");
+                cqMsg.setMessage("They're all dead!!");
+                cqUtil.sendMsg(cqMsg);
+                cqMsg.setMessageType("smoke");
+                cqMsg.setDuration(sec);
+                cqMsg.setUserId(Long.valueOf(QQ));
+                cqUtil.sendMsg(cqMsg);
                 break;
-            case "invite":
+            case "listInvite":
+                String resp;
+                if(inviteRequests.size()>0) {
+                    resp = "以下是白菜本次启动期间收到的加群邀请：";
+                    for (CqMsg aList : inviteRequests) {
+                        resp = resp.concat("\n"+"Flag：" + aList.getFlag() + "，群号：" + aList.getGroupId());
+                    }
+                }else{
+                    resp = "本次启动白菜没有收到加群邀请。";
+                }
+                cqMsg.setMessage(resp);
+                cqUtil.sendMsg(cqMsg);
+
+                break;
+            case "handleInvite":
+                String flag = m.group(2).substring(1);
+                logger.info("正在通过对Flag为：" + flag + "的邀请");
+                cqMsg.setFlag(flag);
+                cqMsg.setApprove(true);
+                cqMsg.setType("invite");
+                cqMsg.setMessageType("handleInvite");
+                CqResponse cqResponse = cqUtil.sendMsg(cqMsg);
+                if (cqResponse.getRetCode()==0){
+                    cqMsg.setMessageType("group");
+                    cqMsg.setMessage("已通过Flag为："+flag+"的邀请");
+                    cqUtil.sendMsg(cqMsg);
+                }
+
                 break;
             case "unbind":
-                break;
+                QQ = m.group(2).substring(1);
 
+                user = baseMapper.getUser(QQ, null);
+                if (user == null) {
+                    cqMsg.setMessage("该QQ没有绑定用户……");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                user.setQQ(null);
+                baseMapper.updateUser(user);
+                cqMsg.setMessage("QQ"+QQ+"的绑定信息已经清除");
+                cqUtil.sendMsg(cqMsg);
+                break;
         }
     }
 
@@ -313,7 +438,7 @@ public class CqServiceImpl implements CqService {
 
         }
         if (count >= 6) {
-            String resp;
+
             if (mp5Admin.contains(cqMsg.getUserId()) && cqMsg.getGroupId() == 201872650) {
                 logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
                 cqMsg.setMessage("[CQ:at,qq=2643555740] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
@@ -385,7 +510,7 @@ public class CqServiceImpl implements CqService {
             return;
         }
         if (userFromAPI.getUserId() == 3) {
-            cqMsg.setMessage("你们总是想查BanchoBot。\\n可是BanchoBot已经很累了，她不想被查。\\n她想念自己的小ppy，而不是被逼着查PP。\\n你有考虑过这些吗？没有！你只考虑过你自己。");
+            cqMsg.setMessage("你们总是想查BanchoBot。\n可是BanchoBot已经很累了，她不想被查。\n她想念自己的小ppy，而不是被逼着查PP。\n你有考虑过这些吗？没有！你只考虑过你自己。");
             cqUtil.sendMsg(cqMsg);
             return;
         }
@@ -464,8 +589,9 @@ public class CqServiceImpl implements CqService {
         if (num == 0) {
             logger.info("筛选今日BP成功");
             if (result.size() == 0) {
-                cqMsg.setMessage("玩家" + userinfo.getUserName() + "今天没有更新BP。");
+                cqMsg.setMessage("玩家" + userinfo.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
                 cqUtil.sendMsg(cqMsg);
+
                 logger.info("没有查到该玩家今天更新的BP");
                 return;
             }
@@ -476,7 +602,7 @@ public class CqServiceImpl implements CqService {
                 Beatmap map = apiUtil.getBeatmap(aList.getBeatmapId());
                 aList.setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
             }
-            imgUtil.drawUserBP(userinfo.getUserName(), result);
+            imgUtil.drawUserBP(userinfo, result);
             cqMsg.setMessage("[CQ:image,file=" + userinfo.getUserName() + "BP.png]");
             cqUtil.sendMsg(cqMsg);
         } else {
@@ -490,7 +616,7 @@ public class CqServiceImpl implements CqService {
                 logger.info("获得了玩家" + userinfo.getUserName() + "的第" + num + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
                 Beatmap map = apiUtil.getBeatmap(score.getBeatmapId());
 
-                imgUtil.drawResult(userinfo.getUserName(), score, map);
+                imgUtil.drawResult(userinfo, score, map);
                 cqMsg.setMessage("[CQ:image,file=" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + ".png]");
                 cqUtil.sendMsg(cqMsg);
             }
@@ -589,21 +715,120 @@ public class CqServiceImpl implements CqService {
         resp = "用户组修改完成。";
 
         if (doneList.size() > 0) {
-            resp = resp.concat("\\n修改成功：" + doneList.toString());
+            resp = resp.concat("\n修改成功：" + doneList.toString());
         }
 
         if (addList.size() > 0) {
-            resp = resp.concat("\\n新增成功：" + addList.toString());
+            resp = resp.concat("\n新增成功：" + addList.toString());
         }
         if (nullList.size() > 0) {
-            resp = resp.concat("\\n不存在的：" + nullList.toString());
+            resp = resp.concat("\n不存在的：" + nullList.toString());
         }
         if (usernames.length == 0) {
             resp = "没有做出改动。";
         }
-        if (usernames.length == 1&&nullList.size()==0) {
+        //最后的条件可以不用写，不过为了干掉这个报错还是谢了
+        if (addList.size()==1&&usernames.length==1 && userFromAPI != null) {
             //这时候是只有单个用户，并且没有在nulllist里
-            resp = resp.concat("\\n[CQ:image,file=" + userFromAPI.getUserName()+"stat.png]");
+            resp = resp.concat("\n[CQ:image,file=" + userFromAPI.getUserName() + "stat.png]");
+        }
+        cqMsg.setMessage(resp);
+        cqUtil.sendMsg(cqMsg);
+    }
+
+    private void checkPPOverflow(String role) {
+        logger.info("开始检查" + role + "用户组中超限的玩家。");
+        String resp;
+        List<Integer> list = baseMapper.listUserIdByRole(role);
+        List<String> overflowList = new ArrayList<>();
+        for (Integer aList : list) {
+            //拿到用户最接近今天的数据（因为是最接近所以也不用打补丁了）
+            Userinfo userinfo = baseMapper.getNearestUserInfo(aList, new Date(Calendar.getInstance().getTimeInMillis()));
+            //如果PP超过了警戒线，请求API拿到最新PP
+            if (userinfo.getPpRaw() > Integer.valueOf(rb.getString(role + "RiskPP"))) {
+                logger.info("开始从API获取" + aList + "的信息");
+                userinfo = apiUtil.getUser(null, String.valueOf(aList));
+                if (userinfo.getPpRaw() > Integer.valueOf(rb.getString(role + "PP")) + 0.49) {
+                    logger.info("玩家" + aList + "超限，已记录");
+                    overflowList.add(userinfo.getUserName());
+                } else {
+                    logger.info("玩家" + aList + "没有超限");
+                }
+            }
+        }
+        resp = "查询PP溢出玩家完成。";
+        if (overflowList.size() > 0) {
+            resp = resp.concat("\n查询到" + role + "用户组中，以下玩家：" + overflowList.toString() + "PP超出了设定的限制。");
+        } else {
+            resp = resp.concat("\n没有检测" + role + "用户组中PP溢出的玩家。");
+        }
+        cqMsg.setMessage(resp);
+        cqUtil.sendMsg(cqMsg);
+    }
+
+    private void downloadBG(String URL, String target) {
+        BufferedImage bg;
+        try {
+            logger.info("开始根据URL下载新背景。");
+            bg = ImageIO.read(new URL(URL));
+        } catch (IOException e) {
+            logger.error("根据URL下载背景图失败，" + e.getMessage());
+            cqMsg.setMessage("根据URL下载背景图失败。错误信息是：" + e.getMessage());
+            cqUtil.sendMsg(cqMsg);
+            return;
+        }
+        //并不需要删除旧图片
+        try {
+            logger.info("开始将新背景写入硬盘");
+            ImageIO.write(bg, "png", new File(rb.getString("path") + "\\data\\image\\resource\\img\\stat\\" + target + ".png"));
+        } catch (IOException e) {
+            logger.error("将新背景写入硬盘失败，" + e.getMessage());
+            cqMsg.setMessage("将新背景写入硬盘失败。错误信息是：" + e.getMessage());
+            cqUtil.sendMsg(cqMsg);
+            return;
+        }
+        cqMsg.setMessage("修改用户/用户组" + target + "的背景图成功。");
+        cqUtil.sendMsg(cqMsg);
+    }
+
+    private void getRecent(Userinfo userFromAPI) {
+        logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
+        Score score = apiUtil.getRecent(null, userFromAPI.getUserName());
+        if (score == null) {
+            cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有游戏记录。");
+            cqUtil.sendMsg(cqMsg);
+            return;
+        }
+        Beatmap beatmap = apiUtil.getBeatmap(score.getBeatmapId());
+        if (beatmap == null) {
+            cqMsg.setMessage("网络错误：没有获取到Bid为" + score.getBeatmapId() + "的谱面信息。");
+            cqUtil.sendMsg(cqMsg);
+            return;
+        }
+        imgUtil.drawResult(userFromAPI, score, beatmap);
+        cqMsg.setMessage("[CQ:image,file=" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + ".png]");
+        cqUtil.sendMsg(cqMsg);
+    }
+
+    private void checkAfkPlayer(String role, int day) {
+        String resp;
+        Calendar cl = Calendar.getInstance();
+        cl.add(Calendar.DATE, -day);
+        java.sql.Date date = new Date(cl.getTimeInMillis());
+
+        List<Integer> list = baseMapper.listUserIdByRole(role);
+        List<String> afkList = new ArrayList<>();
+        logger.info("开始查询" + role + "用户组中" + day + "天前的AFK玩家");
+        for (Integer aList : list) {
+            if (webPageUtil.getLastActive(aList).before(date)) {
+                afkList.add(apiUtil.getUser(null, String.valueOf(aList)).getUserName());
+            }
+        }
+        resp = "查询" + role + "用户组中" + day + "天前的AFK玩家完成。";
+        if (afkList.size() > 0) {
+            resp = resp.concat("\n查询到" + role + "用户组中，以下玩家：" + afkList.toString() + "最后登录时间在" + day + "天前。");
+        } else {
+            resp = resp.concat("\n没有检测" + role + "用户组中PP溢出的玩家。");
         }
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
