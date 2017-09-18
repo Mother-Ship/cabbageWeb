@@ -82,24 +82,16 @@ public class ImgUtil {
 
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
         //绘制布局和用户组
-        g2.drawImage(roleBg, 0, 0, null);
+
         g2.drawImage(layout, 0, 0, null);
+        g2.drawImage(roleBg, 0, 0, null);
         try {
             g2.drawImage(ava, Integer.decode(rb.getString("avax")), Integer.decode(rb.getString("avay")), null);
         } catch (NullPointerException e) {
             logger.warn(userFromAPI.getUserName() + "玩家没有头像");
         }
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        //绘制用户名
-        draw(g2, "unameColor", "unameFont", "unameSize", userFromAPI.getUserName(), "namex", "namey");
-
-        //绘制Rank
-        draw(g2, "defaultColor", "numberFont", "rankSize", "#" + userFromAPI.getPpRank(), "rankx", "ranky");
-
-        //绘制PP
-        draw(g2, "ppColor", "numberFont", "ppSize", String.valueOf(userFromAPI.getPpRaw()), "ppx", "ppy");
-
-
+        //将scorerank比用户名先画
         if (scoreRank > 0) {
             //把scorerank用到的bg画到bg上
             g2.drawImage(scoreRankBG, 653, 7, null);
@@ -109,6 +101,16 @@ public class ImgUtil {
                 draw(g2, "scoreRankColor", "scoreRankFont", "scoreRankSize", "#" + Integer.toString(scoreRank), "scoreRankx", "scoreRanky");
             }
         }
+
+        //绘制用户名
+        draw(g2, "unameColor", "unameFont", "unameSize", userFromAPI.getUserName(), "namex", "namey");
+
+        //绘制Rank
+        draw(g2, "defaultColor", "numberFont", "rankSize", "#" + userFromAPI.getPpRank(), "rankx", "ranky");
+
+        //绘制PP
+        draw(g2, "ppColor", "numberFont", "ppSize", String.valueOf(userFromAPI.getPpRaw()), "ppx", "ppy");
+
 
         //绘制RankedScore
         draw(g2, "defaultColor", "numberFont", "numberSize",
