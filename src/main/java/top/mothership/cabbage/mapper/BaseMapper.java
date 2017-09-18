@@ -1,6 +1,7 @@
 package top.mothership.cabbage.mapper;
 
 import org.apache.ibatis.annotations.*;
+import org.springframework.stereotype.Repository;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.Userinfo;
 
@@ -25,6 +26,7 @@ import java.util.List;
 "DELETE FROM `userinfo` WHERE `queryDate` = ?"
  */
 @Mapper
+@Repository
 public interface BaseMapper {
     @Select("<script>" +
             "SELECT * FROM `userrole` " +
@@ -32,14 +34,18 @@ public interface BaseMapper {
             "<when test=\"QQ != null\">" +
             "WHERE `QQ` = #{QQ}" +
             "</when>" +
-            "<when test=\"user_id != null\">" +
+            "<when test=\"userId != null\">" +
             "WHERE`user_id` = #{userId}" +
             "</when>" +
             "</choose>" +
             "</script>")
+        //只能传一个，不能同时处理两个
     User getUser(@Param("QQ") String QQ, @Param("userId") Integer userId);
 
-    @Select("SELECT `user_id` FROM `userrole` WHERE `role` = #{role}")
+    @Select("<script>"
+            + "SELECT `user_id` FROM `userrole` "
+            + "<if test=\"role != null\">WHERE `role` = #{role}</if>"
+            + "</script>")
     List<Integer> listUserIdByRole(@Param("role") String role);
 
     @Update("<script>" + "update `userrole`"
@@ -47,35 +53,29 @@ public interface BaseMapper {
             + "<if test=\"user.role != null\">role=#{user.role},</if>"
             + "<if test=\"user.QQ != null\">QQ=#{user.QQ},</if>"
             + "</set>"
-            + " where id = #{user.userId}" + "</script>")
+            + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);
 
     @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.QQ})")
     Integer addUser(@Param("user") User user);
 
 
-    @Insert("<script>" + "INSERT INTO `userinfo` " +
-            "VALUES" +
-            "<foreach item='Userinfo' collection='list' open='' separator=',' close=''>" +
-            "(null," +
-            "#{userinfo.userName},#{userinfo.userId}," +
-            "#{userinfo.count300},#{userinfo.count100}," +
+    @Insert("INSERT INTO `userinfo` VALUES(null," +
+            "#{userinfo.userId},#{userinfo.count300},#{userinfo.count100}," +
             "#{userinfo.count50},#{userinfo.playCount}," +
             "#{userinfo.accuracy},#{userinfo.ppRaw}," +
             "#{userinfo.rankedScore},#{userinfo.totalScore}," +
             "#{userinfo.level},#{userinfo.ppRank}," +
             "#{userinfo.countRankSs},#{userinfo.countRankS}," +
-            "#{userinfo.countRankA},#{userinfo.queryDate}," +
-            ")" +
-            "</foreach>" +
-            "</script>")
-    Integer addUserInfo(@Param("userInfo") List<Userinfo> list);
+            "#{userinfo.countRankA},#{userinfo.queryDate}" +
+            ")")
+    Integer addUserInfo(@Param("userinfo") Userinfo userinfo);
 
     @Select("SELECT * , abs(UNIX_TIMESTAMP(queryDate) - UNIX_TIMESTAMP(#{queryDate})) AS ds FROM `userinfo`  WHERE `user_id` = #{userId} ORDER BY ds ASC LIMIT 1")
-    Userinfo getNearestUserInfo(@Param("queryDate") Date queryDate, @Param("userId") Integer userId);
+    Userinfo getNearestUserInfo(@Param("userId") Integer userId, @Param("queryDate") Date queryDate);
 
     @Select("SELECT * FROM `userinfo` WHERE `user_id` = #{userId} AND `queryDate` = #{queryDate}")
-    Userinfo getUserInfo(@Param("queryDate") Date queryDate, @Param("userId") Integer userId);
+    Userinfo getUserInfo(@Param("userId") Integer userId, @Param("queryDate") Date queryDate);
 
     @Delete("DELETE FROM `userinfo` WHERE `queryDate` = #{queryDate}")
     void clearTodayInfo(@Param("queryDate") Date queryDate);

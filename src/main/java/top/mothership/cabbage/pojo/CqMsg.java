@@ -23,6 +23,33 @@ public class CqMsg {
     @SerializedName("discuss_id")
     private Long discussId;
     private String flag;
+    private String type;
+    private boolean approve;
+    private String reason;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public boolean getApprove() {
+        return approve;
+    }
+
+    public void setApprove(boolean approve) {
+        this.approve = approve;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
 
     public String getFlag() {
         return flag;

@@ -22,6 +22,8 @@ public class ApiUtil {
     private final String getBPURL = "https://osu.ppy.sh/api/get_user_best";
     private final String getMapURL = "https://osu.ppy.sh/api/get_beatmaps";
     private final String getRecentURL = "https://osu.ppy.sh/api/get_user_recent";
+    private final String getScoreURL = "https://osu.ppy.sh/api/get_scores";
+
     private final String key = "25559acca3eea3e2c730cd65ee8a6b2da55b52c0";
     private Logger logger = LogManager.getLogger(this.getClass());
 
@@ -31,10 +33,13 @@ public class ApiUtil {
     }
 
     public Beatmap getBeatmap(Integer bid) {
-        String result = accessAPI("beatmap", null, null, String.valueOf(bid));
+        String result = accessAPI("beatmap", null, null, String.valueOf(bid),null);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Beatmap.class);
     }
-
+    public Beatmap getBeatmap(String hash) {
+        String result = accessAPI("beatmapHash", null, null, null,String.valueOf(hash));
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Beatmap.class);
+    }
     public List<Score> getBP(String username, String userId) {
         String result = praseUid("bp", username, userId);
         //由于这里用到List，手动补上双括号
@@ -48,14 +53,18 @@ public class ApiUtil {
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Score.class);
     }
 
+    public Score getFirstScore(Integer bid){
+        String result = accessAPI("first", null, null, String.valueOf(bid),null);
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Score.class);
+    }
 
     private String praseUid(String apiType, String username, String userId) {
         String result;
         if (username != null && userId == null) {
-            result = accessAPI(apiType, username, "string", null);
+            result = accessAPI(apiType, username, "string", null,null);
             return result;
         } else if (username == null && userId != null) {
-            result = accessAPI(apiType, String.valueOf(userId), "id", null);
+            result = accessAPI(apiType, String.valueOf(userId), "id", null,null);
             return result;
         } else {
             logger.error("不可同时指定用户名和用户id。");
@@ -63,7 +72,7 @@ public class ApiUtil {
         }
     }
 
-    private String accessAPI(String apiType, String uid, String uidType, String bid) {
+    private String accessAPI(String apiType, String uid, String uidType, String bid,String hash) {
         String URL;
         String failLog;
         String output = null;
@@ -81,9 +90,17 @@ public class ApiUtil {
                 URL = getMapURL + "?k=" + key + "&b=" + bid;
                 failLog = "谱面" + bid + "请求API：get_beatmaps失败五次";
                 break;
+            case "beatmapHash":
+                URL = getMapURL + "?k=" + key + "&h=" + hash;
+                failLog = "谱面" + bid + "请求API：get_beatmaps失败五次";
+                break;
             case "recent":
                 URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=1&u=" + uid;
                 failLog = "玩家" + uid + "请求API：get_recent失败五次";
+                break;
+            case "first":
+                URL = getScoreURL + "?k=" + key + "&limit=1&b=" + bid;
+                failLog = "谱面" + bid + "请求API：get_scores失败五次";
                 break;
             default:
                 logger.info("apiType错误");
