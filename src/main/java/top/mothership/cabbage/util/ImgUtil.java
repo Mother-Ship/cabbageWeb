@@ -16,7 +16,10 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -643,7 +646,8 @@ public class ImgUtil {
     }
 
     public void drawFirstRank(Score score){
-        //TODO
+        logger.info("开始绘制"+score.getBeatmapName()+"的#1信息");
+
     }
 
     private OppaiResult calcPP(Score score, Beatmap beatmap, float acc) {
@@ -677,7 +681,21 @@ public class ImgUtil {
             process.waitFor();
             bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()), 1024);
             String result = bufferedReader.readLine();
-            return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, OppaiResult.class);
+            OppaiResult oppaiResult = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, OppaiResult.class);
+            //一个小补丁
+            if(Math.round(oppaiResult.getAimPp())==Integer.MAX_VALUE){
+                oppaiResult.setAimPp(0);
+                oppaiResult.setPp(oppaiResult.getAimPp()+oppaiResult.getAccPp()+oppaiResult.getSpeedPp());
+            }
+            if(Math.round(oppaiResult.getAccPp())==Integer.MAX_VALUE){
+                oppaiResult.setAccPp(0);
+                oppaiResult.setPp(oppaiResult.getAimPp()+oppaiResult.getAccPp()+oppaiResult.getSpeedPp());
+            }
+            if(Math.round(oppaiResult.getSpeedPp())==Integer.MAX_VALUE){
+                oppaiResult.setSpeedPp(0);
+                oppaiResult.setPp(oppaiResult.getAimPp()+oppaiResult.getAccPp()+oppaiResult.getSpeedPp());
+            }
+            return oppaiResult;
 
         } catch (InterruptedException | IOException e) {
             logger.error("离线计算PP出错");

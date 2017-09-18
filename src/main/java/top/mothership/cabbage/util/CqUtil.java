@@ -2,8 +2,6 @@ package top.mothership.cabbage.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.CqMsg;
 import top.mothership.cabbage.pojo.CqResponse;

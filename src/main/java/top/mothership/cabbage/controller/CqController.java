@@ -34,9 +34,10 @@ public class CqController {
         msg = msg.replaceAll("&#93;", "]");
         cqMsg.setMessage(msg);
         //待整理业务逻辑
+        start = Calendar.getInstance().getTime();
         switch (cqMsg.getPostType()){
             case "message":
-                start = Calendar.getInstance().getTime();
+
                 String msgWithoutImage;
                 if (msg.matches(imgRegex)) {
                     msgWithoutImage = msg.replaceAll(singleImgRegex, "");
