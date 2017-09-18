@@ -1,11 +1,62 @@
 package top.mothership.cabbage.pojo;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Beatmap {
+    private String beatmapsetId;
+
+    private String beatmapId;
+
     private Integer approved;
-    private String artist;
-    private String title;
+
+    private String totalLength;
+
+    private String hitLength;
+
     private String version;
+
+    private String fileMd5;
+
+    private String diffSize;
+
+    private String diffOverall;
+
+    private String diffApproach;
+
+    private String diffDrain;
+
+    private String mode;
+
+    private String approvedDate;
+
+    private String lastUpdate;
+
+    private String artist;
+
+    private String title;
+
     private String creator;
+
+    private String bpm;
+
+    private String source;
+
+    private String tags;
+
+    private String genreId;
+
+    private String languageId;
+
+    private String favouriteCount;
+@SerializedName("playcount")
+    private String playCount;
+@SerializedName("passCount")
+    private String passCount;
+
+    private String maxCombo;
+
+    private String difficultyRating;
+
 
     public String getCreator() {
         return creator;

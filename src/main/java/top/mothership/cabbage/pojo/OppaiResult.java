@@ -24,11 +24,11 @@ public class OppaiResult {
 
     private double od;
 
-    private int ar;
+    private double ar;
 
     private double cs;
 
-    private int hp;
+    private double hp;
 
     private int combo;
 
@@ -142,13 +142,6 @@ public class OppaiResult {
         this.od = od;
     }
 
-    public int getAr() {
-        return ar;
-    }
-
-    public void setAr(int ar) {
-        this.ar = ar;
-    }
 
     public double getCs() {
         return cs;
@@ -158,11 +151,19 @@ public class OppaiResult {
         this.cs = cs;
     }
 
-    public int getHp() {
+    public double getAr() {
+        return ar;
+    }
+
+    public void setAr(double ar) {
+        this.ar = ar;
+    }
+
+    public double getHp() {
         return hp;
     }
 
-    public void setHp(int hp) {
+    public void setHp(double hp) {
         this.hp = hp;
     }
 

@@ -4,5 +4,7 @@
 <configuration>
     <settings>
         <setting name="mapUnderscoreToCamelCase" value="true" />
+        <!--学到了需要手动指定log4j2……自己写东西真的是能体会很多啊-->
+        <setting name="logImpl" value="LOG4J2"/>
     </settings>
 </configuration>

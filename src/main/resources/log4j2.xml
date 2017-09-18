@@ -25,26 +25,29 @@
     </appenders>
     <loggers>
         <!-- 3rdparty Loggers -->
-        <logger name="org.springframework.core" level="debug">
+        <logger name="org.springframework.core" level="info">
         </logger>
-        <logger name="org.springframework.beans" level="debug">
+        <logger name="org.springframework.beans" level="info">
         </logger>
-        <logger name="org.springframework.context" level="debug">
+        <logger name="org.springframework.context" level="info">
         </logger>
-        <logger name="org.springframework.web" level="debug">
+        <logger name="org.springframework.web" level="info">
         </logger>
-        <logger name="org.jboss.netty" level="warn">
+        <logger name="druid.sql.ResultSet" level="info">
         </logger>
-        <logger name="org.apache.http" level="warn">
+        <logger name="druid.sql.Connection" level="info">
         </logger>
-        <logger name="com.mchange.v2" level="warn">
+        <logger name="druid.sql.Statement" level="info">
         </logger>
-        <logger name="com.alibaba.druid" level="info">
+        <logger name="org.mybatis.spring.SqlSessionUtils" level="info">
         </logger>
-        <!-- Root Logger -->
-        <root level="DEBUG">
+        <logger name="org.apache.ibatis.io" level="info">
+        </logger>
+         <!--Root Logger -->
+        <root level="info">
             <appender-ref ref="DevLog"/>
             <appender-ref ref="Console"/>
         </root>
+
     </loggers>
 </configuration>

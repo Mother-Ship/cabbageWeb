@@ -1,24 +1,12 @@
-import com.google.gson.Gson;
-import org.jsoup.Connection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import top.mothership.cabbage.mapper.BaseMapper;
-import top.mothership.cabbage.pojo.Beatmap;
-import top.mothership.cabbage.pojo.CqMsg;
-import top.mothership.cabbage.pojo.Score;
-import top.mothership.cabbage.pojo.Userinfo;
 import top.mothership.cabbage.util.ApiUtil;
 import top.mothership.cabbage.util.CqUtil;
 import top.mothership.cabbage.util.ImgUtil;
-
-import java.sql.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = {"classpath*:/spring/spring-*.xml"})

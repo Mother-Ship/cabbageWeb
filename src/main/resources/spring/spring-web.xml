@@ -3,45 +3,50 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:task="http://www.springframework.org/schema/task"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd
-        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.1.xsd  ">
 
 
-    <!-- scan the package and the sub package -->
+    <!-- 1）配置扫描的包-->
     <context:component-scan base-package="top.mothership.cabbage.controller"/>
 
-    <!-- if you use annotation you must configure following setting -->
+    <!-- 2）开启注解 -->
     <mvc:annotation-driven/>
 
-    <!-- 对上传文件的配置 -->
+    <!-- 3）上传文件的配置 -->
     <bean id="multipartResolver"
           class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
-        <property name="defaultEncoding">
-            <value>UTF-8</value>
-        </property>
-        <property name="maxUploadSize">
-            <value>32505856</value><!-- 上传文件大小限制为31M，31*1024*1024 -->
-        </property>
-        <property name="maxInMemorySize">
-            <value>4096</value>
-        </property>
+        <property name="defaultEncoding" value="UTF-8"/>
+        <property name="maxUploadSize" value="32505856"/><!--32MB-->
+        <property name="maxInMemorySize" value="4096"/>
     </bean>
-    <!--1.扫描service所在包-->
+
+    <!--4）扫描service所在包-->
     <context:component-scan base-package="top.mothership.cabbage.serviceImpl"/>
-    <!--2.扫描工具类-->
-    <context:component-scan base-package="top.mothership.cabbage.util" />
-    <!--2.5.配置事务并注入连接池-->
+    <!--5）扫描工具类-->
+    <context:component-scan base-package="top.mothership.cabbage.util"/>
+    <!--6）配置事务并注入连接池-->
     <bean id="transactionManager"
           class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <!-- 注入数据库连接池 -->
-        <property name="dataSource" ref="dataSource" />
+        <property name="dataSource" ref="dataSource"/>
     </bean>
 
-    <!--3.指定使用AspectJ，否则无法完成AOP相关的日志、事务，会报错-->
-    <aop:aspectj-autoproxy  proxy-target-class="true"/>
+    <!--7）指定使用AspectJ，否则无法完成AOP相关的日志、事务，会报错-->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
 
-    <!--&lt;!&ndash;4.日志记录的切面&ndash;&gt;-->
+    <!--8）视图解析器-->
+    <bean id="viewResolver"
+          class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <!-- jsp路径前缀 -->
+        <property name="prefix" value="/WEB-INF/jsp/"/>
+        <!-- jsp路径后缀 -->
+        <property name="suffix" value=".jsp"/>
+    </bean>
+    <!--&lt;!&ndash;9）日志记录的切面&ndash;&gt;-->
     <!--&lt;!&ndash;发现小系统没必要折腾面向切面的日志……还是手动在类里打日志好了。&ndash;&gt;-->
     <!--<bean id="logAspect" class="com.shengting.store.aop.logAspect"></bean>-->
     <!--<aop:config>-->
@@ -54,4 +59,10 @@
     <!--<aop:around pointcut-ref="logService" method="doAround"/>-->
     <!--</aop:aspect>-->
     <!--</aop:config>-->
+
+    <!--10）使用注解声明的定时任务-->
+    <task:annotation-driven/>
+    <context:annotation-config/>
+    <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+    <context:component-scan base-package="top.mothership.cabbage.task "/>
 </beans>

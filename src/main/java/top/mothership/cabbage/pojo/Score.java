@@ -34,6 +34,28 @@ public class Score {
     private String rank;
 
     private Float pp;
+    //md ppysb
+    @SerializedName("username")
+    private String userName;
+
+    private Integer userId;
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
+    public String getUserName() {
+
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
     public Integer getBeatmapId() {
         return beatmapId;
