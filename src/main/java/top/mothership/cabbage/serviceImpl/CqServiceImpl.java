@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import sun.rmi.server.InactiveGroupException;
 import top.mothership.cabbage.mapper.BaseMapper;
 import top.mothership.cabbage.pojo.*;
 import top.mothership.cabbage.service.CqService;
@@ -201,15 +200,29 @@ public class CqServiceImpl implements CqService {
                 cqUtil.sendMsg(cqMsg);
                 break;
             case "fp":
+
                 cqMsg.setMessage(m.group(2).substring(1));
                 if (!msgUtil.CheckBidParam(cqMsg)) {
                     return;
                 }
-                Score score = apiUtil.getFirstScore(Integer.valueOf(m.group(2).substring(1)));
+                Integer bid = Integer.valueOf(m.group(2).substring(1));
+                Beatmap beatmap = apiUtil.getBeatmap(bid);
+                if (beatmap == null) {
+                    cqMsg.setMessage("提供的bid没有找到谱面信息。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                Score score = apiUtil.getFirstScore(bid);
                 if (score == null) {
                     cqMsg.setMessage("提供的bid没有找到#1成绩。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
                 }
+                score.setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
                 imgUtil.drawFirstRank(score);
+//                cqMsg.setMessage("[CQ:image,file=" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + ".png]");
+                cqMsg.setMessage("敬请期待");
+                cqUtil.sendMsg(cqMsg);
                 break;
 
         }
@@ -557,10 +570,9 @@ public class CqServiceImpl implements CqService {
                 c.add(Calendar.DAY_OF_MONTH, -1);
             }
             userFromAPI.setQueryDate(new java.sql.Date(c.getTime().getTime()));
-            List<Userinfo> list = new ArrayList<>();
-            list.add(userFromAPI);
+
             //写入一行userinfo
-            baseMapper.addUserInfo(list);
+            baseMapper.addUserInfo(userFromAPI);
         }
     }
 
@@ -687,8 +699,8 @@ public class CqServiceImpl implements CqService {
                         c.add(Calendar.DAY_OF_MONTH, -1);
                     }
                     userFromAPI.setQueryDate(new Date(c.getTime().getTime()));
-                    List<Userinfo> list = new ArrayList<>();
-                    baseMapper.addUserInfo(list);
+
+                    baseMapper.addUserInfo(userFromAPI);
 
                     if (usernames.length == 1) {
                         logger.info("新增单个用户，绘制名片");
