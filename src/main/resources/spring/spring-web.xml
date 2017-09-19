@@ -46,6 +46,10 @@
         <!-- jsp路径后缀 -->
         <property name="suffix" value=".jsp"/>
     </bean>
+    <mvc:resources cache-period="31556926" location="/WEB-INF/js/" mapping="/js/**"/>
+
+    <mvc:resources cache-period="31556926" location="/WEB-INF/css/" mapping="/css/**"/>
+
     <!--&lt;!&ndash;9）日志记录的切面&ndash;&gt;-->
     <!--&lt;!&ndash;发现小系统没必要折腾面向切面的日志……还是手动在类里打日志好了。&ndash;&gt;-->
     <!--<bean id="logAspect" class="com.shengting.store.aop.logAspect"></bean>-->

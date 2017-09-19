@@ -296,7 +296,7 @@ public class ImgUtil {
             }
         }
         g2.dispose();
-        drawImage(bg, userFromAPI.getUserName()+"stat");
+        drawImage(bg, userFromAPI.getUserId()+"stat");
     }
 
     public void drawUserBP(Userinfo userFromAPI, LinkedHashMap<Score, Integer> map) {
