@@ -212,16 +212,19 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                Score score = apiUtil.getFirstScore(bid);
+                //一次性取2个
+                List<Score> score = apiUtil.getScore(bid,2);
                 if (score == null) {
                     cqMsg.setMessage("提供的bid没有找到#1成绩。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                score.setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
-                imgUtil.drawFirstRank(score);
-//                cqMsg.setMessage("[CQ:image,file=" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + ".png]");
-                cqMsg.setMessage("敬请期待");
+                userFromAPI  = apiUtil.getUser(null,String.valueOf(score.get(0).getUserId()));
+                //为了日志+和BP的PP计算兼容
+                score.get(0).setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
+                score.get(0).setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
+                imgUtil.drawFirstRank(beatmap,score.get(0),userFromAPI,score.get(0).getScore()-score.get(1).getScore());
+                cqMsg.setMessage("[CQ:image,file=" + score.get(0).getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.get(0).getDate()) + "fp.png]");
                 cqUtil.sendMsg(cqMsg);
                 break;
 

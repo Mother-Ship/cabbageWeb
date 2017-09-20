@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import sun.awt.image.ToolkitImage;
 import top.mothership.cabbage.pojo.Beatmap;
 import top.mothership.cabbage.pojo.OppaiResult;
 import top.mothership.cabbage.pojo.Score;
@@ -28,6 +29,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class ImgUtil {
@@ -296,7 +300,7 @@ public class ImgUtil {
             }
         }
         g2.dispose();
-        drawImage(bg, userFromAPI.getUserId()+"stat");
+        drawImage(bg, userFromAPI.getUserId() + "stat");
     }
 
     public void drawUserBP(Userinfo userFromAPI, LinkedHashMap<Score, Integer> map) {
@@ -386,7 +390,7 @@ public class ImgUtil {
         }
         g.dispose();
         //不，文件名最好还是数字
-        drawImage(result, userFromAPI.getUserId()+"BP");
+        drawImage(result, userFromAPI.getUserId() + "BP");
 
     }
 
@@ -399,14 +403,15 @@ public class ImgUtil {
         Map<String, String> mods = convertMOD(score.getEnabledMods());
         //这个none是为了BP节省代码，在这里移除掉
         mods.remove("None");
-        OppaiResult oppaiResult = calcPP(score, beatmap, acc);
+        //离线计算PP
+        OppaiResult oppaiResult = calcPP(score, beatmap);
         boolean defaultBG = false;
         try {
             bg = webPageUtil.getBG(score.getBeatmapId(), beatmap);
         } catch (NullPointerException e) {
-            logger.error("从血猫抓取谱面背景失败,错误原因："+e.getMessage()+"，使用默认背景");
+            logger.error("从血猫抓取谱面背景失败,错误原因：" + e.getMessage() + "，使用默认背景");
             //随机抽取一个bg
-            String RandomBG = "defaultBG1" + ((int)(Math.random() * 2)+2)+".png";
+            String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
             bg = getCopyImage(images.get(RandomBG));
             defaultBG = true;
         }
@@ -595,41 +600,41 @@ public class ImgUtil {
             }
             //底端PP面板
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            if ((int) (Math.random() * 20) == 1) {
-                g2.drawImage(images.get("zPPTrick.png"), 540, 200, null);
-                g2.setFont(new Font("Ubuntu Bold", Font.BOLD, 14));
-                g2.setPaint(Color.decode("#000000"));
-                g2.drawString(" " + String.valueOf(Math.round(oppaiResult.getPp())), 210 + 540, 76 + 200);
+//            if ((int) (Math.random() * 20) == 1) {
+//                g2.drawImage(images.get("zPPTrick.png"), 540, 200, null);
+//                g2.setFont(new Font("Ubuntu Bold", Font.BOLD, 14));
+//                g2.setPaint(Color.decode("#000000"));
+//                g2.drawString(" " + String.valueOf(Math.round(oppaiResult.getPp())), 210 + 540, 76 + 200);
+//
+//                g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())) + "PP", 349 + 540, 195 + 200);
+//                g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())) + "PP", 349 + 540, 241 + 200);
+//                g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())) + "PP", 349 + 540, 284 + 200);
+//
+//                g2.drawString("Aim PP", 46 + 540, 195 + 200);
+//                g2.drawString("Speed PP", 46 + 540, 241 + 200);
+//                g2.drawString("Acc PP", 46 + 540, 284 + 200);
+//                g2.setPaint(Color.decode("#8e8e8d"));
+//
+//                g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())) + "PP", 142 + 540, 94 + 200);
+//
+//                g2.drawString("Aim Star: " + String.valueOf(oppaiResult.getAimStars()).substring(0, 4), 253 + 540, 195 + 200);
+//                g2.drawString("ACC: " + accS + "%", 253 + 540, 284 + 200);
+//                g2.drawString("Spd Star: " + String.valueOf(oppaiResult.getSpeedStars()).substring(0, 4), 253 + 540, 241 + 200);
+//            } else {
+            g2.drawImage(images.get("zpp.png"), 570, 700, null);
 
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())) + "PP", 349 + 540, 195 + 200);
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())) + "PP", 349 + 540, 241 + 200);
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())) + "PP", 349 + 540, 284 + 200);
-
-                g2.drawString("Aim PP", 46 + 540, 195 + 200);
-                g2.drawString("Speed PP", 46 + 540, 241 + 200);
-                g2.drawString("Acc PP", 46 + 540, 284 + 200);
-                g2.setPaint(Color.decode("#8e8e8d"));
-
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())) + "PP", 142 + 540, 94 + 200);
-
-                g2.drawString("Aim Star: " + String.valueOf(oppaiResult.getAimStars()).substring(0, 4), 253 + 540, 195 + 200);
-                g2.drawString("ACC: " + accS + "%", 253 + 540, 284 + 200);
-                g2.drawString("Spd Star: " + String.valueOf(oppaiResult.getSpeedStars()).substring(0, 4), 253 + 540, 241 + 200);
+            g2.setPaint(Color.decode("#ff66a9"));
+            g2.setFont(new Font("Gayatri", 0, 60));
+            if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
+                g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 616, 753);
             } else {
-                g2.drawImage(images.get("zpp.png"), 570, 700, null);
-
-                g2.setPaint(Color.decode("#ff66a9"));
-                g2.setFont(new Font("Gayatri", 0, 60));
-                if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
-                    g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 616, 753);
-                } else {
-                    g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 601, 753);
-                }
-                g2.setFont(new Font("Gayatri", 0, 48));
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 834, 758);
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())), 932, 758);
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())), 1030, 758);
+                g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 601, 753);
             }
+            g2.setFont(new Font("Gayatri", 0, 48));
+            g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 834, 758);
+            g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())), 932, 758);
+            g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())), 1030, 758);
+//            }
         }
         g2.dispose();
         if (!defaultBG) {
@@ -647,13 +652,202 @@ public class ImgUtil {
         drawImage(result, score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()));
     }
 
-    public void drawFirstRank(Score score){
-        logger.info("开始绘制"+score.getBeatmapName()+"的#1信息");
+    public void drawFirstRank(Beatmap beatmap, Score score, Userinfo userFromAPI, Long xE) {
+        logger.info("开始绘制" + userFromAPI.getUserName() + "在谱面" + score.getBeatmapName() + "的#1信息");
+        BufferedImage bg;
+        Image bg2;
+        //头像
+        BufferedImage ava = webPageUtil.getAvatar(userFromAPI.getUserId());
+
+        OppaiResult oppaiResult = calcPP(score, beatmap);
+        try {
+            bg = webPageUtil.getBG(score.getBeatmapId(), beatmap);
+        } catch (NullPointerException e) {
+            logger.error("从血猫抓取谱面背景失败,错误原因：" + e.getMessage() + "，使用默认背景");
+            //随机抽取一个bg
+            String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
+            bg = getCopyImage(images.get(RandomBG));
+        }
+        //缩略图
+        bg2 = getCopyImage(bg).getScaledInstance(161, 121, Image.SCALE_SMOOTH);
+
+        //拉伸裁剪原bg
+
+        Image bgTmp =bg.getScaledInstance(1580, 888, Image.SCALE_SMOOTH);
+
+        bg =  new BufferedImage(1580, 888, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D bGr = bg.createGraphics();
+        bGr.drawImage(bgTmp, 0, 0, null);
+        bGr.dispose();
+        bg = bg.getSubimage(0, 0, 1580, 286);
+
+
+        Graphics2D g2 = bg.createGraphics();
+        //全局平滑
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        //画好布局
+        g2.drawImage(images.get("fpLayout.png"), 0, 0, null);
+        //Ranked状态
+        g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
+        //歌曲信息
+        String title = null;
+        //source
+        if (beatmap.getSource() != null) {
+            title = unicodeToString(beatmap.getSource());
+        }
+        //artist
+        if (oppaiResult.getArtistUnicode() != null) {
+            title = title.concat("（" + oppaiResult.getArtistUnicode() + "）");
+        } else {
+            title = title.concat("（" + oppaiResult.getArtist() + "）");
+        }
+        //title
+        if (oppaiResult.getTitleUnicode() != null) {
+            title = title.concat(" - " + oppaiResult.getTitleUnicode());
+        } else {
+            title = title.concat(" - " + oppaiResult.getTitle());
+        }
+        title.concat("[" + oppaiResult.getVersion() + "]");
+        //白色字体
+        g2.setPaint(Color.decode("#FFFFFF"));
+
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 32));
+        g2.drawString(title, 54, 31);
+
+        //作者信息
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
+        g2.drawString(oppaiResult.getCreator(), 54, 54);
+        //长度、bpm、物件数
+        g2.setFont(new Font("微软雅黑", Font.BOLD, 23));
+        g2.drawString("长度：" + Integer.valueOf(beatmap.getTotalLength()) / 60 + ":" + Integer.valueOf(beatmap.getTotalLength()) % 60
+                + " BPM：" + beatmap.getBpm() + " 物件数：" + (oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners()), 7, 80);
+
+        //圈数、滑条数、转盘数
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
+        g2.drawString("圈数：" + oppaiResult.getNumCircles() + " 滑条数：" + oppaiResult.getNumSliders() + " 转盘数：" + oppaiResult.getNumSpinners(), 7, 108);
+
+        //四围、难度
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        g2.drawString("CS:" + oppaiResult.getCs() + " AR:" + oppaiResult.getAr()
+                + " OD:" + oppaiResult.getOd() + " HP:" + oppaiResult.getHp() + " Star:" + new DecimalFormat("###.00").format(oppaiResult.getStars()), 7, 122);
+        //小头像
+        g2.drawImage(ava.getScaledInstance(66, 66, Image.SCALE_SMOOTH), 14, 217, null);
+
+
+        //id
+        g2.setFont(new Font("Ubuntu", Font.PLAIN, 32));
+
+        //投影
+        g2.setPaint(Color.decode("#000000"));
+        g2.drawString(userFromAPI.getUserName(), 144, 245);
+        g2.setPaint(Color.decode("#FFFFFF"));
+        //本体
+        g2.drawString(userFromAPI.getUserName(), 143, 244);
+        //分数
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
+
+        //投影
+        g2.setPaint(Color.decode("#000000"));
+        g2.drawString(new DecimalFormat("###,###").format(score.getScore()), 141, 277);
+        g2.setPaint(Color.decode("#FFFFFF"));
+        g2.drawString(new DecimalFormat("###,###").format(score.getScore()), 140, 276);
+        //cb
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
+
+        //投影
+        g2.setPaint(Color.decode("#000000"));
+        g2.drawString("(" + score.getMaxCombo() + "x)", 354, 277);
+        g2.setPaint(Color.decode("#FFFFFF"));
+        g2.drawString("(" + score.getMaxCombo() + "x)", 353, 276);
+        //mod
+        if (score.getEnabledMods() > 0) {
+            List<String> mods = new ArrayList<>(convertMOD(score.getEnabledMods()).keySet());
+            g2.setFont(new Font("Arial", Font.PLAIN, 17));
+            int a = g2.getFontMetrics(new Font("Arial", Font.PLAIN, 17)).stringWidth(mods.toString().replaceAll("[\\[\\]]", ""));
+
+            //投影
+            g2.setPaint(Color.decode("#000000"));
+            g2.drawString(mods.toString().replaceAll("[\\[\\]]", ""), 532 - a, 232);
+            g2.drawString(mods.toString().replaceAll("[\\[\\]]", ""), 534 - a, 234);
+            g2.setPaint(Color.decode("#FFFFFF"));
+            g2.drawString(mods.toString().replaceAll("[\\[\\]]", ""), 533 - a, 233);
+        }
+        //acc
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 17));
+        String accS = new DecimalFormat("###.00").format(100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50()) / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())));
+        int a = g2.getFontMetrics(new Font("Arial", Font.PLAIN, 17)).stringWidth(accS);
+
+        //投影
+        g2.setPaint(Color.decode("#000000"));
+        g2.drawString(accS, 512 - a, 255);
+        g2.drawString(accS, 514 - a, 257);
+        g2.setPaint(Color.decode("#FFFFFF"));
+        g2.drawString(accS, 513 - a, 256);
+
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
+
+        g2.setPaint(Color.decode("#000000"));
+        g2.drawString("%", 513, 255);
+        g2.drawString("%", 515, 257);
+        g2.setPaint(Color.decode("#FFFFFF"));
+        g2.drawString("%", 514, 256);
+        //分差
+        g2.setFont(new Font("Tahoma", Font.PLAIN, 17));
+        a = g2.getFontMetrics(new Font("Arial", Font.PLAIN, 17)).stringWidth("+" + String.valueOf(xE));
+
+        g2.setPaint(Color.decode("#000000"));
+        g2.drawString("+" + String.valueOf(xE), 532 - a, 278);
+        g2.drawString("+" + String.valueOf(xE), 534 - a, 280);
+        g2.setPaint(Color.decode("#FFFFFF"));
+        g2.drawString("+" + String.valueOf(xE), 533 - a, 279);
+
+        //Rank标志
+        g2.drawImage(images.get("fp" + score.getRank() + ".png"), 0, 0, null);
+        //头像上的灰板
+        g2.drawImage(images.get("fpMark.png"), 0, 0, null);
+        //谱面的Rank状态
+        g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
+        //右侧title
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 31));
+        g2.setPaint(Color.decode("#000000"));
+        if (oppaiResult.getTitleUnicode() != null) {
+            g2.drawString(oppaiResult.getTitleUnicode(), 982, 196);
+        } else {
+            g2.drawString(oppaiResult.getTitle(), 982, 196);
+        }
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
+        //artist//creator
+        if (oppaiResult.getArtistUnicode() != null) {
+            g2.drawString(oppaiResult.getArtistUnicode() + " // " + oppaiResult.getCreator(), 982, 223);
+        } else {
+            g2.drawString(oppaiResult.getArtist() + " // " + oppaiResult.getCreator(), 982, 223);
+        }
+        //难度名
+        g2.setFont(new Font("微软雅黑", Font.BOLD, 22));
+        g2.drawString(oppaiResult.getVersion(), 982, 245);
+        //小星星
+        String[] b = String.valueOf(oppaiResult.getStars()).split("\\.");
+        //取出难度的整数部分，画上对应的star
+        for (int i = 0; i < Integer.valueOf(b[0]); i++) {
+            g2.drawImage(images.get("fpStar.png"), 1162 + i, 250, null);
+        }
+
+        //取出小数部分，缩放star并绘制在对应的地方
+        float c = Integer.valueOf(b[1].substring(0, 1)) / 10F;
+        g2.drawImage(images.get("fpStar.png").getScaledInstance((int)(25*c),(int)(25*c),Image.SCALE_SMOOTH),(int)(1162+(Integer.valueOf(b[0])-1)*40+(1-c)*12.5),250,null);
+
+        //缩略图
+        g2.drawImage(bg2, 762, 162, null);
+        g2.dispose();
+        drawImage(bg,score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) +"fp");
 
     }
 
-    private OppaiResult calcPP(Score score, Beatmap beatmap, float acc) {
+    private OppaiResult calcPP(Score score, Beatmap beatmap) {
         logger.info("开始计算PP");
+        String accS = new DecimalFormat("###.00").format(100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50()) / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())));
+        float acc = Float.valueOf(accS);
         String cmd = "\"" + rb.getString("path") + "\\data\\image\\resource\\oppai.exe\" "
                 + "\"" + rb.getString("path") + "\\data\\image\\resource\\osu\\";
         String osuFile = webPageUtil.getOsuFile(score.getBeatmapId(), beatmap);
@@ -681,21 +875,21 @@ public class ImgUtil {
             cmd = cmd + acc + "% " + score.getCountMiss() + "m " + score.getMaxCombo() + "x";
             Process process = Runtime.getRuntime().exec(cmd);
             process.waitFor();
-            bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()), 1024);
+            bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"), 1024);
             String result = bufferedReader.readLine();
             OppaiResult oppaiResult = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, OppaiResult.class);
             //一个小补丁
-            if(Math.round(oppaiResult.getAimPp())==Integer.MAX_VALUE){
+            if (Math.round(oppaiResult.getAimPp()) == Integer.MAX_VALUE) {
                 oppaiResult.setAimPp(0);
-                oppaiResult.setPp(oppaiResult.getAimPp()+oppaiResult.getAccPp()+oppaiResult.getSpeedPp());
+                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
             }
-            if(Math.round(oppaiResult.getAccPp())==Integer.MAX_VALUE){
+            if (Math.round(oppaiResult.getAccPp()) == Integer.MAX_VALUE) {
                 oppaiResult.setAccPp(0);
-                oppaiResult.setPp(oppaiResult.getAimPp()+oppaiResult.getAccPp()+oppaiResult.getSpeedPp());
+                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
             }
-            if(Math.round(oppaiResult.getSpeedPp())==Integer.MAX_VALUE){
+            if (Math.round(oppaiResult.getSpeedPp()) == Integer.MAX_VALUE) {
                 oppaiResult.setSpeedPp(0);
-                oppaiResult.setPp(oppaiResult.getAimPp()+oppaiResult.getAccPp()+oppaiResult.getSpeedPp());
+                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
             }
             return oppaiResult;
 
@@ -748,11 +942,23 @@ public class ImgUtil {
     }
 
 
-    private Map<String, String> convertMOD(Integer bp) {
+    private String unicodeToString(String str) {
+
+        Pattern pattern = Pattern.compile("(\\\\u(\\p{XDigit}{4}))");
+        Matcher matcher = pattern.matcher(str);
+        char ch;
+        while (matcher.find()) {
+            ch = (char) Integer.parseInt(matcher.group(2), 16);
+            str = str.replace(matcher.group(1), ch + "");
+        }
+        return str;
+    }
+
+    private LinkedHashMap<String, String> convertMOD(Integer bp) {
         String modBin = Integer.toBinaryString(bp);
         //反转mod
         modBin = new StringBuffer(modBin).reverse().toString();
-        Map<String, String> mods = new HashMap<>();
+        LinkedHashMap<String, String> mods = new LinkedHashMap<>();
         char[] c = modBin.toCharArray();
         if (bp != 0) {
             for (int i = c.length - 1; i >= 0; i--) {

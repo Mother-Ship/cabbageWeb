@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 public class Beatmap {
     private String beatmapsetId;
 
+
     private String beatmapId;
 
     private Integer approved;
@@ -37,6 +38,7 @@ public class Beatmap {
 
     private String creator;
 
+
     private String bpm;
 
     private String source;
@@ -56,6 +58,13 @@ public class Beatmap {
     private String maxCombo;
 
     private String difficultyRating;
+    public String getBeatmapId() {
+        return beatmapId;
+    }
+
+    public void setBeatmapId(String beatmapId) {
+        this.beatmapId = beatmapId;
+    }
 
 
     public String getCreator() {
@@ -96,5 +105,29 @@ public class Beatmap {
 
     public void setArtist(String artist) {
         this.artist = artist;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getTotalLength() {
+        return totalLength;
+    }
+
+    public void setTotalLength(String totalLength) {
+        this.totalLength = totalLength;
+    }
+
+    public String getBpm() {
+        return bpm;
+    }
+
+    public void setBpm(String bpm) {
+        this.bpm = bpm;
     }
 }
