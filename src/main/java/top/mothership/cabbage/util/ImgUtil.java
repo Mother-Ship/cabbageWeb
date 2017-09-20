@@ -73,7 +73,7 @@ public class ImgUtil {
         BufferedImage scoreRankBG = getCopyImage(images.get(rb.getString("scoreRankBG")));
         BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
         try {
-            bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId())));
+            bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId())+".png"));
         } catch (NullPointerException e) {
             try {
                 bg = getCopyImage(images.get(role + ".png"));
