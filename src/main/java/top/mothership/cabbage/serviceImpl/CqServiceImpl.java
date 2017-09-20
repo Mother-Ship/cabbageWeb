@@ -219,12 +219,18 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
+                if(score.get(0).getUserId()!=baseMapper.getUser(String.valueOf(cqMsg.getUserId()),null).getUserId()){
+                    cqMsg.setMessage("不是你打的#1不给看哦。\n如果你确定是你打的，看看是不是没登记osu!id？(使用!setid命令)");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
                 userFromAPI  = apiUtil.getUser(null,String.valueOf(score.get(0).getUserId()));
                 //为了日志+和BP的PP计算兼容
                 score.get(0).setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
                 score.get(0).setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
                 imgUtil.drawFirstRank(beatmap,score.get(0),userFromAPI,score.get(0).getScore()-score.get(1).getScore());
                 cqMsg.setMessage("[CQ:image,file=" + score.get(0).getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.get(0).getDate()) + "fp.png]");
+                logger.info("开始调用函数发送"+ score.get(0).getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.get(0).getDate()) + "fp.png");
                 cqUtil.sendMsg(cqMsg);
                 break;
 
@@ -555,7 +561,7 @@ public class CqServiceImpl implements CqService {
         //调用绘图类绘图
         imgUtil.drawUserInfo(userFromAPI, userInDB, role, day, near, scoreRank);
         //构造消息并发送
-        cqMsg.setMessage("[CQ:image,file=" + userFromAPI.getUserName() + "stat.png]");
+        cqMsg.setMessage("[CQ:image,file=" + userFromAPI.getUserId() + "stat.png]");
         cqUtil.sendMsg(cqMsg);
 
     }
@@ -618,7 +624,7 @@ public class CqServiceImpl implements CqService {
                 aList.setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
             }
             imgUtil.drawUserBP(userinfo, result);
-            cqMsg.setMessage("[CQ:image,file=" + userinfo.getUserName() + "BP.png]");
+            cqMsg.setMessage("[CQ:image,file=" + userinfo.getUserId() + "BP.png]");
             cqUtil.sendMsg(cqMsg);
         } else {
             if (num > list.size()) {
