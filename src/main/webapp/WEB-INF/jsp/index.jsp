@@ -89,7 +89,10 @@
 <br />
 <br />
 <form id="uploadForm" method="post" enctype="multipart/form-data">
-    <input type="file" id="file" name="myfile" /><!-- input标签的name属性用于post传输，作为表单的键值，后台通过键值获取序列化后的表单数据。name属性值和springmvc中的“@RequestParam(value = "myfile", required = true)”的value值相同，通过该值反序列化成springmvc的MultipartFile对象 -->
+    <input type="file" id="file" name="myfile" />
+    <!-- input标签的name属性用于post传输，作为表单的键值，后台通过键值获取序列化后的表单数据。
+    name属性值和springmvc中的“@RequestParam(value = "myfile", required = true)”的value值相同，
+    通过该值反序列化成springmvc的MultipartFile对象 -->
     <input type="button" onclick="UpladFile()" value="上传" />
     <input type="button" onclick="cancleUploadFile()" value="取消" />
 </form>

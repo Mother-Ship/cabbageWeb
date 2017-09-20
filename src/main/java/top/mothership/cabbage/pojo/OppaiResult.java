@@ -1,10 +1,12 @@
 package top.mothership.cabbage.pojo;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * Created by QHS on 2017/9/11.
  */
 public class OppaiResult {
-    private String oppai_version;
+    private String oppaiVersion;
 
     private int code;
 
@@ -12,7 +14,11 @@ public class OppaiResult {
 
     private String artist;
 
+    private String artistUnicode;
+
     private String title;
+
+    private String titleUnicode;
 
     private String creator;
 
@@ -62,12 +68,12 @@ public class OppaiResult {
 
     private double pp;
 
-    public String getOppai_version() {
-        return oppai_version;
+    public String getOppaiVersion() {
+        return oppaiVersion;
     }
 
-    public void setOppai_version(String oppai_version) {
-        this.oppai_version = oppai_version;
+    public void setOppaiVersion(String oppaiVersion) {
+        this.oppaiVersion = oppaiVersion;
     }
 
     public int getCode() {
@@ -102,6 +108,34 @@ public class OppaiResult {
         this.title = title;
     }
 
+    public String getArtistUnicode() {
+//        try {
+//            return new String(artistUnicode.getBytes("GBK"),"UTF-8");
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+        return artistUnicode;
+    }
+
+    public void setArtistUnicode(String artistUnicode) {
+        this.artistUnicode = artistUnicode;
+    }
+
+    public String getTitleUnicode() {
+//
+//        try {
+//            return new String(titleUnicode.getBytes("GBK"),"UTF-8");
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+        return titleUnicode;
+    }
+
+    public void setTitleUnicode(String titleUnicode) {
+        this.titleUnicode = titleUnicode;
+    }
     public String getCreator() {
         return creator;
     }
