@@ -18,6 +18,7 @@ public class Beatmap {
 
     private String fileMd5;
 
+
     private String diffSize;
 
     private String diffOverall;
@@ -56,7 +57,7 @@ public class Beatmap {
     private String passCount;
 
     private String maxCombo;
-
+    @SerializedName("difficultyrating")
     private String difficultyRating;
     public String getBeatmapId() {
         return beatmapId;
@@ -103,6 +104,118 @@ public class Beatmap {
         return artist;
     }
 
+    public String getBeatmapsetId() {
+        return beatmapsetId;
+    }
+
+    public void setBeatmapsetId(String beatmapsetId) {
+        this.beatmapsetId = beatmapsetId;
+    }
+
+    public String getHitLength() {
+        return hitLength;
+    }
+
+    public void setHitLength(String hitLength) {
+        this.hitLength = hitLength;
+    }
+
+    public String getFileMd5() {
+        return fileMd5;
+    }
+
+    public void setFileMd5(String fileMd5) {
+        this.fileMd5 = fileMd5;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
+    public String getApprovedDate() {
+        return approvedDate;
+    }
+
+    public void setApprovedDate(String approvedDate) {
+        this.approvedDate = approvedDate;
+    }
+
+    public String getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(String lastUpdate) {
+        this.lastUpdate = lastUpdate;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public String getGenreId() {
+        return genreId;
+    }
+
+    public void setGenreId(String genreId) {
+        this.genreId = genreId;
+    }
+
+    public String getLanguageId() {
+        return languageId;
+    }
+
+    public void setLanguageId(String languageId) {
+        this.languageId = languageId;
+    }
+
+    public String getFavouriteCount() {
+        return favouriteCount;
+    }
+
+    public void setFavouriteCount(String favouriteCount) {
+        this.favouriteCount = favouriteCount;
+    }
+
+    public String getPlayCount() {
+        return playCount;
+    }
+
+    public void setPlayCount(String playCount) {
+        this.playCount = playCount;
+    }
+
+    public String getPassCount() {
+        return passCount;
+    }
+
+    public void setPassCount(String passCount) {
+        this.passCount = passCount;
+    }
+
+    public String getMaxCombo() {
+        return maxCombo;
+    }
+
+    public void setMaxCombo(String maxCombo) {
+        this.maxCombo = maxCombo;
+    }
+
+    public String getDifficultyRating() {
+        return difficultyRating;
+    }
+
+    public void setDifficultyRating(String difficultyRating) {
+        this.difficultyRating = difficultyRating;
+    }
+
     public void setArtist(String artist) {
         this.artist = artist;
     }
@@ -129,5 +242,36 @@ public class Beatmap {
 
     public void setBpm(String bpm) {
         this.bpm = bpm;
+    }
+    public String getDiffSize() {
+        return diffSize;
+    }
+
+    public void setDiffSize(String diffSize) {
+        this.diffSize = diffSize;
+    }
+
+    public String getDiffOverall() {
+        return diffOverall;
+    }
+
+    public void setDiffOverall(String diffOverall) {
+        this.diffOverall = diffOverall;
+    }
+
+    public String getDiffApproach() {
+        return diffApproach;
+    }
+
+    public void setDiffApproach(String diffApproach) {
+        this.diffApproach = diffApproach;
+    }
+
+    public String getDiffDrain() {
+        return diffDrain;
+    }
+
+    public void setDiffDrain(String diffDrain) {
+        this.diffDrain = diffDrain;
     }
 }

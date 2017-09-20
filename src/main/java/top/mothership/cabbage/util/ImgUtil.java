@@ -658,8 +658,8 @@ public class ImgUtil {
         Image bg2;
         //头像
         BufferedImage ava = webPageUtil.getAvatar(userFromAPI.getUserId());
-
         OppaiResult oppaiResult = calcPP(score, beatmap);
+
         try {
             bg = webPageUtil.getBG(score.getBeatmapId(), beatmap);
         } catch (NullPointerException e) {
@@ -668,7 +668,9 @@ public class ImgUtil {
             String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
             bg = getCopyImage(images.get(RandomBG));
         }
+        logger.info("开始绘图");
         //缩略图
+
         bg2 = getCopyImage(bg).getScaledInstance(161, 121, Image.SCALE_SMOOTH);
 
         //拉伸裁剪原bg
@@ -690,25 +692,33 @@ public class ImgUtil {
         g2.drawImage(images.get("fpLayout.png"), 0, 0, null);
         //Ranked状态
         g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
-        //歌曲信息
-        String title = null;
-        //source
-        if (beatmap.getSource() != null) {
+        //歌曲信息（这里不能是null）
+        String title = "";
+        //source artist
+        if (!beatmap.getSource() .equals("")) {
             title = unicodeToString(beatmap.getSource());
+            if (oppaiResult.getArtistUnicode() != null) {
+                title = title.concat(" (" + oppaiResult.getArtistUnicode() + ") ");
+            } else {
+                title = title.concat(" (" + oppaiResult.getArtist() + ") ");
+            }
+        }else{
+            if (oppaiResult.getArtistUnicode() != null) {
+                title = title.concat(oppaiResult.getArtistUnicode());
+            } else {
+                title = title.concat(oppaiResult.getArtist());
+            }
         }
         //artist
-        if (oppaiResult.getArtistUnicode() != null) {
-            title = title.concat("（" + oppaiResult.getArtistUnicode() + "）");
-        } else {
-            title = title.concat("（" + oppaiResult.getArtist() + "）");
-        }
+
         //title
         if (oppaiResult.getTitleUnicode() != null) {
             title = title.concat(" - " + oppaiResult.getTitleUnicode());
         } else {
             title = title.concat(" - " + oppaiResult.getTitle());
         }
-        title.concat("[" + oppaiResult.getVersion() + "]");
+        title = title.concat(" [" + oppaiResult.getVersion() + "]");
+
         //白色字体
         g2.setPaint(Color.decode("#FFFFFF"));
 
@@ -717,20 +727,27 @@ public class ImgUtil {
 
         //作者信息
         g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
-        g2.drawString(oppaiResult.getCreator(), 54, 54);
+        g2.drawString("作者："+oppaiResult.getCreator(), 54, 54);
         //长度、bpm、物件数
         g2.setFont(new Font("微软雅黑", Font.BOLD, 23));
-        g2.drawString("长度：" + Integer.valueOf(beatmap.getTotalLength()) / 60 + ":" + Integer.valueOf(beatmap.getTotalLength()) % 60
-                + " BPM：" + beatmap.getBpm() + " 物件数：" + (oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners()), 7, 80);
+        String length = "";
+        //加入自动补0
+        g2.drawString("长度：" +  String.format("%02d",Integer.valueOf(beatmap.getTotalLength()) / 60) + ":"
+                + String.format("%02d",Integer.valueOf(beatmap.getTotalLength()) % 60)
+                + "  BPM：" + Math.round(Float.valueOf(beatmap.getBpm()))
+                + "  物件数：" + new DecimalFormat("###,###").format((oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners())), 7, 80);
 
         //圈数、滑条数、转盘数
         g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
-        g2.drawString("圈数：" + oppaiResult.getNumCircles() + " 滑条数：" + oppaiResult.getNumSliders() + " 转盘数：" + oppaiResult.getNumSpinners(), 7, 108);
+        g2.drawString("圈数：" + new DecimalFormat("###,###").format(oppaiResult.getNumCircles())
+                + "  滑条数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSliders())
+                + "  转盘数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSpinners()), 7, 108);
 
         //四围、难度
         g2.setFont(new Font("微软雅黑", Font.PLAIN, 13));
-        g2.drawString("CS:" + oppaiResult.getCs() + " AR:" + oppaiResult.getAr()
-                + " OD:" + oppaiResult.getOd() + " HP:" + oppaiResult.getHp() + " Star:" + new DecimalFormat("###.00").format(oppaiResult.getStars()), 7, 122);
+        g2.drawString("CS:" +beatmap.getDiffSize() + " AR:" + beatmap.getDiffApproach()
+                + " OD:" + beatmap.getDiffOverall() + " HP:" + beatmap.getDiffDrain()
+                + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(beatmap.getDifficultyRating())), 7, 125);
         //小头像
         g2.drawImage(ava.getScaledInstance(66, 66, Image.SCALE_SMOOTH), 14, 217, null);
 
@@ -744,25 +761,21 @@ public class ImgUtil {
         g2.setPaint(Color.decode("#FFFFFF"));
         //本体
         g2.drawString(userFromAPI.getUserName(), 143, 244);
-        //分数
+        //分数+cb
         g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
 
         //投影
         g2.setPaint(Color.decode("#000000"));
-        g2.drawString(new DecimalFormat("###,###").format(score.getScore()), 141, 277);
+        g2.drawString("得分："+new DecimalFormat("###,###").format(score.getScore())+" (" + score.getMaxCombo() + "x)", 141, 277);
         g2.setPaint(Color.decode("#FFFFFF"));
-        g2.drawString(new DecimalFormat("###,###").format(score.getScore()), 140, 276);
-        //cb
-        g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
+        g2.drawString("得分："+new DecimalFormat("###,###").format(score.getScore())+" (" + score.getMaxCombo() + "x)", 140, 276);
 
-        //投影
-        g2.setPaint(Color.decode("#000000"));
-        g2.drawString("(" + score.getMaxCombo() + "x)", 354, 277);
-        g2.setPaint(Color.decode("#FFFFFF"));
-        g2.drawString("(" + score.getMaxCombo() + "x)", 353, 276);
         //mod
         if (score.getEnabledMods() > 0) {
-            List<String> mods = new ArrayList<>(convertMOD(score.getEnabledMods()).keySet());
+            List<String> mods = new ArrayList<>();
+            for (Map.Entry<String, String> entry : convertMOD(score.getEnabledMods()).entrySet()) {
+                mods.add(entry.getKey());
+            }
             g2.setFont(new Font("Arial", Font.PLAIN, 17));
             int a = g2.getFontMetrics(new Font("Arial", Font.PLAIN, 17)).stringWidth(mods.toString().replaceAll("[\\[\\]]", ""));
 
@@ -774,33 +787,27 @@ public class ImgUtil {
             g2.drawString(mods.toString().replaceAll("[\\[\\]]", ""), 533 - a, 233);
         }
         //acc
-        g2.setFont(new Font("微软雅黑", Font.PLAIN, 17));
+        g2.setFont(new Font("Ubuntu", Font.PLAIN, 17));
         String accS = new DecimalFormat("###.00").format(100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50()) / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())));
-        int a = g2.getFontMetrics(new Font("Arial", Font.PLAIN, 17)).stringWidth(accS);
+        int a = g2.getFontMetrics(new Font("Ubuntu", Font.PLAIN, 17)).stringWidth(accS);
 
         //投影
         g2.setPaint(Color.decode("#000000"));
-        g2.drawString(accS, 512 - a, 255);
-        g2.drawString(accS, 514 - a, 257);
+        g2.drawString(accS+"%", 517 - a, 255);
+        g2.drawString(accS+"%", 519 - a, 257);
         g2.setPaint(Color.decode("#FFFFFF"));
-        g2.drawString(accS, 513 - a, 256);
+        g2.drawString(accS+"%", 518 - a, 256);
 
-        g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
 
-        g2.setPaint(Color.decode("#000000"));
-        g2.drawString("%", 513, 255);
-        g2.drawString("%", 515, 257);
-        g2.setPaint(Color.decode("#FFFFFF"));
-        g2.drawString("%", 514, 256);
         //分差
-        g2.setFont(new Font("Tahoma", Font.PLAIN, 17));
-        a = g2.getFontMetrics(new Font("Arial", Font.PLAIN, 17)).stringWidth("+" + String.valueOf(xE));
+        g2.setFont(new Font("Ubuntu", Font.PLAIN, 17));
+        a = g2.getFontMetrics(new Font("Ubuntu", Font.PLAIN, 17)).stringWidth("+ " + String.valueOf(xE));
 
         g2.setPaint(Color.decode("#000000"));
-        g2.drawString("+" + String.valueOf(xE), 532 - a, 278);
-        g2.drawString("+" + String.valueOf(xE), 534 - a, 280);
+        g2.drawString("+" + new DecimalFormat("###,###").format(xE), 532 - a, 278);
+        g2.drawString("+" + new DecimalFormat("###,###").format(xE), 534 - a, 280);
         g2.setPaint(Color.decode("#FFFFFF"));
-        g2.drawString("+" + String.valueOf(xE), 533 - a, 279);
+        g2.drawString("+" + new DecimalFormat("###,###").format(xE), 533 - a, 279);
 
         //Rank标志
         g2.drawImage(images.get("fp" + score.getRank() + ".png"), 0, 0, null);
@@ -827,15 +834,16 @@ public class ImgUtil {
         g2.setFont(new Font("微软雅黑", Font.BOLD, 22));
         g2.drawString(oppaiResult.getVersion(), 982, 245);
         //小星星
-        String[] b = String.valueOf(oppaiResult.getStars()).split("\\.");
+        String[] b = String.valueOf(beatmap.getDifficultyRating()).split("\\.");
         //取出难度的整数部分，画上对应的star
         for (int i = 0; i < Integer.valueOf(b[0]); i++) {
-            g2.drawImage(images.get("fpStar.png"), 1162 + i, 250, null);
+            g2.drawImage(images.get("fpStar.png"), 984 + 44*i, 250, null);
         }
 
         //取出小数部分，缩放star并绘制在对应的地方
         float c = Integer.valueOf(b[1].substring(0, 1)) / 10F;
-        g2.drawImage(images.get("fpStar.png").getScaledInstance((int)(25*c),(int)(25*c),Image.SCALE_SMOOTH),(int)(1162+(Integer.valueOf(b[0])-1)*40+(1-c)*12.5),250,null);
+        g2.drawImage(images.get("fpStar.png").getScaledInstance((int)(25*c),(int)(25*c),Image.SCALE_SMOOTH),
+                (int)(984+(Integer.valueOf(b[0]))*44-(1-c)*12.5),(int)(250+(1-c)*12.5),null);
 
         //缩略图
         g2.drawImage(bg2, 762, 162, null);

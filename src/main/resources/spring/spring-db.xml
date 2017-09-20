@@ -19,8 +19,8 @@
         <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
         <property name="url" value="${jdbcURL}"/>
         <property name="username" value="${jdbcUser}"/>
-        <property name="password" value="${jdbcDevPwd}"/>
-
+        <!--<property name="password" value="${jdbcDevPwd}"/>-->
+        <property name="password" value="${jdbcPwd}"/>
         <!-- 配置初始化大小、最小、最大 -->
         <property name="initialSize" value="1" />
         <property name="minIdle" value="1" />
