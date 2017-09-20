@@ -214,7 +214,7 @@ public class CqServiceImpl implements CqService {
                 }
                 //一次性取2个
                 List<Score> score = apiUtil.getScore(bid,2);
-                if (score == null) {
+                if (score.size()==0) {
                     cqMsg.setMessage("提供的bid没有找到#1成绩。");
                     cqUtil.sendMsg(cqMsg);
                     return;
@@ -224,14 +224,7 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI  = apiUtil.getUser(null,String.valueOf(score.get(0).getUserId()));
-                //为了日志+和BP的PP计算兼容
-                score.get(0).setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
-                score.get(0).setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
-                imgUtil.drawFirstRank(beatmap,score.get(0),userFromAPI,score.get(0).getScore()-score.get(1).getScore());
-                cqMsg.setMessage("[CQ:image,file=" + score.get(0).getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.get(0).getDate()) + "fp.png]");
-                logger.info("开始调用函数发送"+ score.get(0).getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.get(0).getDate()) + "fp.png");
-                cqUtil.sendMsg(cqMsg);
+                getFristRank(beatmap,score);
                 break;
 
         }
@@ -241,10 +234,14 @@ public class CqServiceImpl implements CqService {
     public void praseAdminCmd(CqMsg cqMsg) {
         this.cqMsg = cqMsg;
         if (!admin.contains(String.valueOf(cqMsg.getUserId()))) {
-            //如果没有权限
-            cqMsg.setMessage("[CQ:face,id=14]？");
-            cqUtil.sendMsg(cqMsg);
-            return;
+            //增加了用户权限模块
+            User user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()),null);
+            if(user!=null&&!"sup".equals(user.getRole())) {
+                //如果没有权限
+                cqMsg.setMessage("[CQ:face,id=14]？");
+                cqUtil.sendMsg(cqMsg);
+                return;
+            }
         }
         String msg = cqMsg.getMessage();
         Matcher m = Pattern.compile(adminCmdRegex).matcher(msg);
@@ -404,11 +401,33 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                user.setQQ(null);
+                user.setQQ("0");
+
                 baseMapper.updateUser(user);
                 cqMsg.setMessage("QQ"+QQ+"的绑定信息已经清除");
                 cqUtil.sendMsg(cqMsg);
                 break;
+            case "fp":
+                cqMsg.setMessage(m.group(2).substring(1));
+                if (!msgUtil.CheckBidParam(cqMsg)) {
+                    return;
+                }
+                Integer bid = Integer.valueOf(m.group(2).substring(1));
+                Beatmap beatmap = apiUtil.getBeatmap(bid);
+                if (beatmap == null) {
+                    cqMsg.setMessage("提供的bid没有找到谱面信息。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                //一次性取2个
+                List<Score> score = apiUtil.getScore(bid,2);
+                if (score.size()==0) {
+                    cqMsg.setMessage("提供的bid没有找到#1成绩。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                getFristRank(beatmap,score);
+
         }
     }
 
@@ -666,7 +685,7 @@ public class CqServiceImpl implements CqService {
         if (userFromDB == null) {
             //只有这个id对应的QQ是null
             userFromDB = baseMapper.getUser(null, userId);
-            if (userFromDB.getQQ() == null) {
+            if (userFromDB.getQQ().equals("0")) {
                 //由于reg方法中已经进行过登记了,所以这用的应该是update操作
                 User user = new User();
                 user.setUserId(userId);
@@ -852,6 +871,17 @@ public class CqServiceImpl implements CqService {
             resp = resp.concat("\n没有检测" + role + "用户组中PP溢出的玩家。");
         }
         cqMsg.setMessage(resp);
+        cqUtil.sendMsg(cqMsg);
+    }
+    private void getFristRank(Beatmap beatmap,List<Score> score){
+
+        Userinfo userFromAPI  = apiUtil.getUser(null,String.valueOf(score.get(0).getUserId()));
+        //为了日志+和BP的PP计算兼容
+        score.get(0).setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
+        score.get(0).setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
+        imgUtil.drawFirstRank(beatmap,score.get(0),userFromAPI,score.get(0).getScore()-score.get(1).getScore());
+        cqMsg.setMessage("[CQ:image,file=" + score.get(0).getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.get(0).getDate()) + "fp.png]");
+        logger.info("开始调用函数发送"+ score.get(0).getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.get(0).getDate()) + "fp.png");
         cqUtil.sendMsg(cqMsg);
     }
 }
