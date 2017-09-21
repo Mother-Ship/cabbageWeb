@@ -37,11 +37,11 @@ public class CqServiceImpl implements CqService {
     private static List<Long> mp4Admin = Arrays.asList(89217167L, 295539897L, 290514894L, 2307282906L,
             2643555740L, 2055805091L, 954176984L, 879804833L, 526942417L);
     private static List<CqMsg> inviteRequests = new ArrayList<>();
-    private final ApiUtil apiUtil;
-    private final CqUtil cqUtil;
-    private final ImgUtil imgUtil;
-    private final MsgUtil msgUtil;
-    private final WebPageUtil webPageUtil;
+    private ApiUtil apiUtil;
+    private CqUtil cqUtil;
+    private ImgUtil imgUtil;
+    private MsgUtil msgUtil;
+    private WebPageUtil webPageUtil;
     private BaseMapper baseMapper;
     private Logger logger = LogManager.getLogger(this.getClass());
     private static List<String> admin = Arrays.asList(rb.getString("admin").split(","));
