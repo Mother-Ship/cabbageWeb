@@ -45,7 +45,7 @@ public class CqServiceImpl implements CqService {
     private BaseMapper baseMapper;
     private Logger logger = LogManager.getLogger(this.getClass());
     private static List<String> admin = Arrays.asList(rb.getString("admin").split(","));
-
+    private java.util.Date s = Calendar.getInstance().getTime();
     @Autowired
     public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, BaseMapper baseMapper) {
         this.apiUtil = apiUtil;
@@ -228,20 +228,19 @@ public class CqServiceImpl implements CqService {
                 break;
 
         }
+        logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
     }
 
     @Override
     public void praseAdminCmd(CqMsg cqMsg) {
         this.cqMsg = cqMsg;
         if (!admin.contains(String.valueOf(cqMsg.getUserId()))) {
-            //增加了用户权限模块
-            User user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()),null);
-            if(user!=null&&!"sup".equals(user.getRole())) {
+
                 //如果没有权限
                 cqMsg.setMessage("[CQ:face,id=14]？");
                 cqUtil.sendMsg(cqMsg);
                 return;
-            }
+
         }
         String msg = cqMsg.getMessage();
         Matcher m = Pattern.compile(adminCmdRegex).matcher(msg);
@@ -429,6 +428,7 @@ public class CqServiceImpl implements CqService {
                 getFristRank(beatmap,score);
 
         }
+        logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
     }
 
     @Override
@@ -494,6 +494,7 @@ public class CqServiceImpl implements CqService {
             }
             cqUtil.sendMsg(cqMsg);
         }
+        logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
     }
 
     @Override
@@ -521,12 +522,13 @@ public class CqServiceImpl implements CqService {
         cqMsg.setMessageType("group");
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
-
+        logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
     }
 
     @Override
     public void stashInviteRequest(CqMsg cqMsg) {
         inviteRequests.add(cqMsg);
+        logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
     }
 
     private void statUserInfo(Userinfo userFromAPI, int day) {

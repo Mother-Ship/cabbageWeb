@@ -42,7 +42,7 @@ public class WebPageUtil {
 
             if (ava != null) {
                 //进行缩放
-                logger.info("获取成功，开始缩放");
+
                 if (ava.getHeight() > 128 || ava.getWidth() > 128) {
                     //获取原图比例，将较大的值除以128，然后把较小的值去除以这个f
                     int resizedHeight;
@@ -65,7 +65,6 @@ public class WebPageUtil {
                     //如果不需要缩小，直接把引用转过来
                     resizedAva = ava;
                 }
-                logger.info("缩放成功");
                 return resizedAva;
             } else {
                 return null;
@@ -90,14 +89,14 @@ public class WebPageUtil {
         if (bgFile.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
             //如果osu文件大小大于0，并且状态是ranked
             try {
-                logger.info("检测到谱面"+bid+"的背景的本地缓存，开始读取");
+
                 return ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\bg\\" + bid + ".png"));
                 //这个异常几乎肯定是不会出现的……
             } catch (IOException e) {
-                logger.info("检测到谱面"+bid+"的背景的本地缓存，但是读取失败……这不可能……"+e.getMessage());
+
             }
         }
-        logger.info("检测到谱面"+bid+"的背景没有本地缓存，正在下载");
+
         while (retry < 5) {
             try {
 
@@ -295,7 +294,6 @@ public class WebPageUtil {
 
         if (osu.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
             //如果osu文件大小大于0，并且状态是ranked
-            logger.info("检测到谱面"+bid+"是Ranked/Approved谱面，并且.osu文件存在本地缓存，开始读取");
             return bid + ".osu";
         }
         while (retry < 5) {
@@ -314,7 +312,6 @@ public class WebPageUtil {
                     continue;
                 }
                 //读取返回结果
-                logger.info("检测到谱面"+bid+"的.osu文件没有在本地缓存，开始下载");
                 fs.write(readInputStream(httpConnection.getInputStream()));
                 //手动关闭流
                 httpConnection.disconnect();
@@ -331,7 +328,6 @@ public class WebPageUtil {
         }
         return bid + ".osu";
     }
-
 
     private byte[] readInputStream(InputStream inputStream) throws IOException {
         byte[] buffer = new byte[1024];

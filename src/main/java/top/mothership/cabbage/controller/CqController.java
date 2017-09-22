@@ -24,7 +24,7 @@ public class CqController {
     private static String mainRegex = "[!！]([^ \\u4e00-\\u9fa5]+)([\\u892a\\u88d9\\u9000\\u7fa4\\u767d\\u83dcA-Za-z0-9\\[\\] :#-_]*+)";
     private static String imgRegex = ".*\\[CQ:image,file=(.+)\\].*";
     private static String singleImgRegex = "\\[CQ:image,file=(.+)\\]";
-    private Date start;
+
     private Matcher m;
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public String cqMsgPrase(@RequestBody CqMsg cqMsg){
@@ -34,7 +34,7 @@ public class CqController {
         msg = msg.replaceAll("&#93;", "]");
         cqMsg.setMessage(msg);
         //待整理业务逻辑
-        start = Calendar.getInstance().getTime();
+
         switch (cqMsg.getPostType()){
             case "message":
 
@@ -77,11 +77,11 @@ public class CqController {
                         //处理命令
                         case "sudo":
                             cqService.praseAdminCmd(cqMsg);
-                            logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
+
                             break;
                         default:
                             cqService.praseCmd(cqMsg);
-                            logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
+
                             break;
                     }
 
@@ -89,18 +89,18 @@ public class CqController {
                 break;
             case "event":
                 if(cqMsg.getEvent().equals("group_increase")) {
-                    start = Calendar.getInstance().getTime();
+
                     cqService.praseNewsPaper(cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
+
                 }
                 break;
             case "request":
                 //只有是加群请求的时候才进入
                 if(cqMsg.getRequestType().equals("group")&&cqMsg.getSubType().equals("invite")){
-                    start = Calendar.getInstance().getTime();
+
                     logger.info("已将"+cqMsg.getUserId()+"将白菜邀请入"+cqMsg.getGroupId()+"的请求进行暂存");
                     cqService.stashInviteRequest(cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
+
                 }
                 break;
             default:

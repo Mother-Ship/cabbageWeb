@@ -74,31 +74,31 @@ public class ImgUtil {
 
         BufferedImage bg;
 
-        logger.info("头像加载成功，开始读取本地资源：布局");
+
         BufferedImage layout = getCopyImage(images.get(rb.getString("layout")));
-        logger.info("开始读取本地资源：scoreRank背景");
+
         BufferedImage scoreRankBG = getCopyImage(images.get(rb.getString("scoreRankBG")));
-        logger.info("开始读取本地资源：用户组标志");
+
         BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
         try {
-            logger.info("开始读取本地资源：用户自定义BG");
+
             bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId())+".png"));
         } catch (NullPointerException e) {
             try {
-                logger.info("没有找到自定义bg，使用用户组的bg");
+
                 bg = getCopyImage(images.get(role + ".png"));
             } catch (NullPointerException e1) {
-                logger.error("读取!stat命令所需的本地资源失败");
+
                 logger.error(e1.getMessage());
                 return;
             }
         }
-        logger.info("开始绘制布局");
+
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
         //绘制布局和用户组
 
         g2.drawImage(layout, 0, 0, null);
-        logger.info("开始绘制用户组");
+
         g2.drawImage(roleBg, 0, 0, null);
         try {
             g2.drawImage(ava, Integer.decode(rb.getString("avax")), Integer.decode(rb.getString("avay")), null);
@@ -107,7 +107,7 @@ public class ImgUtil {
         }
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         //将scorerank比用户名先画
-        logger.info("开始绘制Score Rank");
+
         if (scoreRank > 0) {
             //把scorerank用到的bg画到bg上
             g2.drawImage(scoreRankBG, 653, 7, null);
@@ -119,43 +119,42 @@ public class ImgUtil {
         }
 
         //绘制用户名
-        logger.info("开始绘制用户名");
+
         draw(g2, "unameColor", "unameFont", "unameSize", userFromAPI.getUserName(), "namex", "namey");
 
         //绘制Rank
-        logger.info("开始绘制Rank");
+
         draw(g2, "defaultColor", "numberFont", "rankSize", "#" + userFromAPI.getPpRank(), "rankx", "ranky");
 
         //绘制PP
-        logger.info("开始绘制PP");
         draw(g2, "ppColor", "numberFont", "ppSize", String.valueOf(userFromAPI.getPpRaw()), "ppx", "ppy");
 
 
         //绘制RankedScore
-        logger.info("开始绘制RankedScore");
+
         draw(g2, "defaultColor", "numberFont", "numberSize",
                 new DecimalFormat("###,###").format(userFromAPI.getRankedScore()), "rScorex", "rScorey");
         //绘制acc
-        logger.info("开始绘制acc");
+
         draw(g2, "defaultColor", "numberFont", "numberSize",
                 new DecimalFormat("##0.00").format(userFromAPI.getAccuracy()) + "%", "accx", "accy");
 
         //绘制pc
-        logger.info("开始绘制pc");
+
         draw(g2, "defaultColor", "numberFont", "numberSize",
                 new DecimalFormat("###,###").format(userFromAPI.getPlayCount()), "pcx", "pcy");
 
         //绘制tth
-        logger.info("开始绘制tth");
+
         draw(g2, "defaultColor", "numberFont", "numberSize",
                 new DecimalFormat("###,###").format(userFromAPI.getCount50() + userFromAPI.getCount100() + userFromAPI.getCount300()), "tthx", "tthy");
         //绘制Level
-        logger.info("开始绘制等级");
+
         draw(g2, "defaultColor", "numberFont", "numberSize",
                 Integer.toString((int) Math.floor(userFromAPI.getLevel())) + " (" + (int) ((userFromAPI.getLevel() - Math.floor(userFromAPI.getLevel())) * 100) + "%)", "levelx", "levely");
 
         //绘制SS计数
-        logger.info("开始绘制Rank计数");
+
         draw(g2, "defaultColor", "numberFont", "countSize", Integer.toString(userFromAPI.getCountRankSs()), "ssCountx", "ssCounty");
 
         //绘制S计数
@@ -164,7 +163,7 @@ public class ImgUtil {
         //绘制A计数
         draw(g2, "defaultColor", "numberFont", "countSize", Integer.toString(userFromAPI.getCountRankA()), "aCountx", "aCounty");
         //绘制当时请求的时间
-        logger.info("开始绘制时间");
+
         draw(g2, "timeColor", "timeFont", "timeSize",
                 new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime()), "timex", "timey");
 
@@ -177,7 +176,7 @@ public class ImgUtil {
                 带day = 0:进入本方法，不读数据库，不进行对比
                 day>1，例如day=2，21号进入本方法，查的是19号结束时候的成绩
                 */
-            logger.info("开始绘制差异量");
+
             if (day > 1) {
                 //临时关闭平滑
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
