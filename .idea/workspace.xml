@@ -7,15 +7,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6d1ab8cc-7a94-4748-b25c-51fdf03c8238" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/.idea/artifacts/cabbageWeb_war_exploded.xml" afterPath="$PROJECT_DIR$/../cabbageWeb/.idea/artifacts/cabbageWeb_war_exploded.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/.idea/workspace.xml" afterPath="$PROJECT_DIR$/../cabbageWeb/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/cabbageWeb.iml" afterPath="$PROJECT_DIR$/../cabbageWeb/cabbageWeb.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/pom.xml" afterPath="$PROJECT_DIR$/../cabbageWeb/pom.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/controller/CqController.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/controller/CqController.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/resources/spring/spring-db.xml" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/resources/spring/spring-db.xml" />
     </list>
     <ignored path="$PROJECT_DIR$/../cabbageWeb/out/" />
     <ignored path="$PROJECT_DIR$/../cabbageWeb/target/" />
@@ -43,11 +37,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="ImgUtil.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="ImgUtil.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="242">
-              <caret line="161" column="0" lean-forward="true" selection-start-line="161" selection-start-column="0" selection-end-line="161" selection-end-column="0" />
+            <state relative-caret-position="374">
+              <caret line="54" column="59" lean-forward="false" selection-start-line="54" selection-start-column="59" selection-end-line="54" selection-end-column="59" />
               <folding />
             </state>
           </provider>
@@ -67,7 +61,7 @@
         <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/resources/spring/spring-db.xml">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="352">
-              <caret line="22" column="45" lean-forward="true" selection-start-line="22" selection-start-column="45" selection-end-line="22" selection-end-column="45" />
+              <caret line="22" column="45" lean-forward="false" selection-start-line="22" selection-start-column="45" selection-end-line="22" selection-end-column="45" />
               <folding />
             </state>
           </provider>
@@ -106,11 +100,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CqServiceImpl.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="CqServiceImpl.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3740">
-              <caret line="242" column="0" lean-forward="false" selection-start-line="242" selection-start-column="0" selection-end-line="242" selection-end-column="0" />
+            <state relative-caret-position="381">
+              <caret line="569" column="36" lean-forward="false" selection-start-line="569" selection-start-column="36" selection-end-line="569" selection-end-column="36" />
               <folding />
             </state>
           </provider>
@@ -231,10 +225,10 @@
         <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/OppaiResult.java" />
         <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/controller/CqController.java" />
         <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" />
         <option value="$PROJECT_DIR$/../cabbageWeb/pom.xml" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java" />
         <option value="$PROJECT_DIR$/../cabbageWeb/src/main/resources/spring/spring-db.xml" />
+        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java" />
+        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" />
       </list>
     </option>
   </component>
@@ -281,12 +275,6 @@
           <item name="" type="16c1761:MavenProjectsStructure$RootNode" />
           <item name="cabbageWeb Maven Webapp" type="9519ce18:MavenProjectsStructure$ProjectNode" />
           <item name="Plugins" type="7aea1407:MavenProjectsStructure$PluginsNode" />
-        </path>
-        <path>
-          <item name="" type="16c1761:MavenProjectsStructure$RootNode" />
-          <item name="cabbageWeb Maven Webapp" type="9519ce18:MavenProjectsStructure$ProjectNode" />
-          <item name="Plugins" type="7aea1407:MavenProjectsStructure$PluginsNode" />
-          <item name="war" type="36feed69:MavenProjectsStructure$PluginNode" />
         </path>
       </expand>
       <select />
@@ -758,7 +746,7 @@
       <workItem from="1505960529169" duration="6695000" />
       <workItem from="1505968542581" duration="244000" />
       <workItem from="1505971321769" duration="4597000" />
-      <workItem from="1506043294028" duration="5388000" />
+      <workItem from="1506043294028" duration="6565000" />
     </task>
     <task id="LOCAL-00001" summary="开始重构api工具类">
       <created>1504691384157</created>
@@ -844,7 +832,14 @@
       <option name="project" value="LOCAL" />
       <updated>1505986761004</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="去除多余的提示……">
+      <created>1506062021774</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1506062021774</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -880,7 +875,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="258330000" />
+    <option name="totallyTimeSpent" value="259507000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1014,13 +1009,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java</url>
-          <line>850</line>
+          <line>883</line>
           <properties />
           <option name="timeStamp" value="75" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java</url>
-          <line>837</line>
+          <line>870</line>
           <properties />
           <option name="timeStamp" value="76" />
         </line-breakpoint>
@@ -1032,7 +1027,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java</url>
-          <line>868</line>
+          <line>866</line>
           <properties />
           <option name="timeStamp" value="110" />
         </line-breakpoint>
@@ -1044,13 +1039,13 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java</url>
-          <line>81</line>
+          <line>79</line>
           <properties />
           <option name="timeStamp" value="112" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java</url>
-          <line>83</line>
+          <line>81</line>
           <properties />
           <option name="timeStamp" value="113" />
         </line-breakpoint>
@@ -1058,7 +1053,7 @@
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="114" />
+      <option name="time" value="115" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="JUnit">
@@ -1408,26 +1403,26 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3740">
-          <caret line="242" column="0" lean-forward="false" selection-start-line="242" selection-start-column="0" selection-end-line="242" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/resources/spring/spring-db.xml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="352">
-          <caret line="22" column="45" lean-forward="true" selection-start-line="22" selection-start-column="45" selection-end-line="22" selection-end-column="45" />
+          <caret line="22" column="45" lean-forward="false" selection-start-line="22" selection-start-column="45" selection-end-line="22" selection-end-column="45" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="161" column="0" lean-forward="true" selection-start-line="161" selection-start-column="0" selection-end-line="161" selection-end-column="0" />
+        <state relative-caret-position="374">
+          <caret line="54" column="59" lean-forward="false" selection-start-line="54" selection-start-column="59" selection-end-line="54" selection-end-column="59" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="381">
+          <caret line="569" column="36" lean-forward="false" selection-start-line="569" selection-start-column="36" selection-end-line="569" selection-end-column="36" />
           <folding />
         </state>
       </provider>

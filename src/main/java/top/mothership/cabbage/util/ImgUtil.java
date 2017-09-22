@@ -48,13 +48,11 @@ public class ImgUtil {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 images.put(file.getFileName().toString(), ImageIO.read(file.toFile()));
-
                 return super.visitFile(file, attrs);
             }
         };
         try {
             java.nio.file.Files.walkFileTree(path, finder);
-            logger.info("抓取完成。"+new ArrayList<>(images.keySet()));
         } catch (IOException e) {
             logger.info("读取本地资源失败");
             logger.error(e.getMessage());
