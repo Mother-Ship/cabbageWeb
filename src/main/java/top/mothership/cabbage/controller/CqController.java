@@ -28,16 +28,16 @@ public class CqController {
     private Matcher m;
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public String cqMsgPrase(@RequestBody CqMsg cqMsg){
-        //转义
-        String msg  = cqMsg.getMessage();
-        msg = msg.replaceAll("&#91;", "[");
-        msg = msg.replaceAll("&#93;", "]");
-        cqMsg.setMessage(msg);
+
         //待整理业务逻辑
 
         switch (cqMsg.getPostType()){
             case "message":
-
+//转义
+                String msg  = cqMsg.getMessage();
+                msg = msg.replaceAll("&#91;", "[");
+                msg = msg.replaceAll("&#93;", "]");
+                cqMsg.setMessage(msg);
                 String msgWithoutImage;
                 if (msg.matches(imgRegex)) {
                     msgWithoutImage = msg.replaceAll(singleImgRegex, "");
