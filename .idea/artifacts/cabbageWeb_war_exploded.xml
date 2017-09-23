@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
   <artifact type="exploded-war" name="cabbageWeb:war exploded">
-    <output-path>$PROJECT_DIR$/../cabbageWeb/target/cabbageWeb</output-path>
+    <output-path>$PROJECT_DIR$/target/cabbageWeb</output-path>
     <root id="root">
       <element id="directory" name="WEB-INF">
         <element id="directory" name="classes">
@@ -8,7 +8,7 @@
         </element>
       </element>
       <element id="directory" name="META-INF">
-        <element id="file-copy" path="$PROJECT_DIR$/../cabbageWeb/target/cabbageWeb/META-INF/MANIFEST.MF" />
+        <element id="file-copy" path="$PROJECT_DIR$/target/cabbageWeb/META-INF/MANIFEST.MF" />
       </element>
       <element id="javaee-facet-resources" facet="cabbageWeb/web/Web" />
     </root>

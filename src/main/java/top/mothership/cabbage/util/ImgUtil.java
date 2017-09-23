@@ -5,6 +5,8 @@ import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 import sun.awt.image.ToolkitImage;
 import top.mothership.cabbage.pojo.Beatmap;
@@ -34,6 +36,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
+//采用原型模式注入，避免出现错群问题
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS, value = "prototype")
 public class ImgUtil {
     private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
     private static Logger logger = LogManager.getLogger("ImgUtil.class");

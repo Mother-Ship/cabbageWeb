@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 
 @Service
 public class CqServiceImpl implements CqService {
-    private CqMsg cqMsg;
     private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
     private static String adminCmdRegex = "[!！]sudo ([^ ]*)(.*)";
     private static String cmdRegex = "[!！]([^ ]+)(.*)";
@@ -61,7 +60,6 @@ public class CqServiceImpl implements CqService {
     @Override
     public void praseCmd(CqMsg cqMsg) {
         s = Calendar.getInstance().getTime();
-        this.cqMsg = cqMsg;
         String msg = cqMsg.getMessage();
         Matcher m = Pattern.compile(cmdRegex).matcher(msg);
         m.find();
@@ -96,7 +94,7 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                statUserInfo(userFromAPI, day);
+                statUserInfo(userFromAPI, day,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "bp":
@@ -123,12 +121,12 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                printBP(userFromAPI, num);
+                printBP(userFromAPI, num,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "setid":
                 username = m.group(2).substring(1);
-                bindQQAndOsu(username, Long.toString(cqMsg.getUserId()));
+                bindQQAndOsu(username, Long.toString(cqMsg.getUserId()),cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "statme":
@@ -154,7 +152,7 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                statUserInfo(userFromAPI, day);
+                statUserInfo(userFromAPI, day,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "bpme":
@@ -179,7 +177,7 @@ public class CqServiceImpl implements CqService {
                     }
                     num = Integer.valueOf(m.group(3));
                 }
-                printBP(userFromAPI, num);
+                printBP(userFromAPI, num,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "recent":
@@ -195,7 +193,7 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                getRecent(userFromAPI);
+                getRecent(userFromAPI,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "help":
@@ -233,7 +231,7 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                getFristRank(beatmap,score);
+                getFristRank(beatmap,score,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
 
@@ -244,7 +242,7 @@ public class CqServiceImpl implements CqService {
     @Override
     public void praseAdminCmd(CqMsg cqMsg) {
         s = Calendar.getInstance().getTime();
-        this.cqMsg = cqMsg;
+
         if (!admin.contains(String.valueOf(cqMsg.getUserId()))) {
 
                 //如果没有权限
@@ -262,7 +260,7 @@ public class CqServiceImpl implements CqService {
         String target;
         String URL;
         String[] usernames;
-        String role = null;
+        String role;
         String QQ;
         int index;
         switch (m.group(1)) {
@@ -279,14 +277,14 @@ public class CqServiceImpl implements CqService {
                 usernames = m.group(2).substring(1, index).split(",");
                 role = m.group(2).substring(index + 1);
                 logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：" + role);
-                modifyUserRole(usernames, role);
+                modifyUserRole(usernames, role,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "del":
                 usernames = m.group(2).substring(1).split(",");
                 role = "creep";
                 logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：" + role);
-                modifyUserRole(usernames, role);
+                modifyUserRole(usernames, role,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "check":
@@ -311,7 +309,7 @@ public class CqServiceImpl implements CqService {
             case "褪裙":
             case "退群":
                 role = m.group(2).substring(1);
-                checkPPOverflow(role);
+                checkPPOverflow(role,cqMsg);
                 break;
             case "bg":
                 try {
@@ -323,7 +321,7 @@ public class CqServiceImpl implements CqService {
                     logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                     return;
                 }
-                downloadBG(URL, target);
+                downloadBG(URL, target,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "recent":
@@ -335,7 +333,7 @@ public class CqServiceImpl implements CqService {
                     logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                     return;
                 }
-                getRecent(userFromAPI);
+                getRecent(userFromAPI,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "afk":
@@ -356,7 +354,7 @@ public class CqServiceImpl implements CqService {
                     return;
                 }
                 logger.info("检测到管理员对" + role + "用户组" + day + "天前的AFK玩家查询");
-                checkAfkPlayer(role, day);
+                checkAfkPlayer(role, day,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "smoke":
@@ -452,7 +450,7 @@ public class CqServiceImpl implements CqService {
                     logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                     return;
                 }
-                getFristRank(beatmap,score);
+                getFristRank(beatmap,score,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
 
@@ -564,7 +562,7 @@ public class CqServiceImpl implements CqService {
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
     }
 
-    private void statUserInfo(Userinfo userFromAPI, int day) {
+    private void statUserInfo(Userinfo userFromAPI, int day,CqMsg cqMsg) {
         //将day转换为Date
         Calendar cl = Calendar.getInstance();
         if (cl.get(Calendar.HOUR_OF_DAY) < 4) {
@@ -626,6 +624,8 @@ public class CqServiceImpl implements CqService {
             //构造User对象写入数据库
             User user = new User();
             user.setUserId(userFromAPI.getUserId());
+            user.setRole("creep");
+            user.setQQ("0");
             baseMapper.addUser(user);
             //构造日历对象和List
             Calendar c = Calendar.getInstance();
@@ -639,7 +639,7 @@ public class CqServiceImpl implements CqService {
         }
     }
 
-    private void printBP(Userinfo userinfo, int num) {
+    private void printBP(Userinfo userinfo, int num,CqMsg cqMsg) {
         //构造一个上一个四点的日历对象
         Calendar c = Calendar.getInstance();
 //        凌晨四点之前，将日期减一
@@ -699,7 +699,7 @@ public class CqServiceImpl implements CqService {
 
     }
 
-    private void bindQQAndOsu(String username, String fromQQ) {
+    private void bindQQAndOsu(String username, String fromQQ,CqMsg cqMsg) {
         Userinfo userinfo = apiUtil.getUser(username, null);
 
         //这彩蛋没意思，去了
@@ -737,7 +737,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void modifyUserRole(String[] usernames, String role) {
+    private void modifyUserRole(String[] usernames, String role,CqMsg cqMsg) {
         List<String> nullList = new ArrayList<>();
         List<String> doneList = new ArrayList<>();
         List<String> addList = new ArrayList<>();
@@ -755,6 +755,8 @@ public class CqServiceImpl implements CqService {
                     logger.info("开始将用户" + userFromAPI.getUserName() + "添加到数据库。");
                     User user = new User();
                     user.setUserId(userFromAPI.getUserId());
+                    user.setRole("creep");
+                    user.setQQ("0");
                     baseMapper.addUser(user);
 
                     Calendar c = Calendar.getInstance();
@@ -811,7 +813,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void checkPPOverflow(String role) {
+    private void checkPPOverflow(String role,CqMsg cqMsg) {
         logger.info("开始检查" + role + "用户组中超限的玩家。");
         String resp;
         List<Integer> list = baseMapper.listUserIdByRole(role);
@@ -841,7 +843,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void downloadBG(String URL, String target) {
+    private void downloadBG(String URL, String target,CqMsg cqMsg) {
         BufferedImage bg;
         try {
             logger.info("开始根据URL下载新背景。");
@@ -866,7 +868,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void getRecent(Userinfo userFromAPI) {
+    private void getRecent(Userinfo userFromAPI,CqMsg cqMsg) {
         logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
         Score score = apiUtil.getRecent(null, userFromAPI.getUserName());
         if (score == null) {
@@ -885,7 +887,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void checkAfkPlayer(String role, int day) {
+    private void checkAfkPlayer(String role, int day,CqMsg cqMsg) {
         String resp;
         Calendar cl = Calendar.getInstance();
         cl.add(Calendar.DATE, -day);
@@ -908,7 +910,7 @@ public class CqServiceImpl implements CqService {
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
     }
-    private void getFristRank(Beatmap beatmap,List<Score> score){
+    private void getFristRank(Beatmap beatmap,List<Score> score,CqMsg cqMsg){
 
         Userinfo userFromAPI  = apiUtil.getUser(null,String.valueOf(score.get(0).getUserId()));
         //为了日志+和BP的PP计算兼容
