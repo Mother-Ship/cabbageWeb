@@ -87,12 +87,17 @@ public class ImgUtil {
             bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId())+".png"));
         } catch (NullPointerException e) {
             try {
+                bg = getCopyImage(ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\img\\stat\\"+String.valueOf(userFromAPI.getUserId())+".png")));
+                //为了防止新加用户图片要重启才生效，特地去硬盘找一次
+            } catch (IOException e1) {
+                try {
+                    bg = getCopyImage(images.get(role + ".png"));
 
-                bg = getCopyImage(images.get(role + ".png"));
-            } catch (NullPointerException e1) {
+                } catch (NullPointerException e2) {
 
-                logger.error(e1.getMessage());
-                return;
+                    logger.error(e1.getMessage());
+                    return;
+                }
             }
         }
 
