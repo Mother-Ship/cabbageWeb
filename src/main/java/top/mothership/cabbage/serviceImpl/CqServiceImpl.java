@@ -901,11 +901,11 @@ public class CqServiceImpl implements CqService {
                 afkList.add(apiUtil.getUser(null, String.valueOf(aList)).getUserName());
             }
         }
-        resp = "查询" + role + "用户组中" + day + "天前的AFK玩家完成。";
+        resp = "查询" + role + "用户组中，最后登录时间早于" + day + "天前的AFK玩家完成。";
         if (afkList.size() > 0) {
-            resp = resp.concat("\n查询到" + role + "用户组中，以下玩家：" + afkList.toString() + "最后登录时间在" + day + "天前。");
+            resp = resp.concat("\n以下玩家：" + afkList.toString() + "最后登录时间在" + day + "天前。");
         } else {
-            resp = resp.concat("\n没有检测" + role + "用户组中PP溢出的玩家。");
+            resp = resp.concat("\n没有检测" + role + "用户组中最后登录时间在" + day + "天前。的玩家。");
         }
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
