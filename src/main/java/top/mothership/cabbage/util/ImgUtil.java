@@ -873,9 +873,11 @@ public class ImgUtil {
 
         //取出小数部分，缩放star并绘制在对应的地方
         float c = Integer.valueOf(b[1].substring(0, 1)) / 10F;
-        g2.drawImage(images.get("fpStar.png").getScaledInstance((int)(25*c),(int)(25*c),Image.SCALE_SMOOTH),
-                (int)(984+(Integer.valueOf(b[0]))*44-(1-c)*12.5),(int)(250+(1-c)*12.5),null);
-
+        //小于0.04的宽高会是0，
+        if(c>0.04) {
+            g2.drawImage(images.get("fpStar.png").getScaledInstance((int) (25 * c), (int) (25 * c), Image.SCALE_SMOOTH),
+                    (int) (984 + (Integer.valueOf(b[0])) * 44), (int) (250 + (1 - c) * 12.5), null);
+        }
         //缩略图
         g2.drawImage(bg2, 762, 162, null);
         g2.dispose();
