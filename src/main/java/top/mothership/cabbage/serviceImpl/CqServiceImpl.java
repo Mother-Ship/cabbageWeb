@@ -3,12 +3,15 @@ package top.mothership.cabbage.serviceImpl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.ConfigurableWebApplicationContext;
 import top.mothership.cabbage.mapper.BaseMapper;
 import top.mothership.cabbage.pojo.*;
 import top.mothership.cabbage.service.CqService;
 import top.mothership.cabbage.util.*;
 
+import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -322,6 +325,8 @@ public class CqServiceImpl implements CqService {
                     return;
                 }
                 downloadBG(URL, target,cqMsg);
+                //手动调用重载缓存
+                ImgUtil.loadCache();
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "recent":
