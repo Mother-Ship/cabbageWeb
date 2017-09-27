@@ -42,19 +42,22 @@ public class ImgUtil {
     private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
     private static Logger logger = LogManager.getLogger("ImgUtil.class");
     //2017-9-8 13:55:42我他妈是个智障……没初始化的map我在下面用
-    private static Map<String, BufferedImage> images = new HashMap<>();
+    private static Map<String, BufferedImage> images;
 
-    static {
+    static{
+        //将静态代码块改成方法，方便外部调用
+        loadCache();
+    }
+    public static void loadCache() {
         //调用NIO遍历那些可以加载一次的文件
         logger.info("开始加载所有本地资源");
+        //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
+        images = new HashMap<>();
         final Path path = Paths.get(rb.getString("path") + "\\data\\image\\resource\\img");
         SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                //只有不是纯数字的才会进行读取。用户自定义的bg不进行缓存
-                if(!file.getFileName().toString().matches("^[0-9]*$")) {
-                    images.put(file.getFileName().toString(), ImageIO.read(file.toFile()));
-                }
+                images.put(file.getFileName().toString(), ImageIO.read(file.toFile()));
                 return super.visitFile(file, attrs);
             }
         };
@@ -86,9 +89,13 @@ public class ImgUtil {
 
         BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
         try {
-            //用户bg不能缓存
-            bg = getCopyImage(ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\img\\stat\\"+String.valueOf(userFromAPI.getUserId())+".png")));
-        }catch (IOException e1) {
+
+            bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId())+".png"));
+        } catch (NullPointerException e) {
+            try {
+                bg = getCopyImage(ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\img\\stat\\"+String.valueOf(userFromAPI.getUserId())+".png")));
+                //为了防止新加用户图片要重启才生效，特地去硬盘找一次
+            } catch (IOException e1) {
                 try {
                     bg = getCopyImage(images.get(role + ".png"));
 
@@ -97,7 +104,7 @@ public class ImgUtil {
                     logger.error(e1.getMessage());
                     return;
                 }
-
+            }
         }
 
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
