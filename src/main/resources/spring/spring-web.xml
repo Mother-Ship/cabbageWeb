@@ -39,13 +39,13 @@
     <aop:aspectj-autoproxy proxy-target-class="true"/>
 
     <!--8）视图解析器-->
-    <bean id="viewResolver"
-          class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-        <!-- jsp路径前缀 -->
-        <property name="prefix" value="/WEB-INF/jsp/"/>
-        <!-- jsp路径后缀 -->
-        <property name="suffix" value=".jsp"/>
-    </bean>
+    <!--<bean id="viewResolver"-->
+          <!--class="org.springframework.web.servlet.view.InternalResourceViewResolver">-->
+        <!--&lt;!&ndash; jsp路径前缀 &ndash;&gt;-->
+        <!--<property name="prefix" value="/WEB-INF/jsp/"/>-->
+        <!--&lt;!&ndash; jsp路径后缀 &ndash;&gt;-->
+        <!--<property name="suffix" value=".jsp"/>-->
+    <!--</bean>-->
     <mvc:resources cache-period="31556926" location="/WEB-INF/js/" mapping="/js/**"/>
 
     <mvc:resources cache-period="31556926" location="/WEB-INF/css/" mapping="/css/**"/>

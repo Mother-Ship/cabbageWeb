@@ -51,7 +51,10 @@ public class ImgUtil {
         SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                images.put(file.getFileName().toString(), ImageIO.read(file.toFile()));
+                //只有不是纯数字的才会进行读取。用户自定义的bg不进行缓存
+                if(!file.getFileName().toString().matches("^[0-9]*$")) {
+                    images.put(file.getFileName().toString(), ImageIO.read(file.toFile()));
+                }
                 return super.visitFile(file, attrs);
             }
         };
@@ -83,13 +86,9 @@ public class ImgUtil {
 
         BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
         try {
-
-            bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId())+".png"));
-        } catch (NullPointerException e) {
-            try {
-                bg = getCopyImage(ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\img\\stat\\"+String.valueOf(userFromAPI.getUserId())+".png")));
-                //为了防止新加用户图片要重启才生效，特地去硬盘找一次
-            } catch (IOException e1) {
+            //用户bg不能缓存
+            bg = getCopyImage(ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\img\\stat\\"+String.valueOf(userFromAPI.getUserId())+".png")));
+        }catch (IOException e1) {
                 try {
                     bg = getCopyImage(images.get(role + ".png"));
 
@@ -98,7 +97,7 @@ public class ImgUtil {
                     logger.error(e1.getMessage());
                     return;
                 }
-            }
+
         }
 
         Graphics2D g2 = (Graphics2D) bg.getGraphics();

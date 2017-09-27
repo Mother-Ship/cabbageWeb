@@ -44,7 +44,7 @@ public class CqServiceImpl implements CqService {
     private BaseMapper baseMapper;
     private Logger logger = LogManager.getLogger(this.getClass());
     private static List<String> admin = Arrays.asList(rb.getString("admin").split(","));
-    private java.util.Date s;
+
     @Autowired
     public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, BaseMapper baseMapper) {
         this.apiUtil = apiUtil;
@@ -59,7 +59,7 @@ public class CqServiceImpl implements CqService {
 
     @Override
     public void praseCmd(CqMsg cqMsg) {
-        s = Calendar.getInstance().getTime();
+        java.util.Date s = Calendar.getInstance().getTime();
         String msg = cqMsg.getMessage();
         Matcher m = Pattern.compile(cmdRegex).matcher(msg);
         m.find();
@@ -241,7 +241,7 @@ public class CqServiceImpl implements CqService {
 
     @Override
     public void praseAdminCmd(CqMsg cqMsg) {
-        s = Calendar.getInstance().getTime();
+        java.util.Date s = Calendar.getInstance().getTime();
 
         if (!admin.contains(String.valueOf(cqMsg.getUserId()))) {
 
@@ -359,20 +359,22 @@ public class CqServiceImpl implements CqService {
                 break;
             case "smoke":
                 try {
-                    index = msg.indexOf(":");
-                    if (index == -1) {
-                        sec = 600;
-                        QQ = msg.substring(12);
-                    } else {
-                        sec = Integer.valueOf(msg.substring(index + 1));
-                        QQ = msg.substring(12, index);
+                    //改为!sudo smoke @xx 600这样的格式
+                    index = msg.indexOf("]");
+                    sec = Integer.valueOf(msg.substring(index + 2));
+                    //!sudo smoke [CQ:at,qq=1012621328] 600
+                    QQ = msg.substring(22, index);
+                } catch (NumberFormatException e) {
+                    try{
+                    index = msg.indexOf("]");
+                    QQ = msg.substring(22, index);
+                    sec=600;
+                    } catch (IndexOutOfBoundsException e1) {
+                        cqMsg.setMessage("字符串处理异常。");
+                        cqUtil.sendMsg(cqMsg);
+                        logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                        return;
                     }
-
-                } catch (IndexOutOfBoundsException e) {
-                    cqMsg.setMessage("字符串处理异常。");
-                    cqUtil.sendMsg(cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    return;
                 }
             logger.info(QQ+"被"+cqMsg.getUserId()+"禁言"+sec+"秒。");
                 cqMsg.setMessage("They're all dead!!");
@@ -460,7 +462,7 @@ public class CqServiceImpl implements CqService {
 
     @Override
     public void praseSmoke(CqMsg cqMsg) {
-        s = Calendar.getInstance().getTime();
+        java.util.Date s = Calendar.getInstance().getTime();
 //这里拿到的是没有刮去图片的
         int count = 0;
         String msg = cqMsg.getMessage();
@@ -528,7 +530,7 @@ public class CqServiceImpl implements CqService {
 
     @Override
     public void praseNewsPaper(CqMsg cqMsg) {
-        s = Calendar.getInstance().getTime();
+        java.util.Date s = Calendar.getInstance().getTime();
         logger.info("开始处理" + cqMsg.getUserId() + "在" + cqMsg.getGroupId() + "群的加群请求");
         String resp;
         switch (String.valueOf(cqMsg.getGroupId())) {
@@ -557,7 +559,7 @@ public class CqServiceImpl implements CqService {
 
     @Override
     public void stashInviteRequest(CqMsg cqMsg) {
-        s = Calendar.getInstance().getTime();
+        java.util.Date s = Calendar.getInstance().getTime();
         inviteRequests.add(cqMsg);
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
     }
