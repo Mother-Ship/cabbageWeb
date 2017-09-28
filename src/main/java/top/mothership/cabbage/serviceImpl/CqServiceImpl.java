@@ -3,21 +3,19 @@ package top.mothership.cabbage.serviceImpl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.ConfigurableWebApplicationContext;
 import top.mothership.cabbage.mapper.BaseMapper;
 import top.mothership.cabbage.pojo.*;
 import top.mothership.cabbage.service.CqService;
 import top.mothership.cabbage.util.*;
 
-import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Date;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -44,17 +42,19 @@ public class CqServiceImpl implements CqService {
     private ImgUtil imgUtil;
     private MsgUtil msgUtil;
     private WebPageUtil webPageUtil;
+    private ScoreUtil scoreUtil;
     private BaseMapper baseMapper;
     private Logger logger = LogManager.getLogger(this.getClass());
     private static List<String> admin = Arrays.asList(rb.getString("admin").split(","));
 
     @Autowired
-    public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, BaseMapper baseMapper) {
+    public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, ScoreUtil scoreUtil, BaseMapper baseMapper) {
         this.apiUtil = apiUtil;
         this.msgUtil = msgUtil;
         this.cqUtil = cqUtil;
         this.imgUtil = imgUtil;
         this.webPageUtil = webPageUtil;
+        this.scoreUtil = scoreUtil;
         this.baseMapper = baseMapper;
 
     }
@@ -69,6 +69,8 @@ public class CqServiceImpl implements CqService {
         String username;
         Userinfo userFromAPI;
         User user;
+        Score score;
+        Beatmap beatmap;
         int day;
         int num;
         switch (m.group(1)) {
@@ -100,7 +102,7 @@ public class CqServiceImpl implements CqService {
                 statUserInfo(userFromAPI, day,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
-            case "bp":
+            case "bp": case "bps":
                 num = 0;
                 username = m.group(2).substring(1);
                 m = Pattern.compile(cmdRegexWithNum).matcher(msg);
@@ -124,7 +126,12 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                printBP(userFromAPI, num,cqMsg);
+                if(m.group(1).equals("bps")&&num>0){
+                    //文字版不对批量BP做处理
+                    printSimpleBP(userFromAPI, num,cqMsg);
+                }else {
+                    printBP(userFromAPI, num,cqMsg);
+                }
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "setid":
@@ -158,7 +165,7 @@ public class CqServiceImpl implements CqService {
                 statUserInfo(userFromAPI, day,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
-            case "bpme":
+            case "bpme": case "bpmes":
                 num = 0;
                 user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null);
                 if (user == null) {
@@ -180,10 +187,17 @@ public class CqServiceImpl implements CqService {
                     }
                     num = Integer.valueOf(m.group(3));
                 }
-                printBP(userFromAPI, num,cqMsg);
+
+                if(m.group(1).equals("bpmes")&&num>0){
+                    printSimpleBP(userFromAPI, num,cqMsg);
+                }else {
+                    printBP(userFromAPI, num,cqMsg);
+                }
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
-            case "recent":
+
+
+            case "recent": case "rs":
                 user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null);
                 if (user == null) {
                     cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
@@ -196,9 +210,14 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                getRecent(userFromAPI,cqMsg);
+                if(m.group(1).equals("rs")){
+                    getSimpleRecent(userFromAPI,cqMsg);
+                }else {
+                    getRecent(userFromAPI, cqMsg);
+                }
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
+
             case "help":
                 if ((int) (Math.random() * 10) == 1) {
                     logger.info("QQ" + cqMsg.getUserId() + "抽中了1/10的几率，触发了Trick");
@@ -216,25 +235,25 @@ public class CqServiceImpl implements CqService {
                     return;
                 }
                 Integer bid = Integer.valueOf(m.group(2).substring(1));
-                Beatmap beatmap = apiUtil.getBeatmap(bid);
+                beatmap = apiUtil.getBeatmap(bid);
                 if (beatmap == null) {
                     cqMsg.setMessage("提供的bid没有找到谱面信息。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
                 //一次性取2个
-                List<Score> score = apiUtil.getScore(bid,2);
-                if (score.size()==0) {
+                List<Score> scores = apiUtil.getScore(bid,2);
+                if (scores.size()==0) {
                     cqMsg.setMessage("提供的bid没有找到#1成绩。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                if(score.get(0).getUserId()!=baseMapper.getUser(String.valueOf(cqMsg.getUserId()),null).getUserId()){
+                if(scores.get(0).getUserId()!=baseMapper.getUser(String.valueOf(cqMsg.getUserId()),null).getUserId()){
                     cqMsg.setMessage("不是你打的#1不给看哦。\n如果你确定是你打的，看看是不是没登记osu!id？(使用!setid命令)");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                getFristRank(beatmap,score,cqMsg);
+                getFristRank(beatmap,scores,cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
 
@@ -928,4 +947,62 @@ public class CqServiceImpl implements CqService {
         logger.info("开始调用函数发送"+ score.get(0).getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.get(0).getDate()) + "fp.png");
         cqUtil.sendMsg(cqMsg);
     }
+
+
+    private void printSimpleBP(Userinfo userinfo, int num, CqMsg cqMsg) {
+
+        logger.info("开始获取玩家" + userinfo.getUserName() + "的BP");
+        List<Score> list = apiUtil.getBP(userinfo.getUserName(), null);
+
+
+            if (num > list.size()) {
+                cqMsg.setMessage("该玩家没有打出指定的bp……");
+                logger.info("请求的bp数比玩家bp总数量大");
+                cqUtil.sendMsg(cqMsg);
+            } else {
+                //list基于0，得-1
+                Score score = list.get(num - 1);
+                logger.info("获得了玩家" + userinfo.getUserName() + "的第" + num + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
+                Beatmap beatmap = apiUtil.getBeatmap(score.getBeatmapId());
+
+
+                cqMsg.setMessage("https://osu.ppy.sh/b/"+score.getBeatmapId()+"\n"
+                        +beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]"
+                        +" , "+scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
+                        +" ("+new DecimalFormat("###.00").format(
+                        100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
+                                / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())))+"%)\n"
+                        +"Played by "+userinfo.getUserName()+", "+new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate())+", "
+                        +String.valueOf(Math.round(scoreUtil.calcPP(score,beatmap).getPp()))+"PP");
+                cqUtil.sendMsg(cqMsg);
+            }
+
+
+    }
+
+    private void getSimpleRecent(Userinfo userFromAPI, CqMsg cqMsg) {
+        logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
+        Score score = apiUtil.getRecent(null, userFromAPI.getUserName());
+        if (score == null) {
+            cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有游戏记录。");
+            cqUtil.sendMsg(cqMsg);
+            return;
+        }
+        Beatmap beatmap = apiUtil.getBeatmap(score.getBeatmapId());
+        if (beatmap == null) {
+            cqMsg.setMessage("网络错误：没有获取到Bid为" + score.getBeatmapId() + "的谱面信息。");
+            cqUtil.sendMsg(cqMsg);
+            return;
+        }
+        cqMsg.setMessage("https://osu.ppy.sh/b/"+score.getBeatmapId()+"\n"
+                +beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]"
+                +" , "+scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
+                +" ("+new DecimalFormat("###.00").format(
+                100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
+                        / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())))+"%)\n"
+                +"Played by "+userFromAPI.getUserName()+", "+new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate())+", "
+                +String.valueOf(Math.round(scoreUtil.calcPP(score,beatmap).getPp()))+"PP");
+        cqUtil.sendMsg(cqMsg);
+    }
+
 }
