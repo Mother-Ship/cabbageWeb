@@ -105,14 +105,14 @@ public class CqServiceImpl implements CqService {
             case "bp": case "bps":
                 num = 0;
                 username = m.group(2).substring(1);
-                m = Pattern.compile(cmdRegexWithNum).matcher(msg);
-                if (m.find()) {
-                    cqMsg.setMessage(m.group(3));
+                Matcher m2 = Pattern.compile(cmdRegexWithNum).matcher(msg);
+                if (m2.find()) {
+                    cqMsg.setMessage(m2.group(3));
                     if (!msgUtil.CheckBPNumParam(cqMsg)) {
                         return;
                     }
-                    num = Integer.valueOf(m.group(3));
-                    username = m.group(2).substring(1);
+                    num = Integer.valueOf(m2.group(3));
+                    username = m2.group(2).substring(1);
                 }
                 if ("白菜".equals(username)) {
                     cqMsg.setMessage("大白菜（学名：Brassica rapa pekinensis，异名Brassica campestris pekinensis或Brassica pekinensis）" +
@@ -179,13 +179,13 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                m = Pattern.compile(cmdRegexWithNum).matcher(msg);
-                if (m.find()) {
-                    cqMsg.setMessage(m.group(3));
+                m2 = Pattern.compile(cmdRegexWithNum).matcher(msg);
+                if (m2.find()) {
+                    cqMsg.setMessage(m2.group(3));
                     if (!msgUtil.CheckBPNumParam(cqMsg)) {
                         return;
                     }
-                    num = Integer.valueOf(m.group(3));
+                    num = Integer.valueOf(m2.group(3));
                 }
 
                 if(m.group(1).equals("bpmes")&&num>0){
@@ -287,8 +287,6 @@ public class CqServiceImpl implements CqService {
         int index;
         switch (m.group(1)) {
             case "add":
-
-
                 index = m.group(2).indexOf(":");
                 if (index == -1) {
                     //如果拿不到
@@ -629,9 +627,12 @@ public class CqServiceImpl implements CqService {
             role = "creep";
         }
         //获取score rank
+        //gust？
         if (userFromAPI.getUserId() == 1244312
                 || userFromAPI.getUserId() == 6149313
-                || userFromAPI.getUserId() == 3213720) {
+                || userFromAPI.getUserId() == 3213720
+                //MFA
+                ||userFromAPI.getUserId() == 6854920) {
             scoreRank = webPageUtil.getRank(userFromAPI.getRankedScore(), 1, 10000);
         } else {
             scoreRank = webPageUtil.getRank(userFromAPI.getRankedScore(), 1, 2000);
@@ -833,7 +834,7 @@ public class CqServiceImpl implements CqService {
         //最后的条件可以不用写，不过为了干掉这个报错还是谢了
         if (addList.size()==1&&usernames.length==1 && userFromAPI != null) {
             //这时候是只有单个用户，并且没有在nulllist里
-            resp = resp.concat("\n[CQ:image,file=" + userFromAPI.getUserName() + "stat.png]");
+            resp = resp.concat("\n[CQ:image,file=" + userFromAPI.getUserId() + "stat.png]");
         }
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
