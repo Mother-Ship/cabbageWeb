@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import top.mothership.cabbage.pojo.CqMsg;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
+import top.mothership.cabbage.util.SmokeUtil;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -18,14 +19,21 @@ import java.util.regex.Pattern;
 
 @RestController
 public class CqController {
-    @Autowired
-    private CqServiceImpl cqService;
+    private final CqServiceImpl cqService;
+    private final SmokeUtil smokeUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
     private static String mainRegex = "[!！]([^ \\u4e00-\\u9fa5]+)([\\u892a\\u88d9\\u9000\\u7fa4\\u767d\\u83dcA-Za-z0-9\\[\\] :#-_]*+)";
     private static String imgRegex = ".*\\[CQ:image,file=(.+)\\].*";
     private static String singleImgRegex = "\\[CQ:image,file=(.+)\\]";
 
     private Matcher m;
+
+    @Autowired
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil) {
+        this.cqService = cqService;
+        this.smokeUtil = smokeUtil;
+    }
+
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public String cqMsgPrase(@RequestBody CqMsg cqMsg){
 
@@ -52,7 +60,7 @@ public class CqController {
                             logger.info("开始处理群" + cqMsg.getGroupId() + "的成员" + cqMsg.getUserId() + "发送的命令");
                         } else {
                             //否则将消息传入禁言处理方法（只有群消息才会进）
-                            cqService.praseSmoke(cqMsg);
+                            smokeUtil.praseSmoke(cqMsg);
                         }
                         break;
                     case "discuss":
