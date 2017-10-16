@@ -27,16 +27,7 @@ public class CqServiceImpl implements CqService {
     private static String adminCmdRegex = "[!！]sudo ([^ ]*)(.*)";
     private static String cmdRegex = "[!！]([^ ]+)(.*)";
     private static String cmdRegexWithNum = "[!！]([^ ]+)([^#]*) #(.+)";
-    private static String singleImgRegex = "\\[CQ:image,file=(.+)\\]";
-    private static String[] msgs = new String[100];
-    private static int start = 0;
-    private static int end = 0;
-    private static int len = 0;
-    private static List<Long> mp5Admin = Arrays.asList(2643555740L, 290514894L, 2307282906L, 2055805091L, 735862173L,
-            1142592265L, 263202941L, 992931505L, 1335734657L, 526942417L, 1012621328L);
-    private static List<Long> mp4Admin = Arrays.asList(89217167L, 295539897L, 290514894L, 2307282906L,
-            2643555740L, 2055805091L, 954176984L, 879804833L, 526942417L);
-    private static List<CqMsg> inviteRequests = new ArrayList<>();
+    private static LinkedHashMap<CqMsg,String> inviteRequests = new LinkedHashMap<>();
     private ApiUtil apiUtil;
     private CqUtil cqUtil;
     private ImgUtil imgUtil;
@@ -411,8 +402,8 @@ public class CqServiceImpl implements CqService {
                 String resp;
                 if(inviteRequests.size()>0) {
                     resp = "以下是白菜本次启动期间收到的加群邀请：";
-                    for (CqMsg aList : inviteRequests) {
-                        resp = resp.concat("\n"+"Flag：" + aList.getFlag() + "，群号：" + aList.getGroupId());
+                    for (CqMsg aList : inviteRequests.keySet()) {
+                        resp = resp.concat("\n"+"Flag：" + aList.getFlag() + "，群号：" + aList.getGroupId()+"，已通过："+inviteRequests.get(aList));
                     }
                 }else{
                     resp = "本次启动白菜没有收到加群邀请。";
@@ -430,10 +421,20 @@ public class CqServiceImpl implements CqService {
                 cqMsg.setMessageType("handleInvite");
                 CqResponse cqResponse = cqUtil.sendMsg(cqMsg);
                 if (cqResponse.getRetCode()==0){
+                    for(CqMsg aList: inviteRequests.keySet()){
+                        if(aList.getFlag().equals(flag)){
+                            inviteRequests.replace(aList,"是");
+                        }
+                    }
                     cqMsg.setMessageType("group");
                     cqMsg.setMessage("已通过Flag为："+flag+"的邀请");
                     cqUtil.sendMsg(cqMsg);
                 }
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+            case "clearInvite":
+                logger.info("正在清理邀请请求");
+                inviteRequests.clear();
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "unbind":
@@ -482,73 +483,6 @@ public class CqServiceImpl implements CqService {
 
     }
 
-    @Override
-    public void praseSmoke(CqMsg cqMsg) {
-        java.util.Date s = Calendar.getInstance().getTime();
-//这里拿到的是没有刮去图片的
-        int count = 0;
-        String msg = cqMsg.getMessage();
-        if (msg.matches(singleImgRegex)) {
-            msg = "Image";
-        }
-        //刮掉除了中文英文数字之外的东西
-        msg = msg.replaceAll("[^\\u4e00-\\u9fa5a-zA-Z0-9]", "");
-        //循环数组
-        if (cqMsg.getGroupId() == 201872650 || cqMsg.getGroupId() == 564679329 || cqMsg.getGroupId() == 532783765) {
-            len++;
-            if (len >= 100) {
-                len = 100;
-                start++;
-            }
-            if (end == 100) {
-                end = 0;
-            }
-            if (start == 100) {
-                start = 0;
-            }
-            //把群号拼在字符串上
-            msgs[end] = cqMsg.getGroupId() + msg;
-            end++;
-            if (start < end) {
-                //复读不抓三个字以下的和纯图片
-                for (int i = 0; i < end; i++) {
-                    if ((cqMsg.getGroupId() + msg).equals(msgs[i]) && !msg.equals("Image") && msg.length() >= 3) {
-                        count++;
-                    }
-                }
-            } else {
-                for (int i = 0; i < start - 1; i++) {
-                    if ((cqMsg.getGroupId() + msg).equals(msgs[i]) && !msg.equals("Image") && msg.length() >= 3) {
-                        count++;
-                    }
-                }
-                for (int i = end; i < msgs.length; i++) {
-                    if ((cqMsg.getGroupId() + msg).equals(msgs[i]) && !msg.equals("Image") && msg.length() >= 3) {
-                        count++;
-                    }
-                }
-            }
-
-        }
-        if (count >= 6) {
-
-            if (mp5Admin.contains(cqMsg.getUserId()) && cqMsg.getGroupId() == 201872650) {
-                logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
-                cqMsg.setMessage("[CQ:at,qq=2643555740] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
-
-            } else if (mp4Admin.contains(cqMsg.getUserId()) && cqMsg.getGroupId() == 564679329) {
-                logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
-                cqMsg.setMessage("[CQ:at,qq=1012621328] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
-            } else {
-                logger.info("正在尝试禁言" + cqMsg.getUserId());
-                cqMsg.setDuration(600);
-                cqMsg.setMessageType("smoke");
-            }
-            cqUtil.sendMsg(cqMsg);
-            logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-        }
-
-    }
 
     @Override
     public void praseNewsPaper(CqMsg cqMsg) {
@@ -569,6 +503,9 @@ public class CqServiceImpl implements CqService {
                         "OSU! MP乐园4号群 (MP4) *(3600-5100pp):564679329\n" +
                         "OSU! MP乐园5号群 (MP5) *(2500-4000pp，无严格下限):201872650";
                 break;
+            case "677545541":
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第四届MP5杯赛群。\n报名比赛需要加入本群并填写此表（http://t.cn/RO9bS4D），详见置顶公告。祝大家在比赛中有好的发挥！";
+                break;
             default:
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎加入本群。";
                 break;
@@ -582,7 +519,7 @@ public class CqServiceImpl implements CqService {
     @Override
     public void stashInviteRequest(CqMsg cqMsg) {
         java.util.Date s = Calendar.getInstance().getTime();
-        inviteRequests.add(cqMsg);
+        inviteRequests.put(cqMsg,"否");
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
     }
 
