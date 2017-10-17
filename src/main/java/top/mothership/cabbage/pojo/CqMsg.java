@@ -24,8 +24,17 @@ public class CqMsg {
     private Long discussId;
     private String flag;
     private String type;
-    private boolean approve;
+    private Boolean approve;
     private String reason;
+    private Boolean enable;
+
+    public Boolean getEnable() {
+        return enable;
+    }
+
+    public void setEnable(Boolean enable) {
+        this.enable = enable;
+    }
 
     public String getType() {
         return type;

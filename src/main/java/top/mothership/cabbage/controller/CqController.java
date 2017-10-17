@@ -11,8 +11,6 @@ import top.mothership.cabbage.pojo.CqMsg;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
 import top.mothership.cabbage.util.SmokeUtil;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,10 +36,9 @@ public class CqController {
     public String cqMsgPrase(@RequestBody CqMsg cqMsg){
 
         //待整理业务逻辑
-
         switch (cqMsg.getPostType()){
             case "message":
-//转义
+                //转义
                 String msg  = cqMsg.getMessage();
                 msg = msg.replaceAll("&#91;", "[");
                 msg = msg.replaceAll("&#93;", "]");
