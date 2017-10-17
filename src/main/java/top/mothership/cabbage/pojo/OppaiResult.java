@@ -1,7 +1,5 @@
 package top.mothership.cabbage.pojo;
 
-import java.io.UnsupportedEncodingException;
-
 /**
  * Created by QHS on 2017/9/11.
  */
