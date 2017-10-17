@@ -2,7 +2,7 @@
 白菜的web版，从WebSocketAPI迁移到HTTP-API，用上了Spring+SpringMVC+MyBatis。
 
 
-###命令：
+### 命令：
 ----
 !help
 发送帮助图片
