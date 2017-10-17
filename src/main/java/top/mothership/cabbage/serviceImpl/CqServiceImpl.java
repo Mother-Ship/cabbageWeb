@@ -251,20 +251,20 @@ public class CqServiceImpl implements CqService {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "sleep":
-                Integer hour;
+                Long hour;
                 try {
-                    hour = Integer.valueOf(m.group(2).substring(1));
+                    hour = Long.valueOf(m.group(2).substring(1));
                 }catch (StringIndexOutOfBoundsException e){
-                    hour = 8;
+                    hour = 13L;
                 }
-                if(hour>12){
-                    hour=12;
+                if(hour>13){
+                    hour=13L;
                 }
                 logger.info(cqMsg.getUserId() + "被自己禁言" + hour + "小时。");
                 cqMsg.setMessage("睡吧。");
                 cqUtil.sendMsg(cqMsg);
                 cqMsg.setMessageType("smoke");
-                cqMsg.setDuration(hour*3600);
+                cqMsg.setDuration((int)(hour*3600));
                 cqUtil.sendMsg(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
