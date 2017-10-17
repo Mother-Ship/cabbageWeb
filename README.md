@@ -79,6 +79,11 @@
 !sudo smoke @xxx  n
 在白菜是管理的群，把被艾特的人禁言n秒
 
+（艾特全体成员则遍历群成员并禁言）
+
+!sudo smokeAll/unsmokeAll
+开关全员禁言
+
 !sudo listInvite
 列举当前的加群邀请
 
