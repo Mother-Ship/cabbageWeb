@@ -23,10 +23,6 @@ import java.util.regex.Pattern;
 
 @Service
 public class CqServiceImpl implements CqService {
-    private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
-    private static String adminCmdRegex = "[!！]sudo ([^ ]*)(.*)";
-    private static String cmdRegex = "[!！]([^ ]+)(.*)";
-    private static String cmdRegexWithNum = "[!！]([^ ]+)([^#]*) #(.+)";
     private static LinkedHashMap<CqMsg, String> inviteRequests = new LinkedHashMap<>();
     private ApiUtil apiUtil;
     private CqUtil cqUtil;
@@ -36,7 +32,7 @@ public class CqServiceImpl implements CqService {
     private ScoreUtil scoreUtil;
     private BaseMapper baseMapper;
     private Logger logger = LogManager.getLogger(this.getClass());
-    private static List<String> admin = Arrays.asList(rb.getString("admin").split(","));
+    private static List<String> admin = Arrays.asList(Constant.CABBAGE_CONFIG.getString("admin").split(","));
 
     @Autowired
     public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, ScoreUtil scoreUtil, BaseMapper baseMapper) {
@@ -55,7 +51,7 @@ public class CqServiceImpl implements CqService {
     public void praseCmd(CqMsg cqMsg) {
         java.util.Date s = Calendar.getInstance().getTime();
         String msg = cqMsg.getMessage();
-        Matcher m = Pattern.compile(cmdRegex).matcher(msg);
+        Matcher m = Pattern.compile(Constant.CMD_REGEX).matcher(msg);
         m.find();
         String username;
         Userinfo userFromAPI;
@@ -70,7 +66,7 @@ public class CqServiceImpl implements CqService {
                 day = 1;
                 username = m.group(2).substring(1);
 
-                m = Pattern.compile(cmdRegexWithNum).matcher(msg);
+                m = Pattern.compile(Constant.CMD_REGEX_NUM).matcher(msg);
                 if (m.find()) {
                     cqMsg.setMessage(m.group(3));
                     if (!msgUtil.CheckDayParam(cqMsg)) {
@@ -97,7 +93,7 @@ public class CqServiceImpl implements CqService {
             case "bps":
                 num = 0;
                 username = m.group(2).substring(1);
-                Matcher m2 = Pattern.compile(cmdRegexWithNum).matcher(msg);
+                Matcher m2 = Pattern.compile(Constant.CMD_REGEX_NUM).matcher(msg);
                 if (m2.find()) {
                     cqMsg.setMessage(m2.group(3));
                     if (!msgUtil.CheckBPNumParam(cqMsg)) {
@@ -139,7 +135,7 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                m = Pattern.compile(cmdRegexWithNum).matcher(msg);
+                m = Pattern.compile(Constant.CMD_REGEX_NUM).matcher(msg);
                 if (m.find()) {
                     cqMsg.setMessage(m.group(3));
                     if (!msgUtil.CheckDayParam(cqMsg)) {
@@ -172,7 +168,7 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                m2 = Pattern.compile(cmdRegexWithNum).matcher(msg);
+                m2 = Pattern.compile(Constant.CMD_REGEX_NUM).matcher(msg);
                 if (m2.find()) {
                     cqMsg.setMessage(m2.group(3));
                     if (!msgUtil.CheckBPNumParam(cqMsg)) {
@@ -285,7 +281,7 @@ public class CqServiceImpl implements CqService {
 
         }
         String msg = cqMsg.getMessage();
-        Matcher m = Pattern.compile(adminCmdRegex).matcher(msg);
+        Matcher m = Pattern.compile(Constant.ADMIN_CMD_REGEX).matcher(msg);
         m.find();
         int day;
         int sec;
@@ -295,7 +291,7 @@ public class CqServiceImpl implements CqService {
         String[] usernames;
         String role;
         String QQ;
-        String resp;
+        String resp = "";
         int index;
         switch (m.group(1)) {
             case "add":
@@ -529,16 +525,27 @@ public class CqServiceImpl implements CqService {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "listMsg":
-                QQ = m.group(2).substring(1);
+                //照例使用艾特
+                index = msg.indexOf("]");
+                QQ = msg.substring(24, index);
+                if ("all".equals(QQ)) {
+                    resp = "啥玩意啊 咋回事啊";
+                }else {
+                    ArrayList<CqMsg> msgs = SmokeUtil.msgQueues.get(cqMsg.getGroupId()).getMsgsByQQ(Long.valueOf(QQ));
+                    String card = cqUtil.getCard(Long.valueOf(QQ), cqMsg.getGroupId());
+                    if (msgs.size() == 0) {
+                        resp = "没有" + QQ + "的最近消息。";
+                    } else if(msgs.size()<=10){
 
-                ArrayList<CqMsg> msgs = SmokeUtil.msgQueues.get(cqMsg.getGroupId()).getMsgsByQQ(Long.valueOf(QQ));
-                if (msgs.size() == 0) {
-                    resp = "该群最近100条消息中没有"+QQ+"发送的。";
-                } else {
-                    resp = "在该群最近100条非命令的消息中，QQ "+QQ+"发送的消息有：";
-                    for (CqMsg aList : msgs) {
-                        resp = resp.concat("\n" +  new SimpleDateFormat("yy-MM-dd HH:mm:ss").
-                                format(new Date(aList.getTime()*1000L))+"："+aList.getMessage());
+                        for (int i=0;i<msgs.size();i++) {
+                            resp = resp.concat("\n" + card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
+                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage());
+                        }
+                    }else{
+                        for (int i=msgs.size()-10;i<msgs.size();i++) {
+                            resp = resp.concat("\n" + card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
+                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage());
+                        }
                     }
                 }
                 cqMsg.setMessage(resp);
@@ -853,10 +860,10 @@ public class CqServiceImpl implements CqService {
             //拿到用户最接近今天的数据（因为是最接近所以也不用打补丁了）
             Userinfo userinfo = baseMapper.getNearestUserInfo(aList, new Date(Calendar.getInstance().getTimeInMillis()));
             //如果PP超过了警戒线，请求API拿到最新PP
-            if (userinfo.getPpRaw() > Integer.valueOf(rb.getString(role + "RiskPP"))) {
+            if (userinfo.getPpRaw() > Integer.valueOf(Constant.CABBAGE_CONFIG.getString(role + "RiskPP"))) {
                 logger.info("开始从API获取" + aList + "的信息");
                 userinfo = apiUtil.getUser(null, String.valueOf(aList));
-                if (userinfo.getPpRaw() > Integer.valueOf(rb.getString(role + "PP")) + 0.49) {
+                if (userinfo.getPpRaw() > Integer.valueOf(Constant.CABBAGE_CONFIG.getString(role + "PP")) + 0.49) {
                     logger.info("玩家" + aList + "超限，已记录");
                     overflowList.add(userinfo.getUserName());
                 } else {
@@ -888,7 +895,7 @@ public class CqServiceImpl implements CqService {
         //并不需要删除旧图片
         try {
             logger.info("开始将新背景写入硬盘");
-            ImageIO.write(bg, "png", new File(rb.getString("path") + "\\data\\image\\resource\\img\\stat\\" + target + ".png"));
+            ImageIO.write(bg, "png", new File(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img\\stat\\" + target + ".png"));
         } catch (IOException e) {
             logger.error("将新背景写入硬盘失败，" + e.getMessage());
             cqMsg.setMessage("将新背景写入硬盘失败。错误信息是：" + e.getMessage());

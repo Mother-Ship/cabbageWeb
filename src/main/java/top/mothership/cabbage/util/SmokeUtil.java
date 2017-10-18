@@ -58,7 +58,7 @@ public class SmokeUtil {
                 if (groupAdmins.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())){
                     logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
                     //第一个永远是群主
-                    cqMsg.setMessage("[CQ:at,qq="+groupAdmins.get(cqMsg.getGroupId()).get(0)+"] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
+                    cqMsg.setMessage("[CQ:at,qq="+cqUtil.getOwner(cqMsg.getGroupId())+"] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
                 } else{
                     logger.info("正在尝试禁言" + cqMsg.getUserId());
                     cqMsg.setDuration(600);

@@ -144,9 +144,6 @@ public class CqUtil {
         List<QQInfo> members = getGroupMembers(groupId).getData();
         List<Long> result = new ArrayList<>();
         for(int i=0;i<members.size();i++){
-            if(members.get(i).getRole().equals("owner")){
-                result.add(members.get(i).getUserId());
-            }
             if(members.get(i).getRole().equals("admin")){
 
                 result.add(members.get(i).getUserId());
@@ -154,5 +151,26 @@ public class CqUtil {
         }
         return result;
     }
-
+    public String getCard(Long QQ,Long groupId){
+        List<QQInfo> members = getGroupMembers(groupId).getData();
+        for(int i=0;i<members.size();i++){
+            if(members.get(i).getUserId().equals(QQ)){
+                if("".equals(members.get(i).getCard())){
+                    return members.get(i).getNickname();
+                }else{
+                    return members.get(i).getCard();
+                }
+            }
+        }
+        return "";
+    }
+    public Long getOwner(Long groupId){
+        List<QQInfo> members = getGroupMembers(groupId).getData();
+        for(int i=0;i<members.size();i++){
+            if(members.get(i).getRole().equals("owner")){
+                return members.get(i).getUserId();
+            }
+        }
+        return 0L;
+    }
 }
