@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
 //采用原型模式注入，避免出现错群问题
 @Scope(proxyMode = ScopedProxyMode.TARGET_CLASS, value = "prototype")
 public class ImgUtil {
-    private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
     private static Logger logger = LogManager.getLogger("ImgUtil.class");
     //2017-9-8 13:55:42我他妈是个智障……没初始化的map我在下面用
     private static Map<String, BufferedImage> images;
@@ -48,7 +47,7 @@ public class ImgUtil {
         logger.info("开始加载所有本地资源");
         //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
         images = new HashMap<>();
-        final Path path = Paths.get(rb.getString("path") + "\\data\\image\\resource\\img");
+        final Path path = Paths.get(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img");
         SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -79,9 +78,9 @@ public class ImgUtil {
         BufferedImage bg;
 
 
-        BufferedImage layout = getCopyImage(images.get(rb.getString("layout")));
+        BufferedImage layout = getCopyImage(images.get(Constant.CABBAGE_CONFIG.getString("layout")));
 
-        BufferedImage scoreRankBG = getCopyImage(images.get(rb.getString("scoreRankBG")));
+        BufferedImage scoreRankBG = getCopyImage(images.get(Constant.CABBAGE_CONFIG.getString("scoreRankBG")));
 
         BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
         try {
@@ -89,7 +88,7 @@ public class ImgUtil {
             bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId())+".png"));
         } catch (NullPointerException e) {
             try {
-                bg = getCopyImage(ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\img\\stat\\"+String.valueOf(userFromAPI.getUserId())+".png")));
+                bg = getCopyImage(ImageIO.read(new File(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img\\stat\\"+String.valueOf(userFromAPI.getUserId())+".png")));
             } catch (IOException e1) {
                 try {
                     bg = getCopyImage(images.get(role + ".png"));
@@ -109,7 +108,7 @@ public class ImgUtil {
 
         g2.drawImage(roleBg, 0, 0, null);
         try {
-            g2.drawImage(ava, Integer.decode(rb.getString("avax")), Integer.decode(rb.getString("avay")), null);
+            g2.drawImage(ava, Integer.decode(Constant.CABBAGE_CONFIG.getString("avax")), Integer.decode(Constant.CABBAGE_CONFIG.getString("avay")), null);
         } catch (NullPointerException e) {
             logger.warn(userFromAPI.getUserName() + "玩家没有头像");
         }
@@ -335,21 +334,21 @@ public class ImgUtil {
     public void drawUserBP(Userinfo userFromAPI, LinkedHashMap<Score, Integer> map) {
         logger.info("开始绘制" + userFromAPI.getUserName() + "的今日BP信息");
         //计算最终宽高
-        int Height = images.get(rb.getString("bptop")).getHeight();
+        int Height = images.get(Constant.CABBAGE_CONFIG.getString("bptop")).getHeight();
         int HeightPoint = 0;
-        int Width = images.get(rb.getString("bptop")).getWidth();
+        int Width = images.get(Constant.CABBAGE_CONFIG.getString("bptop")).getWidth();
         for (Score aList : map.keySet()) {
-            if (aList.getBeatmapName().length() <= Integer.valueOf(rb.getString("bplimit"))) {
-                Height = Height + images.get(rb.getString("bpmid2")).getHeight();
+            if (aList.getBeatmapName().length() <= Integer.valueOf(Constant.CABBAGE_CONFIG.getString("bplimit"))) {
+                Height = Height + images.get(Constant.CABBAGE_CONFIG.getString("bpmid2")).getHeight();
             } else {
-                Height = Height + images.get(rb.getString("bpmid3")).getHeight();
+                Height = Height + images.get(Constant.CABBAGE_CONFIG.getString("bpmid3")).getHeight();
             }
         }
         BufferedImage result = new BufferedImage(Width, Height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = result.createGraphics();
 
         //头部
-        BufferedImage bpTop = getCopyImage(images.get(rb.getString("bptop")));
+        BufferedImage bpTop = getCopyImage(images.get(Constant.CABBAGE_CONFIG.getString("bptop")));
         Graphics2D g2 = (Graphics2D) bpTop.getGraphics();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         draw(g2, "bpUnameColor", "bpUnameFont", "bpUnameSize", "Best Performance of " + userFromAPI.getUserName(), "bpUnamex", "bpUnamey");
@@ -373,16 +372,16 @@ public class ImgUtil {
 
             String mods = scoreUtil.convertMOD(aList.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "");
             int a;
-            if (aList.getBeatmapName().length() <= Integer.valueOf(rb.getString("bplimit"))) {
+            if (aList.getBeatmapName().length() <= Integer.valueOf(Constant.CABBAGE_CONFIG.getString("bplimit"))) {
                 a = 2;
             } else {
                 a = 3;
             }
 
-            BufferedImage bpMid = getCopyImage(images.get(rb.getString("bpmid" + a)));
+            BufferedImage bpMid = getCopyImage(images.get(Constant.CABBAGE_CONFIG.getString("bpmid" + a)));
             Graphics2D g3 = bpMid.createGraphics();
             //小图标
-            g3.drawImage(images.get(aList.getRank() + "_small.png"), Integer.decode(rb.getString("bp" + a + "Rankx")), Integer.decode(rb.getString("bp" + a + "Ranky")), null);
+            g3.drawImage(images.get(aList.getRank() + "_small.png"), Integer.decode(Constant.CABBAGE_CONFIG.getString("bp" + a + "Rankx")), Integer.decode(Constant.CABBAGE_CONFIG.getString("bp" + a + "Ranky")), null);
             //绘制文字
             g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             //绘制日期(给的就是北京时间，不转)
@@ -405,9 +404,9 @@ public class ImgUtil {
                             aList.getBeatmapName() + "(" + acc + "%)", "bp2Namex", "bp2Namey");
                     break;
                 case 3:
-                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize", aList.getBeatmapName().substring(0, aList.getBeatmapName().substring(0, Integer.valueOf(rb.getString("bplimit")) + 1).lastIndexOf(" ") + 1),
+                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize", aList.getBeatmapName().substring(0, aList.getBeatmapName().substring(0, Integer.valueOf(Constant.CABBAGE_CONFIG.getString("bplimit")) + 1).lastIndexOf(" ") + 1),
                             "bp3Namex", "bp3Namey");
-                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize", aList.getBeatmapName().substring(aList.getBeatmapName().substring(0, Integer.valueOf(rb.getString("bplimit")) + 1).lastIndexOf(" ") + 1, aList.getBeatmapName().length())
+                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize", aList.getBeatmapName().substring(aList.getBeatmapName().substring(0, Integer.valueOf(Constant.CABBAGE_CONFIG.getString("bplimit")) + 1).lastIndexOf(" ") + 1, aList.getBeatmapName().length())
                                     + "(" + acc + "%)",
                             "bp3Name+1x", "bp3Name+1y");
                     break;
@@ -908,17 +907,17 @@ public class ImgUtil {
 
     private void draw(Graphics2D g2, String color, String font, String size, String text, String x, String y) {
         //指定颜色
-        g2.setPaint(Color.decode(rb.getString(color)));
+        g2.setPaint(Color.decode(Constant.CABBAGE_CONFIG.getString(color)));
         //指定字体
-        g2.setFont(new Font(rb.getString(font), Font.PLAIN, Integer.decode(rb.getString(size))));
+        g2.setFont(new Font(Constant.CABBAGE_CONFIG.getString(font), Font.PLAIN, Integer.decode(Constant.CABBAGE_CONFIG.getString(size))));
         //指定坐标
-        g2.drawString(text, Integer.decode(rb.getString(x)), Integer.decode(rb.getString(y)));
+        g2.drawString(text, Integer.decode(Constant.CABBAGE_CONFIG.getString(x)), Integer.decode(Constant.CABBAGE_CONFIG.getString(y)));
 
     }
 
     private void drawImage(BufferedImage img, String filename) {
         try {
-            ImageIO.write(img, "png", new File(rb.getString("path") + "\\data\\image\\" + filename + ".png"));
+            ImageIO.write(img, "png", new File(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image\\" + filename + ".png"));
             img.flush();
         } catch (IOException e) {
             logger.error("将图片写入硬盘失败");

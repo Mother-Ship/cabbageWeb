@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import top.mothership.cabbage.pojo.CqMsg;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
+import top.mothership.cabbage.util.Constant;
 import top.mothership.cabbage.util.SmokeUtil;
 
 import java.util.regex.Matcher;
@@ -22,9 +23,6 @@ public class CqController {
     private final CqServiceImpl cqService;
     private final SmokeUtil smokeUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
-    private static String mainRegex = "[!！]([^ \\u4e00-\\u9fa5]+)([\\u892a\\u88d9\\u9000\\u7fa4\\u767d\\u83dcA-Za-z0-9\\[\\] :#-_]*+)";
-    private static String imgRegex = ".*\\[CQ:image,file=(.+)\\].*";
-    private static String singleImgRegex = "\\[CQ:image,file=(.+)\\]";
 
     private Matcher m;
 
@@ -36,7 +34,7 @@ public class CqController {
 
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public String cqMsgPrase(@RequestBody CqMsg cqMsg){
-
+        String cmdRegex = Constant.MAIN_FILTER_REGEX;
         //待整理业务逻辑
         switch (cqMsg.getPostType()){
             case "message":
@@ -46,51 +44,48 @@ public class CqController {
                 msg = msg.replaceAll("&#93;", "]");
                 cqMsg.setMessage(msg);
                 String msgWithoutImage;
-                if (msg.matches(imgRegex)) {
-                    msgWithoutImage = msg.replaceAll(singleImgRegex, "");
+                if (msg.matches(Constant.IMG_REGEX)) {
+                    msgWithoutImage = msg.replaceAll(Constant.SINGLE_IMG_REGEX, "");
                 } else {
                     msgWithoutImage = msg;
                 }
                 //识别消息类型
                 switch (cqMsg.getMessageType()) {
                     case "group":
-                        //如果去掉图片之后的消息是一条命令
-                        if (msgWithoutImage.matches(mainRegex)) {
-                            logger.info("开始处理群" + cqMsg.getGroupId() + "的成员" + cqMsg.getUserId() + "发送的命令");
-                        } else {
-                            //否则将消息传入禁言处理方法（只有群消息才会进）
+                            //直接将群消息传入禁言处理
                             //增加一个时间戳（划掉）插件自带了Time
 //                            cqMsg.setTime(Calendar.getInstance().getTimeInMillis());
                             smokeUtil.praseSmoke(cqMsg);
-                        }
+
                         break;
+
                     case "discuss":
-                        if (msgWithoutImage.matches(mainRegex)) {
+                        if (msgWithoutImage.matches(cmdRegex)) {
                             logger.info("开始处理讨论组" + cqMsg.getDiscussId() + "的成员" + cqMsg.getUserId() + "发送的命令");
                         }
                         break;
                     case "private":
                         //如果是私聊消息，覆盖掉正则表达式（识别汉字）
-                        mainRegex = "[!！]([^ \\u4e00-\\u9fa5]+)(.*+)";
-                        if (msgWithoutImage.matches(mainRegex)) {
+                        //不必考虑线程安全问题，每次进入这个方法，cmdRegex都会被重置为没有汉字的版本
+                        cmdRegex = Constant.MAIN_FILTER_REGEX_CHINESE;
+                        if (msgWithoutImage.matches(cmdRegex)) {
                             logger.info("开始处理" + cqMsg.getUserId() + "发送的命令");
                         }
                         break;
                 }
-                if (msgWithoutImage.matches(mainRegex)) {
+                if (msgWithoutImage.matches(cmdRegex)) {
                     //如果检测到命令，直接把消息中的图片去掉
+                    logger.info("开始处理群" + cqMsg.getGroupId() + "的成员" + cqMsg.getUserId() + "发送的命令");
                     cqMsg.setMessage(msgWithoutImage);
-                    m = Pattern.compile(mainRegex).matcher(msgWithoutImage);
+                    m = Pattern.compile(cmdRegex).matcher(msgWithoutImage);
                     m.find();
                     switch (m.group(1)) {
                         //处理命令
                         case "sudo":
                             cqService.praseAdminCmd(cqMsg);
-
                             break;
                         default:
                             cqService.praseCmd(cqMsg);
-
                             break;
                     }
 
