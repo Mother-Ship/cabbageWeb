@@ -2,26 +2,23 @@ package top.mothership.cabbage.pojo;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
-
 //调用HTTPAPI发送消息之后的返回体
-public class CqResponse {
+public class CqResponse <T>{
 
     private String status;
-@SerializedName("retcode")
+    @SerializedName("retcode")
     private int retCode;
 
-    private RespData respData;
-
-    public List<QQInfo> getData() {
+    public T getData() {
         return data;
     }
 
-    public void setData(List<QQInfo> data) {
+    public void setData(T data) {
         this.data = data;
     }
 
-    private List<QQInfo> data;
+    private T data;
+
 
     public String getStatus() {
         return status;
@@ -39,11 +36,4 @@ public class CqResponse {
         this.retCode = retCode;
     }
 
-    public RespData getRespData() {
-        return respData;
-    }
-
-    public void setRespData(RespData respData) {
-        this.respData = respData;
-    }
 }
