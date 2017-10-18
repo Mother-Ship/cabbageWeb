@@ -87,16 +87,18 @@ public class MsgQueue {
         ArrayList<CqMsg> result = new ArrayList<>();
         if (start < end) {
             for (int i = 0; i < end; i++) {
-                if(msgs[i].getUserId().equals(QQ))
+                if(QQ.equals(msgs[i].getUserId()))
                 result.add(msgs[i]);
             }
         } else {
             for (int i = 0; i < start - 1; i++) {
-                if(msgs[i].getUserId().equals(QQ))
+                if(QQ.equals(msgs[i].getUserId()))
                 result.add(msgs[i]);
             }
+            //目前会引发一个问题，当容器刚启动，这个群还没有消息的时候，调用这个会出NPE
+            //但是我并不打算去用if，毕竟几乎不可能出现这个问题……
             for (int i = end; i < msgs.length; i++) {
-                if(msgs[i].getUserId().equals(QQ))
+                if(QQ.equals(msgs[i].getUserId()))
                 result.add(msgs[i]);
             }
         }

@@ -413,7 +413,7 @@ public class CqServiceImpl implements CqService {
                 }
                 if ("all".equals(QQ)) {
 
-                    List<QQInfo> memberList = cqUtil.getGroupMembers(cqMsg.getGroupId());
+                    List<QQInfo> memberList = cqUtil.getGroupMembers(cqMsg.getGroupId()).getData();
                     cqMsg.setMessageType("smoke");
                     cqMsg.setDuration(sec);
                     String operator = cqMsg.getUserId().toString();
@@ -535,7 +535,7 @@ public class CqServiceImpl implements CqService {
                 if (msgs.size() == 0) {
                     resp = "该群最近100条消息中没有"+QQ+"发送的。";
                 } else {
-                    resp = "QQ " + QQ + "在该群最近100条消息中，非白菜命令的消息有：";
+                    resp = "在该群最近100条非命令的消息中，QQ "+QQ+"发送的消息有：";
                     for (CqMsg aList : msgs) {
                         resp = resp.concat("\n" +  new SimpleDateFormat("yy-MM-dd HH:mm:ss").
                                 format(new Date(aList.getTime()*1000L))+"："+aList.getMessage());

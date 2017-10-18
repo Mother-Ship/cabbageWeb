@@ -2,10 +2,12 @@ package top.mothership.cabbage.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.CqMsg;
 import top.mothership.cabbage.pojo.CqResponse;
 import top.mothership.cabbage.pojo.QQInfo;
+import top.mothership.cabbage.pojo.RespData;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -76,7 +78,7 @@ public class CqUtil {
 
     }
 
-    public List<QQInfo> getGroupMembers(Long groupId) {
+    public CqResponse<List<QQInfo>> getGroupMembers(Long groupId) {
         String URL = baseURL + "/get_group_member_list";
         HttpURLConnection httpConnection;
         try {
@@ -100,7 +102,38 @@ public class CqUtil {
             while ((tmp = responseBuffer.readLine()) != null) {
                 tmp2.append(tmp);
             }
-            return new Gson().fromJson(tmp2.toString(), CqResponse.class).getData();
+            //采用泛型封装，接住变化无穷的data
+            return new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<QQInfo>>>() {}.getType());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+    public CqResponse<List<RespData>> getGroups() {
+        String URL = baseURL + "/get_group_list";
+        HttpURLConnection httpConnection;
+        try {
+            CqMsg cqMsg = new CqMsg();
+            httpConnection =
+                    (HttpURLConnection) new URL(URL).openConnection();
+            httpConnection.setRequestMethod("POST");
+            httpConnection.setRequestProperty("Accept", "application/json");
+            httpConnection.setRequestProperty("Content-Type", "application/json");
+            httpConnection.setDoOutput(true);
+
+            OutputStream os = httpConnection.getOutputStream();
+            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes("UTF-8"));
+            os.flush();
+            os.close();
+            BufferedReader responseBuffer =
+                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()),"UTF-8"));
+            StringBuilder tmp2 = new StringBuilder();
+            String tmp;
+            while ((tmp = responseBuffer.readLine()) != null) {
+                tmp2.append(tmp);
+            }
+            return new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<RespData>>>() {}.getType());
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -108,7 +141,7 @@ public class CqUtil {
 
     }
     public List<Long> getGroupAdmins(Long groupId){
-        List<QQInfo> members = getGroupMembers(groupId);
+        List<QQInfo> members = getGroupMembers(groupId).getData();
         List<Long> result = new ArrayList<>();
         for(int i=0;i<members.size();i++){
             if(members.get(i).getRole().equals("owner")){
