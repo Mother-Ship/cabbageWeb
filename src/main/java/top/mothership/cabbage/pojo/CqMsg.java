@@ -2,7 +2,8 @@ package top.mothership.cabbage.pojo;
 
 import com.google.gson.annotations.SerializedName;
 //酷Q收到消息之后通过HTTPAPI给白菜的POST请求体
-public class CqMsg {
+//public class CqMsg implements Comparable<CqMsg> {
+public class CqMsg  {
     @SerializedName("post_type")
     private String postType;
     private String event;
@@ -164,4 +165,9 @@ public class CqMsg {
     public void setDuration(Integer duration) {
         this.duration = duration;
     }
+
+//    @Override
+//    public int compareTo(CqMsg o) {
+//        return this.getTime().compareTo(o.getTime());
+//    }
 }

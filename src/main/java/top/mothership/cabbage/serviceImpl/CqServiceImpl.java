@@ -538,13 +538,13 @@ public class CqServiceImpl implements CqService {
                     } else if(msgs.size()<=10){
 
                         for (int i=0;i<msgs.size();i++) {
-                            resp = resp.concat("\n" + card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
-                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage());
+                            resp = resp.concat(  card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
+                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage()+"\n");
                         }
                     }else{
                         for (int i=msgs.size()-10;i<msgs.size();i++) {
-                            resp = resp.concat("\n" + card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
-                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage());
+                            resp = resp.concat( card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
+                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage()+"\n");
                         }
                     }
                 }
