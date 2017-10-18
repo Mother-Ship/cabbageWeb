@@ -254,17 +254,17 @@ public class CqServiceImpl implements CqService {
                 Long hour;
                 try {
                     hour = Long.valueOf(m.group(2).substring(1));
-                }catch (StringIndexOutOfBoundsException e){
+                } catch (StringIndexOutOfBoundsException e) {
                     hour = 13L;
                 }
-                if(hour>13){
-                    hour=13L;
+                if (hour > 13) {
+                    hour = 13L;
                 }
                 logger.info(cqMsg.getUserId() + "被自己禁言" + hour + "小时。");
                 cqMsg.setMessage("睡吧。");
                 cqUtil.sendMsg(cqMsg);
                 cqMsg.setMessageType("smoke");
-                cqMsg.setDuration((int)(hour*3600));
+                cqMsg.setDuration((int) (hour * 3600));
                 cqUtil.sendMsg(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
@@ -295,6 +295,7 @@ public class CqServiceImpl implements CqService {
         String[] usernames;
         String role;
         String QQ;
+        String resp;
         int index;
         switch (m.group(1)) {
             case "add":
@@ -449,7 +450,7 @@ public class CqServiceImpl implements CqService {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "listInvite":
-                String resp;
+
                 if (inviteRequests.size() > 0) {
                     resp = "以下是白菜本次启动期间收到的加群邀请：";
                     for (CqMsg aList : inviteRequests.keySet()) {
@@ -489,7 +490,6 @@ public class CqServiceImpl implements CqService {
                 break;
             case "unbind":
                 QQ = m.group(2).substring(1);
-
                 user = baseMapper.getUser(QQ, null);
                 if (user == null) {
                     cqMsg.setMessage("该QQ没有绑定用户……");
@@ -526,6 +526,23 @@ public class CqServiceImpl implements CqService {
                     return;
                 }
                 getFristRank(beatmap, score, cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+            case "listMsg":
+                QQ = m.group(2).substring(1);
+
+                ArrayList<CqMsg> msgs = SmokeUtil.msgQueues.get(cqMsg.getGroupId()).getMsgsByQQ(Long.valueOf(QQ));
+                if (msgs.size() == 0) {
+                    resp = "该群最近100条消息中没有"+QQ+"发送的。";
+                } else {
+                    resp = "QQ " + QQ + "在该群最近100条消息中，非白菜命令的消息有：";
+                    for (CqMsg aList : msgs) {
+                        resp = resp.concat("\n" +  new SimpleDateFormat("yy-MM-dd HH:mm:ss").
+                                format(new Date(aList.getTime()*1000L))+"："+aList.getMessage());
+                    }
+                }
+                cqMsg.setMessage(resp);
+                cqUtil.sendMsg(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
 

@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 //将CQ的HTTP API封装为接口，并托管到Spring
@@ -106,4 +107,19 @@ public class CqUtil {
         }
 
     }
+    public List<Long> getGroupAdmins(Long groupId){
+        List<QQInfo> members = getGroupMembers(groupId);
+        List<Long> result = new ArrayList<>();
+        for(int i=0;i<members.size();i++){
+            if(members.get(i).getRole().equals("owner")){
+                result.add(members.get(i).getUserId());
+            }
+            if(members.get(i).getRole().equals("admin")){
+
+                result.add(members.get(i).getUserId());
+            }
+        }
+        return result;
+    }
+
 }

@@ -6,96 +6,67 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.CqMsg;
 
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class SmokeUtil {
-    private static String singleImgRegex = "\\[CQ:image,file=(.+)\\]";
-    private static List<Long> mp5Admin = Arrays.asList(2643555740L, 290514894L, 2307282906L, 2055805091L, 735862173L,
-            1142592265L, 263202941L, 992931505L, 1335734657L, 526942417L, 1012621328L);
-    private static List<Long> mp4Admin = Arrays.asList(89217167L, 295539897L, 290514894L, 2307282906L,
-            2643555740L, 2055805091L, 954176984L, 879804833L, 526942417L);
-    private static List<Long> mp5S4Admin = Arrays.asList(2643555740L, 2307282906L,  1335734657L,89217167L, 1594504329L,
-            290514894L,372427060L, 1012621328L,992931505L,1142592265L);
+
+    private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
+    private static List<String> smokeGroups = Arrays.asList(rb.getString("smokeGroups").split(","));
     private Logger logger = LogManager.getLogger(this.getClass());
     private final CqUtil cqUtil;
     //对每个开启禁言复读的群，创建一个新的queue
-    private static MsgQueue mp5Queue = new MsgQueue();
-    private static MsgQueue mp4Queue = new MsgQueue();
-    private static MsgQueue mp5S4Queue = new MsgQueue();
-    private static MsgQueue testQueue = new MsgQueue();
+    public static Map<Long, MsgQueue> msgQueues = new HashMap<>();
+    private static Map<Long, List<Long>> groupAdmins;
+
+    //对每个开启禁言的群，创建一个新队列，使用HashMap绑定群号和队列对象
+    //使用静态代码块
+    static {
+        for (String smokeGroup : smokeGroups) {
+            msgQueues.put(Long.valueOf(smokeGroup), new MsgQueue());
+        }
+    }
+
+    //而读取管理员则独立成为方法，方便刷新
+    //现在的问题是这个静态方法会在cqUtil之前初始化，而且CQUtil不是静态的，所以在这个方法里没法用CQUtil
+    //不使用静态方法，调用这个方法放在构造函数里，而Controller里正好由Spring托管了一个
+    public void loadGroupAdmins() {
+        groupAdmins = new HashMap<>();
+        for (String smokeGroup : smokeGroups) {
+            groupAdmins.put(Long.valueOf(smokeGroup), cqUtil.getGroupAdmins(Long.valueOf(smokeGroup)));
+        }
+    }
+
     @Autowired
     public SmokeUtil(CqUtil cqUtil) {
         this.cqUtil = cqUtil;
+        loadGroupAdmins();
     }
 
     public void praseSmoke(CqMsg cqMsg) {
         java.util.Date s = Calendar.getInstance().getTime();
-//这里拿到的是没有刮去图片的
-        int count = 0;
-        String msg = cqMsg.getMessage();
-        if (msg.matches(singleImgRegex)) {
-            msg = "Image";
+        //ArrayList内部使用.equals比较对象，所以直接传入String
+        //如果是开启禁言的群
+        if (smokeGroups.contains(String.valueOf(cqMsg.getGroupId()))) {
+            int count = 0;
+            //获取绑定的那个MsgQueue
+            MsgQueue msgQueue = msgQueues.get(cqMsg.getGroupId());
+            //进行添加
+            msgQueue.addMsg(cqMsg);
+            if (msgQueue.isRepeat()) {
+                if (groupAdmins.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())){
+                    logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
+                    //第一个永远是群主
+                    cqMsg.setMessage("[CQ:at,qq="+groupAdmins.get(cqMsg.getGroupId()).get(0)+"] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
+                } else{
+                    logger.info("正在尝试禁言" + cqMsg.getUserId());
+                    cqMsg.setDuration(600);
+                    cqMsg.setMessageType("smoke");
+                }
+                cqUtil.sendMsg(cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+            }
         }
-        //刮掉除了中文英文数字之外的东西
-        msg = msg.replaceAll("[^\\u4e00-\\u9fa5a-zA-Z0-9]", "");
 
-        if (cqMsg.getGroupId() == 201872650 ) {
-            mp5Queue.addMsg(msg);
-            if (mp5Queue.isRepeat()) {
-                if (mp5Admin.contains(cqMsg.getUserId())) {
-                    logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
-                    cqMsg.setMessage("[CQ:at,qq=2643555740] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
-                }else {
-                    logger.info("正在尝试禁言" + cqMsg.getUserId());
-                    cqMsg.setDuration(600);
-                    cqMsg.setMessageType("smoke");
-                }
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-            }
-        }
-        if(cqMsg.getGroupId() == 564679329){
-            mp4Queue.addMsg(msg);
-            if(mp4Queue.isRepeat()){
-                if (mp4Admin.contains(cqMsg.getUserId())) {
-                    logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
-                    cqMsg.setMessage("[CQ:at,qq=1012621328] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
-                }else{
-                    logger.info("正在尝试禁言" + cqMsg.getUserId());
-                    cqMsg.setDuration(600);
-                    cqMsg.setMessageType("smoke");
-                }
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-            }
-        }
-        if(cqMsg.getGroupId() == 677545541){
-            mp5S4Queue.addMsg(msg);
-            if(mp5S4Queue.isRepeat()){
-                if (mp5S4Admin.contains(cqMsg.getUserId())) {
-                    logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
-                    cqMsg.setMessage("[CQ:at,qq=2643555740] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
-                }else{
-                    logger.info("正在尝试禁言" + cqMsg.getUserId());
-                    cqMsg.setDuration(600);
-                    cqMsg.setMessageType("smoke");
-                }
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-            }
-        }
-        if(cqMsg.getGroupId() == 532783765){
-            testQueue.addMsg(msg);
-            if(testQueue.isRepeat()){
-                logger.info("正在尝试禁言" + cqMsg.getUserId());
-                cqMsg.setDuration(600);
-                cqMsg.setMessageType("smoke");
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-            }
-        }
     }
 }
