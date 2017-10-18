@@ -27,6 +27,15 @@ public class CqMsg {
     private Boolean approve;
     private String reason;
     private Boolean enable;
+    private Long time;
+
+    public Long getTime() {
+        return time;
+    }
+
+    public void setTime(Long time) {
+        this.time = time;
+    }
 
     public Boolean getEnable() {
         return enable;

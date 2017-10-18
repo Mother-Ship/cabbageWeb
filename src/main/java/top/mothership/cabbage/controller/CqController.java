@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
 
 @RestController
 public class CqController {
+
+
     private final CqServiceImpl cqService;
     private final SmokeUtil smokeUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
@@ -57,6 +59,8 @@ public class CqController {
                             logger.info("开始处理群" + cqMsg.getGroupId() + "的成员" + cqMsg.getUserId() + "发送的命令");
                         } else {
                             //否则将消息传入禁言处理方法（只有群消息才会进）
+                            //增加一个时间戳（划掉）插件自带了Time
+//                            cqMsg.setTime(Calendar.getInstance().getTimeInMillis());
                             smokeUtil.praseSmoke(cqMsg);
                         }
                         break;
@@ -94,19 +98,20 @@ public class CqController {
                 break;
             case "event":
                 if(cqMsg.getEvent().equals("group_increase")) {
-
                     cqService.praseNewsPaper(cqMsg);
-
+                }
+                if(cqMsg.getEvent().equals("group_admin")){
+                    logger.info("检测到群管变动："+cqMsg.getUserId()+"，操作为"+cqMsg.getSubType());
+                    smokeUtil.loadGroupAdmins();
                 }
                 break;
             case "request":
                 //只有是加群请求的时候才进入
                 if(cqMsg.getRequestType().equals("group")&&cqMsg.getSubType().equals("invite")){
-
                     logger.info("已将"+cqMsg.getUserId()+"将白菜邀请入"+cqMsg.getGroupId()+"的请求进行暂存");
                     cqService.stashInviteRequest(cqMsg);
-
                 }
+
                 break;
             default:
                 logger.error("传入无法识别的Request，可能是HTTPAPI插件已经更新");

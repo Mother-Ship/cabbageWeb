@@ -1,12 +1,21 @@
 package top.mothership.cabbage.util;
 
+import top.mothership.cabbage.pojo.CqMsg;
+
+import java.util.ArrayList;
+
 public class MsgQueue {
+    private final static String singleImgRegex = "\\[CQ:image,file=(.+)\\]";
+    private final static String filterRegex = "[^\\u4e00-\\u9fa5a-zA-Z0-9]";
     private int start = 0;
     private int end = 0;
     private int len = 0;
-    private String[] msgs = new String[100];
+    private CqMsg[] msgs = new CqMsg[100];
     //避免空指针
-    private String msg ="";
+    private CqMsg msg =new CqMsg();
+
+
+
 
     public boolean isRepeat(){
         int count =0;
@@ -14,25 +23,32 @@ public class MsgQueue {
         if (start < end) {
             //复读不抓三个字以下的和纯图片
             for (int i = 0; i < end; i++) {
-                if (msg.equals(msgs[i]) && !msg.equals("Image") && msg.length() >= 3) {
+                if (msg.getMessage().replaceAll(filterRegex, "")
+                        .equals(msgs[i].getMessage().replaceAll(filterRegex, ""))
+                        && !msg.getMessage().matches(singleImgRegex) && msg.getMessage().length() >= 3) {
                     count++;
                 }
             }
         } else {
             for (int i = 0; i < start - 1; i++) {
-                if (msg.equals(msgs[i]) && !msg.equals("Image") && msg.length() >= 3) {
+                if (msg.getMessage().replaceAll(filterRegex, "")
+                        .equals(msgs[i].getMessage().replaceAll(filterRegex, ""))
+                        && !msg.getMessage().matches(singleImgRegex) && msg.getMessage().length() >= 3) {
                     count++;
                 }
             }
             for (int i = end; i < msgs.length; i++) {
-                if (msg.equals(msgs[i]) && !msg.equals("Image") && msg.length() >= 3) {
+                if (msg.getMessage().replaceAll(filterRegex, "")
+                        .equals(msgs[i].getMessage().replaceAll(filterRegex, ""))
+                        && !msg.getMessage().matches(singleImgRegex) && msg.getMessage().length() >= 3) {
                     count++;
                 }
             }
         }
         return count>=6;
     }
-    public void addMsg(String msg){
+    public void addMsg(CqMsg msg){
+        //循环队列的具体实现
         len++;
         if (len >= 100) {
             len = 100;
@@ -50,5 +66,41 @@ public class MsgQueue {
         end++;
 
     }
+    public ArrayList<CqMsg> toArrayList(){
+        ArrayList<CqMsg> result = new ArrayList<>();
+        if (start < end) {
+            for (int i = 0; i < end; i++) {
+                result.add(msgs[i]);
+            }
+        } else {
+            for (int i = 0; i < start - 1; i++) {
+                result.add(msgs[i]);
+            }
+            for (int i = end; i < msgs.length; i++) {
+                result.add(msgs[i]);
+            }
+        }
+        return result;
+    }
 
+    public ArrayList<CqMsg> getMsgsByQQ(Long QQ){
+        ArrayList<CqMsg> result = new ArrayList<>();
+        if (start < end) {
+            for (int i = 0; i < end; i++) {
+                if(msgs[i].getUserId().equals(QQ))
+                result.add(msgs[i]);
+            }
+        } else {
+            for (int i = 0; i < start - 1; i++) {
+                if(msgs[i].getUserId().equals(QQ))
+                result.add(msgs[i]);
+            }
+            for (int i = end; i < msgs.length; i++) {
+                if(msgs[i].getUserId().equals(QQ))
+                result.add(msgs[i]);
+            }
+        }
+        return result;
+
+    }
 }
