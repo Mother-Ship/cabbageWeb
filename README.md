@@ -25,6 +25,9 @@
 !bps xxx #n
 以文字方式查询某人第n个BP
 
+!sleep n
+睡吧。（禁言自己n小时）
+
 !setid xxx
 将某个id与自己QQ绑定，绑定后可使用：
 
@@ -99,7 +102,8 @@
 !sudo fp bid
 打印给定bid的#1
 
-
+!sudo listMsg @xxx
+打印被艾特的人最近的10条消息。在对方撤回消息时起作用。
 
 
 
