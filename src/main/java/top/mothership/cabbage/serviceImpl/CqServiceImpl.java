@@ -256,6 +256,16 @@ public class CqServiceImpl implements CqService {
                 if (hour > 13) {
                     hour = 13L;
                 }
+                if(hour==0){
+                    if(cqMsg.getUserId()== 546748348){
+                        hour=720L;
+                    }else {
+                        hour = 6L;
+                    }
+                }
+                if(hour<0){
+                    hour = 6L;
+                }
                 logger.info(cqMsg.getUserId() + "被自己禁言" + hour + "小时。");
                 cqMsg.setMessage("睡吧。");
                 cqUtil.sendMsg(cqMsg);

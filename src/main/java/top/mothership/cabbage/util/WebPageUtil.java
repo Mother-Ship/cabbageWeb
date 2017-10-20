@@ -77,7 +77,9 @@ public class WebPageUtil {
         }
 
     }
-
+//    public BufferedImage getBGBackup(int bid,Beatmap beatmap){
+//
+//    }
     public BufferedImage getBG(int bid, Beatmap beatmap) {
         logger.info("开始获取谱面"+bid+"的背景");
         HttpURLConnection httpConnection;

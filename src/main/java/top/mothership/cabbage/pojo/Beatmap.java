@@ -5,7 +5,6 @@ import com.google.gson.annotations.SerializedName;
 public class Beatmap {
     private String beatmapsetId;
 
-
     private String beatmapId;
 
     private Integer approved;
