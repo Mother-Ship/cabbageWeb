@@ -87,18 +87,16 @@ public class ImgUtil {
 
             bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId())+".png"));
         } catch (NullPointerException e) {
-            try {
-                bg = getCopyImage(ImageIO.read(new File(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img\\stat\\"+String.valueOf(userFromAPI.getUserId())+".png")));
-            } catch (IOException e1) {
+           //现在已经不用再去扫描硬盘了啊
                 try {
                     bg = getCopyImage(images.get(role + ".png"));
 
                 } catch (NullPointerException e2) {
 
-                    logger.error(e1.getMessage());
+                    logger.error(e2.getMessage());
                     return;
                 }
-            }
+
         }
 
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
