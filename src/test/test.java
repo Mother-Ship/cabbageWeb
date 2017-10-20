@@ -12,10 +12,15 @@ import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class test {
     @Test
@@ -61,14 +66,35 @@ public class test {
 //        urlParameters.add(new BasicNameValuePair("password", "3133170-="));
 //        post.setEntity(new UrlEncodedFormEntity(urlParameters));
 //        HttpResponse response = client.execute(post);
-//        CookieStore cookiestore=client.getCookieStore();
-//        DefaultHttpClient httpclient2=new DefaultHttpClient();
+//        CookieStore cookiestore = client.getCookieStore();
+//        DefaultHttpClient httpclient2 = new DefaultHttpClient();
 //        httpclient2.setCookieStore(cookiestore);
 //        HttpGet httpGet = new HttpGet("https://osu.ppy.sh/d/10217");
-//       HttpResponse httpResponse=  httpclient2.execute(httpGet);
+//        HttpResponse httpResponse = httpclient2.execute(httpGet);
 //        // 获取响应消息实体
 //        HttpEntity entity = httpResponse.getEntity();
-//        // 响应状态
+//        InputStream is = entity.getContent();
+//        //直接包装为ZipInputStream
+//        //得实现
+//        ZipInputStream zis = new ZipInputStream(new CheckedInputStream(is, new CRC32()));
+//        ZipEntry entry = null;
+//        while ((entry = zis.getNextEntry()) != null) {
+//
+//            int count;
+//            byte data[] = new byte[(int) entry.getSize()];
+//            int start = 0, end = 0;
+//            while (entry.getSize() - start > 0) {
+//                end = zis.read(data, start, (int)entry.getSize()-start);
+//                if (end <= 0) {
+//                    break;
+//                }
+//                start += end;
+//            }
+//            System.out.println(entry.getName());
+//            System.out.println(data);
+//
+//        }
+        // 响应状态
 //        System.out.println("status:" + httpResponse.getStatusLine());
 //        System.out.println("headers:");
 //        HeaderIterator iterator = httpResponse.headerIterator();
@@ -82,7 +108,7 @@ public class test {
 //            System.out.println("response content:"
 //                    + responseString.replace("\r\n", ""));
 //        }
-//
+
     }
 
 

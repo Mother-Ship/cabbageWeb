@@ -42,6 +42,7 @@ public class CqController {
                 String msg  = cqMsg.getMessage();
                 msg = msg.replaceAll("&#91;", "[");
                 msg = msg.replaceAll("&#93;", "]");
+                msg = msg.replaceAll("&#44;", ",");
                 cqMsg.setMessage(msg);
                 String msgWithoutImage;
                 if (msg.matches(Constant.IMG_REGEX)) {
