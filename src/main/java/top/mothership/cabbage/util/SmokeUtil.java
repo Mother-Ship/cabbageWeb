@@ -16,7 +16,6 @@ public class SmokeUtil {
     private static List<String> smokeGroups = Arrays.asList(rb.getString("smokeGroups").split(","));
     private Logger logger = LogManager.getLogger(this.getClass());
     private final CqUtil cqUtil;
-    //对每个开启禁言复读的群，创建一个新的queue
     public static Map<Long, MsgQueue> msgQueues = new HashMap<>();
     private static Map<Long, List<Long>> groupAdmins;
 
@@ -52,7 +51,7 @@ public class SmokeUtil {
             MsgQueue msgQueue = msgQueues.get(cqMsg.getGroupId());
             //进行添加
             msgQueue.addMsg(cqMsg);
-        //如果是开启禁言的群,并且该条触发了禁言
+            //如果是开启禁言的群,并且该条触发了禁言
 
             if (smokeGroups.contains(String.valueOf(cqMsg.getGroupId()))&&msgQueue.isRepeat()) {
                 if (groupAdmins.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())){

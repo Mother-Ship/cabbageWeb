@@ -250,8 +250,8 @@ public class CqServiceImpl implements CqService {
                 Long hour;
                 try {
                     hour = Long.valueOf(m.group(2).substring(1));
-                } catch (StringIndexOutOfBoundsException e) {
-                    hour = 13L;
+                } catch (Exception e) {
+                    hour = 6L;
                 }
                 if (hour > 13) {
                     hour = 13L;
@@ -263,6 +263,12 @@ public class CqServiceImpl implements CqService {
                 cqMsg.setDuration((int) (hour * 3600));
                 cqUtil.sendMsg(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+            case "roll":
+                if(cqMsg.getGroupId()==677545541||cqMsg.getGroupId()==112177148){
+                    cqMsg.setMessage(String.valueOf(new Random().nextInt(100)));
+                    cqUtil.sendMsg(cqMsg);
+                }
                 break;
         }
 
@@ -305,16 +311,28 @@ public class CqServiceImpl implements CqService {
                 usernames = m.group(2).substring(1, index).split(",");
                 role = m.group(2).substring(index + 1);
                 logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：" + role);
-                modifyUserRole(usernames, role, cqMsg);
+                addUserRole(usernames, role, cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "del":
-                usernames = m.group(2).substring(1).split(",");
-                role = "creep";
-                logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：" + role);
-                modifyUserRole(usernames, role, cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
+                index = m.group(2).indexOf(":");
+
+
+                if (index == -1) {
+                    //如果拿不到
+                    usernames = m.group(2).substring(1).split(",");
+                    logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：All");
+                    removeUserRole(usernames, "all", cqMsg);
+                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                    break;
+                }else {
+                    usernames = m.group(2).substring(1,index).split(",");
+                    role = m.group(2).substring(index + 1);
+                    logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：" + role);
+                    removeUserRole(usernames, role, cqMsg);
+                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                    break;
+                }
             case "check":
                 username = m.group(2).substring(1);
                 Userinfo userFromAPI = apiUtil.getUser(username, null);
@@ -471,6 +489,8 @@ public class CqServiceImpl implements CqService {
                     for (CqMsg aList : inviteRequests.keySet()) {
                         if (aList.getFlag().equals(flag)) {
                             inviteRequests.replace(aList, "是");
+                            //通过新群邀请时，向消息队列Map中添加一个消息队列对象
+                            SmokeUtil.msgQueues.put(aList.getGroupId(), new MsgQueue());
                         }
                     }
                     cqMsg.setMessageType("group");
@@ -530,21 +550,21 @@ public class CqServiceImpl implements CqService {
                 QQ = msg.substring(24, index);
                 if ("all".equals(QQ)) {
                     resp = "啥玩意啊 咋回事啊";
-                }else {
+                } else {
                     ArrayList<CqMsg> msgs = SmokeUtil.msgQueues.get(cqMsg.getGroupId()).getMsgsByQQ(Long.valueOf(QQ));
                     String card = cqUtil.getCard(Long.valueOf(QQ), cqMsg.getGroupId());
                     if (msgs.size() == 0) {
                         resp = "没有" + QQ + "的最近消息。";
-                    } else if(msgs.size()<=10){
+                    } else if (msgs.size() <= 10) {
 
-                        for (int i=0;i<msgs.size();i++) {
-                            resp = resp.concat(  card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
-                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage()+"\n");
+                        for (int i = 0; i < msgs.size(); i++) {
+                            resp = resp.concat(card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
+                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n");
                         }
-                    }else{
-                        for (int i=msgs.size()-10;i<msgs.size();i++) {
-                            resp = resp.concat( card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
-                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage()+"\n");
+                    } else {
+                        for (int i = msgs.size() - 10; i < msgs.size(); i++) {
+                            resp = resp.concat(card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
+                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n");
                         }
                     }
                 }
@@ -610,6 +630,7 @@ public class CqServiceImpl implements CqService {
         Userinfo userInDB = null;
         String role;
         int scoreRank;
+        List<String> roles;
         //彩蛋
 
 
@@ -637,6 +658,12 @@ public class CqServiceImpl implements CqService {
         if (role == null) {
             role = "creep";
         }
+        roles = Arrays.asList(role.split(","));
+        //这样可以排成[mp5mc, mp5chart, mp5, mp4chart, mp4, mp3, dev, creep]
+        //符合业务需求
+        Collections.sort(roles);
+        Collections.reverse(roles);
+
         //获取score rank
         //gust？
         if (userFromAPI.getUserId() == 1244312
@@ -648,8 +675,8 @@ public class CqServiceImpl implements CqService {
         } else {
             scoreRank = webPageUtil.getRank(userFromAPI.getRankedScore(), 1, 2000);
         }
-        //调用绘图类绘图
-        imgUtil.drawUserInfo(userFromAPI, userInDB, role, day, near, scoreRank);
+        //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
+        imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), day, near, scoreRank);
         //构造消息并发送
         cqMsg.setMessage("[CQ:image,file=" + userFromAPI.getUserId() + "stat.png]");
         cqUtil.sendMsg(cqMsg);
@@ -775,7 +802,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void modifyUserRole(String[] usernames, String role, CqMsg cqMsg) {
+    private void addUserRole(String[] usernames, String role, CqMsg cqMsg) {
         List<String> nullList = new ArrayList<>();
         List<String> doneList = new ArrayList<>();
         List<String> addList = new ArrayList<>();
@@ -793,7 +820,8 @@ public class CqServiceImpl implements CqService {
                     logger.info("开始将用户" + userFromAPI.getUserName() + "添加到数据库。");
                     User user = new User();
                     user.setUserId(userFromAPI.getUserId());
-                    user.setRole("creep");
+                    //2017-10-19 15:28:37新增加用户时候直接将用户组改为指定用户组
+                    user.setRole(role);
                     user.setQQ("0");
                     baseMapper.addUser(user);
 
@@ -813,9 +841,17 @@ public class CqServiceImpl implements CqService {
                     addList.add(userFromAPI.getUserName());
                 } else {
                     //进行Role更新
-                    User user = new User();
-                    user.setUserId(userFromAPI.getUserId());
-                    user.setRole(role);
+
+                    User user = baseMapper.getUser(null, userFromAPI.getUserId());
+                    //拿到原先的user，把role拼上去，塞回去
+                    String newRole;
+                    //如果当前的用户组是creep，就直接改成现有的组
+                    if("creep".equals(user.getRole())){
+                        newRole = role;
+                    }else {
+                        newRole = user.getRole() + "," + role;
+                    }
+                    user.setRole(newRole);
                     baseMapper.updateUser(user);
                     doneList.add(userFromAPI.getUserName());
                 }
@@ -827,7 +863,7 @@ public class CqServiceImpl implements CqService {
 
         }
         String resp;
-        resp = "用户组修改完成。";
+        resp = "用户组添加完成。";
 
         if (doneList.size() > 0) {
             resp = resp.concat("\n修改成功：" + doneList.toString());
@@ -846,6 +882,69 @@ public class CqServiceImpl implements CqService {
         if (addList.size() == 1 && usernames.length == 1 && userFromAPI != null) {
             //这时候是只有单个用户，并且没有在nulllist里
             resp = resp.concat("\n[CQ:image,file=" + userFromAPI.getUserId() + "stat.png]");
+        }
+        cqMsg.setMessage(resp);
+        cqUtil.sendMsg(cqMsg);
+    }
+
+    private void removeUserRole(String[] usernames, String role, CqMsg cqMsg) {
+        List<String> nullList = new ArrayList<>();
+        List<String> doneList = new ArrayList<>();
+        List<String> notUsedList = new ArrayList<>();
+        Userinfo userFromAPI = null;
+        for (String username : usernames) {
+            logger.info("开始从API获取" + username + "的信息");
+            userFromAPI = apiUtil.getUser(username, null);
+            if (userFromAPI != null) {
+                //查找userRole数据库
+
+                //进行Role更新
+                User user = baseMapper.getUser(null, userFromAPI.getUserId());
+                if(user==null){
+                    notUsedList.add(userFromAPI.getUserName());
+                    //直接忽略掉下面的，进行下一次循环
+                    continue;
+                }
+                //拿到原先的user，把role去掉
+                String newRole;
+                if("all".equals(role)){
+                    newRole = "creep";
+                }else {
+                    //这里如果不把Arrays.asList传入构造函数，而是直接使用会有个Unsupported异常
+                    //因为Arrays.asList做出的List是不可变的
+                    List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
+                    roles.remove(role);
+
+                    if (roles.size() == 0) {
+                        newRole = "creep";
+                    } else {
+                        //转换为字符串，此处得去除空格（懒得遍历+拼接了）
+                        newRole = roles.toString().replace(" ","").
+                                substring(1, roles.toString().replace(" ","").indexOf("]"));
+                    }
+                }
+                user.setRole(newRole);
+                baseMapper.updateUser(user);
+                doneList.add(userFromAPI.getUserName());
+            } else {
+                nullList.add(username);
+            }
+
+        }
+        String resp;
+        resp = "用户组移除完成。";
+
+        if (doneList.size() > 0) {
+            resp = resp.concat("\n修改成功：" + doneList.toString());
+        }
+        if (nullList.size() > 0) {
+            resp = resp.concat("\n不存在的：" + nullList.toString());
+        }
+        if (notUsedList.size() > 0) {
+            resp = resp.concat("\n没用过的：" + notUsedList.toString());
+        }
+        if (usernames.length == 0) {
+            resp = "没有做出改动。";
         }
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
