@@ -77,9 +77,11 @@ public class WebPageUtil {
         }
 
     }
-//    public BufferedImage getBGBackup(int bid,Beatmap beatmap){
-//
-//    }
+    public BufferedImage getBGBackup(int bid,Beatmap beatmap){
+        //业务逻辑走到这里，.osu文件应该已经就位了
+        logger.info("开始从官网获取谱面"+bid+"的背景");
+        return null;
+    }
     public BufferedImage getBG(int bid, Beatmap beatmap) {
         logger.info("开始获取谱面"+bid+"的背景");
         HttpURLConnection httpConnection;

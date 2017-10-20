@@ -610,6 +610,9 @@ public class CqServiceImpl implements CqService {
             case "677545541":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第四届MP5杯赛群。\n报名比赛需要加入本群并填写此表（http://t.cn/RO9bS4D），详见置顶公告。祝大家在比赛中有好的发挥！";
                 break;
+            case "112177148":
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第一届MP4杯赛群。\n报名比赛需要加入本群并填写此表（https://yiqixie.com/e/kabu/v/home/fcABM_9zSnKLHAM2A8bfTCoDM），详见置顶公告。祝大家在比赛中有好的发挥！";
+                break;
             default:
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎加入本群。";
                 break;
