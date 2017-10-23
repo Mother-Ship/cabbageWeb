@@ -309,7 +309,7 @@ public class WebPageUtil {
         }
         File osu = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId()+"\\"+beatmap.getBeatmapId() + ".osu");
 
-        if (osu.length() > 0 && beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
+        if (osu.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
             //如果beatmap状态是ranked,直接读取
             return ;
         }

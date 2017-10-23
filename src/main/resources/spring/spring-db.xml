@@ -21,7 +21,7 @@
         <property name="username" value="${jdbcUser}"/>
         <!--<property name="password" value="${jdbcDevPwd}"/>-->
         <property name="password" value="${jdbcPwd}"/>
-        <!-- 配置初始化大小、最小、最大 -->
+         <!--配置初始化大小、最小、最大 -->
         <property name="initialSize" value="1" />
         <property name="minIdle" value="1" />
         <property name="maxActive" value="100" />
