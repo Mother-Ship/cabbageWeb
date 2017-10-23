@@ -56,7 +56,6 @@ public class CqServiceImpl implements CqService {
         String username;
         Userinfo userFromAPI;
         User user;
-        Score score;
         Beatmap beatmap;
         int day;
         int num;
@@ -176,7 +175,9 @@ public class CqServiceImpl implements CqService {
                     }
                     num = Integer.valueOf(m2.group(3));
                 }
-
+                if("112177148".equals(cqMsg.getGroupId())||"677545541".equals(cqMsg.getGroupId())){
+                    return;
+                }
                 if (m.group(1).equals("bpmes") && num > 0) {
                     printSimpleBP(userFromAPI, num, cqMsg);
                 } else {

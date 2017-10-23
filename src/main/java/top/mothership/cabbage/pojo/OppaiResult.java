@@ -66,6 +66,7 @@ public class OppaiResult {
 
     private double pp;
 
+
     public String getOppaiVersion() {
         return oppaiVersion;
     }

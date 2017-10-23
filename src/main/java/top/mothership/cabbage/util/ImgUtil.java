@@ -435,7 +435,7 @@ public class ImgUtil {
 //        logger.info("计算完成，开始绘制");
         boolean defaultBG = false;
         try {
-            bg = webPageUtil.getBG(score.getBeatmapId(), beatmap);
+            bg = webPageUtil.getBG(beatmap);
         } catch (NullPointerException e) {
             logger.error("从血猫抓取谱面背景失败,错误原因：" + e.getMessage() + "，使用默认背景");
             //随机抽取一个bg
@@ -691,7 +691,7 @@ public class ImgUtil {
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
 
         try {
-            bg = webPageUtil.getBG(score.getBeatmapId(), beatmap);
+            bg = webPageUtil.getBG(beatmap);
         } catch (NullPointerException e) {
             logger.error("从血猫抓取谱面背景失败,错误原因：" + e.getMessage() + "，使用默认背景");
             //随机抽取一个bg
