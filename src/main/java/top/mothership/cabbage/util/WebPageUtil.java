@@ -92,12 +92,13 @@ public class WebPageUtil {
         BufferedImage bg;
         BufferedImage resizedBG = null;
         OsuFile osuFile = praseOsuFile(beatmap);
-        File bgFile = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId() +osuFile.getBgName());
-
+        File bgFile = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\"
+                + beatmap.getBeatmapSetId()+"\\" +osuFile.getBgName());
+        logger.debug(bgFile.length());
         if (bgFile.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
             //如果osu文件大小大于0，并且状态是ranked
             try {
-                return ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId()+ osuFile.getBgName()));
+                return ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId()+"\\"+ osuFile.getBgName()));
                 //这个异常几乎肯定是不会出现的……
             } catch (IOException e) {
             }
@@ -343,10 +344,9 @@ public class WebPageUtil {
             logger.error("获取" + beatmap.getBeatmapId() + "的.osu文件，失败五次");
         }
     }
-    //这个方法只能处理ranked/approved/qualified的.osu文件。
+    //这个方法只能处理ranked/approved/qualified的.osu文件,在目前的业务逻辑里默认.osu文件是存在的。
     public OsuFile praseOsuFile(Beatmap beatmap){
         //先获取
-        getOsuFile(beatmap);
         String osuFile;
         String bgName;
 
@@ -364,7 +364,7 @@ public class WebPageUtil {
         }else{
             bgName = m.group(1);
         }
-        m=Pattern.compile(Constant.BGNAME_REGEX).matcher(osuFile);
+        m=Pattern.compile(Constant.BGNAME_REGEX).matcher(bgName);
         if(m.find()) {
             OsuFile result = new OsuFile();
             bgName = m.group(0);

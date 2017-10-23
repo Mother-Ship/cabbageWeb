@@ -113,7 +113,7 @@ public class test {
 //            System.out.println("response content:"
 //                    + responseString.replace("\r\n", ""));
 //        }
-//        String osuFile = null;
+        String osuFile = null;
 //        File osu = new File("c:\\coolq pro\\data\\image\\resource\\osu\\" +190045 + ".osu");
 //        try(FileInputStream fis = new FileInputStream(osu)) {
 //            osuFile = new String(readInputStream(fis), Charset.forName("UTF-8"));
@@ -122,13 +122,13 @@ public class test {
 //        }
 //        Matcher m = Pattern.compile("(?<=\\[Events]\\r\\n)([^\\r\\n]*)\\r\\n([^\\r\\n]*)").matcher(osuFile);
 //        m.find();
-//        osuFile=m.group(2);
-//        System.out.println(osuFile);
-//        m=Pattern.compile("(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|(png))").matcher(osuFile);
-//        m.find();
-//        System.out.println(m.group(0));
-            Long a =null;
-            System.out.println(String.valueOf(a));
+//        osuFile="0,0,\"bg.png\",0,0";
+        osuFile = "0,0,\"deetz.jpg\",0,0";
+        System.out.println(osuFile);
+        Matcher m=Pattern.compile("(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|.*\\.(png))").matcher(osuFile);
+        m.find();
+        System.out.println(m.group(0));
+
 
     }
     private byte[] readInputStream(InputStream inputStream) throws IOException {
