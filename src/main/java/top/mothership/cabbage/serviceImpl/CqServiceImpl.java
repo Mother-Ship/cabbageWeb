@@ -175,8 +175,11 @@ public class CqServiceImpl implements CqService {
                     }
                     num = Integer.valueOf(m2.group(3));
                 }
-                if("112177148".equals(cqMsg.getGroupId())||"677545541".equals(cqMsg.getGroupId())){
+                if(num>0&&("112177148".equals(String.valueOf(cqMsg.getGroupId()))||"677545541".equals(String.valueOf(cqMsg.getGroupId())))){
+                    logger.info(cqMsg.getUserId()+"触发了赛群禁用!bpme #n命令。");
+                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                     return;
+
                 }
                 if (m.group(1).equals("bpmes") && num > 0) {
                     printSimpleBP(userFromAPI, num, cqMsg);
