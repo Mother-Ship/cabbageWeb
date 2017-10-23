@@ -13,6 +13,6 @@ public class Constant {
     public final static ResourceBundle CABBAGE_CONFIG = ResourceBundle.getBundle("cabbage");
     public final static String REPEAT_FILTER_REGEX = "[^\\u4e00-\\u9fa5a-zA-Z0-9]";
     public final static String BGLINE_REGEX = "(?<=\\[Events]\\r\\n)([^\\r\\n]*)\\r\\n([^\\r\\n]*)";
-    public final static String BGNAME_REGEX = "(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|(png))";
+    public final static String BGNAME_REGEX = "(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|.*\\.(png))";
     public final static String DOWNLOAD_FILENAME_REGEX ="(?<=filename=\")([^\";]*)";
 }
