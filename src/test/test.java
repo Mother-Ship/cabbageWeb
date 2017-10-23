@@ -1,3 +1,4 @@
+
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -10,13 +11,17 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
+import top.mothership.cabbage.util.Constant;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.ZipEntry;
@@ -108,8 +113,32 @@ public class test {
 //            System.out.println("response content:"
 //                    + responseString.replace("\r\n", ""));
 //        }
+        String osuFile = null;
+        File osu = new File("c:\\coolq pro\\data\\image\\resource\\osu\\" +190045 + ".osu");
+        try(FileInputStream fis = new FileInputStream(osu)) {
+            osuFile = new String(readInputStream(fis), Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Matcher m = Pattern.compile("(?<=\\[Events]\\r\\n)([^\\r\\n]*)\\r\\n([^\\r\\n]*)").matcher(osuFile);
+        m.find();
+        osuFile=m.group(2);
+        System.out.println(osuFile);
+        m=Pattern.compile("(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|(png))").matcher(osuFile);
+        m.find();
+        System.out.println(m.group(0));
+
 
     }
-
+    private byte[] readInputStream(InputStream inputStream) throws IOException {
+        byte[] buffer = new byte[1024];
+        int len = 0;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        while ((len = inputStream.read(buffer)) != -1) {
+            bos.write(buffer, 0, len);
+        }
+        bos.close();
+        return bos.toByteArray();
+    }
 
 }

@@ -3,7 +3,8 @@ package top.mothership.cabbage.pojo;
 import com.google.gson.annotations.SerializedName;
 
 public class Beatmap {
-    private String beatmapsetId;
+    @SerializedName("beatmapset_id")
+    private String beatmapSetId;
 
     private String beatmapId;
 
@@ -16,7 +17,6 @@ public class Beatmap {
     private String version;
 
     private String fileMd5;
-
 
     private String diffSize;
 
@@ -103,12 +103,12 @@ public class Beatmap {
         return artist;
     }
 
-    public String getBeatmapsetId() {
-        return beatmapsetId;
+    public String getBeatmapSetId() {
+        return beatmapSetId;
     }
 
-    public void setBeatmapsetId(String beatmapsetId) {
-        this.beatmapsetId = beatmapsetId;
+    public void setBeatmapSetId(String beatmapSetId) {
+        this.beatmapSetId = beatmapSetId;
     }
 
     public String getHitLength() {

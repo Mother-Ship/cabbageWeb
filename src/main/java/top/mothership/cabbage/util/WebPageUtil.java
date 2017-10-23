@@ -7,6 +7,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.Beatmap;
+import top.mothership.cabbage.pojo.OsuFile;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -14,11 +15,14 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class WebPageUtil {
@@ -77,35 +81,32 @@ public class WebPageUtil {
         }
 
     }
-    public BufferedImage getBGBackup(int bid,Beatmap beatmap){
-        //业务逻辑走到这里，.osu文件应该已经就位了
-        logger.info("开始从官网获取谱面"+bid+"的背景");
+    public BufferedImage getBGBackup(Beatmap beatmap){
+        logger.info("开始从官网获取谱面"+beatmap.getBeatmapId()+"的背景");
         return null;
     }
-    public BufferedImage getBG(int bid, Beatmap beatmap) {
-        logger.info("开始获取谱面"+bid+"的背景");
+    public BufferedImage getBG(Beatmap beatmap) {
+        logger.info("开始获取谱面"+beatmap.getBeatmapId()+"的背景");
         HttpURLConnection httpConnection;
         int retry = 0;
         BufferedImage bg;
         BufferedImage resizedBG = null;
-        File bgFile = new File(rb.getString("path") + "\\data\\image\\resource\\bg\\" + bid + ".png");
+        OsuFile osuFile = praseOsuFile(beatmap);
+        File bgFile = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId() +osuFile.getBgName());
 
         if (bgFile.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
             //如果osu文件大小大于0，并且状态是ranked
             try {
-
-                return ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\bg\\" + bid + ".png"));
+                return ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId()+ osuFile.getBgName()));
                 //这个异常几乎肯定是不会出现的……
             } catch (IOException e) {
-
             }
         }
 
         while (retry < 5) {
             try {
-
                 httpConnection =
-                        (HttpURLConnection) new URL(getBGURL + bid).openConnection();
+                        (HttpURLConnection) new URL(getBGURL + beatmap.getBeatmapId()).openConnection();
                 httpConnection.setRequestMethod("GET");
                 httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
                 httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);
@@ -117,6 +118,10 @@ public class WebPageUtil {
                 }
                 //读取返回结果
                 bg = ImageIO.read(httpConnection.getInputStream());
+                Matcher m = Pattern.compile(Constant.DOWNLOAD_FILENAME_REGEX)
+                        .matcher(httpConnection.getHeaderFields().get("Content-Disposition").get(0));
+                m.find();
+
                 //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
                 int resizedWeight = 1366;
                 int resizedHeight = (int) Math.ceil((float) bg.getHeight() / bg.getWidth() * 1366);
@@ -146,15 +151,16 @@ public class WebPageUtil {
                 }
                 //刷新掉bg以及临时bg的缓冲，将其作废
                 resizedBGTmp.flush();
-
                 bg.flush();
-
-
-                //同时写入硬盘
-                ImageIO.write(resizedBG, "png", new File(rb.getString("path") + "\\data\\image\\resource\\bg\\" + bid + ".png"));
+                //在谱面rank状态是Ranked或者Approved时，写入硬盘
+                if(beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
+                    //扩展名直接从文件里取
+                    ImageIO.write(resizedBG, m.group(0).substring(m.group(0).indexOf(".")+1),
+                            new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" +
+                                    beatmap.getBeatmapSetId()+"\\" + m.group(0)));
+                }
                 //手动关闭流
                 httpConnection.disconnect();
-
                 break;
             } catch (IOException e) {
                 logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
@@ -163,7 +169,7 @@ public class WebPageUtil {
 
         }
         if (retry == 5) {
-            logger.error("获取" + bid + "的背景图，失败五次");
+            logger.error("获取" + beatmap.getBeatmapId()+ "的背景图，失败五次");
         }
         return resizedBG;
 
@@ -291,22 +297,26 @@ public class WebPageUtil {
         return null;
     }
 
-    public String getOsuFile(int bid, Beatmap beatmap) {
-        HttpURLConnection httpConnection = null;
+    public void getOsuFile(Beatmap beatmap) {
+        HttpURLConnection httpConnection;
+        byte[] osuFile;
         int retry = 0;
-        File osu = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + bid + ".osu");
+        //获取.osu的逻辑和获取BG不一样，Qua的图BG不缓存，而.osu必须缓存
+        //即使是qua的图，也必须有sid的文件夹
+        File sidPath =new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId());
+        if(!sidPath.exists()){
+            sidPath.mkdir();
+        }
+        File osu = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId()+"\\"+beatmap.getBeatmapId() + ".osu");
 
-        if (osu.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
-            //如果osu文件大小大于0，并且状态是ranked
-            return bid + ".osu";
+        if (osu.length() > 0 && beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
+            //如果beatmap状态是ranked,直接读取
+            return ;
         }
         while (retry < 5) {
-            try (
-                    FileOutputStream fs = new FileOutputStream(osu)
-            ) {
-
+            try (FileOutputStream fs = new FileOutputStream(osu)) {
                 httpConnection =
-                        (HttpURLConnection) new URL(getOsuURL + bid).openConnection();
+                        (HttpURLConnection) new URL(getOsuURL + beatmap.getBeatmapId()).openConnection();
                 httpConnection.setRequestMethod("GET");
                 httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
                 httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);
@@ -315,9 +325,12 @@ public class WebPageUtil {
                     retry++;
                     continue;
                 }
-                //读取返回结果
-                fs.write(readInputStream(httpConnection.getInputStream()));
-                //手动关闭流
+                //将返回结果读取为Byte数组
+                osuFile = readInputStream(httpConnection.getInputStream());
+
+                fs.write(osuFile);
+
+                //手动关闭连接
                 httpConnection.disconnect();
                 break;
             } catch (IOException e) {
@@ -327,12 +340,39 @@ public class WebPageUtil {
 
         }
         if (retry == 5) {
-            logger.error("获取" + bid + "的背景图，失败五次");
+            logger.error("获取" + beatmap.getBeatmapId() + "的.osu文件，失败五次");
+        }
+    }
+    //这个方法只能处理ranked/approved/qualified的.osu文件。
+    public OsuFile praseOsuFile(Beatmap beatmap){
+        //先获取
+        getOsuFile(beatmap);
+        String osuFile;
+        String bgName;
+
+        File osu = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId()+"\\"+beatmap.getBeatmapId() + ".osu");
+        try(FileInputStream fis = new FileInputStream(osu)) {
+            osuFile = new String(readInputStream(fis), Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
             return null;
         }
-        return bid + ".osu";
-    }
+        Matcher m = Pattern.compile(Constant.BGLINE_REGEX).matcher(osuFile);
+        m.find();
+        if("//Background and Video events".equals(m.group(1))){
+            bgName = m.group(2);
+        }else{
+            bgName = m.group(1);
+        }
+        m=Pattern.compile(Constant.BGNAME_REGEX).matcher(osuFile);
+        if(m.find()) {
+            OsuFile result = new OsuFile();
+            bgName = m.group(0);
+            result.setBgName(bgName);
+            return result;
+        }else return null;
 
+    }
     private byte[] readInputStream(InputStream inputStream) throws IOException {
         byte[] buffer = new byte[1024];
         int len = 0;

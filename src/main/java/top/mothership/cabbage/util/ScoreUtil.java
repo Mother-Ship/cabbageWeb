@@ -93,9 +93,11 @@ public class ScoreUtil {
         logger.info("开始计算PP");
         String accS = new DecimalFormat("###.00").format(100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50()) / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())));
         float acc = Float.valueOf(accS);
+        //直接将.osu文件名拼在命令上。
         String cmd = "\"" + rb.getString("path") + "\\data\\image\\resource\\oppai.exe\" "
-                + "\"" + rb.getString("path") + "\\data\\image\\resource\\osu\\";
-        String osuFile = webPageUtil.getOsuFile(score.getBeatmapId(), beatmap);
+                + "\"" + rb.getString("path") + "\\data\\image\\resource\\osu\\"+beatmap.getBeatmapSetId()
+                +"\\"+beatmap.getBeatmapId()+".osu";
+        webPageUtil.getOsuFile(beatmap);
         Set<String> mods = convertMOD(score.getEnabledMods()).keySet();
         BufferedReader bufferedReader;
 
@@ -112,7 +114,7 @@ public class ScoreUtil {
                 modsWithoutSD = mods;
             }
             //拼接命令
-            cmd = cmd + osuFile + "\" -ojson ";
+            cmd = cmd + "\" -ojson ";
             if (modsWithoutSD.size() > 0) {
                 cmd = cmd.concat("+" + modsWithoutSD.toString().replaceAll("[\\[\\] ,]", "") + " ");
 
@@ -125,7 +127,7 @@ public class ScoreUtil {
             String result = bufferedReader.readLine();
 //            logger.info("oppai计算结果："+result);
             OppaiResult oppaiResult = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, OppaiResult.class);
-            //一个小补丁
+            //这见鬼的PP溢出好像并不能这样修好，先不管了
             if (Math.round(oppaiResult.getAimPp()) == Integer.MAX_VALUE) {
                 oppaiResult.setAimPp(0);
                 oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
@@ -138,6 +140,7 @@ public class ScoreUtil {
                 oppaiResult.setSpeedPp(0);
                 oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
             }
+
             return oppaiResult;
 
         } catch (InterruptedException | IOException e) {
