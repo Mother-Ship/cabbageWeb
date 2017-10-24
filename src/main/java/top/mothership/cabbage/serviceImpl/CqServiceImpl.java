@@ -1294,7 +1294,6 @@ public class CqServiceImpl implements CqService {
             entity = response.getEntity();
             String html = EntityUtils.toString(entity, "GBK");
             httpGet.releaseConnection();
-            System.out.println(html);
             Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
             m.find();
             String addLink = m.group(1);
@@ -1329,6 +1328,25 @@ public class CqServiceImpl implements CqService {
 
     }
     private void verify(User user,CqMsg cqMsg){
-
+        DefaultHttpClient client = new DefaultHttpClient();
+        HttpGet httpGet = new HttpGet("https://osu.ppy.sh/p/verify");
+        List<Cookie> list = new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {
+        }.getType());
+        CookieStore cookieStore = new BasicCookieStore();
+        for (Cookie c : list) {
+            cookieStore.addCookie(c);
+        }
+        client.setCookieStore(cookieStore);
+        HttpResponse response = null;
+        HttpEntity entity;
+        try {
+            response = client.execute(httpGet);
+            entity = response.getEntity();
+            String html = EntityUtils.toString(entity, "GBK");
+            httpGet.releaseConnection();
+            System.out.println(html);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
