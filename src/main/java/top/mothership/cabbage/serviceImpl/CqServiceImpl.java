@@ -2,7 +2,6 @@ package top.mothership.cabbage.serviceImpl;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -29,7 +28,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.sql.Date;
 import java.text.DecimalFormat;
@@ -41,6 +39,7 @@ import java.util.regex.Pattern;
 @Service
 public class CqServiceImpl implements CqService {
     private static LinkedHashMap<CqMsg, String> inviteRequests = new LinkedHashMap<>();
+    private static List<String> admin = Arrays.asList(Constant.CABBAGE_CONFIG.getString("admin").split(","));
     private ApiUtil apiUtil;
     private CqUtil cqUtil;
     private ImgUtil imgUtil;
@@ -49,7 +48,6 @@ public class CqServiceImpl implements CqService {
     private ScoreUtil scoreUtil;
     private BaseMapper baseMapper;
     private Logger logger = LogManager.getLogger(this.getClass());
-    private static List<String> admin = Arrays.asList(Constant.CABBAGE_CONFIG.getString("admin").split(","));
 
     @Autowired
     public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, ScoreUtil scoreUtil, BaseMapper baseMapper) {
@@ -195,12 +193,7 @@ public class CqServiceImpl implements CqService {
                     }
                     num = Integer.valueOf(m2.group(3));
                 }
-                if (num > 0 && ("112177148".equals(String.valueOf(cqMsg.getGroupId())) || "677545541".equals(String.valueOf(cqMsg.getGroupId())))) {
-                    logger.info(cqMsg.getUserId() + "触发了赛群禁用!bpme #n命令。");
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    return;
 
-                }
                 if (m.group(1).equals("bpmes") && num > 0) {
                     printSimpleBP(userFromAPI, num, cqMsg);
                 } else {
@@ -356,7 +349,7 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                verify(user,cqMsg);
+                verify(user, cqMsg);
                 break;
         }
 
@@ -796,6 +789,14 @@ public class CqServiceImpl implements CqService {
     }
 
     private void printBP(Userinfo userinfo, int num, CqMsg cqMsg) {
+        if (num > 0 && ("112177148".equals(String.valueOf(cqMsg.getGroupId()))
+                || "677545541".equals(String.valueOf(cqMsg.getGroupId())))
+                || "201872650".equals(String.valueOf(cqMsg.getGroupId()))
+                ||"564679329".equals(String.valueOf(cqMsg.getGroupId()))){
+            logger.info(cqMsg.getUserId() + "触发了赛群/4 5群禁用!bpme #n命令。");
+            return;
+
+        }
         //构造一个上一个四点的日历对象
         Calendar c = Calendar.getInstance();
 //        凌晨四点之前，将日期减一
@@ -1153,7 +1154,14 @@ public class CqServiceImpl implements CqService {
 
 
     private void printSimpleBP(Userinfo userinfo, int num, CqMsg cqMsg) {
+        if (num > 0 && ("112177148".equals(String.valueOf(cqMsg.getGroupId()))
+                || "677545541".equals(String.valueOf(cqMsg.getGroupId())))
+                || "201872650".equals(String.valueOf(cqMsg.getGroupId()))
+                ||"564679329".equals(String.valueOf(cqMsg.getGroupId()))){
+            logger.info(cqMsg.getUserId() + "触发了赛群/4 5群禁用!bpme #n命令。");
+            return;
 
+        }
         logger.info("开始获取玩家" + userinfo.getUserName() + "的BP");
         List<Score> list = apiUtil.getBP(userinfo.getUserName(), null);
 
@@ -1257,7 +1265,6 @@ public class CqServiceImpl implements CqService {
 
     private void mutual(User user, String target, CqMsg cqMsg) {
         String msg = cqMsg.getMessage();
-        String targetUserName;
         int uid = 0;
         if (target.contains("[CQ:at,qq=")) {
             int index = msg.indexOf("]");
@@ -1291,6 +1298,7 @@ public class CqServiceImpl implements CqService {
         HttpResponse response = null;
         HttpEntity entity;
         try {
+            response = client.execute(httpGet);
             entity = response.getEntity();
             String html = EntityUtils.toString(entity, "GBK");
             httpGet.releaseConnection();
@@ -1327,7 +1335,8 @@ public class CqServiceImpl implements CqService {
         }
 
     }
-    private void verify(User user,CqMsg cqMsg){
+
+    private void verify(User user, CqMsg cqMsg) {
         DefaultHttpClient client = new DefaultHttpClient();
         HttpGet httpGet = new HttpGet("https://osu.ppy.sh/p/verify");
         List<Cookie> list = new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {
@@ -1344,7 +1353,8 @@ public class CqServiceImpl implements CqService {
             entity = response.getEntity();
             String html = EntityUtils.toString(entity, "GBK");
             httpGet.releaseConnection();
-            System.out.println(html);
+            cqMsg.setMessage(String.valueOf(html.contains("Success")));
+            cqUtil.sendMsg(cqMsg);
         } catch (IOException e) {
             e.printStackTrace();
         }
