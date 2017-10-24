@@ -52,6 +52,7 @@ public interface BaseMapper {
             + "<set>"
             + "<if test=\"user.role != null\">role=#{user.role},</if>"
             + "<if test=\"user.QQ != null\">QQ=#{user.QQ},</if>"
+            + "<if test=\"user.cookie != null\">cookie=#{user.cookie},</if>"
             + "</set>"
             + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);

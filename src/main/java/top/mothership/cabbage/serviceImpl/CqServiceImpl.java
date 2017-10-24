@@ -1,5 +1,20 @@
 package top.mothership.cabbage.serviceImpl;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +28,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.sql.Date;
 import java.text.DecimalFormat;
@@ -54,6 +70,8 @@ public class CqServiceImpl implements CqService {
         Matcher m = Pattern.compile(Constant.CMD_REGEX).matcher(msg);
         m.find();
         String username;
+        String pwd;
+        String target;
         Userinfo userFromAPI;
         User user;
         Beatmap beatmap;
@@ -175,8 +193,8 @@ public class CqServiceImpl implements CqService {
                     }
                     num = Integer.valueOf(m2.group(3));
                 }
-                if(num>0&&("112177148".equals(String.valueOf(cqMsg.getGroupId()))||"677545541".equals(String.valueOf(cqMsg.getGroupId())))){
-                    logger.info(cqMsg.getUserId()+"触发了赛群禁用!bpme #n命令。");
+                if (num > 0 && ("112177148".equals(String.valueOf(cqMsg.getGroupId())) || "677545541".equals(String.valueOf(cqMsg.getGroupId())))) {
+                    logger.info(cqMsg.getUserId() + "触发了赛群禁用!bpme #n命令。");
                     logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                     return;
 
@@ -260,14 +278,14 @@ public class CqServiceImpl implements CqService {
                 if (hour > 13) {
                     hour = 13L;
                 }
-                if(hour==0){
-                    if(cqMsg.getUserId()== 546748348){
-                        hour=720L;
-                    }else {
+                if (hour == 0) {
+                    if (cqMsg.getUserId() == 546748348) {
+                        hour = 720L;
+                    } else {
                         hour = 6L;
                     }
                 }
-                if(hour<0){
+                if (hour < 0) {
                     hour = 6L;
                 }
                 logger.info(cqMsg.getUserId() + "被自己禁言" + hour + "小时。");
@@ -279,11 +297,48 @@ public class CqServiceImpl implements CqService {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "roll":
-                if(cqMsg.getGroupId()==677545541||cqMsg.getGroupId()==112177148){
+                if (cqMsg.getGroupId() == 677545541 || cqMsg.getGroupId() == 112177148) {
                     cqMsg.setMessage(String.valueOf(new Random().nextInt(100)));
                     cqUtil.sendMsg(cqMsg);
                 }
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
+                //懒得处理验证码+有连环ban风险，咕
+//            case "login":
+//                pwd = m.group(2).substring(1);
+//                user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null);
+//                if (user == null) {
+//                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
+//                    cqUtil.sendMsg(cqMsg);
+//                    return;
+//                }
+//
+//                login(user,pwd,cqMsg);
+//                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+//                break;
+//            case "mu":
+//                target = m.group(2).substring(1);
+//                user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()),null);
+//                if (user == null) {
+//                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
+//                    cqUtil.sendMsg(cqMsg);
+//                    return;
+//                }
+//                if (user.getCookie() == null) {
+//                    cqMsg.setMessage("你没有登陆。请使用!login <你的osu!密码> 命令。" +
+//                            "\n你输入的密码仅仅用于提交给osu!登陆，不会被存储。" +
+//                            "\n所有代码均开源在Github(https://github.com/Arsenolite/cabbageWeb)上，有安全疑虑请前往阅读。");
+//                    cqUtil.sendMsg(cqMsg);
+//                    return;
+//                }
+//                List<Cookie> list =  new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {}.getType());
+//                if(Calendar.getInstance().getTime().after(list.get(2).getExpiryDate())){
+//                    cqMsg.setMessage("你的Cookie已过期，请私聊使用!login <你的osu!密码> 重新登录。");
+//                    cqUtil.sendMsg(cqMsg);
+//                    return;
+//                }
+//                mutual(user,target,cqMsg);
+//                break;
         }
 
     }
@@ -339,8 +394,8 @@ public class CqServiceImpl implements CqService {
                     removeUserRole(usernames, "all", cqMsg);
                     logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                     break;
-                }else {
-                    usernames = m.group(2).substring(1,index).split(",");
+                } else {
+                    usernames = m.group(2).substring(1, index).split(",");
                     role = m.group(2).substring(index + 1);
                     logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：" + role);
                     removeUserRole(usernames, role, cqMsg);
@@ -863,9 +918,9 @@ public class CqServiceImpl implements CqService {
                     //拿到原先的user，把role拼上去，塞回去
                     String newRole;
                     //如果当前的用户组是creep，就直接改成现有的组
-                    if("creep".equals(user.getRole())){
+                    if ("creep".equals(user.getRole())) {
                         newRole = role;
-                    }else {
+                    } else {
                         newRole = user.getRole() + "," + role;
                     }
                     user.setRole(newRole);
@@ -917,16 +972,16 @@ public class CqServiceImpl implements CqService {
 
                 //进行Role更新
                 User user = baseMapper.getUser(null, userFromAPI.getUserId());
-                if(user==null){
+                if (user == null) {
                     notUsedList.add(userFromAPI.getUserName());
                     //直接忽略掉下面的，进行下一次循环
                     continue;
                 }
                 //拿到原先的user，把role去掉
                 String newRole;
-                if("all".equals(role)){
+                if ("all".equals(role)) {
                     newRole = "creep";
-                }else {
+                } else {
                     //这里如果不把Arrays.asList传入构造函数，而是直接使用会有个Unsupported异常
                     //因为Arrays.asList做出的List是不可变的
                     List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
@@ -936,8 +991,8 @@ public class CqServiceImpl implements CqService {
                         newRole = "creep";
                     } else {
                         //转换为字符串，此处得去除空格（懒得遍历+拼接了）
-                        newRole = roles.toString().replace(" ","").
-                                substring(1, roles.toString().replace(" ","").indexOf("]"));
+                        newRole = roles.toString().replace(" ", "").
+                                substring(1, roles.toString().replace(" ", "").indexOf("]"));
                     }
                 }
                 user.setRole(newRole);
@@ -1134,4 +1189,64 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
+    private void login(User user, String pwd, CqMsg cqMsg) {
+        Userinfo userFromAPI = apiUtil.getUser(null, String.valueOf(user.getUserId()));
+        if (userFromAPI == null) {
+            cqMsg.setMessage("API没有获取到QQ" + cqMsg.getUserId() + "绑定的" + user.getUserId() + "玩家的信息。");
+            cqUtil.sendMsg(cqMsg);
+            return;
+        }
+        logger.info("检测到对" + userFromAPI.getUserName() + "的模拟登陆请求");
+        DefaultHttpClient client = new DefaultHttpClient();
+        HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
+        //添加请求头
+        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+        urlParameters.add(new BasicNameValuePair("autologin", "on"));
+        urlParameters.add(new BasicNameValuePair("login", "login"));
+        urlParameters.add(new BasicNameValuePair("username", userFromAPI.getUserName()));
+        urlParameters.add(new BasicNameValuePair("password", pwd));
+        HttpResponse response;
+        try {
+            post.setEntity(new UrlEncodedFormEntity(urlParameters));
+            response = client.execute(post);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        List<Cookie> cookies = client.getCookieStore().getCookies();
+        String CookieNames = "";
+        for(Cookie c:cookies){
+            CookieNames= CookieNames.concat(c.getName());
+        }
+        if(CookieNames.contains("phpbb3_2cjk5_sid")){
+            String cookie = new Gson().toJson(cookies);
+            user.setCookie(cookie);
+            baseMapper.updateUser(user);
+            cqMsg.setMessage("登陆成功，Cookie到期时间为："+
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cookies.get(2).getExpiryDate()));
+            cqUtil.sendMsg(cqMsg);
+        }else if(CookieNames.contains("PHPSESSID")){
+            cqMsg.setMessage("登录失败，可能触发了长时间未登录强行要求重设密码。");
+            cqUtil.sendMsg(cqMsg);
+
+        }else {
+            cqMsg.setMessage("登陆失败，请检查输入。");
+            cqUtil.sendMsg(cqMsg);
+        }
+
+    }
+    private void mutual(User user,String target,CqMsg cqMsg){
+        String msg = cqMsg.getMessage();
+        if(target.contains("[CQ:at,qq=")){
+            int index = msg.indexOf("]");
+           User targetUser = baseMapper.getUser(msg.substring(14, index),null);
+            if (targetUser == null) {
+                cqMsg.setMessage("对方没有绑定osu!id。请提醒他使用!setid <你的osu!id> 命令。");
+                cqUtil.sendMsg(cqMsg);
+                return;
+            }
+        }else{
+            //懒得处理邮箱验证码+同IP反复登录官网可能引发ban，咕
+        }
+    }
 }

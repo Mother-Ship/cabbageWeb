@@ -357,14 +357,14 @@ public class WebPageUtil {
             e.printStackTrace();
             return null;
         }
-        Matcher m = Pattern.compile(Constant.BGLINE_REGEX).matcher(osuFile);
-        m.find();
-        if("//Background and Video events".equals(m.group(1))){
-            bgName = m.group(2);
-        }else{
-            bgName = m.group(1);
-        }
-        m=Pattern.compile(Constant.BGNAME_REGEX).matcher(bgName);
+//        Matcher m = Pattern.compile(Constant.BGLINE_REGEX).matcher(osuFile);
+//        m.find();
+//        if("//Background and Video events".equals(m.group(1))){
+//            bgName = m.group(2);
+//        }else{
+//            bgName = m.group(1);
+//        }
+        Matcher m=Pattern.compile(Constant.BGNAME_REGEX).matcher(osuFile);
         if(m.find()) {
             OsuFile result = new OsuFile();
             bgName = m.group(0);

@@ -1,31 +1,31 @@
-
-import org.apache.http.HeaderIterator;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import org.apache.http.*;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
-import top.mothership.cabbage.util.Constant;
 
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.Charset;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.CRC32;
-import java.util.zip.CheckedInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 public class test {
     @Test
@@ -71,7 +71,34 @@ public class test {
 //        urlParameters.add(new BasicNameValuePair("password", "3133170-="));
 //        post.setEntity(new UrlEncodedFormEntity(urlParameters));
 //        HttpResponse response = client.execute(post);
-//        CookieStore cookiestore = client.getCookieStore();
+//       List<Cookie> cookies =  client.getCookieStore().getCookies();
+//       if(cookies.size()>1){
+//           System.out.println("Login Success");
+//           String cookie = new Gson().toJson(cookies);
+//           System.out.println(cookie);
+//           DefaultHttpClient client2 = new DefaultHttpClient();
+//           CookieStore cookieStore2 = new BasicCookieStore();
+//           List<Cookie> list =  new Gson().fromJson(cookie, new TypeToken<List<BasicClientCookie>>() {}.getType());
+//           for (Cookie c:list){
+//               cookieStore2.addCookie(c);
+//           }
+//           client2.setCookieStore(cookieStore2);
+//           HttpGet httpGet = new HttpGet("https://osu.ppy.sh/u/124493");
+//           response = client2.execute(httpGet);
+//           HttpEntity entity = response.getEntity();
+//           entity = response.getEntity();
+//           String html = EntityUtils.toString(entity, "GBK");
+//           httpGet.releaseConnection();
+//           System.out.println(html);
+//       }else{
+//           System.out.println("Login Failed");
+//       }
+
+
+
+
+//
+
 //        DefaultHttpClient httpclient2 = new DefaultHttpClient();
 //        httpclient2.setCookieStore(cookiestore);
 //        HttpGet httpGet = new HttpGet("https://osu.ppy.sh/d/10217");
@@ -113,7 +140,7 @@ public class test {
 //            System.out.println("response content:"
 //                    + responseString.replace("\r\n", ""));
 //        }
-        String osuFile = null;
+//        String osuFile = null;
 //        File osu = new File("c:\\coolq pro\\data\\image\\resource\\osu\\" +190045 + ".osu");
 //        try(FileInputStream fis = new FileInputStream(osu)) {
 //            osuFile = new String(readInputStream(fis), Charset.forName("UTF-8"));
@@ -123,11 +150,11 @@ public class test {
 //        Matcher m = Pattern.compile("(?<=\\[Events]\\r\\n)([^\\r\\n]*)\\r\\n([^\\r\\n]*)").matcher(osuFile);
 //        m.find();
 //        osuFile="0,0,\"bg.png\",0,0";
-        osuFile = "0,0,\"deetz.jpg\",0,0";
-        System.out.println(osuFile);
-        Matcher m=Pattern.compile("(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|.*\\.(png))").matcher(osuFile);
-        m.find();
-        System.out.println(m.group(0));
+//        osuFile = "0,0,\"deetz.jpg\",0,0";
+//        System.out.println(osuFile);
+//        Matcher m=Pattern.compile("(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|.*\\.(png))").matcher(osuFile);
+//        m.find();
+//        System.out.println(m.group(0));
 
 
     }
