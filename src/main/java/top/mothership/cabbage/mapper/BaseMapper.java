@@ -57,7 +57,7 @@ public interface BaseMapper {
             + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);
 
-    @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.QQ})")
+    @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.QQ},#{user.cookie})")
     Integer addUser(@Param("user") User user);
 
 
