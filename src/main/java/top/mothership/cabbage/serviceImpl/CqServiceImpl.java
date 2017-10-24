@@ -2,6 +2,7 @@ package top.mothership.cabbage.serviceImpl;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -75,6 +76,7 @@ public class CqServiceImpl implements CqService {
         Userinfo userFromAPI;
         User user;
         Beatmap beatmap;
+        List<Cookie> list;
         int day;
         int num;
         switch (m.group(1)) {
@@ -303,42 +305,59 @@ public class CqServiceImpl implements CqService {
                 }
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
-                //懒得处理验证码+有连环ban风险，咕
-//            case "login":
-//                pwd = m.group(2).substring(1);
-//                user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null);
-//                if (user == null) {
-//                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
-//                    cqUtil.sendMsg(cqMsg);
-//                    return;
-//                }
-//
-//                login(user,pwd,cqMsg);
-//                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-//                break;
-//            case "mu":
-//                target = m.group(2).substring(1);
-//                user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()),null);
-//                if (user == null) {
-//                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
-//                    cqUtil.sendMsg(cqMsg);
-//                    return;
-//                }
-//                if (user.getCookie() == null) {
-//                    cqMsg.setMessage("你没有登陆。请使用!login <你的osu!密码> 命令。" +
-//                            "\n你输入的密码仅仅用于提交给osu!登陆，不会被存储。" +
-//                            "\n所有代码均开源在Github(https://github.com/Arsenolite/cabbageWeb)上，有安全疑虑请前往阅读。");
-//                    cqUtil.sendMsg(cqMsg);
-//                    return;
-//                }
-//                List<Cookie> list =  new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {}.getType());
-//                if(Calendar.getInstance().getTime().after(list.get(2).getExpiryDate())){
-//                    cqMsg.setMessage("你的Cookie已过期，请私聊使用!login <你的osu!密码> 重新登录。");
-//                    cqUtil.sendMsg(cqMsg);
-//                    return;
-//                }
-//                mutual(user,target,cqMsg);
-//                break;
+
+            case "login":
+                pwd = m.group(2).substring(1);
+                user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null);
+                if (user == null) {
+                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+
+                login(user, pwd, cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+            case "mu":
+                target = m.group(2).substring(1);
+                user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null);
+                if (user == null) {
+                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                if (user.getCookie() == null) {
+                    cqMsg.setMessage("你没有登陆。请使用!login <你的osu!密码> 命令。" +
+                            "\n你输入的密码仅仅用于提交给osu!登陆，不会被存储。" +
+                            "\n所有代码均开源在Github(https://github.com/Arsenolite/cabbageWeb)上，有安全疑虑请前往阅读。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                list = new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {
+                }.getType());
+                if (Calendar.getInstance().getTime().after(list.get(2).getExpiryDate())) {
+                    cqMsg.setMessage("你的Cookie已过期，请私聊使用!login <你的osu!密码> 重新登录。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                mutual(user, target, cqMsg);
+                break;
+            case "verify":
+                user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null);
+                if (user == null) {
+                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                if (user.getCookie() == null) {
+                    cqMsg.setMessage("你没有登陆。请使用!login <你的osu!密码> 命令。" +
+                            "\n你输入的密码仅仅用于提交给osu!登陆，不会被存储。" +
+                            "\n所有代码均开源在Github(https://github.com/Arsenolite/cabbageWeb)上，有安全疑虑请前往阅读。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                verify(user,cqMsg);
+                break;
         }
 
     }
@@ -963,7 +982,7 @@ public class CqServiceImpl implements CqService {
         List<String> nullList = new ArrayList<>();
         List<String> doneList = new ArrayList<>();
         List<String> notUsedList = new ArrayList<>();
-        Userinfo userFromAPI = null;
+        Userinfo userFromAPI;
         for (String username : usernames) {
             logger.info("开始从API获取" + username + "的信息");
             userFromAPI = apiUtil.getUser(username, null);
@@ -1215,38 +1234,101 @@ public class CqServiceImpl implements CqService {
         }
         List<Cookie> cookies = client.getCookieStore().getCookies();
         String CookieNames = "";
-        for(Cookie c:cookies){
-            CookieNames= CookieNames.concat(c.getName());
+        for (Cookie c : cookies) {
+            CookieNames = CookieNames.concat(c.getName());
         }
-        if(CookieNames.contains("phpbb3_2cjk5_sid")){
+        if (CookieNames.contains("phpbb3_2cjk5_sid")) {
             String cookie = new Gson().toJson(cookies);
             user.setCookie(cookie);
             baseMapper.updateUser(user);
-            cqMsg.setMessage("登陆成功，Cookie到期时间为："+
+            cqMsg.setMessage("登陆成功，Cookie到期时间为：" +
                     new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cookies.get(2).getExpiryDate()));
             cqUtil.sendMsg(cqMsg);
-        }else if(CookieNames.contains("PHPSESSID")){
+        } else if (CookieNames.contains("PHPSESSID")) {
             cqMsg.setMessage("登录失败，可能触发了长时间未登录强行要求重设密码。");
             cqUtil.sendMsg(cqMsg);
 
-        }else {
+        } else {
             cqMsg.setMessage("登陆失败，请检查输入。");
             cqUtil.sendMsg(cqMsg);
         }
 
     }
-    private void mutual(User user,String target,CqMsg cqMsg){
+
+    private void mutual(User user, String target, CqMsg cqMsg) {
         String msg = cqMsg.getMessage();
-        if(target.contains("[CQ:at,qq=")){
+        String targetUserName;
+        int uid = 0;
+        if (target.contains("[CQ:at,qq=")) {
             int index = msg.indexOf("]");
-           User targetUser = baseMapper.getUser(msg.substring(14, index),null);
+            User targetUser = baseMapper.getUser(msg.substring(14, index), null);
             if (targetUser == null) {
                 cqMsg.setMessage("对方没有绑定osu!id。请提醒他使用!setid <你的osu!id> 命令。");
                 cqUtil.sendMsg(cqMsg);
                 return;
             }
-        }else{
-            //懒得处理邮箱验证码+同IP反复登录官网可能引发ban，咕
+            uid = targetUser.getUserId();
+
+        } else {
+            Userinfo userFromAPI = apiUtil.getUser(target, null);
+            if (userFromAPI == null) {
+                cqMsg.setMessage("没有从osu!API获取到玩家" + target + "的信息。");
+                cqUtil.sendMsg(cqMsg);
+                return;
+            }
+            uid = userFromAPI.getUserId();
+            target = userFromAPI.getUserName();
         }
+        DefaultHttpClient client = new DefaultHttpClient();
+        HttpGet httpGet = new HttpGet("https://osu.ppy.sh/u/" + uid);
+        List<Cookie> list = new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {
+        }.getType());
+        CookieStore cookieStore = new BasicCookieStore();
+        for (Cookie c : list) {
+            cookieStore.addCookie(c);
+        }
+        client.setCookieStore(cookieStore);
+        HttpResponse response = null;
+        HttpEntity entity;
+        try {
+            entity = response.getEntity();
+            String html = EntityUtils.toString(entity, "GBK");
+            httpGet.releaseConnection();
+            System.out.println(html);
+            Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
+            m.find();
+            String addLink = m.group(1);
+            if (addLink.contains("remove")) {
+                cqMsg.setMessage("你和" + target + "已经是好友了，请不要重复添加。");
+                cqUtil.sendMsg(cqMsg);
+                return;
+            }
+            httpGet = new HttpGet("https://osu.ppy.sh" + m.group(1));
+            response = client.execute(httpGet);
+            httpGet.releaseConnection();
+            if (response.getStatusLine().getStatusCode() == 302) {
+                //这里是跳转了，获取当前Cookie存入数据库，然后使用verify命令
+//                httpGet = new HttpGet("https://osu.ppy.sh/p/verify?r="+addLink);
+                List<Cookie> cookies = client.getCookieStore().getCookies();
+                String CookieNames = "";
+                for (Cookie c : cookies) {
+                    CookieNames = CookieNames.concat(c.getName());
+                }
+                String cookie = new Gson().toJson(cookies);
+                user.setCookie(cookie);
+                baseMapper.updateUser(user);
+                cqMsg.setMessage("触发验证，请登录osu!并尝试使用!verify命令。");
+                cqUtil.sendMsg(cqMsg);
+            } else {
+                cqMsg.setMessage("添加成功。");
+                cqUtil.sendMsg(cqMsg);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+    private void verify(User user,CqMsg cqMsg){
+
     }
 }

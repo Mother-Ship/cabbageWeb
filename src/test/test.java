@@ -21,11 +21,12 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class test {
     @Test
@@ -61,40 +62,45 @@ public class test {
 //                "id": 7
 //        }
 //        ]
-//        DefaultHttpClient client = new DefaultHttpClient();
-//        HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
-//        //添加请求头
-//        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-//        urlParameters.add(new BasicNameValuePair("autologin", "on"));
-//        urlParameters.add(new BasicNameValuePair("login", "login"));
-//        urlParameters.add(new BasicNameValuePair("username", "Mother Ship"));
-//        urlParameters.add(new BasicNameValuePair("password", "3133170-="));
-//        post.setEntity(new UrlEncodedFormEntity(urlParameters));
-//        HttpResponse response = client.execute(post);
-//       List<Cookie> cookies =  client.getCookieStore().getCookies();
-//       if(cookies.size()>1){
-//           System.out.println("Login Success");
-//           String cookie = new Gson().toJson(cookies);
-//           System.out.println(cookie);
-//           DefaultHttpClient client2 = new DefaultHttpClient();
-//           CookieStore cookieStore2 = new BasicCookieStore();
-//           List<Cookie> list =  new Gson().fromJson(cookie, new TypeToken<List<BasicClientCookie>>() {}.getType());
-//           for (Cookie c:list){
-//               cookieStore2.addCookie(c);
-//           }
-//           client2.setCookieStore(cookieStore2);
-//           HttpGet httpGet = new HttpGet("https://osu.ppy.sh/u/124493");
-//           response = client2.execute(httpGet);
-//           HttpEntity entity = response.getEntity();
-//           entity = response.getEntity();
-//           String html = EntityUtils.toString(entity, "GBK");
-//           httpGet.releaseConnection();
-//           System.out.println(html);
-//       }else{
-//           System.out.println("Login Failed");
-//       }
+        DefaultHttpClient client = new DefaultHttpClient();
+        HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
+        //添加请求头
+        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+        urlParameters.add(new BasicNameValuePair("autologin", "on"));
+        urlParameters.add(new BasicNameValuePair("login", "login"));
+        urlParameters.add(new BasicNameValuePair("username", "Mother Ship"));
+        urlParameters.add(new BasicNameValuePair("password", "3133170-="));
+        post.setEntity(new UrlEncodedFormEntity(urlParameters));
+        HttpResponse response = client.execute(post);
+       List<Cookie> cookies =  client.getCookieStore().getCookies();
+       if(cookies.size()>1){
+           System.out.println("Login Success");
+           String cookie = new Gson().toJson(cookies);
+           System.out.println(cookie);
+           DefaultHttpClient client2 = new DefaultHttpClient();
+           CookieStore cookieStore2 = new BasicCookieStore();
+           List<Cookie> list =  new Gson().fromJson(cookie, new TypeToken<List<BasicClientCookie>>() {}.getType());
+           for (Cookie c:list){
+               cookieStore2.addCookie(c);
+           }
+           client2.setCookieStore(cookieStore2);
+           HttpGet httpGet = new HttpGet("https://osu.ppy.sh/u/124493");
+           response = client2.execute(httpGet);
+           HttpEntity entity = response.getEntity();
+           entity = response.getEntity();
+           String html = EntityUtils.toString(entity, "GBK");
+           httpGet.releaseConnection();
+           System.out.println(html);
+           Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
+           m.find();
+
+           System.out.println(m.group(1));
 
 
+
+       }else{
+           System.out.println("Login Failed");
+       }
 
 
 //
@@ -141,10 +147,17 @@ public class test {
 //                    + responseString.replace("\r\n", ""));
 //        }
 //        String osuFile = null;
-//        File osu = new File("c:\\coolq pro\\data\\image\\resource\\osu\\" +190045 + ".osu");
-//        try(FileInputStream fis = new FileInputStream(osu)) {
-//            osuFile = new String(readInputStream(fis), Charset.forName("UTF-8"));
-//        } catch (IOException e) {
+//        File osu = new File("c:\\coolq pro\\data\\image\\resource\\osu\\403612\\877625.osu");
+//        try (FileInputStream fis = new FileInputStream(osu);
+//             ByteArrayOutputStream bos = new ByteArrayOutputStream()){
+//            byte[] buffer = new byte[1024];
+//            int len = 0;
+//            while ((len = fis.read(buffer)) != -1) {
+//                bos.write(buffer, 0, len);
+//            }
+//            osuFile = new String(bos.toByteArray(), Charset.forName("UTF-8"));
+//            System.out.println(osuFile);
+//        } catch(IOException e){
 //            e.printStackTrace();
 //        }
 //        Matcher m = Pattern.compile("(?<=\\[Events]\\r\\n)([^\\r\\n]*)\\r\\n([^\\r\\n]*)").matcher(osuFile);
@@ -156,8 +169,8 @@ public class test {
 //        m.find();
 //        System.out.println(m.group(0));
 
-
     }
+
     private byte[] readInputStream(InputStream inputStream) throws IOException {
         byte[] buffer = new byte[1024];
         int len = 0;
