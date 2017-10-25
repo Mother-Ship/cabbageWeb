@@ -20,9 +20,12 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
+import top.mothership.cabbage.util.Constant;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -62,45 +65,45 @@ public class test {
 //                "id": 7
 //        }
 //        ]
-        DefaultHttpClient client = new DefaultHttpClient();
-        HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
-        //添加请求头
-        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-        urlParameters.add(new BasicNameValuePair("autologin", "on"));
-        urlParameters.add(new BasicNameValuePair("login", "login"));
-        urlParameters.add(new BasicNameValuePair("username", "Mother Ship"));
-        urlParameters.add(new BasicNameValuePair("password", "3133170-="));
-        post.setEntity(new UrlEncodedFormEntity(urlParameters));
-        HttpResponse response = client.execute(post);
-       List<Cookie> cookies =  client.getCookieStore().getCookies();
-       if(cookies.size()>1){
-           System.out.println("Login Success");
-           String cookie = new Gson().toJson(cookies);
-           System.out.println(cookie);
-           DefaultHttpClient client2 = new DefaultHttpClient();
-           CookieStore cookieStore2 = new BasicCookieStore();
-           List<Cookie> list =  new Gson().fromJson(cookie, new TypeToken<List<BasicClientCookie>>() {}.getType());
-           for (Cookie c:list){
-               cookieStore2.addCookie(c);
-           }
-           client2.setCookieStore(cookieStore2);
-           HttpGet httpGet = new HttpGet("https://osu.ppy.sh/u/124493");
-           response = client2.execute(httpGet);
-           HttpEntity entity = response.getEntity();
-           entity = response.getEntity();
-           String html = EntityUtils.toString(entity, "GBK");
-           httpGet.releaseConnection();
-           System.out.println(html);
-           Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
-           m.find();
-
-           System.out.println(m.group(1));
-
-
-
-       }else{
-           System.out.println("Login Failed");
-       }
+//        DefaultHttpClient client = new DefaultHttpClient();
+//        HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
+//        //添加请求头
+//        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+//        urlParameters.add(new BasicNameValuePair("autologin", "on"));
+//        urlParameters.add(new BasicNameValuePair("login", "login"));
+//        urlParameters.add(new BasicNameValuePair("username", "Mother Ship"));
+//        urlParameters.add(new BasicNameValuePair("password", "3133170-="));
+//        post.setEntity(new UrlEncodedFormEntity(urlParameters));
+//        HttpResponse response = client.execute(post);
+//       List<Cookie> cookies =  client.getCookieStore().getCookies();
+//       if(cookies.size()>1){
+//           System.out.println("Login Success");
+//           String cookie = new Gson().toJson(cookies);
+//           System.out.println(cookie);
+//           DefaultHttpClient client2 = new DefaultHttpClient();
+//           CookieStore cookieStore2 = new BasicCookieStore();
+//           List<Cookie> list =  new Gson().fromJson(cookie, new TypeToken<List<BasicClientCookie>>() {}.getType());
+//           for (Cookie c:list){
+//               cookieStore2.addCookie(c);
+//           }
+//           client2.setCookieStore(cookieStore2);
+//           HttpGet httpGet = new HttpGet("https://osu.ppy.sh/u/124493");
+//           response = client2.execute(httpGet);
+//           HttpEntity entity = response.getEntity();
+//           entity = response.getEntity();
+//           String html = EntityUtils.toString(entity, "GBK");
+//           httpGet.releaseConnection();
+//           System.out.println(html);
+//           Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
+//           m.find();
+//
+//           System.out.println(m.group(1));
+//
+//
+//
+//       }else{
+//           System.out.println("Login Failed");
+//       }
 
 
 //
@@ -168,7 +171,26 @@ public class test {
 //        Matcher m=Pattern.compile("(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|.*\\.(png))").matcher(osuFile);
 //        m.find();
 //        System.out.println(m.group(0));
+        final Path path = Paths.get(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image");
+        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (!file.toString().contains("resource")
+                        && !file.toString().contains("!help")
+                        && !file.toString().contains("!smokeAll")
+                        && !file.toString().contains("!helpTrick")) {
+                    System.out.println("正在删除" + file.toString());
+                    Files.delete(file);
+                }
+                return super.visitFile(file, attrs);
+            }
+        };
+        try {
 
+            Files.walkFileTree(path, finder);
+        } catch (IOException e) {
+
+        }
     }
 
     private byte[] readInputStream(InputStream inputStream) throws IOException {

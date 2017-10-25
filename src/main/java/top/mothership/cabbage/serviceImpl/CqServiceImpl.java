@@ -760,9 +760,9 @@ public class CqServiceImpl implements CqService {
             scoreRank = webPageUtil.getRank(userFromAPI.getRankedScore(), 1, 2000);
         }
         //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
-        imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), day, near, scoreRank);
+       String filename =  imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), day, near, scoreRank);
         //构造消息并发送
-        cqMsg.setMessage("[CQ:image,file=" + userFromAPI.getUserId() + "stat.png]");
+        cqMsg.setMessage("[CQ:image,file=" + filename + "]");
         cqUtil.sendMsg(cqMsg);
 
     }

@@ -70,8 +70,8 @@ public class ImgUtil {
         this.webPageUtil = webPageUtil;
         this.scoreUtil = scoreUtil;
     }
-
-    public void drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean near, int scoreRank) {
+    //为线程安全，将当前时间毫秒数加入文件名并返回
+    public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean near, int scoreRank) {
         logger.info("开始绘制" + userFromAPI.getUserName() + "的名片");
         BufferedImage ava = webPageUtil.getAvatar(userFromAPI.getUserId());
 
@@ -90,11 +90,10 @@ public class ImgUtil {
            //现在已经不用再去扫描硬盘了啊
                 try {
                     bg = getCopyImage(images.get(role + ".png"));
-
                 } catch (NullPointerException e2) {
-
+                    //这个异常是在出现了新用户组，但是没有准备这个用户组的右下角标志时候出现
                     logger.error(e2.getMessage());
-                    return;
+                    return null;
                 }
 
         }
@@ -325,8 +324,10 @@ public class ImgUtil {
             }
         }
         g2.dispose();
-        logger.info("绘制完成，开始将"+userFromAPI.getUserId() + "stat.png写入硬盘");
-        drawImage(bg, userFromAPI.getUserId() + "stat");
+        long nowTime  =Calendar.getInstance().getTimeInMillis();
+        logger.info("绘制完成，开始将"+userFromAPI.getUserId() + nowTime+ "stat.png写入硬盘");
+        drawImage(bg, userFromAPI.getUserId() +  nowTime+"stat");
+        return userFromAPI.getUserId() +  nowTime+"stat.png" ;
     }
 
     public void drawUserBP(Userinfo userFromAPI, LinkedHashMap<Score, Integer> map) {
