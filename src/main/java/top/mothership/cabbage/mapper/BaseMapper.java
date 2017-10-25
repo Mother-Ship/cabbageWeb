@@ -41,9 +41,16 @@ public interface BaseMapper {
             "</script>")
         //只能传一个，不能同时处理两个
     User getUser(@Param("QQ") String QQ, @Param("userId") Integer userId);
-
-    @Select("SELECT `user_id`,`role` FROM `userrole`")
-    List<User> listUserId();
+    //加入分隔符处理，在中间的，开头的，结尾的，只有这一个用户组的
+    @Select("<script>"
+            + "SELECT `user_id` FROM `userrole` "
+            + "<if test=\"role != null\">"
+            + "WHERE `role` LIKE CONCAT('%,',#{role},',%') "
+            + "OR `role` LIKE CONCAT(#{role},',%') "
+            + "OR `role` = #{role} "
+            + "OR `role` LIKE CONCAT('%,',#{role}) </if>"
+            + "</script>")
+    List<Integer> listUserIdByRole(@Param("role") String role);
 
     @Update("<script>" + "update `userrole`"
             + "<set>"
