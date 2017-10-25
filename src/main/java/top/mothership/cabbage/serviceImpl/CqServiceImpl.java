@@ -748,11 +748,21 @@ public class CqServiceImpl implements CqService {
             role = "creep";
         }
         roles = Arrays.asList(role.split(","));
-        //这样可以排成[mp5mc, mp5chart, mp5, mp4chart, mp4, mp3, dev, creep]
-        //符合业务需求
-//        Collections.sort(roles);
-//        Collections.reverse(roles);
-//不排序了，改为按添加时间判断
+        //此处自定义实现排序方法
+        //dev>分群>主群>比赛
+        roles.sort((o1, o2) -> {
+            //mp5S得在mp5前面
+            if(o1.contains("mp5S")&&(o2.equals("mp5")||o2.equals("mp5mc"))){
+                return -1;
+            }
+            //dev得在最后面
+            if(o1.equals("dev")){
+                return 1;
+            }
+            return o1.compareTo(o2);
+        });
+        Collections.reverse(roles);
+
         //获取score rank
         //gust？
         if (userFromAPI.getUserId() == 1244312
@@ -1053,13 +1063,13 @@ public class CqServiceImpl implements CqService {
     private void checkPPOverflow(String role, CqMsg cqMsg) {
         logger.info("开始检查" + role + "用户组中超限的玩家。");
         String resp;
-        List<User> list = baseMapper.listUserId();
+        List<Integer> list = baseMapper.listUserIdByRole(role);
         List<String> overflowList = new ArrayList<>();
-        for (User aList : list) {
+        for (Integer aList : list) {
             //这里没有做多用户组。2017-10-25 17:39:10修正
-            if (Arrays.asList(aList.getRole().split(",")).contains(role)) {
+//            if (Arrays.asList(aList.getRole().split(",")).contains(role)) {
                 //拿到用户最接近今天的数据（因为是最接近所以也不用打补丁了）
-                Userinfo userinfo = baseMapper.getNearestUserInfo(aList.getUserId(), new Date(Calendar.getInstance().getTimeInMillis()));
+                Userinfo userinfo = baseMapper.getNearestUserInfo(aList, new Date(Calendar.getInstance().getTimeInMillis()));
                 //如果PP超过了警戒线，请求API拿到最新PP
                 if (userinfo.getPpRaw() > Integer.valueOf(Constant.CABBAGE_CONFIG.getString(role + "RiskPP"))) {
                     logger.info("开始从API获取" + aList + "的信息");
@@ -1071,7 +1081,7 @@ public class CqServiceImpl implements CqService {
                         logger.info("玩家" + aList + "没有超限");
                     }
                 }
-            }
+//            }
         }
         resp = "查询PP溢出玩家完成。";
         if (overflowList.size() > 0) {
@@ -1133,12 +1143,13 @@ public class CqServiceImpl implements CqService {
         cl.add(Calendar.DATE, -day);
         java.sql.Date date = new Date(cl.getTimeInMillis());
 
-        List<User> list = baseMapper.listUserId();
+        List<Integer> list = baseMapper.listUserIdByRole(role);
         List<String> afkList = new ArrayList<>();
         logger.info("开始查询" + role + "用户组中" + day + "天前的AFK玩家");
-        for (User aList : list) {
-            if (Arrays.asList(aList.getRole().split(",")).contains(role)
-                    && webPageUtil.getLastActive(aList.getUserId()).before(date)) {
+        for (Integer aList : list) {
+//            if (Arrays.asList(aList.getRole().split(",")).contains(role)
+//                    && webPageUtil.getLastActive(aList.getUserId()).before(date)) {
+            if(webPageUtil.getLastActive(aList).before(date)){
                 afkList.add(apiUtil.getUser(null, String.valueOf(aList)).getUserName());
             }
         }
@@ -1383,16 +1394,22 @@ public class CqServiceImpl implements CqService {
 
     private void listPP(String role, CqMsg cqMsg) {
         logger.info("开始检查" + role + "用户组中所有人的PP");
-        String resp = role + "用户组中所有人的PP：";
-        List<User> list = baseMapper.listUserId();
-        logger.debug(list.size());
-        for (User aList : list) {
-            if (Arrays.asList(aList.getRole().split(",")).contains(role)) {
-                Userinfo userinfo = apiUtil.getUser(null, String.valueOf(aList.getUserId()));
+        List<Integer> list = baseMapper.listUserIdByRole(role);
+        String resp;
+        if(list.size()>0) {
+            resp = role + "用户组中所有人的PP：";
+
+            for (Integer aList : list) {
+//            if (Arrays.asList(aList.getRole().split(",")).contains(role)) {
+                Userinfo userinfo = apiUtil.getUser(null, String.valueOf(aList));
                 logger.info(userinfo.getUserName() + "的PP是" + userinfo.getPpRaw());
                 resp = resp.concat("\n" + userinfo.getUserName() + "：" + userinfo.getPpRaw());
+//            }
             }
+        }else{
+            resp = role+"用户组没有成员。";
         }
+
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
     }

@@ -33,18 +33,19 @@
         </logger>
         <logger name="org.springframework.web" level="info">
         </logger>
-        <logger name="druid.sql.ResultSet" level="info">
-        </logger>
-        <logger name="druid.sql.Connection" level="info">
-        </logger>
-        <logger name="druid.sql.Statement" level="info">
-        </logger>
-        <logger name="org.mybatis.spring.SqlSessionUtils" level="info">
-        </logger>
-        <logger name="org.apache.ibatis.io" level="info">
-        </logger>
+        <!--<logger name="druid.sql.ResultSet" level="info">-->
+        <!--</logger>-->
+        <!--<logger name="druid.sql.Connection" level="info">-->
+        <!--</logger>-->
+        <!--<logger name="druid.sql.Statement" level="info">-->
+        <!--</logger>-->
+        <!--<logger name="org.mybatis.spring.SqlSessionUtils" level="info">-->
+        <!--</logger>-->
+        <!--<logger name="org.apache.ibatis.io" level="info">-->
+        <!--</logger>-->
          <!--Root Logger -->
-        <root level="info">
+        <root level="debug">
+        <!--<root level="info">-->
             <appender-ref ref="DevLog"/>
             <appender-ref ref="Console"/>
         </root>
