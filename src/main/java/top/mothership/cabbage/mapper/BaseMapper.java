@@ -42,11 +42,8 @@ public interface BaseMapper {
         //只能传一个，不能同时处理两个
     User getUser(@Param("QQ") String QQ, @Param("userId") Integer userId);
 
-    @Select("<script>"
-            + "SELECT `user_id` FROM `userrole` "
-            + "<if test=\"role != null\">WHERE `role` = #{role}</if>"
-            + "</script>")
-    List<Integer> listUserIdByRole(@Param("role") String role);
+    @Select("SELECT `user_id`,`role` FROM `userrole`")
+    List<User> listUserId();
 
     @Update("<script>" + "update `userrole`"
             + "<set>"

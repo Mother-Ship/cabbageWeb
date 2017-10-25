@@ -84,7 +84,6 @@ public class ImgUtil {
 
         BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
         try {
-
             bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId())+".png"));
         } catch (NullPointerException e) {
            //现在已经不用再去扫描硬盘了啊
