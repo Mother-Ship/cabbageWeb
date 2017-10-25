@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import top.mothership.cabbage.mapper.BaseMapper;
+import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.Userinfo;
 import top.mothership.cabbage.util.ApiUtil;
 import top.mothership.cabbage.util.Constant;
@@ -48,17 +49,17 @@ public class dairyTask {
         cl.add(Calendar.DATE, -1);
         baseMapper.clearTodayInfo(new Date(cl.getTimeInMillis()));
         logger.info("开始进行每日登记");
-        List<Integer> list = baseMapper.listUserIdByRole(null);
+        List<User> list = baseMapper.listUserId();
         List<Integer> nullList = new ArrayList<>();
-        for (Integer aList : list) {
-            Userinfo userinfo = apiUtil.getUser(null, String.valueOf(aList));
+        for (User aList : list) {
+            Userinfo userinfo = apiUtil.getUser(null, String.valueOf(aList.getUserId()));
             if (userinfo != null) {
                 //将日期改为一天前写入
                 userinfo.setQueryDate(new java.sql.Date(Calendar.getInstance().getTimeInMillis() - 1000 * 3600 * 24));
                 baseMapper.addUserInfo(userinfo);
                 logger.info("将" + userinfo.getUserName() + "的数据录入成功");
             } else {
-                nullList.add(aList);
+                nullList.add(aList.getUserId());
             }
         }
         if (nullList.size() > 0) {

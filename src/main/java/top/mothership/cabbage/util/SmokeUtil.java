@@ -13,8 +13,8 @@ import java.util.*;
 public class SmokeUtil {
     //对所有群开启消息记录
     private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
-//    private static List<String> smokeGroups = Arrays.asList(rb.getString("smokeGroups").split(","));
-    private static List<String> smokeGroups = Arrays.asList(rb.getString("smokeGroupsDev").split(","));
+    private static List<String> smokeGroups = Arrays.asList(rb.getString("smokeGroups").split(","));
+//    private static List<String> smokeGroups = Arrays.asList(rb.getString("smokeGroupsDev").split(","));
     private Logger logger = LogManager.getLogger(this.getClass());
     private final CqUtil cqUtil;
     public static Map<Long, MsgQueue> msgQueues = new HashMap<>();
@@ -57,7 +57,7 @@ public class SmokeUtil {
             if (smokeGroups.contains(String.valueOf(cqMsg.getGroupId()))&&msgQueue.isRepeat()) {
                 if (groupAdmins.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())){
                     logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
-                    //第一个永远是群主
+                    //第一个永远是群主个屁，不一定的
                     cqMsg.setMessage("[CQ:at,qq="+cqUtil.getOwner(cqMsg.getGroupId())+"] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
                 } else{
                     logger.info("正在尝试禁言" + cqMsg.getUserId());

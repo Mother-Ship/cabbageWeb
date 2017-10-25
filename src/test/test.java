@@ -1,37 +1,36 @@
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.apache.http.*;
-import org.apache.http.client.ClientProtocolException;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.client.params.AllClientPNames;
+import org.apache.http.client.params.ClientPNames;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
-import top.mothership.cabbage.util.Constant;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import top.mothership.cabbage.mapper.BaseMapper;
+import top.mothership.cabbage.pojo.User;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
 public class test {
+    @Autowired
+    private  BaseMapper baseMapper;
     @Test
     public void Test() throws IOException {
 //        System.out.println("mp4".compareTo("mp5"));
@@ -171,37 +170,90 @@ public class test {
 //        Matcher m=Pattern.compile("(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|.*\\.(png))").matcher(osuFile);
 //        m.find();
 //        System.out.println(m.group(0));
-        final Path path = Paths.get(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image");
-        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (!file.toString().contains("resource")
-                        && !file.toString().contains("!help")
-                        && !file.toString().contains("!smokeAll")
-                        && !file.toString().contains("!helpTrick")) {
-                    System.out.println("正在删除" + file.toString());
-                    Files.delete(file);
-                }
-                return super.visitFile(file, attrs);
-            }
-        };
+//        final Path path = Paths.get(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image");
+//        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
+//            @Override
+//            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+//                if (!file.toString().contains("resource")
+//                        && !file.toString().contains("!help")
+//                        && !file.toString().contains("!smokeAll")
+//                        && !file.toString().contains("!helpTrick")) {
+//                    System.out.println("正在删除" + file.toString());
+//                    Files.delete(file);
+//                }
+//                return super.visitFile(file, attrs);
+//            }
+//        };
+//        try {
+//
+//            Files.walkFileTree(path, finder);
+//        } catch (IOException e) {
+//
+//        }
+        mutual();
+    }
+    private void mutual() {
+        User user = baseMapper.getUser("1335734657",null);
+        int uid = 124493;
+        DefaultHttpClient client = new DefaultHttpClient();
+        HttpParams params = client.getParams();
+        //禁用GET请求自动重定向
+        params.setParameter(ClientPNames.HANDLE_REDIRECTS, false);
+        HttpGet httpGet = new HttpGet("https://osu.ppy.sh/u/" + uid);
+        List<Cookie> list = new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {
+        }.getType());
+        CookieStore cookieStore = new BasicCookieStore();
+        for (Cookie c : list) {
+            cookieStore.addCookie(c);
+        }
+        client.setCookieStore(cookieStore);
+        HttpResponse response = null;
+        HttpEntity entity;
         try {
-
-            Files.walkFileTree(path, finder);
+            response = client.execute(httpGet);
+            entity = response.getEntity();
+            String html = EntityUtils.toString(entity, "GBK");
+            httpGet.releaseConnection();
+            Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
+            m.find();
+            String addLink = m.group(1);
+            if (addLink.contains("remove")) {
+                System.out.println("你和Cookiezi已经是好友了，请不要重复添加。");
+                return;
+            }
+            httpGet = new HttpGet("https://osu.ppy.sh" + m.group(1));
+            response = client.execute(httpGet);
+//            entity = response.getEntity();
+//            html = EntityUtils.toString(entity, "GBK");
+            if (response.getStatusLine().getStatusCode() != 200) {
+                //这里是跳转了，获取当前Cookie存入数据库，然后使用verify命令
+//                httpGet = new HttpGet("https://osu.ppy.sh/p/verify?r="+addLink);
+                List<Cookie> cookies = client.getCookieStore().getCookies();
+                String CookieNames = "";
+                for (Cookie c : cookies) {
+                    CookieNames = CookieNames.concat(c.getName());
+                }
+                String cookie = new Gson().toJson(cookies);
+                user.setCookie(cookie);
+                baseMapper.updateUser(user);
+                System.out.println("触发验证，请登录osu!并尝试使用!verify命令。");
+            } else {
+                System.out.println("添加成功。");
+            }
         } catch (IOException e) {
-
+            e.printStackTrace();
         }
-    }
 
-    private byte[] readInputStream(InputStream inputStream) throws IOException {
-        byte[] buffer = new byte[1024];
-        int len = 0;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        while ((len = inputStream.read(buffer)) != -1) {
-            bos.write(buffer, 0, len);
-        }
-        bos.close();
-        return bos.toByteArray();
     }
+//    private byte[] readInputStream(InputStream inputStream) throws IOException {
+//        byte[] buffer = new byte[1024];
+//        int len = 0;
+//        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//        while ((len = inputStream.read(buffer)) != -1) {
+//            bos.write(buffer, 0, len);
+//        }
+//        bos.close();
+//        return bos.toByteArray();
+//    }
 
 }
