@@ -14,10 +14,14 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import top.mothership.cabbage.mapper.BaseMapper;
 import top.mothership.cabbage.pojo.Userinfo;
 import top.mothership.cabbage.util.ApiUtil;
+import top.mothership.cabbage.util.Constant;
 
+import javax.imageio.ImageIO;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Date;
 import java.util.*;
 
@@ -66,6 +70,31 @@ public class dairyTask {
         }
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
     }
+    @Scheduled(cron = "0 0 4 * * ?")
+    public void clearTodayImages() {
+        final Path path = Paths.get(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image");
+        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (!file.toString().contains("resource")
+                        && !file.toString().contains("!help")
+                        && !file.toString().contains("!smokeAll")
+                        && !file.toString().contains("!helpTrick")) {
+                    System.out.println("正在删除" + file.toString());
+                    Files.delete(file);
+                }
+                return super.visitFile(file, attrs);
+            }
+        };
+        try {
+
+            Files.walkFileTree(path, finder);
+        } catch (IOException e) {
+            logger.error("清空临时文件时出现异常，"+e.getMessage());
+        }
+
+    }
+
 
     private void sendMail(String target, Map<String, String> map) {
         String content;

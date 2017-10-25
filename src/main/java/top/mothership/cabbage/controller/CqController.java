@@ -57,7 +57,9 @@ public class CqController {
                             //增加一个时间戳（划掉）插件自带了Time
 //                            cqMsg.setTime(Calendar.getInstance().getTimeInMillis());
                             smokeUtil.praseSmoke(cqMsg);
-
+                        if (msgWithoutImage.matches(cmdRegex)) {
+                            logger.info("开始处理群" + cqMsg.getGroupId() + "的成员" + cqMsg.getUserId() + "发送的命令");
+                        }
                         break;
 
                     case "discuss":
@@ -76,7 +78,7 @@ public class CqController {
                 }
                 if (msgWithoutImage.matches(cmdRegex)) {
                     //如果检测到命令，直接把消息中的图片去掉
-                    logger.info("开始处理群" + cqMsg.getGroupId() + "的成员" + cqMsg.getUserId() + "发送的命令");
+
                     cqMsg.setMessage(msgWithoutImage);
                     m = Pattern.compile(cmdRegex).matcher(msgWithoutImage);
                     m.find();
