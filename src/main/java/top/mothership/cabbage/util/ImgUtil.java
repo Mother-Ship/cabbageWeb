@@ -437,12 +437,10 @@ public class ImgUtil {
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
 //        logger.info("计算完成，开始绘制");
         boolean defaultBG = false;
-
-        bg = webPageUtil.getBG(beatmap);
-        if (bg == null) {
-
+        try {
+            bg = webPageUtil.getBG(beatmap);
+        }catch (NullPointerException e){
             logger.error("从血猫抓取谱面背景失败，尝试改为从官网抓取");
-
             bg = webPageUtil.getBGBackup(beatmap);
             if (bg == null) {
                 //随机抽取一个bg
@@ -451,7 +449,6 @@ public class ImgUtil {
                 bg = getCopyImage(images.get(RandomBG));
                 defaultBG = true;
             }
-
         }
         logger.info("资源加载完成，开始绘制");
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
