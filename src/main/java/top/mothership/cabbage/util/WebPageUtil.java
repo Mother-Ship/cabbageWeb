@@ -151,23 +151,19 @@ public class WebPageUtil {
                 logger.info("开始下载并解析谱面压缩包");
                 while ((entry = zis.getNextEntry()) != null) {
                     logger.info("当前文件名为：" + entry.getName());
-                    if(entry.getName().contains("mp3")){
-                        //尝试跳过.mp3
-                        continue;
-                    }
-
-                    if (osuFile.getBgName().equals(entry.getName())) {
-                        byte data[] = new byte[(int) entry.getSize()];
-                        int start = 0, end = 0;
-                        while (entry.getSize() - start > 0) {
-                            end = zis.read(data, start, (int) entry.getSize() - start);
-                            logger.info("正在读取"+start+"/"+entry.getSize()+"字节");
-                            if (end <= 0) {
-                                break;
-                            }
-                            start += end;
+                    byte data[] = new byte[(int) entry.getSize()];
+                    int start = 0, end = 0;
+                    while (entry.getSize() - start > 0) {
+                        end = zis.read(data, start, (int) entry.getSize() - start);
+                        if(start%1000==0) {
+                            logger.info("正在读取" + start + "/" + entry.getSize() + "字节");
                         }
-
+                        if (end <= 0) {
+                            break;
+                        }
+                        start += end;
+                    }
+                    if (osuFile.getBgName().equals(entry.getName())) {
                         ByteArrayInputStream in = new ByteArrayInputStream(data);
                         BufferedImage result = ImageIO.read(in);
                         //懒得重构成方法了_(:з」∠)_
