@@ -155,7 +155,7 @@ public class WebPageUtil {
                     int start = 0, end = 0;
                     while (entry.getSize() - start > 0) {
                         end = zis.read(data, start, (int) entry.getSize() - start);
-                        if(start%1000==0) {
+                        if(end>1000&&start>0) {
                             logger.info("正在读取" + start + "/" + entry.getSize() + "字节");
                         }
                         if (end <= 0) {

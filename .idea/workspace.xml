@@ -8,11 +8,7 @@
   <component name="ChangeListManager">
     <list default="true" id="6d1ab8cc-7a94-4748-b25c-51fdf03c8238" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/.idea/workspace.xml" afterPath="$PROJECT_DIR$/../cabbageWeb/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/SmokeUtil.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/SmokeUtil.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/resources/log4j2.xml" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/resources/log4j2.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/resources/spring/spring-db.xml" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/resources/spring/spring-db.xml" />
     </list>
     <ignored path="$PROJECT_DIR$/../cabbageWeb/out/" />
     <ignored path="$PROJECT_DIR$/../cabbageWeb/target/" />
@@ -76,8 +72,8 @@
       <file leaf-file-name="WebPageUtil.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="417">
-              <caret line="192" column="0" lean-forward="true" selection-start-line="192" selection-start-column="0" selection-end-line="192" selection-end-column="0" />
+            <state relative-caret-position="439">
+              <caret line="166" column="56" lean-forward="false" selection-start-line="166" selection-start-column="56" selection-end-line="166" selection-end-column="56" />
               <folding>
                 <element signature="e#4104#4119#0" expanded="true" />
               </folding>
@@ -876,7 +872,7 @@
       <workItem from="1508721793328" duration="5040000" />
       <workItem from="1508726956693" duration="17662000" />
       <workItem from="1508807466622" duration="42537000" />
-      <workItem from="1509001726098" duration="7427000" />
+      <workItem from="1509001726098" duration="8537000" />
     </task>
     <task id="LOCAL-00001" summary="开始重构api工具类">
       <created>1504691384157</created>
@@ -1123,7 +1119,21 @@
       <option name="project" value="LOCAL" />
       <updated>1509003140747</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="暂且撸了一个能用的官网下载">
+      <created>1509011152543</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1509011152543</updated>
+    </task>
+    <task id="LOCAL-00037" summary="微调，加入下载进度">
+      <created>1509011755376</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1509011755376</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1159,7 +1169,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="454966000" />
+    <option name="totallyTimeSpent" value="456076000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1172,7 +1182,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.35799783" sideWeight="0.4348986" order="7" side_tool="true" content_ui="tabs" />
@@ -1184,7 +1193,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2497332" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.39934713" sideWeight="0.71344715" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39934713" sideWeight="0.71344715" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.49786553" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28618065" sideWeight="0.34418356" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -1192,7 +1201,7 @@
       <window_info id="Java Enterprise" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32100108" sideWeight="0.49359658" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31120783" sideWeight="0.5651014" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.31120783" sideWeight="0.5651014" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Spring" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19850586" sideWeight="0.4728972" order="0" side_tool="false" content_ui="combo" />
@@ -1273,9 +1282,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="初步实现……FP" />
-    <MESSAGE value="找了一天结果是oom" />
-    <MESSAGE value="去除多余的提示……" />
     <MESSAGE value="修正日志计时" />
     <MESSAGE value="修正!sudo 褪裙提示" />
     <MESSAGE value="修正时间统计，不缓存用户特定bg" />
@@ -1298,7 +1304,10 @@
     <MESSAGE value="修正连续stat线程不安全问题，修正日志提示错误，新增凌晨清空临时文件" />
     <MESSAGE value="解决数据库根据用户组遍历时没有考虑多用户组的问题，用户组按先后顺序排而不是按字母数量" />
     <MESSAGE value="修正正则表达式错误而不识别大写BG名" />
-    <option name="LAST_COMMIT_MESSAGE" value="修正正则表达式错误而不识别大写BG名" />
+    <MESSAGE value="暂且撸了一个能用的官网下载" />
+    <MESSAGE value="微调，加入下载进度" />
+    <MESSAGE value="微调x2" />
+    <option name="LAST_COMMIT_MESSAGE" value="微调x2" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1365,85 +1374,85 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>473</line>
+          <line>469</line>
           <properties />
           <option name="timeStamp" value="173" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>238</line>
+          <line>234</line>
           <properties />
           <option name="timeStamp" value="175" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>252</line>
+          <line>248</line>
           <properties />
           <option name="timeStamp" value="179" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>240</line>
+          <line>236</line>
           <properties />
           <option name="timeStamp" value="180" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>244</line>
+          <line>240</line>
           <properties />
           <option name="timeStamp" value="182" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>243</line>
+          <line>239</line>
           <properties />
           <option name="timeStamp" value="183" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>494</line>
+          <line>490</line>
           <properties />
           <option name="timeStamp" value="184" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>495</line>
+          <line>491</line>
           <properties />
           <option name="timeStamp" value="185" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>504</line>
+          <line>500</line>
           <properties />
           <option name="timeStamp" value="186" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>517</line>
+          <line>513</line>
           <properties />
           <option name="timeStamp" value="188" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>511</line>
+          <line>507</line>
           <properties />
           <option name="timeStamp" value="189" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>515</line>
+          <line>511</line>
           <properties />
           <option name="timeStamp" value="190" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>512</line>
+          <line>508</line>
           <properties />
           <option name="timeStamp" value="191" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java</url>
-          <line>516</line>
+          <line>512</line>
           <properties />
           <option name="timeStamp" value="192" />
         </line-breakpoint>
@@ -1878,8 +1887,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/WebPageUtil.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="417">
-          <caret line="192" column="0" lean-forward="true" selection-start-line="192" selection-start-column="0" selection-end-line="192" selection-end-column="0" />
+        <state relative-caret-position="439">
+          <caret line="166" column="56" lean-forward="false" selection-start-line="166" selection-start-column="56" selection-end-line="166" selection-end-column="56" />
           <folding>
             <element signature="e#4104#4119#0" expanded="true" />
           </folding>
