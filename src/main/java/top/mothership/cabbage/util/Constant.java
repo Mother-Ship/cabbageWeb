@@ -12,7 +12,7 @@ public class Constant {
     public final static  String MAIN_FILTER_REGEX_CHINESE = "[!！]([^ \\u4e00-\\u9fa5]+)(.*+)";
     public final static ResourceBundle CABBAGE_CONFIG = ResourceBundle.getBundle("cabbage");
     public final static String REPEAT_FILTER_REGEX = "[^\\u4e00-\\u9fa5a-zA-Z0-9]";
-    public final static String BGNAME_REGEX = "(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|.*\\.(png))";
+    public final static String BGNAME_REGEX = "(?<=[\\d*],[\\d*],\")(.*\\.(jpg|png|JPG|PNG|Jpg|jPg|jpG|JPg|jPG|Png|pNg|pnG|PNg|pNG))";
     public final static String DOWNLOAD_FILENAME_REGEX ="(?<=filename=\")([^\";]*)";
     public final static String ADD_FRIEND_REGEX = "<div class='centrep'>\\n<a href='([^']*)";
 }
