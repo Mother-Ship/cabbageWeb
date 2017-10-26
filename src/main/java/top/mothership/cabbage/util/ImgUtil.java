@@ -38,10 +38,11 @@ public class ImgUtil {
     //2017-9-8 13:55:42我他妈是个智障……没初始化的map我在下面用
     private static Map<String, BufferedImage> images;
 
-    static{
+    static {
         //将静态代码块改成方法，方便外部调用
         loadCache();
     }
+
     public static void loadCache() {
         //调用NIO遍历那些可以加载一次的文件
         logger.info("开始加载所有本地资源");
@@ -65,11 +66,13 @@ public class ImgUtil {
 
     private WebPageUtil webPageUtil;
     private ScoreUtil scoreUtil;
+
     @Autowired
     public ImgUtil(WebPageUtil webPageUtil, ScoreUtil scoreUtil) {
         this.webPageUtil = webPageUtil;
         this.scoreUtil = scoreUtil;
     }
+
     //为线程安全，将当前时间毫秒数加入文件名并返回
     public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean near, int scoreRank) {
         logger.info("开始绘制" + userFromAPI.getUserName() + "的名片");
@@ -84,16 +87,16 @@ public class ImgUtil {
 
         BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
         try {
-            bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId())+".png"));
+            bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId()) + ".png"));
         } catch (NullPointerException e) {
-           //现在已经不用再去扫描硬盘了啊
-                try {
-                    bg = getCopyImage(images.get(role + ".png"));
-                } catch (NullPointerException e2) {
-                    //这个异常是在出现了新用户组，但是没有准备这个用户组的右下角标志时候出现
-                    logger.error(e2.getMessage());
-                    return null;
-                }
+            //现在已经不用再去扫描硬盘了啊
+            try {
+                bg = getCopyImage(images.get(role + ".png"));
+            } catch (NullPointerException e2) {
+                //这个异常是在出现了新用户组，但是没有准备这个用户组的右下角标志时候出现
+                logger.error(e2.getMessage());
+                return null;
+            }
 
         }
 
@@ -323,10 +326,10 @@ public class ImgUtil {
             }
         }
         g2.dispose();
-        long nowTime  =Calendar.getInstance().getTimeInMillis();
-        logger.info("绘制完成，开始将"+userFromAPI.getUserId() + nowTime+ "stat.png写入硬盘");
-        drawImage(bg, userFromAPI.getUserId() +  nowTime+"stat");
-        return userFromAPI.getUserId() +  nowTime+"stat.png" ;
+        long nowTime = Calendar.getInstance().getTimeInMillis();
+        logger.info("绘制完成，开始将" + userFromAPI.getUserId() + nowTime + "stat.png写入硬盘");
+        drawImage(bg, userFromAPI.getUserId() + nowTime + "stat");
+        return userFromAPI.getUserId() + nowTime + "stat.png";
     }
 
     public void drawUserBP(Userinfo userFromAPI, LinkedHashMap<Score, Integer> map) {
@@ -434,14 +437,21 @@ public class ImgUtil {
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
 //        logger.info("计算完成，开始绘制");
         boolean defaultBG = false;
-        try {
-            bg = webPageUtil.getBG(beatmap);
-        } catch (NullPointerException e) {
-            logger.error("从血猫抓取谱面背景失败,错误原因：" + e.getMessage() + "，使用默认背景");
-            //随机抽取一个bg
-            String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
-            bg = getCopyImage(images.get(RandomBG));
-            defaultBG = true;
+
+        bg = webPageUtil.getBG(beatmap);
+        if (bg == null) {
+
+            logger.error("从血猫抓取谱面背景失败，尝试改为从官网抓取");
+
+            bg = webPageUtil.getBGBackup(beatmap);
+            if (bg == null) {
+                //随机抽取一个bg
+                logger.error("从官网/血猫抓取谱面背景失败，抽取默认BG之一作为BG");
+                String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
+                bg = getCopyImage(images.get(RandomBG));
+                defaultBG = true;
+            }
+
         }
         logger.info("资源加载完成，开始绘制");
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
@@ -678,7 +688,7 @@ public class ImgUtil {
             result = bg;
             bg.flush();
         }
-        logger.info("开始将" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate())+ ".png写入硬盘");
+        logger.info("开始将" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + ".png写入硬盘");
         drawImage(result, score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()));
     }
 
@@ -704,9 +714,9 @@ public class ImgUtil {
 
         //拉伸裁剪原bg
 
-        Image bgTmp =bg.getScaledInstance(1580, 888, Image.SCALE_SMOOTH);
+        Image bgTmp = bg.getScaledInstance(1580, 888, Image.SCALE_SMOOTH);
 
-        bg =  new BufferedImage(1580, 888, BufferedImage.TYPE_INT_ARGB);
+        bg = new BufferedImage(1580, 888, BufferedImage.TYPE_INT_ARGB);
         Graphics2D bGr = bg.createGraphics();
         bGr.drawImage(bgTmp, 0, 0, null);
         bGr.dispose();
@@ -724,14 +734,14 @@ public class ImgUtil {
         //歌曲信息（这里不能是null）
         String title = "";
         //source artist
-        if (!beatmap.getSource() .equals("")) {
+        if (!beatmap.getSource().equals("")) {
             title = unicodeToString(beatmap.getSource());
             if (oppaiResult.getArtistUnicode() != null) {
                 title = title.concat(" (" + oppaiResult.getArtistUnicode() + ") ");
             } else {
                 title = title.concat(" (" + oppaiResult.getArtist() + ") ");
             }
-        }else{
+        } else {
             if (oppaiResult.getArtistUnicode() != null) {
                 title = title.concat(oppaiResult.getArtistUnicode());
             } else {
@@ -756,13 +766,13 @@ public class ImgUtil {
 
         //作者信息
         g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
-        g2.drawString("作者："+oppaiResult.getCreator(), 54, 54);
+        g2.drawString("作者：" + oppaiResult.getCreator(), 54, 54);
         //长度、bpm、物件数
         g2.setFont(new Font("微软雅黑", Font.BOLD, 23));
         String length = "";
         //加入自动补0
-        g2.drawString("长度：" +  String.format("%02d",Integer.valueOf(beatmap.getTotalLength()) / 60) + ":"
-                + String.format("%02d",Integer.valueOf(beatmap.getTotalLength()) % 60)
+        g2.drawString("长度：" + String.format("%02d", Integer.valueOf(beatmap.getTotalLength()) / 60) + ":"
+                + String.format("%02d", Integer.valueOf(beatmap.getTotalLength()) % 60)
                 + "  BPM：" + Math.round(Float.valueOf(beatmap.getBpm()))
                 + "  物件数：" + new DecimalFormat("###,###").format((oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners())), 7, 80);
 
@@ -774,7 +784,7 @@ public class ImgUtil {
 
         //四围、难度
         g2.setFont(new Font("微软雅黑", Font.PLAIN, 13));
-        g2.drawString("CS:" +beatmap.getDiffSize() + " AR:" + beatmap.getDiffApproach()
+        g2.drawString("CS:" + beatmap.getDiffSize() + " AR:" + beatmap.getDiffApproach()
                 + " OD:" + beatmap.getDiffOverall() + " HP:" + beatmap.getDiffDrain()
                 + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(beatmap.getDifficultyRating())), 7, 125);
         //小头像
@@ -795,9 +805,9 @@ public class ImgUtil {
 
         //投影
         g2.setPaint(Color.decode("#000000"));
-        g2.drawString("得分："+new DecimalFormat("###,###").format(score.getScore())+" (" + score.getMaxCombo() + "x)", 141, 277);
+        g2.drawString("得分：" + new DecimalFormat("###,###").format(score.getScore()) + " (" + score.getMaxCombo() + "x)", 141, 277);
         g2.setPaint(Color.decode("#FFFFFF"));
-        g2.drawString("得分："+new DecimalFormat("###,###").format(score.getScore())+" (" + score.getMaxCombo() + "x)", 140, 276);
+        g2.drawString("得分：" + new DecimalFormat("###,###").format(score.getScore()) + " (" + score.getMaxCombo() + "x)", 140, 276);
 
         //mod
         if (score.getEnabledMods() > 0) {
@@ -822,10 +832,10 @@ public class ImgUtil {
 
         //投影
         g2.setPaint(Color.decode("#000000"));
-        g2.drawString(accS+"%", 517 - a, 255);
-        g2.drawString(accS+"%", 519 - a, 257);
+        g2.drawString(accS + "%", 517 - a, 255);
+        g2.drawString(accS + "%", 519 - a, 257);
         g2.setPaint(Color.decode("#FFFFFF"));
-        g2.drawString(accS+"%", 518 - a, 256);
+        g2.drawString(accS + "%", 518 - a, 256);
 
 
         //分差
@@ -866,24 +876,23 @@ public class ImgUtil {
         String[] b = String.valueOf(beatmap.getDifficultyRating()).split("\\.");
         //取出难度的整数部分，画上对应的star
         for (int i = 0; i < Integer.valueOf(b[0]); i++) {
-            g2.drawImage(images.get("fpStar.png"), 984 + 44*i, 250, null);
+            g2.drawImage(images.get("fpStar.png"), 984 + 44 * i, 250, null);
         }
 
         //取出小数部分，缩放star并绘制在对应的地方
         float c = Integer.valueOf(b[1].substring(0, 1)) / 10F;
         //小于0.04的宽高会是0，
-        if(c>0.04) {
+        if (c > 0.04) {
             g2.drawImage(images.get("fpStar.png").getScaledInstance((int) (25 * c), (int) (25 * c), Image.SCALE_SMOOTH),
                     (int) (984 + (Integer.valueOf(b[0])) * 44), (int) (250 + (1 - c) * 12.5), null);
         }
         //缩略图
         g2.drawImage(bg2, 762, 162, null);
         g2.dispose();
-        logger.info("开始将" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate())+ "fp.png写入硬盘");
-        drawImage(bg,score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) +"fp");
+        logger.info("开始将" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + "fp.png写入硬盘");
+        drawImage(bg, score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + "fp");
 
     }
-
 
 
     private BufferedImage getCopyImage(BufferedImage bi) {

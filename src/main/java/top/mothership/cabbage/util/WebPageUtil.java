@@ -1,5 +1,15 @@
 package top.mothership.cabbage.util;
 
+import com.google.gson.Gson;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -18,11 +28,17 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Component
 public class WebPageUtil {
@@ -39,7 +55,7 @@ public class WebPageUtil {
         URL avaurl;
         BufferedImage ava;
         BufferedImage resizedAva = null;
-        logger.info("开始获取玩家"+uid+"的头像");
+        logger.info("开始获取玩家" + uid + "的头像");
         try {
             avaurl = new URL(getAvaURL + uid + "?.png");
             ava = ImageIO.read(avaurl);
@@ -81,98 +97,226 @@ public class WebPageUtil {
         }
 
     }
-    public BufferedImage getBGBackup(Beatmap beatmap){
-        logger.info("开始从官网获取谱面"+beatmap.getBeatmapId()+"的背景");
-        return null;
-    }
-    public BufferedImage getBG(Beatmap beatmap) {
-        logger.info("开始获取谱面"+beatmap.getBeatmapId()+"的背景");
-        HttpURLConnection httpConnection;
-        int retry = 0;
-        BufferedImage bg;
-        BufferedImage resizedBG = null;
-        OsuFile osuFile = praseOsuFile(beatmap);
-        File bgFile = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\"
-                + beatmap.getBeatmapSetId()+"\\" +osuFile.getBgName());
-        logger.debug(bgFile.length());
-        if (bgFile.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
-            //如果osu文件大小大于0，并且状态是ranked
-            try {
-                return ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId()+"\\"+ osuFile.getBgName()));
-                //这个异常几乎肯定是不会出现的……
-            } catch (IOException e) {
-            }
+
+    public BufferedImage getBGBackup(Beatmap beatmap) {
+        logger.info("开始从官网获取谱面" + beatmap.getBeatmapId() + "的背景");
+        DefaultHttpClient client = new DefaultHttpClient();
+        HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
+        //添加请求头
+        java.util.List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+
+        urlParameters.add(new BasicNameValuePair("autologin", "on"));
+        urlParameters.add(new BasicNameValuePair("login", "login"));
+        urlParameters.add(new BasicNameValuePair("username", "Togashi Yuta"));
+        urlParameters.add(new BasicNameValuePair("password", "3133170-="));
+        try {
+            logger.info("开始登录");
+            post.setEntity(new UrlEncodedFormEntity(urlParameters));
+            client.execute(post);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-
-        while (retry < 5) {
+        List<Cookie> cookies = client.getCookieStore().getCookies();
+        String CookieNames = "";
+        for (Cookie c : cookies) {
+            CookieNames = CookieNames.concat(c.getName());
+        }
+        if (CookieNames.contains("phpbb3_2cjk5_sid")) {
+            //登录成功
+            DefaultHttpClient httpclient2 = new DefaultHttpClient();
+            OsuFile osuFile = praseOsuFile(beatmap);
+            if (osuFile.getBgName() == null) {
+                logger.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+                return null;
+            }
+            httpclient2.setCookieStore(client.getCookieStore());
+            HttpGet httpGet = new HttpGet("https://osu.ppy.sh/d/" + beatmap.getBeatmapSetId());
+            HttpResponse httpResponse;
+            InputStream is;
             try {
-                httpConnection =
-                        (HttpURLConnection) new URL(getBGURL + beatmap.getBeatmapId()).openConnection();
-                httpConnection.setRequestMethod("GET");
-                httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
-                httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);
-                httpConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.40 Safari/537.36");
-                if (httpConnection.getResponseCode() != 200) {
-                    logger.error("HTTP GET请求失败: " + httpConnection.getResponseCode() + "，正在重试第" + (retry + 1) + "次");
-                    retry++;
-                    continue;
-                }
-                //读取返回结果
-                bg = ImageIO.read(httpConnection.getInputStream());
-                Matcher m = Pattern.compile(Constant.DOWNLOAD_FILENAME_REGEX)
-                        .matcher(httpConnection.getHeaderFields().get("Content-Disposition").get(0));
-                m.find();
+                httpResponse = httpclient2.execute(httpGet);
+                HttpEntity entity = httpResponse.getEntity();
+                is = entity.getContent();
+            } catch (IOException e) {
+                logger.error("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，" + e.getMessage());
+                return null;
+            }
+            // 获取响应消息实体
 
-                //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
-                int resizedWeight = 1366;
-                int resizedHeight = (int) Math.ceil((float) bg.getHeight() / bg.getWidth() * 1366);
-                int heightDiff = ((resizedHeight - 768) / 2);
-                int widthDiff = 0;
-                //如果算出重画之后的高<768(遇到金盏花这种特别宽的)
-                if (resizedHeight < 768) {
-                    resizedWeight = (int) Math.ceil((float) bg.getWidth() / bg.getHeight() * 768);
-                    resizedHeight = 768;
-                    heightDiff = 0;
-                    widthDiff = ((resizedWeight - 1366) / 2);
-                }
-                //把BG横向拉到1366;
-                //忘记在这里处理了
-                BufferedImage resizedBGTmp = new BufferedImage(resizedWeight, resizedHeight, bg.getType());
-                Graphics2D g = resizedBGTmp.createGraphics();
-                g.drawImage(bg.getScaledInstance(resizedWeight, resizedHeight, Image.SCALE_SMOOTH), 0, 0, resizedWeight, resizedHeight, null);
-                g.dispose();
+            //直接包装为ZipInputStream
+            ZipInputStream zis = new ZipInputStream(new CheckedInputStream(is, new CRC32()));
+            ZipEntry entry;
+            try {
+                logger.info("开始下载并解析谱面压缩包");
+                while ((entry = zis.getNextEntry()) != null) {
+                    logger.info("当前文件名为：" + entry.getName());
+                    if(entry.getName().contains("mp3")){
+                        //尝试跳过.mp3
+                        continue;
+                    }
 
-                //切割图片
-                resizedBG = new BufferedImage(1366, 768, BufferedImage.TYPE_INT_RGB);
-                for (int x = 0; x < 1366; x++) {
-                    //这里之前用了原bg拉伸之前的分辨率，难怪报错
-                    for (int y = 0; y < 768; y++) {
-                        resizedBG.setRGB(x, y, resizedBGTmp.getRGB(x + widthDiff, y + heightDiff));
+                    if (osuFile.getBgName().equals(entry.getName())) {
+                        byte data[] = new byte[(int) entry.getSize()];
+                        int start = 0, end = 0;
+                        while (entry.getSize() - start > 0) {
+                            end = zis.read(data, start, (int) entry.getSize() - start);
+                            logger.info("正在读取"+start+"/"+entry.getSize()+"字节");
+                            if (end <= 0) {
+                                break;
+                            }
+                            start += end;
+                        }
+
+                        ByteArrayInputStream in = new ByteArrayInputStream(data);
+                        BufferedImage result = ImageIO.read(in);
+                        //懒得重构成方法了_(:з」∠)_
+                        BufferedImage resizedBG;
+                        //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
+                        int resizedWeight = 1366;
+                        int resizedHeight = (int) Math.ceil((float) result.getHeight() / result.getWidth() * 1366);
+                        int heightDiff = ((resizedHeight - 768) / 2);
+                        int widthDiff = 0;
+                        //如果算出重画之后的高<768(遇到金盏花这种特别宽的)
+                        if (resizedHeight < 768) {
+                            resizedWeight = (int) Math.ceil((float) result.getWidth() / result.getHeight() * 768);
+                            resizedHeight = 768;
+                            heightDiff = 0;
+                            widthDiff = ((resizedWeight - 1366) / 2);
+                        }
+                        //把BG横向拉到1366;
+                        //忘记在这里处理了
+                        BufferedImage resizedBGTmp = new BufferedImage(resizedWeight, resizedHeight, result.getType());
+                        Graphics2D g = resizedBGTmp.createGraphics();
+                        g.drawImage(result.getScaledInstance(resizedWeight, resizedHeight, Image.SCALE_SMOOTH), 0, 0, resizedWeight, resizedHeight, null);
+                        g.dispose();
+
+                        //切割图片
+                        resizedBG = new BufferedImage(1366, 768, BufferedImage.TYPE_INT_RGB);
+                        for (int x = 0; x < 1366; x++) {
+                            //这里之前用了原bg拉伸之前的分辨率，难怪报错
+                            for (int y = 0; y < 768; y++) {
+                                resizedBG.setRGB(x, y, resizedBGTmp.getRGB(x + widthDiff, y + heightDiff));
+                            }
+                        }
+                        //刷新掉bg以及临时bg的缓冲，将其作废
+                        resizedBGTmp.flush();
+                        result.flush();
+                        //在谱面rank状态是Ranked或者Approved时，写入硬盘
+                        if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
+                            //扩展名直接从文件里取
+                            ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().indexOf(".") + 1),
+                                    new File(rb.getString("path") + "\\data\\image\\resource\\osu\\"
+                                            + beatmap.getBeatmapSetId() + "\\" + osuFile.getBgName()));
+                        }
+                        in.close();
+                        zis.close();
+                        is.close();
+                        return result;
                     }
                 }
-                //刷新掉bg以及临时bg的缓冲，将其作废
-                resizedBGTmp.flush();
-                bg.flush();
-                //在谱面rank状态是Ranked或者Approved时，写入硬盘
-                if(beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
-                    //扩展名直接从文件里取
-                    ImageIO.write(resizedBG, m.group(0).substring(m.group(0).indexOf(".")+1),
-                            new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" +
-                                    beatmap.getBeatmapSetId()+"\\" + m.group(0)));
-                }
-                //手动关闭流
-                httpConnection.disconnect();
-                break;
+                zis.close();
+                is.close();
+                return null;
             } catch (IOException e) {
-                logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
-                retry++;
+                logger.error("解析谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，" + e.getMessage());
+                return null;
             }
+        }
+        logger.warn("登录官网失败。");
+        return null;
 
-        }
-        if (retry == 5) {
-            logger.error("获取" + beatmap.getBeatmapId()+ "的背景图，失败五次");
-        }
-        return resizedBG;
+    }
+
+    public BufferedImage getBG(Beatmap beatmap) {
+        logger.info("开始获取谱面" + beatmap.getBeatmapId() + "的背景");
+        return null;
+//        HttpURLConnection httpConnection;
+//        int retry = 0;
+//        BufferedImage bg;
+//        BufferedImage resizedBG = null;
+//        OsuFile osuFile = praseOsuFile(beatmap);
+//        File bgFile = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\"
+//                + beatmap.getBeatmapSetId() + "\\" + osuFile.getBgName());
+//        logger.debug(bgFile.length());
+//        if (bgFile.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
+//            //如果osu文件大小大于0，并且状态是ranked
+//            try {
+//                return ImageIO.read(new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId() + "\\" + osuFile.getBgName()));
+//                //这个异常几乎肯定是不会出现的……
+//            } catch (IOException e) {
+//            }
+//        }
+//
+//        while (retry < 5) {
+//            try {
+//                httpConnection =
+//                        (HttpURLConnection) new URL(getBGURL + beatmap.getBeatmapId()).openConnection();
+//                httpConnection.setRequestMethod("GET");
+//                httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
+//                httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);
+//                httpConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.40 Safari/537.36");
+//                if (httpConnection.getResponseCode() != 200) {
+//                    logger.error("HTTP GET请求失败: " + httpConnection.getResponseCode() + "，正在重试第" + (retry + 1) + "次");
+//                    retry++;
+//                    continue;
+//                }
+//                //读取返回结果
+//                bg = ImageIO.read(httpConnection.getInputStream());
+//                Matcher m = Pattern.compile(Constant.DOWNLOAD_FILENAME_REGEX)
+//                        .matcher(httpConnection.getHeaderFields().get("Content-Disposition").get(0));
+//                m.find();
+//
+//                //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
+//                int resizedWeight = 1366;
+//                int resizedHeight = (int) Math.ceil((float) bg.getHeight() / bg.getWidth() * 1366);
+//                int heightDiff = ((resizedHeight - 768) / 2);
+//                int widthDiff = 0;
+//                //如果算出重画之后的高<768(遇到金盏花这种特别宽的)
+//                if (resizedHeight < 768) {
+//                    resizedWeight = (int) Math.ceil((float) bg.getWidth() / bg.getHeight() * 768);
+//                    resizedHeight = 768;
+//                    heightDiff = 0;
+//                    widthDiff = ((resizedWeight - 1366) / 2);
+//                }
+//                //把BG横向拉到1366;
+//                //忘记在这里处理了
+//                BufferedImage resizedBGTmp = new BufferedImage(resizedWeight, resizedHeight, bg.getType());
+//                Graphics2D g = resizedBGTmp.createGraphics();
+//                g.drawImage(bg.getScaledInstance(resizedWeight, resizedHeight, Image.SCALE_SMOOTH), 0, 0, resizedWeight, resizedHeight, null);
+//                g.dispose();
+//
+//                //切割图片
+//                resizedBG = new BufferedImage(1366, 768, BufferedImage.TYPE_INT_RGB);
+//                for (int x = 0; x < 1366; x++) {
+//                    //这里之前用了原bg拉伸之前的分辨率，难怪报错
+//                    for (int y = 0; y < 768; y++) {
+//                        resizedBG.setRGB(x, y, resizedBGTmp.getRGB(x + widthDiff, y + heightDiff));
+//                    }
+//                }
+//                //刷新掉bg以及临时bg的缓冲，将其作废
+//                resizedBGTmp.flush();
+//                bg.flush();
+//                //在谱面rank状态是Ranked或者Approved时，写入硬盘
+//                if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
+//                    //扩展名直接从文件里取
+//                    ImageIO.write(resizedBG, m.group(0).substring(m.group(0).indexOf(".") + 1),
+//                            new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" +
+//                                    beatmap.getBeatmapSetId() + "\\" + m.group(0)));
+//                }
+//                //手动关闭流
+//                httpConnection.disconnect();
+//                break;
+//            } catch (IOException e) {
+//                logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
+//                retry++;
+//            }
+//
+//        }
+//        if (retry == 5) {
+//            logger.error("获取" + beatmap.getBeatmapId() + "的背景图，失败五次");
+//        }
+//        return resizedBG;
 
     }
 
@@ -304,15 +448,15 @@ public class WebPageUtil {
         int retry = 0;
         //获取.osu的逻辑和获取BG不一样，Qua的图BG不缓存，而.osu必须缓存
         //即使是qua的图，也必须有sid的文件夹
-        File sidPath =new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId());
-        if(!sidPath.exists()){
+        File sidPath = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId());
+        if (!sidPath.exists()) {
             sidPath.mkdir();
         }
-        File osu = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId()+"\\"+beatmap.getBeatmapId() + ".osu");
+        File osu = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId() + "\\" + beatmap.getBeatmapId() + ".osu");
 
         if (osu.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
             //如果beatmap状态是ranked,直接读取
-            return ;
+            return;
         }
         while (retry < 5) {
             try (FileOutputStream fs = new FileOutputStream(osu)) {
@@ -344,14 +488,15 @@ public class WebPageUtil {
             logger.error("获取" + beatmap.getBeatmapId() + "的.osu文件，失败五次");
         }
     }
+
     //这个方法只能处理ranked/approved/qualified的.osu文件,在目前的业务逻辑里默认.osu文件是存在的。
-    public OsuFile praseOsuFile(Beatmap beatmap){
+    public OsuFile praseOsuFile(Beatmap beatmap) {
         //先获取
         String osuFile;
         String bgName;
 
-        File osu = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId()+"\\"+beatmap.getBeatmapId() + ".osu");
-        try(FileInputStream fis = new FileInputStream(osu)) {
+        File osu = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\" + beatmap.getBeatmapSetId() + "\\" + beatmap.getBeatmapId() + ".osu");
+        try (FileInputStream fis = new FileInputStream(osu)) {
             osuFile = new String(readInputStream(fis), Charset.forName("UTF-8"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -364,15 +509,16 @@ public class WebPageUtil {
 //        }else{
 //            bgName = m.group(1);
 //        }
-        Matcher m=Pattern.compile(Constant.BGNAME_REGEX).matcher(osuFile);
-        if(m.find()) {
+        Matcher m = Pattern.compile(Constant.BGNAME_REGEX).matcher(osuFile);
+        if (m.find()) {
             OsuFile result = new OsuFile();
             bgName = m.group(0);
             result.setBgName(bgName);
             return result;
-        }else return null;
+        } else return null;
 
     }
+
     private byte[] readInputStream(InputStream inputStream) throws IOException {
         byte[] buffer = new byte[1024];
         int len = 0;
