@@ -443,6 +443,7 @@ public class ImgUtil {
             logger.error("从血猫抓取谱面背景失败，尝试改为从官网抓取");
             try {
                 bg = webPageUtil.getBGBackup(beatmap);
+                if(bg==null)throw new NullPointerException();
             } catch (NullPointerException e1){
                 //随机抽取一个bg
                 logger.error("从官网/血猫抓取谱面背景失败，抽取默认BG之一作为BG");

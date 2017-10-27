@@ -751,8 +751,12 @@ public class CqServiceImpl implements CqService {
         //此处自定义实现排序方法
         //dev>分群>主群>比赛
         roles.sort((o1, o2) -> {
-            //mp5S得在mp5前面
-            if(o1.contains("mp5S")&&(o2.equals("mp5")||o2.equals("mp5mc"))){
+            //mp5s得在mp5及其他分部前面
+            if(o1.contains("mp5s")&&(o2.equals("mp5")||o2.equals("mp5mc")||o2.equals("mp5chart"))){
+                return -1;
+            }
+            //mp4s得在mp4前面
+            if(o1.contains("mp4s")&&o2.equals("mp4")){
                 return -1;
             }
             //dev得在最后面
