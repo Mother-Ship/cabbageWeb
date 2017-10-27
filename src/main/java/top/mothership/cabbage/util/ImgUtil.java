@@ -439,10 +439,11 @@ public class ImgUtil {
         boolean defaultBG = false;
         try {
             bg = webPageUtil.getBG(beatmap);
-        }catch (NullPointerException e){
+        }catch (NullPointerException e) {
             logger.error("从血猫抓取谱面背景失败，尝试改为从官网抓取");
-            bg = webPageUtil.getBGBackup(beatmap);
-            if (bg == null) {
+            try {
+                bg = webPageUtil.getBGBackup(beatmap);
+            } catch (NullPointerException e1){
                 //随机抽取一个bg
                 logger.error("从官网/血猫抓取谱面背景失败，抽取默认BG之一作为BG");
                 String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
