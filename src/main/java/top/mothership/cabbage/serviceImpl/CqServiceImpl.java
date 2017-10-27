@@ -781,6 +781,7 @@ public class CqServiceImpl implements CqService {
         //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
         String filename = imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), day, near, scoreRank);
         //构造消息并发送
+        logger.info("开始调用函数发送" + filename + ".png");
         cqMsg.setMessage("[CQ:image,file=" + filename + "]");
         cqUtil.sendMsg(cqMsg);
 
@@ -854,6 +855,7 @@ public class CqServiceImpl implements CqService {
                 aList.setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
             }
             imgUtil.drawUserBP(userinfo, result);
+            logger.info("开始调用函数发送" + userinfo.getUserId() + "BP.png");
             cqMsg.setMessage("[CQ:image,file=" + userinfo.getUserId() + "BP.png]");
             cqUtil.sendMsg(cqMsg);
         } else {
@@ -868,6 +870,7 @@ public class CqServiceImpl implements CqService {
                 Beatmap map = apiUtil.getBeatmap(score.getBeatmapId());
 
                 imgUtil.drawResult(userinfo, score, map);
+                logger.info("开始调用函数发送" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + ".png");
                 cqMsg.setMessage("[CQ:image,file=" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + ".png]");
                 cqUtil.sendMsg(cqMsg);
             }
@@ -918,6 +921,7 @@ public class CqServiceImpl implements CqService {
         List<String> doneList = new ArrayList<>();
         List<String> addList = new ArrayList<>();
         Userinfo userFromAPI = null;
+        String filename = null;
         for (String username : usernames) {
             logger.info("开始从API获取" + username + "的信息");
             userFromAPI = apiUtil.getUser(username, null);
@@ -947,7 +951,7 @@ public class CqServiceImpl implements CqService {
                     if (usernames.length == 1) {
                         logger.info("新增单个用户，绘制名片");
                         int scoreRank = webPageUtil.getRank(userFromAPI.getRankedScore(), 1, 2000);
-                        imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank);
+                        filename =  imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank);
                     }
                     addList.add(userFromAPI.getUserName());
                 } else {
@@ -992,7 +996,8 @@ public class CqServiceImpl implements CqService {
         //最后的条件可以不用写，不过为了干掉这个报错还是谢了
         if (addList.size() == 1 && usernames.length == 1 && userFromAPI != null) {
             //这时候是只有单个用户，并且没有在nulllist里
-            resp = resp.concat("\n[CQ:image,file=" + userFromAPI.getUserId() + "stat.png]");
+            logger.info("开始调用函数发送" + filename + ".png");
+            resp = resp.concat("\n[CQ:image,file=" + filename+ ".png]");
         }
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
@@ -1137,6 +1142,7 @@ public class CqServiceImpl implements CqService {
             return;
         }
         imgUtil.drawResult(userFromAPI, score, beatmap);
+        logger.info("开始调用函数发送" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + ".png");
         cqMsg.setMessage("[CQ:image,file=" + score.getBeatmapId() + "_" + new SimpleDateFormat("yy-MM-dd").format(score.getDate()) + ".png]");
         cqUtil.sendMsg(cqMsg);
     }
