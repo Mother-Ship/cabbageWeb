@@ -50,14 +50,20 @@
 
     <!--<mvc:resources cache-period="31556926" location="/WEB-INF/css/" mapping="/css/**"/>-->
 
-    <!--&lt;!&ndash;9）日志记录的切面&ndash;&gt;-->
-    <!--&lt;!&ndash;发现小系统没必要折腾面向切面的日志……还是手动在类里打日志好了。&ndash;&gt;-->
-    <!--<bean id="logAspect" class="com.shengting.store.aop.logAspect"></bean>-->
+    <!--9）日志记录的切面-->
+    <!--发现小系统没必要折腾面向切面的日志……还是手动在类里打日志好了。-->
+    <!--2017-10-30 16:41:28现在的业务已经多到需要面向切面了……-->
+
+    <!--指定使用AspectJ，否则无法完成AOP相关的日志、事务，会报错-->
+    <aop:aspectj-autoproxy  proxy-target-class="true"/>
+
+    <!--<bean id="logAspect" class="top.mothership.cabbage.aspect.CqServiceAspect"/>-->
+    <!--可以使用注解，下面注释的XML已经无需使用，仅仅为记录而保留-->
     <!--<aop:config>-->
     <!--<aop:aspect id="aspect" ref="logAspect">-->
     <!--&lt;!&ndash;对哪些方法进行日志记录 &ndash;&gt;-->
     <!--&lt;!&ndash;这里可以直接写接口，也可以写实现类。&ndash;&gt;-->
-    <!--<aop:pointcut id="logService" expression="execution(* com.shengting.store.serviceImpl.*.*(..))"/>-->
+    <!--<aop:pointcut id="logService" expression="execution(* top.mothership.cabbage.serviceImpl.*.*(..))"/>-->
     <!--<aop:before pointcut-ref="logService" method="doBefore"/>-->
     <!--<aop:after pointcut-ref="logService" method="doAfter"/>-->
     <!--<aop:around pointcut-ref="logService" method="doAround"/>-->
