@@ -878,9 +878,10 @@ public class CqServiceImpl implements CqService {
         if (num == 0) {
             logger.info("筛选今日BP成功");
             if (result.size() == 0) {
+                cqMsg.setMessage("[CQ:record,file=wan_bu_liao_la.wav]");
+                cqUtil.sendMsg(cqMsg);
                 cqMsg.setMessage("玩家" + userinfo.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
                 cqUtil.sendMsg(cqMsg);
-
                 logger.info("没有查到该玩家今天更新的BP");
                 return;
             }
