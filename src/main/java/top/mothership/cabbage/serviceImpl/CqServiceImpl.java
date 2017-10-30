@@ -21,6 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import top.mothership.cabbage.aspect.CqServiceAspect;
 import top.mothership.cabbage.mapper.BaseMapper;
 import top.mothership.cabbage.pojo.*;
 import top.mothership.cabbage.service.CqService;
@@ -30,6 +31,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.lang.Exception;
 import java.net.URL;
 import java.sql.Date;
 import java.text.DecimalFormat;
@@ -269,7 +272,7 @@ public class CqServiceImpl implements CqService {
                 Long hour;
                 try {
                     hour = Long.valueOf(m.group(2).substring(1));
-                } catch (Exception e) {
+                } catch (java.lang.Exception e) {
                     hour = 6L;
                 }
                 if (hour > 13) {
@@ -300,6 +303,7 @@ public class CqServiceImpl implements CqService {
                 }
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
+
 //邮箱验证码没什么样本……还是不搞了，这块注释掉吧
 //            case "login":
 //                pwd = m.group(2).substring(1);
@@ -379,6 +383,7 @@ public class CqServiceImpl implements CqService {
         String role;
         String QQ;
         String resp = "";
+        String flag;
         int index;
         switch (m.group(1)) {
             case "add":
@@ -559,7 +564,7 @@ public class CqServiceImpl implements CqService {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "handleInvite":
-                String flag = m.group(2).substring(1);
+                flag = m.group(2).substring(1);
                 logger.info("正在通过对Flag为：" + flag + "的邀请");
                 cqMsg.setFlag(flag);
                 cqMsg.setApprove(true);
@@ -659,6 +664,34 @@ public class CqServiceImpl implements CqService {
                 listPP(role, cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
+            case "debug":
+                logger.info("正在获取白菜本次启动发生的异常");
+                if (CqServiceAspect.Exceptions.size() == 0) {
+                    resp = "白菜本次启动没有发生异常。";
+                } else {
+                    resp = "以下是本次白菜启动期间发生的异常：";
+                    for (Map.Entry<Integer, top.mothership.cabbage.pojo.Exception> entry : CqServiceAspect.Exceptions.entrySet()) {
+                        resp = resp.concat("\n" + "Flag："+entry.getKey()+"，日期："+new SimpleDateFormat("yy-MM-dd HH:mm:ss").
+                                format(entry.getValue().getTime()) + "\n" + entry.getValue().getE());
+                    }
+                }
+                cqMsg.setMessage(resp);
+                cqUtil.sendMsg(cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+            case "getStackTrace":
+                flag = m.group(2).substring(1);
+                logger.info("正在获取Flag为：" + flag + "的堆栈信息");
+                top.mothership.cabbage.pojo.Exception ex = CqServiceAspect.Exceptions.get(Integer.valueOf(flag));
+
+                Object[] args = ex.getPjp().getArgs();
+                resp = ex.getE().toString() + ;
+                StackTraceElement[] a =  ex.getE().getStackTrace();
+                for(StackTraceElement b:a){
+                    resp = resp.concat("\n    at "+b);
+                }
+                logStr="方法："+ex.getPjp().getTarget().getClass()+"."+ex.getPjp().getSignature().getName()+"()";
+                break;
         }
 
     }
@@ -752,15 +785,15 @@ public class CqServiceImpl implements CqService {
         //dev>分群>主群>比赛
         roles.sort((o1, o2) -> {
             //mp5s得在mp5及其他分部前面
-            if(o1.contains("mp5s")&&(o2.equals("mp5")||o2.equals("mp5mc")||o2.equals("mp5chart"))){
+            if (o1.contains("mp5s") && (o2.equals("mp5") || o2.equals("mp5mc") || o2.equals("mp5chart"))) {
                 return -1;
             }
             //mp4s得在mp4前面
-            if(o1.contains("mp4s")&&o2.equals("mp4")){
+            if (o1.contains("mp4s") && o2.equals("mp4")) {
                 return -1;
             }
             //dev得在最后面
-            if(o1.equals("dev")){
+            if (o1.equals("dev")) {
                 return 1;
             }
             return o1.compareTo(o2);
@@ -951,7 +984,7 @@ public class CqServiceImpl implements CqService {
                     if (usernames.length == 1) {
                         logger.info("新增单个用户，绘制名片");
                         int scoreRank = webPageUtil.getRank(userFromAPI.getRankedScore(), 1, 2000);
-                        filename =  imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank);
+                        filename = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank);
                     }
                     addList.add(userFromAPI.getUserName());
                 } else {
@@ -997,7 +1030,7 @@ public class CqServiceImpl implements CqService {
         if (addList.size() == 1 && usernames.length == 1 && userFromAPI != null) {
             //这时候是只有单个用户，并且没有在nulllist里
             logger.info("开始调用函数发送" + filename + ".png");
-            resp = resp.concat("\n[CQ:image,file=" + filename+ ".png]");
+            resp = resp.concat("\n[CQ:image,file=" + filename + ".png]");
         }
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
@@ -1077,19 +1110,19 @@ public class CqServiceImpl implements CqService {
         for (Integer aList : list) {
             //这里没有做多用户组。2017-10-25 17:39:10修正
 //            if (Arrays.asList(aList.getRole().split(",")).contains(role)) {
-                //拿到用户最接近今天的数据（因为是最接近所以也不用打补丁了）
-                Userinfo userinfo = baseMapper.getNearestUserInfo(aList, new Date(Calendar.getInstance().getTimeInMillis()));
-                //如果PP超过了警戒线，请求API拿到最新PP
-                if (userinfo.getPpRaw() > Integer.valueOf(Constant.CABBAGE_CONFIG.getString(role + "RiskPP"))) {
-                    logger.info("开始从API获取" + aList + "的信息");
-                    userinfo = apiUtil.getUser(null, String.valueOf(aList));
-                    if (userinfo.getPpRaw() > Integer.valueOf(Constant.CABBAGE_CONFIG.getString(role + "PP")) + 0.49) {
-                        logger.info("玩家" + aList + "超限，已记录");
-                        overflowList.add(userinfo.getUserName());
-                    } else {
-                        logger.info("玩家" + aList + "没有超限");
-                    }
+            //拿到用户最接近今天的数据（因为是最接近所以也不用打补丁了）
+            Userinfo userinfo = baseMapper.getNearestUserInfo(aList, new Date(Calendar.getInstance().getTimeInMillis()));
+            //如果PP超过了警戒线，请求API拿到最新PP
+            if (userinfo.getPpRaw() > Integer.valueOf(Constant.CABBAGE_CONFIG.getString(role + "RiskPP"))) {
+                logger.info("开始从API获取" + aList + "的信息");
+                userinfo = apiUtil.getUser(null, String.valueOf(aList));
+                if (userinfo.getPpRaw() > Integer.valueOf(Constant.CABBAGE_CONFIG.getString(role + "PP")) + 0.49) {
+                    logger.info("玩家" + aList + "超限，已记录");
+                    overflowList.add(userinfo.getUserName());
+                } else {
+                    logger.info("玩家" + aList + "没有超限");
                 }
+            }
 //            }
         }
         resp = "查询PP溢出玩家完成。";
@@ -1159,7 +1192,7 @@ public class CqServiceImpl implements CqService {
         for (Integer aList : list) {
 //            if (Arrays.asList(aList.getRole().split(",")).contains(role)
 //                    && webPageUtil.getLastActive(aList.getUserId()).before(date)) {
-            if(webPageUtil.getLastActive(aList).before(date)){
+            if (webPageUtil.getLastActive(aList).before(date)) {
                 afkList.add(apiUtil.getUser(null, String.valueOf(aList)).getUserName());
             }
         }
@@ -1266,13 +1299,15 @@ public class CqServiceImpl implements CqService {
         urlParameters.add(new BasicNameValuePair("username", userFromAPI.getUserName()));
         urlParameters.add(new BasicNameValuePair("password", pwd));
         HttpResponse response;
+
         try {
             post.setEntity(new UrlEncodedFormEntity(urlParameters));
             response = client.execute(post);
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
-            return;
         }
+
+
         List<Cookie> cookies = client.getCookieStore().getCookies();
         String CookieNames = "";
         for (Cookie c : cookies) {
@@ -1406,7 +1441,7 @@ public class CqServiceImpl implements CqService {
         logger.info("开始检查" + role + "用户组中所有人的PP");
         List<Integer> list = baseMapper.listUserIdByRole(role);
         String resp;
-        if(list.size()>0) {
+        if (list.size() > 0) {
             resp = role + "用户组中所有人的PP：";
 
             for (Integer aList : list) {
@@ -1416,8 +1451,8 @@ public class CqServiceImpl implements CqService {
                 resp = resp.concat("\n" + userinfo.getUserName() + "：" + userinfo.getPpRaw());
 //            }
             }
-        }else{
-            resp = role+"用户组没有成员。";
+        } else {
+            resp = role + "用户组没有成员。";
         }
 
         cqMsg.setMessage(resp);
