@@ -31,7 +31,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.Exception;
 import java.net.URL;
 import java.sql.Date;
@@ -68,7 +67,7 @@ public class CqServiceImpl implements CqService {
 
 
     @Override
-    public void praseCmd(CqMsg cqMsg) {
+    public void praseCmd(CqMsg cqMsg) throws Exception{
         java.util.Date s = Calendar.getInstance().getTime();
         String msg = cqMsg.getMessage();
         Matcher m = Pattern.compile(Constant.CMD_REGEX).matcher(msg);
@@ -289,7 +288,7 @@ public class CqServiceImpl implements CqService {
                     hour = 6L;
                 }
                 logger.info(cqMsg.getUserId() + "被自己禁言" + hour + "小时。");
-                cqMsg.setMessage("睡吧。");
+                cqMsg.setMessage("[CQ:record,file=zou_hao_bu_song.wav]");
                 cqUtil.sendMsg(cqMsg);
                 cqMsg.setMessageType("smoke");
                 cqMsg.setDuration((int) (hour * 3600));
@@ -360,7 +359,7 @@ public class CqServiceImpl implements CqService {
     }
 
     @Override
-    public void praseAdminCmd(CqMsg cqMsg) {
+    public void praseAdminCmd(CqMsg cqMsg) throws Exception {
         java.util.Date s = Calendar.getInstance().getTime();
 
         if (!admin.contains(String.valueOf(cqMsg.getUserId()))) {
@@ -512,7 +511,6 @@ public class CqServiceImpl implements CqService {
                     }
                 }
                 if ("all".equals(QQ)) {
-
                     List<QQInfo> memberList = cqUtil.getGroupMembers(cqMsg.getGroupId()).getData();
                     cqMsg.setMessageType("smoke");
                     cqMsg.setDuration(sec);
@@ -527,7 +525,7 @@ public class CqServiceImpl implements CqService {
                     cqUtil.sendMsg(cqMsg);
                 } else {
                     logger.info(QQ + "被" + cqMsg.getUserId() + "禁言" + sec + "秒。");
-                    cqMsg.setMessage("They're all dead!!");
+                    cqMsg.setMessage("[CQ:record,file=all_dead.mp3]");
                     cqUtil.sendMsg(cqMsg);
                     cqMsg.setMessageType("smoke");
                     cqMsg.setDuration(sec);
@@ -671,7 +669,7 @@ public class CqServiceImpl implements CqService {
                 } else {
                     resp = "以下是本次白菜启动期间发生的异常：";
                     for (Map.Entry<Integer, top.mothership.cabbage.pojo.Exception> entry : CqServiceAspect.Exceptions.entrySet()) {
-                        resp = resp.concat("\n" + "Flag："+entry.getKey()+"，日期："+new SimpleDateFormat("yy-MM-dd HH:mm:ss").
+                        resp = resp.concat("\n" + "Flag：" + entry.getKey() + "，日期：" + new SimpleDateFormat("yy-MM-dd HH:mm:ss").
                                 format(entry.getValue().getTime()) + "\n" + entry.getValue().getE());
                     }
                 }
@@ -683,14 +681,19 @@ public class CqServiceImpl implements CqService {
                 flag = m.group(2).substring(1);
                 logger.info("正在获取Flag为：" + flag + "的堆栈信息");
                 top.mothership.cabbage.pojo.Exception ex = CqServiceAspect.Exceptions.get(Integer.valueOf(flag));
-
+                resp = ex.getE().toString() + "，方法：" + ex.getPjp().getTarget().getClass() + "." + ex.getPjp().getSignature().getName() + "()\n方法入参：";
                 Object[] args = ex.getPjp().getArgs();
-                resp = ex.getE().toString() + ;
-                StackTraceElement[] a =  ex.getE().getStackTrace();
-                for(StackTraceElement b:a){
-                    resp = resp.concat("\n    at "+b);
+                for (Object arg : args) {
+                    resp = resp.concat("\n" + arg);
                 }
-                logStr="方法："+ex.getPjp().getTarget().getClass()+"."+ex.getPjp().getSignature().getName()+"()";
+                StackTraceElement[] a = ex.getE().getStackTrace();
+                for (int i=0;i<a.length;i++) {
+                    if(a[i].toString().contains("top.mothership")&&!a[i].toString().contains("<generated>"))
+                    resp = resp.concat("\n    at " + a[i]);
+                }
+                cqMsg.setMessage(resp);
+                cqUtil.sendMsg(cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
         }
 
@@ -739,7 +742,7 @@ public class CqServiceImpl implements CqService {
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
     }
 
-    private void statUserInfo(Userinfo userFromAPI, int day, CqMsg cqMsg) {
+    private void statUserInfo(Userinfo userFromAPI, int day, CqMsg cqMsg) throws Exception {
         //将day转换为Date
         Calendar cl = Calendar.getInstance();
         if (cl.get(Calendar.HOUR_OF_DAY) < 4) {
@@ -841,9 +844,10 @@ public class CqServiceImpl implements CqService {
         }
     }
 
-    private void printBP(Userinfo userinfo, int num, CqMsg cqMsg) {
+    private void printBP(Userinfo userinfo, int num, CqMsg cqMsg) throws Exception{
         if (num > 0 && ("112177148".equals(String.valueOf(cqMsg.getGroupId()))
                 || "677545541".equals(String.valueOf(cqMsg.getGroupId()))
+                || "234219559".equals(String.valueOf(cqMsg.getGroupId()))
                 || "201872650".equals(String.valueOf(cqMsg.getGroupId()))
                 || "564679329".equals(String.valueOf(cqMsg.getGroupId())))) {
             logger.info(cqMsg.getUserId() + "触发了赛群/4 5群禁用!bpme #n命令。");
@@ -949,7 +953,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void addUserRole(String[] usernames, String role, CqMsg cqMsg) {
+    private void addUserRole(String[] usernames, String role, CqMsg cqMsg) throws Exception{
         List<String> nullList = new ArrayList<>();
         List<String> doneList = new ArrayList<>();
         List<String> addList = new ArrayList<>();
@@ -1135,32 +1139,21 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void downloadBG(String URL, String target, CqMsg cqMsg) {
+    private void downloadBG(String URL, String target, CqMsg cqMsg) throws IOException {
         BufferedImage bg;
-        try {
-            logger.info("开始根据URL下载新背景。");
-            bg = ImageIO.read(new URL(URL));
-        } catch (IOException e) {
-            logger.error("根据URL下载背景图失败，" + e.getMessage());
-            cqMsg.setMessage("根据URL下载背景图失败。错误信息是：" + e.getMessage());
-            cqUtil.sendMsg(cqMsg);
-            return;
-        }
+        logger.info("开始根据URL下载新背景。");
+        bg = ImageIO.read(new URL(URL));
+
         //并不需要删除旧图片
-        try {
-            logger.info("开始将新背景写入硬盘");
-            ImageIO.write(bg, "png", new File(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img\\stat\\" + target + ".png"));
-        } catch (IOException e) {
-            logger.error("将新背景写入硬盘失败，" + e.getMessage());
-            cqMsg.setMessage("将新背景写入硬盘失败。错误信息是：" + e.getMessage());
-            cqUtil.sendMsg(cqMsg);
-            return;
-        }
+
+        logger.info("开始将新背景写入硬盘");
+        ImageIO.write(bg, "png", new File(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img\\stat\\" + target + ".png"));
+
         cqMsg.setMessage("修改用户/用户组" + target + "的背景图成功。");
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void getRecent(Userinfo userFromAPI, CqMsg cqMsg) {
+    private void getRecent(Userinfo userFromAPI, CqMsg cqMsg) throws Exception{
         logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
         Score score = apiUtil.getRecent(null, userFromAPI.getUserName());
         if (score == null) {
@@ -1206,7 +1199,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void getFristRank(Beatmap beatmap, List<Score> score, CqMsg cqMsg) {
+    private void getFristRank(Beatmap beatmap, List<Score> score, CqMsg cqMsg) throws Exception{
 
         Userinfo userFromAPI = apiUtil.getUser(null, String.valueOf(score.get(0).getUserId()));
         //为了日志+和BP的PP计算兼容
@@ -1282,7 +1275,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void login(User user, String pwd, CqMsg cqMsg) {
+    private void login(User user, String pwd, CqMsg cqMsg) throws IOException {
         Userinfo userFromAPI = apiUtil.getUser(null, String.valueOf(user.getUserId()));
         if (userFromAPI == null) {
             cqMsg.setMessage("API没有获取到QQ" + cqMsg.getUserId() + "绑定的" + user.getUserId() + "玩家的信息。");
@@ -1300,12 +1293,9 @@ public class CqServiceImpl implements CqService {
         urlParameters.add(new BasicNameValuePair("password", pwd));
         HttpResponse response;
 
-        try {
+
             post.setEntity(new UrlEncodedFormEntity(urlParameters));
             response = client.execute(post);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
 
         List<Cookie> cookies = client.getCookieStore().getCookies();
@@ -1331,7 +1321,7 @@ public class CqServiceImpl implements CqService {
 
     }
 
-    private void mutual(User user, String target, CqMsg cqMsg) {
+    private void mutual(User user, String target, CqMsg cqMsg)throws Exception {
         String msg = cqMsg.getMessage();
         int uid = 0;
         if (target.contains("[CQ:at,qq=")) {
@@ -1368,7 +1358,7 @@ public class CqServiceImpl implements CqService {
         client.setCookieStore(cookieStore);
         HttpResponse response = null;
         HttpEntity entity;
-        try {
+
             response = client.execute(httpGet);
             entity = response.getEntity();
             String html = EntityUtils.toString(entity, "GBK");
@@ -1402,13 +1392,11 @@ public class CqServiceImpl implements CqService {
                 cqMsg.setMessage("添加成功。");
                 cqUtil.sendMsg(cqMsg);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
 
     }
 
-    private void verify(User user, CqMsg cqMsg) {
+    private void verify(User user, CqMsg cqMsg) throws Exception{
         DefaultHttpClient client = new DefaultHttpClient();
         HttpGet httpGet = new HttpGet("https://osu.ppy.sh/p/verify");
         List<Cookie> list = new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {
@@ -1420,7 +1408,7 @@ public class CqServiceImpl implements CqService {
         client.setCookieStore(cookieStore);
         HttpResponse response;
         HttpEntity entity;
-        try {
+
             response = client.execute(httpGet);
             entity = response.getEntity();
             String html = EntityUtils.toString(entity, "GBK");
@@ -1432,9 +1420,7 @@ public class CqServiceImpl implements CqService {
                 cqMsg.setMessage("验证未通过，请检查游戏是否登录。");
             }
             cqUtil.sendMsg(cqMsg);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
     private void listPP(String role, CqMsg cqMsg) {

@@ -58,6 +58,18 @@ public class Beatmap {
     private String maxCombo;
     @SerializedName("difficultyrating")
     private String difficultyRating;
+
+    @Override
+    public String toString() {
+        return "Beatmap{" +
+                "beatmapId='" + beatmapId + '\'' +
+                ", version='" + version + '\'' +
+                ", artist='" + artist + '\'' +
+                ", title='" + title + '\'' +
+                ", creator='" + creator + '\'' +
+                '}';
+    }
+
     public String getBeatmapId() {
         return beatmapId;
     }

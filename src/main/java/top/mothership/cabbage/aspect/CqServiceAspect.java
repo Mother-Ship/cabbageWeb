@@ -22,7 +22,7 @@ public class CqServiceAspect {
 
     //我需要存储一个Exception对象，入参，发生时间,以及某个标志用来标明它
     public static Map<Integer,Exception> Exceptions = new LinkedHashMap<Integer,Exception>();
-
+    private int count =1;
 
 
 
@@ -40,7 +40,8 @@ public class CqServiceAspect {
         try {
             result=pjp.proceed();
         } catch (Throwable e) {
-            Exceptions.put(new Random().nextInt(),new Exception(Time,e,pjp));
+            Exceptions.put(count,new Exception(Time,e,pjp));
+            count++;
         }
         return result;
     }
