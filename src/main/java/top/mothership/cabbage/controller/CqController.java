@@ -33,7 +33,7 @@ public class CqController {
     }
 
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
-    public String cqMsgPrase(@RequestBody CqMsg cqMsg){
+    public String cqMsgPrase(@RequestBody CqMsg cqMsg) throws Exception{
         String cmdRegex = Constant.MAIN_FILTER_REGEX;
         //待整理业务逻辑
         switch (cqMsg.getPostType()){

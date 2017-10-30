@@ -6,6 +6,15 @@ public class User {
     private String QQ;
     private String cookie;
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "userId=" + userId +
+                ", role='" + role + '\'' +
+                ", QQ='" + QQ + '\'' +
+                '}';
+    }
+
     public String getCookie() {
         return cookie;
     }

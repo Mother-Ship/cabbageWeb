@@ -40,6 +40,16 @@ public class Score {
 
     private Integer userId;
 
+    @Override
+    public String toString() {
+        return "Score{" +
+                "beatmapId=" + beatmapId +
+                ", score=" + score +
+                ", userName='" + userName + '\'' +
+                ", userId=" + userId +
+                '}';
+    }
+
     public Integer getUserId() {
         return userId;
     }

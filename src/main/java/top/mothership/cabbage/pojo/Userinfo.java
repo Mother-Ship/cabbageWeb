@@ -24,6 +24,15 @@ public class Userinfo {
     private int countRankA;
     private Date queryDate;
 
+    @Override
+    public String toString() {
+        return "Userinfo{" +
+                "userName='" + userName + '\'' +
+                ", userId=" + userId +
+                ", queryDate=" + queryDate +
+                '}';
+    }
+
     public String getUserName() {
         return userName;
     }

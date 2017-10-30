@@ -30,6 +30,22 @@ public class CqMsg  {
     private Boolean enable;
     private Long time;
 
+    @Override
+    public String toString() {
+        return "CqMsg{" +
+                "postType='" + postType + '\'' +
+                ", event='" + event + '\'' +
+                ", messageType='" + messageType + '\'' +
+                ", subType='" + subType + '\'' +
+                ", groupId=" + groupId +
+                ", userId=" + userId +
+                ", message='" + message + '\'' +
+                ", operatorId=" + operatorId +
+                ", discussId=" + discussId +
+                ", time=" + time +
+                '}';
+    }
+
     public Long getTime() {
         return time;
     }

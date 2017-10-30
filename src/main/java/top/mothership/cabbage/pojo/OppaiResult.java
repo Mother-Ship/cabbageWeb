@@ -66,6 +66,14 @@ public class OppaiResult {
 
     private double pp;
 
+    @Override
+    public String toString() {
+        return "OppaiResult{" +
+                "oppaiVersion='" + oppaiVersion + '\'' +
+                ", code=" + code +
+                ", errstr='" + errstr + '\'' +
+                '}';
+    }
 
     public String getOppaiVersion() {
         return oppaiVersion;

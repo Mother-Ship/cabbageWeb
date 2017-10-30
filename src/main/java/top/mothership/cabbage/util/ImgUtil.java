@@ -894,7 +894,7 @@ public class ImgUtil {
     }
 
 
-    private BufferedImage getCopyImage(BufferedImage bi) {
+    public BufferedImage getCopyImage(BufferedImage bi) {
 //        return bi.getSubimage(0, 0, bi.getWidth(), bi.getHeight());
 
         ColorModel cm = bi.getColorModel();
@@ -921,7 +921,7 @@ public class ImgUtil {
 
     }
 
-    private void drawImage(BufferedImage img, String filename) {
+    public void drawImage(BufferedImage img, String filename) {
         try {
             ImageIO.write(img, "png", new File(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image\\" + filename + ".png"));
             img.flush();
