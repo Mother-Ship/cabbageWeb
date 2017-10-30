@@ -57,7 +57,7 @@ public class MsgUtil {
                 return true;
             }
         } catch (java.lang.NumberFormatException e) {
-            cqMsg.setMessage("Ай-ай-ай-ай-ай, что сейчас произошло!");
+            cqMsg.setMessage("[CQ:record,file=ay_ay_ay.wav]");
             cqUtil.sendMsg(cqMsg);
             logger.info("给的BP数目不是int");
             return false;
