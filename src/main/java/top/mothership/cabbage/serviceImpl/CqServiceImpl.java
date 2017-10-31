@@ -817,7 +817,7 @@ public class CqServiceImpl implements CqService {
         //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
         String filename = imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), day, near, scoreRank);
         //构造消息并发送
-        logger.info("开始调用函数发送" + filename + ".png");
+        logger.info("开始调用函数发送" + filename );
         cqMsg.setMessage("[CQ:image,file=" + filename + "]");
         cqUtil.sendMsg(cqMsg);
 
@@ -1034,8 +1034,8 @@ public class CqServiceImpl implements CqService {
         //最后的条件可以不用写，不过为了干掉这个报错还是谢了
         if (addList.size() == 1 && usernames.length == 1 && userFromAPI != null) {
             //这时候是只有单个用户，并且没有在nulllist里
-            logger.info("开始调用函数发送" + filename + ".png");
-            resp = resp.concat("\n[CQ:image,file=" + filename + ".png]");
+            logger.info("开始调用函数发送" + filename );
+            resp = resp.concat("\n[CQ:image,file=" + filename + "]");
         }
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
