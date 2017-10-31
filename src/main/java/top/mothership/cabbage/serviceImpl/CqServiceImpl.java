@@ -689,7 +689,7 @@ public class CqServiceImpl implements CqService {
                 StackTraceElement[] a = ex.getE().getStackTrace();
                 for (int i=0;i<a.length;i++) {
                     if(a[i].toString().contains("top.mothership")&&!a[i].toString().contains("<generated>"))
-                    resp = resp.concat("\n    at " + a[i]);
+                        resp = resp.concat("\n    at " + a[i]);
                 }
                 cqMsg.setMessage(resp);
                 cqUtil.sendMsg(cqMsg);
@@ -1295,8 +1295,8 @@ public class CqServiceImpl implements CqService {
         HttpResponse response;
 
 
-            post.setEntity(new UrlEncodedFormEntity(urlParameters));
-            response = client.execute(post);
+        post.setEntity(new UrlEncodedFormEntity(urlParameters));
+        response = client.execute(post);
 
 
         List<Cookie> cookies = client.getCookieStore().getCookies();
@@ -1360,24 +1360,24 @@ public class CqServiceImpl implements CqService {
         HttpResponse response = null;
         HttpEntity entity;
 
-            response = client.execute(httpGet);
-            entity = response.getEntity();
-            String html = EntityUtils.toString(entity, "GBK");
-            httpGet.releaseConnection();
-            Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
-            m.find();
-            String addLink = m.group(1);
-            if (addLink.contains("remove")) {
-                cqMsg.setMessage("你和" + target + "已经是好友了，请不要重复添加。");
-                cqUtil.sendMsg(cqMsg);
-                return;
-            }
-            httpGet = new HttpGet("https://osu.ppy.sh" + m.group(1));
-            response = client.execute(httpGet);
-            httpGet.releaseConnection();
-            if (response.getStatusLine().getStatusCode() != 200) {
-                //这里是跳转了，获取当前Cookie存入数据库，然后使用verify命令
-                //Cookie似乎没有变化，暂时先不update Cookie
+        response = client.execute(httpGet);
+        entity = response.getEntity();
+        String html = EntityUtils.toString(entity, "GBK");
+        httpGet.releaseConnection();
+        Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
+        m.find();
+        String addLink = m.group(1);
+        if (addLink.contains("remove")) {
+            cqMsg.setMessage("你和" + target + "已经是好友了，请不要重复添加。");
+            cqUtil.sendMsg(cqMsg);
+            return;
+        }
+        httpGet = new HttpGet("https://osu.ppy.sh" + m.group(1));
+        response = client.execute(httpGet);
+        httpGet.releaseConnection();
+        if (response.getStatusLine().getStatusCode() != 200) {
+            //这里是跳转了，获取当前Cookie存入数据库，然后使用verify命令
+            //Cookie似乎没有变化，暂时先不update Cookie
 //                httpGet = new HttpGet("https://osu.ppy.sh/p/verify?r="+addLink);
 //                List<Cookie> cookies = client.getCookieStore().getCookies();
 //                String CookieNames = "";
@@ -1387,12 +1387,12 @@ public class CqServiceImpl implements CqService {
 //                String cookie = new Gson().toJson(cookies);
 //                user.setCookie(cookie);
 //                baseMapper.updateUser(user);
-                cqMsg.setMessage("触发验证，请登录osu!并尝试使用!verify命令。");
-                cqUtil.sendMsg(cqMsg);
-            } else {
-                cqMsg.setMessage("添加成功。");
-                cqUtil.sendMsg(cqMsg);
-            }
+            cqMsg.setMessage("触发验证，请登录osu!并尝试使用!verify命令。");
+            cqUtil.sendMsg(cqMsg);
+        } else {
+            cqMsg.setMessage("添加成功。");
+            cqUtil.sendMsg(cqMsg);
+        }
 
 
     }
@@ -1410,17 +1410,17 @@ public class CqServiceImpl implements CqService {
         HttpResponse response;
         HttpEntity entity;
 
-            response = client.execute(httpGet);
-            entity = response.getEntity();
-            String html = EntityUtils.toString(entity, "GBK");
-            httpGet.releaseConnection();
-            //验证未通过时也有这个……
-            if (html.contains("<h1>Success!</h1>")) {
-                cqMsg.setMessage("验证通过。");
-            } else {
-                cqMsg.setMessage("验证未通过，请检查游戏是否登录。");
-            }
-            cqUtil.sendMsg(cqMsg);
+        response = client.execute(httpGet);
+        entity = response.getEntity();
+        String html = EntityUtils.toString(entity, "GBK");
+        httpGet.releaseConnection();
+        //验证未通过时也有这个……
+        if (html.contains("<h1>Success!</h1>")) {
+            cqMsg.setMessage("验证通过。");
+        } else {
+            cqMsg.setMessage("验证未通过，请检查游戏是否登录。");
+        }
+        cqUtil.sendMsg(cqMsg);
 
     }
 

@@ -44,8 +44,8 @@ public class Score {
     public String toString() {
         return "Score{" +
                 "beatmapId=" + beatmapId +
-                ", score=" + score +
-                ", userName='" + userName + '\'' +
+                ", date=" + date +
+                ", rank='" + rank + '\'' +
                 ", userId=" + userId +
                 '}';
     }
