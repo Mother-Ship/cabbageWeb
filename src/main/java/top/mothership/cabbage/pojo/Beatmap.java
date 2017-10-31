@@ -62,11 +62,13 @@ public class Beatmap {
     @Override
     public String toString() {
         return "Beatmap{" +
-                "beatmapId='" + beatmapId + '\'' +
-                ", version='" + version + '\'' +
+                "beatmapSetId='" + beatmapSetId + '\'' +
+                ", beatmapId='" + beatmapId + '\'' +
                 ", artist='" + artist + '\'' +
                 ", title='" + title + '\'' +
+                ", version='" + version + '\'' +
                 ", creator='" + creator + '\'' +
+                ", bpm='" + bpm + '\'' +
                 '}';
     }
 
