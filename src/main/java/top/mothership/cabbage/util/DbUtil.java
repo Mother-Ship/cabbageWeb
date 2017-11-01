@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.Beatmap;
+import top.mothership.cabbage.pojo.Score;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -15,19 +16,21 @@ import java.util.*;
 @Component
 public class DbUtil {
 private final ApiUtil apiUtil;
+    private final ScoreUtil scoreUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
     @Autowired
-    public DbUtil(ApiUtil apiUtil) {
+    public DbUtil(ApiUtil apiUtil,ScoreUtil scoreUtil) {
         this.apiUtil = apiUtil;
+        this.scoreUtil =scoreUtil;
     }
 
     //到底是把文件名传入构造方法，让一个util对象对应一个collection呢
     //还是提供方法，传入文件名，输出Beatmap集合呢
-    public Map<String,List<Beatmap>> praseCollectionDB(String filename) throws IOException {
+    public LinkedHashMap<String,List<Beatmap>> praseCollectionDB(String filename) throws IOException {
         DataInputStream reader  = new DataInputStream(new FileInputStream(filename));
         int version = readInt(reader);
         int count = readInt(reader);
-        Map<String,List<Beatmap>> map = new LinkedHashMap<>(count);
+        LinkedHashMap<String,List<Beatmap>> map = new LinkedHashMap<>(count);
         for (int i = 0; i < count; i++)
         {
             String name = readString(reader);
@@ -42,6 +45,84 @@ private final ApiUtil apiUtil;
             }
 
             map.put(name,md5Hashes);
+        }
+        return map;
+    }
+    public LinkedHashMap<Beatmap,List<Score>> praseScoresDB(String filename) throws IOException {
+        DataInputStream reader = new DataInputStream(new FileInputStream("D:\\scores.db"));
+        int version = readInt(reader);
+        int count = readInt(reader);
+        LinkedHashMap<Beatmap, List<Score>> map = new LinkedHashMap<>(count);
+        for (int i = 0; i < count; i++) {
+            String md5 = readString(reader);
+            Beatmap beatmap = apiUtil.getBeatmap(md5);
+            int scoreCount = readInt(reader);
+            List<Score> scores = new ArrayList<>(scoreCount);
+            for (int i2 = 0; i2 < scoreCount; i2++) {
+                Score score = new Score();
+                byte mode = readByte(reader);
+                int scoreVersion = readInt(reader);
+                String mapMd5 = readString(reader);
+                String username = readString(reader);
+                String repMd5 = readString(reader);
+                int count300 = readShort(reader);
+                int count100 = readShort(reader);
+                int count50 = readShort(reader);
+                int countGeki = readShort(reader);
+                int countKatu = readShort(reader);
+                int countMiss = readShort(reader);
+                int scoreValue = readInt(reader);
+                int maxCombo = readInt(reader);
+                boolean perfect = readBoolean(reader);
+                int mods = readInt(reader);
+//                String empty = readString(reader);
+                long timestamps = readLong(reader);
+                int size = readInt(reader);
+                long onlineId = readLong(reader);
+                LinkedHashMap<String,String> modsMap = scoreUtil.convertMOD(mods);
+                score.setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
+                score.setCount50(count50);
+                score.setCount100(count100);
+                score.setCount300(count300);
+                score.setCountGeki(countGeki);
+                score.setCountKatu(countKatu);
+                score.setCountMiss(countMiss);
+                score.setDate(new Date(timestamps));
+                score.setMaxCombo(maxCombo);
+                score.setEnabledMods(mods);
+                score.setScore((long) scoreValue);
+                score.setUserName(username);
+                if (perfect) {
+                    score.setPerfect(1);
+                } else {
+                    score.setPerfect(0);
+                }
+                int noteCount = count50 + count100 + count300 + countMiss;
+                float percent300 = (float) count300 / noteCount;
+                float percent50 = (float) count50 / noteCount;
+
+                if (percent300 < 0.7) {
+                    score.setRank("D");
+                } else if (percent300 <= 0.8) {
+                    score.setRank("C");
+                } else if (percent300 <= 0.85) {
+                    score.setRank("B");
+                }else if(percent300<1&&percent50<0.1){
+                    if(modsMap.keySet().contains("HD")||modsMap.keySet().contains("FL")) {
+                        score.setRank("SH");
+                    }else{
+                        score.setRank("S");
+                    }
+                }else{
+                    if(modsMap.keySet().contains("HD")||modsMap.keySet().contains("FL")) {
+                        score.setRank("XH");
+                    }else{
+                        score.setRank("X");
+                    }
+                }
+                scores.add(score);
+            }
+            map.put(beatmap, scores);
         }
         return map;
     }
