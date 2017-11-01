@@ -688,7 +688,9 @@ public class CqServiceImpl implements CqService {
                 }
                 StackTraceElement[] a = ex.getE().getStackTrace();
                 for (int i=0;i<a.length;i++) {
-                    if(a[i].toString().contains("top.mothership")&&!a[i].toString().contains("<generated>"))
+                    if(a[i].toString().contains("top.mothership")
+                            &&!a[i].toString().contains("<generated>")
+                            &&!a[i].toString().contains("Aspect"))
                         resp = resp.concat("\n    at " + a[i]);
                 }
                 cqMsg.setMessage(resp);
@@ -1435,7 +1437,7 @@ public class CqServiceImpl implements CqService {
 //            if (Arrays.asList(aList.getRole().split(",")).contains(role)) {
                 Userinfo userinfo = apiUtil.getUser(null, String.valueOf(aList));
                 logger.info(userinfo.getUserName() + "的PP是" + userinfo.getPpRaw());
-                resp = resp.concat("\n" + userinfo.getUserName() + "：" + userinfo.getPpRaw());
+                resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw());
 //            }
             }
         } else {
