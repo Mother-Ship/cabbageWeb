@@ -11,6 +11,8 @@ import java.io.File;
 @RequestMapping(value = "/api/user",produces = {"application/json;charset=UTF-8"})
 public class UserController {
     private Logger logger = LogManager.getLogger(this.getClass());
+
+
     @RequestMapping(value = "/upload",method = RequestMethod.POST)
     @CrossOrigin(origins = "http://localhost")
     public String upload(@RequestParam(value = "myfile") MultipartFile file) throws Exception {
