@@ -24,6 +24,12 @@ import org.springframework.stereotype.Service;
 import top.mothership.cabbage.aspect.CqServiceAspect;
 import top.mothership.cabbage.mapper.BaseMapper;
 import top.mothership.cabbage.pojo.*;
+import top.mothership.cabbage.pojo.CoolQ.CqMsg;
+import top.mothership.cabbage.pojo.CoolQ.CqResponse;
+import top.mothership.cabbage.pojo.CoolQ.QQInfo;
+import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.Score;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.service.CqService;
 import top.mothership.cabbage.util.*;
 
@@ -67,7 +73,7 @@ public class CqServiceImpl implements CqService {
 
 
     @Override
-    public void praseCmd(CqMsg cqMsg) throws Exception{
+    public void praseCmd(CqMsg cqMsg) throws Exception {
         java.util.Date s = Calendar.getInstance().getTime();
         String msg = cqMsg.getMessage();
         Matcher m = Pattern.compile(Constant.CMD_REGEX).matcher(msg);
@@ -662,41 +668,6 @@ public class CqServiceImpl implements CqService {
                 listPP(role, cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
-            case "debug":
-                logger.info("正在获取白菜本次启动发生的异常");
-                if (CqServiceAspect.Exceptions.size() == 0) {
-                    resp = "白菜本次启动没有发生异常。";
-                } else {
-                    resp = "以下是本次白菜启动期间发生的异常：";
-                    for (Map.Entry<Integer, top.mothership.cabbage.pojo.Exception> entry : CqServiceAspect.Exceptions.entrySet()) {
-                        resp = resp.concat("\n" + "Flag：" + entry.getKey() + "，日期：" + new SimpleDateFormat("yy-MM-dd HH:mm:ss").
-                                format(entry.getValue().getTime()) + "\n" + entry.getValue().getE());
-                    }
-                }
-                cqMsg.setMessage(resp);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "getStackTrace":
-                flag = m.group(2).substring(1);
-                logger.info("正在获取Flag为：" + flag + "的堆栈信息");
-                top.mothership.cabbage.pojo.Exception ex = CqServiceAspect.Exceptions.get(Integer.valueOf(flag));
-                resp = ex.getE().toString() + "，方法：" + ex.getPjp().getTarget().getClass() + "." + ex.getPjp().getSignature().getName() + "()\n方法入参：";
-                Object[] args = ex.getPjp().getArgs();
-                for (Object arg : args) {
-                    resp = resp.concat("\n" + arg);
-                }
-                StackTraceElement[] a = ex.getE().getStackTrace();
-                for (int i=0;i<a.length;i++) {
-                    if(a[i].toString().contains("top.mothership")
-                            &&!a[i].toString().contains("<generated>")
-                            &&!a[i].toString().contains("Aspect"))
-                        resp = resp.concat("\n    at " + a[i]);
-                }
-                cqMsg.setMessage(resp);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
         }
 
     }
@@ -819,7 +790,7 @@ public class CqServiceImpl implements CqService {
         //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
         String filename = imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), day, near, scoreRank);
         //构造消息并发送
-        logger.info("开始调用函数发送" + filename );
+        logger.info("开始调用函数发送" + filename);
         cqMsg.setMessage("[CQ:image,file=" + filename + "]");
         cqUtil.sendMsg(cqMsg);
 
@@ -846,7 +817,7 @@ public class CqServiceImpl implements CqService {
         }
     }
 
-    private void printBP(Userinfo userinfo, int num, CqMsg cqMsg) throws Exception{
+    private void printBP(Userinfo userinfo, int num, CqMsg cqMsg) throws Exception {
         if (num > 0 && ("112177148".equals(String.valueOf(cqMsg.getGroupId()))
                 || "677545541".equals(String.valueOf(cqMsg.getGroupId()))
                 || "234219559".equals(String.valueOf(cqMsg.getGroupId()))
@@ -956,7 +927,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void addUserRole(String[] usernames, String role, CqMsg cqMsg) throws Exception{
+    private void addUserRole(String[] usernames, String role, CqMsg cqMsg) throws Exception {
         List<String> nullList = new ArrayList<>();
         List<String> doneList = new ArrayList<>();
         List<String> addList = new ArrayList<>();
@@ -1036,7 +1007,7 @@ public class CqServiceImpl implements CqService {
         //最后的条件可以不用写，不过为了干掉这个报错还是谢了
         if (addList.size() == 1 && usernames.length == 1 && userFromAPI != null) {
             //这时候是只有单个用户，并且没有在nulllist里
-            logger.info("开始调用函数发送" + filename );
+            logger.info("开始调用函数发送" + filename);
             resp = resp.concat("\n[CQ:image,file=" + filename + "]");
         }
         cqMsg.setMessage(resp);
@@ -1156,7 +1127,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void getRecent(Userinfo userFromAPI, CqMsg cqMsg) throws Exception{
+    private void getRecent(Userinfo userFromAPI, CqMsg cqMsg) throws Exception {
         logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
         Score score = apiUtil.getRecent(null, userFromAPI.getUserName());
         if (score == null) {
@@ -1202,7 +1173,7 @@ public class CqServiceImpl implements CqService {
         cqUtil.sendMsg(cqMsg);
     }
 
-    private void getFristRank(Beatmap beatmap, List<Score> score, CqMsg cqMsg) throws Exception{
+    private void getFristRank(Beatmap beatmap, List<Score> score, CqMsg cqMsg) throws Exception {
 
         Userinfo userFromAPI = apiUtil.getUser(null, String.valueOf(score.get(0).getUserId()));
         //为了日志+和BP的PP计算兼容
@@ -1277,107 +1248,126 @@ public class CqServiceImpl implements CqService {
                 + String.valueOf(Math.round(scoreUtil.calcPP(score, beatmap).getPp())) + "PP");
         cqUtil.sendMsg(cqMsg);
     }
+    private void listPP(String role, CqMsg cqMsg) {
+        logger.info("开始检查" + role + "用户组中所有人的PP");
+        List<Integer> list = baseMapper.listUserIdByRole(role);
+        String resp;
+        if (list.size() > 0) {
+            resp = role + "用户组中所有人的PP：";
 
-    private void login(User user, String pwd, CqMsg cqMsg) throws IOException {
-        Userinfo userFromAPI = apiUtil.getUser(null, String.valueOf(user.getUserId()));
-        if (userFromAPI == null) {
-            cqMsg.setMessage("API没有获取到QQ" + cqMsg.getUserId() + "绑定的" + user.getUserId() + "玩家的信息。");
-            cqUtil.sendMsg(cqMsg);
-            return;
-        }
-        logger.info("检测到对" + userFromAPI.getUserName() + "的模拟登陆请求");
-        DefaultHttpClient client = new DefaultHttpClient();
-        HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
-        //添加请求头
-        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-        urlParameters.add(new BasicNameValuePair("autologin", "on"));
-        urlParameters.add(new BasicNameValuePair("login", "login"));
-        urlParameters.add(new BasicNameValuePair("username", userFromAPI.getUserName()));
-        urlParameters.add(new BasicNameValuePair("password", pwd));
-        HttpResponse response;
+            for (Integer aList : list) {
 
-
-        post.setEntity(new UrlEncodedFormEntity(urlParameters));
-        response = client.execute(post);
-
-
-        List<Cookie> cookies = client.getCookieStore().getCookies();
-        String CookieNames = "";
-        for (Cookie c : cookies) {
-            CookieNames = CookieNames.concat(c.getName());
-        }
-        if (CookieNames.contains("phpbb3_2cjk5_sid")) {
-            String cookie = new Gson().toJson(cookies);
-            user.setCookie(cookie);
-            baseMapper.updateUser(user);
-            cqMsg.setMessage("登陆成功，Cookie到期时间为：" +
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cookies.get(2).getExpiryDate()));
-            cqUtil.sendMsg(cqMsg);
-        } else if (CookieNames.contains("PHPSESSID")) {
-            cqMsg.setMessage("登录失败，可能触发了长时间未登录强行要求重设密码。");
-            cqUtil.sendMsg(cqMsg);
-
+                Userinfo userinfo = apiUtil.getUser(null, String.valueOf(aList));
+                logger.info(userinfo.getUserName() + "的PP是" + userinfo.getPpRaw());
+                resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw());
+            }
         } else {
-            cqMsg.setMessage("登陆失败，请检查输入。");
-            cqUtil.sendMsg(cqMsg);
+            resp = role + "用户组没有成员。";
         }
 
+        cqMsg.setMessage(resp);
+        cqUtil.sendMsg(cqMsg);
     }
+//    private void login(User user, String pwd, CqMsg cqMsg) throws IOException {
+//        Userinfo userFromAPI = apiUtil.getUser(null, String.valueOf(user.getUserId()));
+//        if (userFromAPI == null) {
+//            cqMsg.setMessage("API没有获取到QQ" + cqMsg.getUserId() + "绑定的" + user.getUserId() + "玩家的信息。");
+//            cqUtil.sendMsg(cqMsg);
+//            return;
+//        }
+//        logger.info("检测到对" + userFromAPI.getUserName() + "的模拟登陆请求");
+//        DefaultHttpClient client = new DefaultHttpClient();
+//        HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
+//        //添加请求头
+//        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+//        urlParameters.add(new BasicNameValuePair("autologin", "on"));
+//        urlParameters.add(new BasicNameValuePair("login", "login"));
+//        urlParameters.add(new BasicNameValuePair("username", userFromAPI.getUserName()));
+//        urlParameters.add(new BasicNameValuePair("password", pwd));
+//        HttpResponse response;
+//
+//
+//        post.setEntity(new UrlEncodedFormEntity(urlParameters));
+//        response = client.execute(post);
+//
+//
+//        List<Cookie> cookies = client.getCookieStore().getCookies();
+//        String CookieNames = "";
+//        for (Cookie c : cookies) {
+//            CookieNames = CookieNames.concat(c.getName());
+//        }
+//        if (CookieNames.contains("phpbb3_2cjk5_sid")) {
+//            String cookie = new Gson().toJson(cookies);
+//            user.setCookie(cookie);
+//            baseMapper.updateUser(user);
+//            cqMsg.setMessage("登陆成功，Cookie到期时间为：" +
+//                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cookies.get(2).getExpiryDate()));
+//            cqUtil.sendMsg(cqMsg);
+//        } else if (CookieNames.contains("PHPSESSID")) {
+//            cqMsg.setMessage("登录失败，可能触发了长时间未登录强行要求重设密码。");
+//            cqUtil.sendMsg(cqMsg);
+//
+//        } else {
+//            cqMsg.setMessage("登陆失败，请检查输入。");
+//            cqUtil.sendMsg(cqMsg);
+//        }
+//
+//    }
 
-    private void mutual(User user, String target, CqMsg cqMsg)throws Exception {
-        String msg = cqMsg.getMessage();
-        int uid = 0;
-        if (target.contains("[CQ:at,qq=")) {
-            int index = msg.indexOf("]");
-            User targetUser = baseMapper.getUser(msg.substring(14, index), null);
-            if (targetUser == null) {
-                cqMsg.setMessage("对方没有绑定osu!id。请提醒他使用!setid <你的osu!id> 命令。");
-                cqUtil.sendMsg(cqMsg);
-                return;
-            }
-            uid = targetUser.getUserId();
-
-        } else {
-            Userinfo userFromAPI = apiUtil.getUser(target, null);
-            if (userFromAPI == null) {
-                cqMsg.setMessage("没有从osu!API获取到玩家" + target + "的信息。");
-                cqUtil.sendMsg(cqMsg);
-                return;
-            }
-            uid = userFromAPI.getUserId();
-            target = userFromAPI.getUserName();
-        }
-        DefaultHttpClient client = new DefaultHttpClient();
-        HttpGet httpGet = new HttpGet("https://osu.ppy.sh/u/" + uid);
-        HttpParams params = client.getParams();
-        //禁用GET请求自动重定向
-        params.setParameter(ClientPNames.HANDLE_REDIRECTS, false);
-        List<Cookie> list = new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {
-        }.getType());
-        CookieStore cookieStore = new BasicCookieStore();
-        for (Cookie c : list) {
-            cookieStore.addCookie(c);
-        }
-        client.setCookieStore(cookieStore);
-        HttpResponse response = null;
-        HttpEntity entity;
-
-        response = client.execute(httpGet);
-        entity = response.getEntity();
-        String html = EntityUtils.toString(entity, "GBK");
-        httpGet.releaseConnection();
-        Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
-        m.find();
-        String addLink = m.group(1);
-        if (addLink.contains("remove")) {
-            cqMsg.setMessage("你和" + target + "已经是好友了，请不要重复添加。");
-            cqUtil.sendMsg(cqMsg);
-            return;
-        }
-        httpGet = new HttpGet("https://osu.ppy.sh" + m.group(1));
-        response = client.execute(httpGet);
-        httpGet.releaseConnection();
-        if (response.getStatusLine().getStatusCode() != 200) {
+//    private void mutual(User user, String target, CqMsg cqMsg) throws Exception {
+//        String msg = cqMsg.getMessage();
+//        int uid = 0;
+//        if (target.contains("[CQ:at,qq=")) {
+//            int index = msg.indexOf("]");
+//            User targetUser = baseMapper.getUser(msg.substring(14, index), null);
+//            if (targetUser == null) {
+//                cqMsg.setMessage("对方没有绑定osu!id。请提醒他使用!setid <你的osu!id> 命令。");
+//                cqUtil.sendMsg(cqMsg);
+//                return;
+//            }
+//            uid = targetUser.getUserId();
+//
+//        } else {
+//            Userinfo userFromAPI = apiUtil.getUser(target, null);
+//            if (userFromAPI == null) {
+//                cqMsg.setMessage("没有从osu!API获取到玩家" + target + "的信息。");
+//                cqUtil.sendMsg(cqMsg);
+//                return;
+//            }
+//            uid = userFromAPI.getUserId();
+//            target = userFromAPI.getUserName();
+//        }
+//        DefaultHttpClient client = new DefaultHttpClient();
+//        HttpGet httpGet = new HttpGet("https://osu.ppy.sh/u/" + uid);
+//        HttpParams params = client.getParams();
+//        //禁用GET请求自动重定向
+//        params.setParameter(ClientPNames.HANDLE_REDIRECTS, false);
+//        List<Cookie> list = new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {
+//        }.getType());
+//        CookieStore cookieStore = new BasicCookieStore();
+//        for (Cookie c : list) {
+//            cookieStore.addCookie(c);
+//        }
+//        client.setCookieStore(cookieStore);
+//        HttpResponse response = null;
+//        HttpEntity entity;
+//
+//        response = client.execute(httpGet);
+//        entity = response.getEntity();
+//        String html = EntityUtils.toString(entity, "GBK");
+//        httpGet.releaseConnection();
+//        Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
+//        m.find();
+//        String addLink = m.group(1);
+//        if (addLink.contains("remove")) {
+//            cqMsg.setMessage("你和" + target + "已经是好友了，请不要重复添加。");
+//            cqUtil.sendMsg(cqMsg);
+//            return;
+//        }
+//        httpGet = new HttpGet("https://osu.ppy.sh" + m.group(1));
+//        response = client.execute(httpGet);
+//        httpGet.releaseConnection();
+//        if (response.getStatusLine().getStatusCode() != 200) {
             //这里是跳转了，获取当前Cookie存入数据库，然后使用verify命令
             //Cookie似乎没有变化，暂时先不update Cookie
 //                httpGet = new HttpGet("https://osu.ppy.sh/p/verify?r="+addLink);
@@ -1389,62 +1379,41 @@ public class CqServiceImpl implements CqService {
 //                String cookie = new Gson().toJson(cookies);
 //                user.setCookie(cookie);
 //                baseMapper.updateUser(user);
-            cqMsg.setMessage("触发验证，请登录osu!并尝试使用!verify命令。");
-            cqUtil.sendMsg(cqMsg);
-        } else {
-            cqMsg.setMessage("添加成功。");
-            cqUtil.sendMsg(cqMsg);
-        }
+//            cqMsg.setMessage("触发验证，请登录osu!并尝试使用!verify命令。");
+//            cqUtil.sendMsg(cqMsg);
+//        } else {
+//            cqMsg.setMessage("添加成功。");
+//            cqUtil.sendMsg(cqMsg);
+//        }
 
 
-    }
+//    }
+//    private void verify(User user, CqMsg cqMsg) throws Exception {
+//        DefaultHttpClient client = new DefaultHttpClient();
+//        HttpGet httpGet = new HttpGet("https://osu.ppy.sh/p/verify");
+//        List<Cookie> list = new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {
+//        }.getType());
+//        CookieStore cookieStore = new BasicCookieStore();
+//        for (Cookie c : list) {
+//            cookieStore.addCookie(c);
+//        }
+//        client.setCookieStore(cookieStore);
+//        HttpResponse response;
+//        HttpEntity entity;
+//
+//        response = client.execute(httpGet);
+//        entity = response.getEntity();
+//        String html = EntityUtils.toString(entity, "GBK");
+//        httpGet.releaseConnection();
+//        //验证未通过时也有这个……
+//        if (html.contains("<h1>Success!</h1>")) {
+//            cqMsg.setMessage("验证通过。");
+//        } else {
+//            cqMsg.setMessage("验证未通过，请检查游戏是否登录。");
+//        }
+//        cqUtil.sendMsg(cqMsg);
+//
+//    }
 
-    private void verify(User user, CqMsg cqMsg) throws Exception{
-        DefaultHttpClient client = new DefaultHttpClient();
-        HttpGet httpGet = new HttpGet("https://osu.ppy.sh/p/verify");
-        List<Cookie> list = new Gson().fromJson(user.getCookie(), new TypeToken<List<BasicClientCookie>>() {
-        }.getType());
-        CookieStore cookieStore = new BasicCookieStore();
-        for (Cookie c : list) {
-            cookieStore.addCookie(c);
-        }
-        client.setCookieStore(cookieStore);
-        HttpResponse response;
-        HttpEntity entity;
 
-        response = client.execute(httpGet);
-        entity = response.getEntity();
-        String html = EntityUtils.toString(entity, "GBK");
-        httpGet.releaseConnection();
-        //验证未通过时也有这个……
-        if (html.contains("<h1>Success!</h1>")) {
-            cqMsg.setMessage("验证通过。");
-        } else {
-            cqMsg.setMessage("验证未通过，请检查游戏是否登录。");
-        }
-        cqUtil.sendMsg(cqMsg);
-
-    }
-
-    private void listPP(String role, CqMsg cqMsg) {
-        logger.info("开始检查" + role + "用户组中所有人的PP");
-        List<Integer> list = baseMapper.listUserIdByRole(role);
-        String resp;
-        if (list.size() > 0) {
-            resp = role + "用户组中所有人的PP：";
-
-            for (Integer aList : list) {
-//            if (Arrays.asList(aList.getRole().split(",")).contains(role)) {
-                Userinfo userinfo = apiUtil.getUser(null, String.valueOf(aList));
-                logger.info(userinfo.getUserName() + "的PP是" + userinfo.getPpRaw());
-                resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw());
-//            }
-            }
-        } else {
-            resp = role + "用户组没有成员。";
-        }
-
-        cqMsg.setMessage(resp);
-        cqUtil.sendMsg(cqMsg);
-    }
 }

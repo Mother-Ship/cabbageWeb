@@ -1,4 +1,4 @@
-package top.mothership.cabbage.pojo;
+package top.mothership.cabbage.pojo.CoolQ;
 
 import com.google.gson.annotations.SerializedName;
 

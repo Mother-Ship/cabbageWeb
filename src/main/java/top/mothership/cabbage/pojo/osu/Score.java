@@ -1,4 +1,4 @@
-package top.mothership.cabbage.pojo;
+package top.mothership.cabbage.pojo.osu;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -44,8 +44,19 @@ public class Score {
     public String toString() {
         return "Score{" +
                 "beatmapId=" + beatmapId +
+                ", score=" + score +
+                ", maxCombo=" + maxCombo +
+                ", count50=" + count50 +
+                ", count100=" + count100 +
+                ", count300=" + count300 +
+                ", countMiss=" + countMiss +
+                ", countKatu=" + countKatu +
+                ", countGeki=" + countGeki +
+                ", perfect=" + perfect +
+                ", enabledMods=" + enabledMods +
                 ", date=" + date +
                 ", rank='" + rank + '\'' +
+                ", pp=" + pp +
                 ", userId=" + userId +
                 '}';
     }

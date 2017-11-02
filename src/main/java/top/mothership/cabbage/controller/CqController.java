@@ -7,11 +7,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import top.mothership.cabbage.pojo.CqMsg;
+import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
 import top.mothership.cabbage.util.Constant;
 import top.mothership.cabbage.util.SmokeUtil;
 
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -73,6 +74,7 @@ public class CqController {
                         cmdRegex = Constant.MAIN_FILTER_REGEX_CHINESE;
                         if (msgWithoutImage.matches(cmdRegex)) {
                             logger.info("开始处理" + cqMsg.getUserId() + "发送的命令");
+                            throw new IOException("Test");
                         }
                         break;
                 }

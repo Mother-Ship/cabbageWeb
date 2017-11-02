@@ -4,7 +4,7 @@ public class User {
     private int userId;
     private String role;
     private String QQ;
-    private String cookie;
+
 
     @Override
     public String toString() {
@@ -15,13 +15,6 @@ public class User {
                 '}';
     }
 
-    public String getCookie() {
-        return cookie;
-    }
-
-    public void setCookie(String cookie) {
-        this.cookie = cookie;
-    }
 
     public String getRole() {
         return role;

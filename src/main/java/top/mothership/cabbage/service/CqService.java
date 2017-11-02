@@ -1,6 +1,6 @@
 package top.mothership.cabbage.service;
 
-import top.mothership.cabbage.pojo.CqMsg;
+import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
 public interface CqService {
     void praseCmd(CqMsg cqMsg) throws Exception;

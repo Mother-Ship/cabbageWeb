@@ -6,9 +6,9 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pojo.Beatmap;
-import top.mothership.cabbage.pojo.Score;
-import top.mothership.cabbage.pojo.Userinfo;
+import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.Score;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 
 import java.io.BufferedReader;
 import java.io.IOException;

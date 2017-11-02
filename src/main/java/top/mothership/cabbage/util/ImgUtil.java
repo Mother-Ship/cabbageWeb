@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pojo.Beatmap;
-import top.mothership.cabbage.pojo.OppaiResult;
-import top.mothership.cabbage.pojo.Score;
-import top.mothership.cabbage.pojo.Userinfo;
+import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.OppaiResult;
+import top.mothership.cabbage.pojo.osu.Score;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

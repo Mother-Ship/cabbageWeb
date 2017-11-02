@@ -6,9 +6,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pojo.Beatmap;
-import top.mothership.cabbage.pojo.OppaiResult;
-import top.mothership.cabbage.pojo.Score;
+import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.OppaiResult;
+import top.mothership.cabbage.pojo.osu.Score;
 
 import java.io.BufferedReader;
 import java.io.IOException;
