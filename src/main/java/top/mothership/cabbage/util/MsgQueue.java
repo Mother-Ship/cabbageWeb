@@ -1,9 +1,8 @@
 package top.mothership.cabbage.util;
 
-import top.mothership.cabbage.pojo.CqMsg;
+import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class MsgQueue {
 

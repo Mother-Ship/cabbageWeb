@@ -1,4 +1,4 @@
-package top.mothership.cabbage.pojo;
+package top.mothership.cabbage.pojo.osu;
 
 public class OsuFile {
     private Integer version;

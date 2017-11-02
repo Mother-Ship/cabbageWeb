@@ -1,4 +1,4 @@
-package top.mothership.cabbage.pojo;
+package top.mothership.cabbage.pojo.osu;
 
 /**
  * Created by QHS on 2017/9/11.

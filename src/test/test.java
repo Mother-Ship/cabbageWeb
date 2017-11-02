@@ -1,28 +1,11 @@
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.params.AllClientPNames;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.params.HttpParams;
-import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import top.mothership.cabbage.mapper.BaseMapper;
-import top.mothership.cabbage.pojo.Beatmap;
-import top.mothership.cabbage.pojo.Score;
-import top.mothership.cabbage.pojo.User;
+import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.util.ApiUtil;
 import top.mothership.cabbage.util.ScoreUtil;
 
@@ -32,8 +15,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:spring/spring-*.xml")

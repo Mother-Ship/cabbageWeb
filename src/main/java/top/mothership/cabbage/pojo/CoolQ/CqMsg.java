@@ -1,4 +1,4 @@
-package top.mothership.cabbage.pojo;
+package top.mothership.cabbage.pojo.CoolQ;
 
 import com.google.gson.annotations.SerializedName;
 //酷Q收到消息之后通过HTTPAPI给白菜的POST请求体

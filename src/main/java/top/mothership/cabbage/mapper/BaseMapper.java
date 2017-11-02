@@ -3,7 +3,7 @@ package top.mothership.cabbage.mapper;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 import top.mothership.cabbage.pojo.User;
-import top.mothership.cabbage.pojo.Userinfo;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 
 import java.sql.Date;
 import java.util.List;

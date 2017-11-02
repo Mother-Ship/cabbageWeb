@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pojo.CqMsg;
+import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

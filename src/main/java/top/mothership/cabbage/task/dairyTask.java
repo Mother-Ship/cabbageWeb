@@ -12,12 +12,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import top.mothership.cabbage.mapper.BaseMapper;
-import top.mothership.cabbage.pojo.User;
-import top.mothership.cabbage.pojo.Userinfo;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.ApiUtil;
 import top.mothership.cabbage.util.Constant;
 
-import javax.imageio.ImageIO;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
