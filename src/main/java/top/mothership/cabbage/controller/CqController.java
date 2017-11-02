@@ -74,7 +74,6 @@ public class CqController {
                         cmdRegex = Constant.MAIN_FILTER_REGEX_CHINESE;
                         if (msgWithoutImage.matches(cmdRegex)) {
                             logger.info("开始处理" + cqMsg.getUserId() + "发送的命令");
-                            throw new IOException("Test");
                         }
                         break;
                 }
