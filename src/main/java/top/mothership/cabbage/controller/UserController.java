@@ -11,7 +11,11 @@ import java.io.File;
 @RequestMapping(value = "/api/user",produces = {"application/json;charset=UTF-8"})
 public class UserController {
     private Logger logger = LogManager.getLogger(this.getClass());
-
+    @RequestMapping(value = "/login",method = RequestMethod.POST)
+    @CrossOrigin(origins = "http://localhost")
+    public String login(){
+        return null;
+    }
 
     @RequestMapping(value = "/upload",method = RequestMethod.POST)
     @CrossOrigin(origins = "http://localhost")

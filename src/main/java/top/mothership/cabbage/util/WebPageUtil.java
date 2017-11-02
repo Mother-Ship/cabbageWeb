@@ -174,39 +174,10 @@ public class WebPageUtil {
                     }
                     if (osuFile.getBgName().equals(filename)) {
                         ByteArrayInputStream in = new ByteArrayInputStream(data);
-                        BufferedImage result = ImageIO.read(in);
+                        BufferedImage bg = ImageIO.read(in);
                         //懒得重构成方法了_(:з」∠)_
-                        BufferedImage resizedBG;
+                        BufferedImage resizedBG = Convert1366_768(bg);
                         //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
-                        int resizedWeight = 1366;
-                        int resizedHeight = (int) Math.ceil((float) result.getHeight() / result.getWidth() * 1366);
-                        int heightDiff = ((resizedHeight - 768) / 2);
-                        int widthDiff = 0;
-                        //如果算出重画之后的高<768(遇到金盏花这种特别宽的)
-                        if (resizedHeight < 768) {
-                            resizedWeight = (int) Math.ceil((float) result.getWidth() / result.getHeight() * 768);
-                            resizedHeight = 768;
-                            heightDiff = 0;
-                            widthDiff = ((resizedWeight - 1366) / 2);
-                        }
-                        //把BG横向拉到1366;
-                        //忘记在这里处理了
-                        BufferedImage resizedBGTmp = new BufferedImage(resizedWeight, resizedHeight, result.getType());
-                        Graphics2D g = resizedBGTmp.createGraphics();
-                        g.drawImage(result.getScaledInstance(resizedWeight, resizedHeight, Image.SCALE_SMOOTH), 0, 0, resizedWeight, resizedHeight, null);
-                        g.dispose();
-
-                        //切割图片
-                        resizedBG = new BufferedImage(1366, 768, BufferedImage.TYPE_INT_RGB);
-                        for (int x = 0; x < 1366; x++) {
-                            //这里之前用了原bg拉伸之前的分辨率，难怪报错
-                            for (int y = 0; y < 768; y++) {
-                                resizedBG.setRGB(x, y, resizedBGTmp.getRGB(x + widthDiff, y + heightDiff));
-                            }
-                        }
-                        //刷新掉bg以及临时bg的缓冲，将其作废
-                        resizedBGTmp.flush();
-                        result.flush();
                         //在谱面rank状态是Ranked或者Approved时，写入硬盘
                         if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
                             //扩展名直接从文件里取
@@ -214,7 +185,6 @@ public class WebPageUtil {
                                     new File(rb.getString("path") + "\\data\\image\\resource\\osu\\"
                                             + beatmap.getBeatmapSetId() + "\\" + osuFile.getBgName()));
                         }
-
                         httpGet.releaseConnection();
                         in.close();
                         zis.close();
@@ -273,37 +243,7 @@ public class WebPageUtil {
                 Matcher m = Pattern.compile(Constant.DOWNLOAD_FILENAME_REGEX)
                         .matcher(httpConnection.getHeaderFields().get("Content-Disposition").get(0));
                 m.find();
-
-                //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
-                int resizedWeight = 1366;
-                int resizedHeight = (int) Math.ceil((float) bg.getHeight() / bg.getWidth() * 1366);
-                int heightDiff = ((resizedHeight - 768) / 2);
-                int widthDiff = 0;
-                //如果算出重画之后的高<768(遇到金盏花这种特别宽的)
-                if (resizedHeight < 768) {
-                    resizedWeight = (int) Math.ceil((float) bg.getWidth() / bg.getHeight() * 768);
-                    resizedHeight = 768;
-                    heightDiff = 0;
-                    widthDiff = ((resizedWeight - 1366) / 2);
-                }
-                //把BG横向拉到1366;
-                //忘记在这里处理了
-                BufferedImage resizedBGTmp = new BufferedImage(resizedWeight, resizedHeight, bg.getType());
-                Graphics2D g = resizedBGTmp.createGraphics();
-                g.drawImage(bg.getScaledInstance(resizedWeight, resizedHeight, Image.SCALE_SMOOTH), 0, 0, resizedWeight, resizedHeight, null);
-                g.dispose();
-
-                //切割图片
-                resizedBG = new BufferedImage(1366, 768, BufferedImage.TYPE_INT_RGB);
-                for (int x = 0; x < 1366; x++) {
-                    //这里之前用了原bg拉伸之前的分辨率，难怪报错
-                    for (int y = 0; y < 768; y++) {
-                        resizedBG.setRGB(x, y, resizedBGTmp.getRGB(x + widthDiff, y + heightDiff));
-                    }
-                }
-                //刷新掉bg以及临时bg的缓冲，将其作废
-                resizedBGTmp.flush();
-                bg.flush();
+                resizedBG = Convert1366_768(bg);
                 //在谱面rank状态是Ranked或者Approved时，写入硬盘
                 if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
                     //扩展名直接从文件里取
@@ -525,7 +465,40 @@ public class WebPageUtil {
         } else return null;
 
     }
+    private BufferedImage Convert1366_768(BufferedImage bg){
+        BufferedImage resizedBG;
+        //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
+        int resizedWeight = 1366;
+        int resizedHeight = (int) Math.ceil((float) bg.getHeight() / bg.getWidth() * 1366);
+        int heightDiff = ((resizedHeight - 768) / 2);
+        int widthDiff = 0;
+        //如果算出重画之后的高<768(遇到金盏花这种特别宽的)
+        if (resizedHeight < 768) {
+            resizedWeight = (int) Math.ceil((float) bg.getWidth() / bg.getHeight() * 768);
+            resizedHeight = 768;
+            heightDiff = 0;
+            widthDiff = ((resizedWeight - 1366) / 2);
+        }
+        //把BG横向拉到1366;
+        //忘记在这里处理了
+        BufferedImage resizedBGTmp = new BufferedImage(resizedWeight, resizedHeight, bg.getType());
+        Graphics2D g = resizedBGTmp.createGraphics();
+        g.drawImage(bg.getScaledInstance(resizedWeight, resizedHeight, Image.SCALE_SMOOTH), 0, 0, resizedWeight, resizedHeight, null);
+        g.dispose();
 
+        //切割图片
+        resizedBG = new BufferedImage(1366, 768, BufferedImage.TYPE_INT_RGB);
+        for (int x = 0; x < 1366; x++) {
+            //这里之前用了原bg拉伸之前的分辨率，难怪报错
+            for (int y = 0; y < 768; y++) {
+                resizedBG.setRGB(x, y, resizedBGTmp.getRGB(x + widthDiff, y + heightDiff));
+            }
+        }
+        //刷新掉bg以及临时bg的缓冲，将其作废
+        bg.flush();
+        resizedBGTmp.flush();
+        return  resizedBG;
+    }
     private byte[] readInputStream(InputStream inputStream) throws IOException {
         byte[] buffer = new byte[1024];
         int len = 0;

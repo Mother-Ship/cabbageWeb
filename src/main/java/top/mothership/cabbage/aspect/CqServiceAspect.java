@@ -36,6 +36,7 @@ private final CqUtil cqUtil;
         try {
             result=pjp.proceed();
         } catch (Throwable e) {
+
            String resp = new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime())+
                    "\n"+e.toString() + "，方法：" + pjp.getTarget().getClass() + "."
                    + pjp.getSignature().getName() + "()\n方法入参：";

@@ -76,6 +76,9 @@ public interface BaseMapper {
             ")")
     Integer addUserInfo(@Param("userinfo") Userinfo userinfo);
 
+    @Select("SELECT * FROM `userinfo` WHERE `user_id` = #{userId}")
+    List<Userinfo> listUserInfoByUserId(@Param("userId") Integer userId);
+
     @Select("SELECT * , abs(UNIX_TIMESTAMP(queryDate) - UNIX_TIMESTAMP(#{queryDate})) AS ds FROM `userinfo`  WHERE `user_id` = #{userId} ORDER BY ds ASC LIMIT 1")
     Userinfo getNearestUserInfo(@Param("userId") Integer userId, @Param("queryDate") Date queryDate);
 
@@ -84,6 +87,5 @@ public interface BaseMapper {
 
     @Delete("DELETE FROM `userinfo` WHERE `queryDate` = #{queryDate}")
     void clearTodayInfo(@Param("queryDate") Date queryDate);
-
 
 }
