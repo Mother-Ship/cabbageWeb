@@ -56,12 +56,11 @@ public interface BaseMapper {
             + "<set>"
             + "<if test=\"user.role != null\">role=#{user.role},</if>"
             + "<if test=\"user.QQ != null\">QQ=#{user.QQ},</if>"
-            + "<if test=\"user.cookie != null\">cookie=#{user.cookie},</if>"
             + "</set>"
             + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);
 
-    @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.QQ},#{user.cookie})")
+    @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.QQ})")
     Integer addUser(@Param("user") User user);
 
 

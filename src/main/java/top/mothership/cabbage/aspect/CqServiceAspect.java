@@ -51,7 +51,6 @@ private final CqUtil cqUtil;
             }
             resp = resp.concat("\n……");
             CqMsg cqMsg = new CqMsg();
-            System.out.println(resp);
             cqMsg.setMessage(resp);
             cqMsg.setUserId(1335734657L);
             cqMsg.setMessageType("private");
