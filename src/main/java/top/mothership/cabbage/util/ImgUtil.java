@@ -439,12 +439,10 @@ public class ImgUtil {
         boolean defaultBG = false;
         try {
             bg = webPageUtil.getBG(beatmap);
-        }catch (NullPointerException e) {
+        } catch (NullPointerException e) {
             logger.error("从血猫抓取谱面背景失败，尝试改为从官网抓取");
-            try {
-                bg = webPageUtil.getBGBackup(beatmap);
-                if(bg==null)throw new NullPointerException();
-            } catch (NullPointerException e1){
+            bg = webPageUtil.getBGBackup(beatmap);
+            if (bg == null) {
                 //随机抽取一个bg
                 logger.error("从官网/血猫抓取谱面背景失败，抽取默认BG之一作为BG");
                 String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
@@ -453,6 +451,7 @@ public class ImgUtil {
             }
         }
         logger.info("资源加载完成，开始绘制");
+        //2017-11-3 17:51:47这里有莫名的空指针，比较迷，在webpageUtil.getBG里加一个判断为空则抛出空指针看看
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
         //画上各个元素，这里Images按文件名排序
         //顶端banner(下方也暗化了20%，JAVA自带算法容易导致某些图片生成透明图片)

@@ -9,6 +9,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.ibatis.jdbc.Null;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -215,7 +216,6 @@ public class WebPageUtil {
         OsuFile osuFile = praseOsuFile(beatmap);
         File bgFile = new File(rb.getString("path") + "\\data\\image\\resource\\osu\\"
                 + beatmap.getBeatmapSetId() + "\\" + osuFile.getBgName());
-        logger.debug(bgFile.length());
         if (bgFile.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
             //如果osu文件大小大于0，并且状态是ranked
             try {
@@ -262,6 +262,9 @@ public class WebPageUtil {
         }
         if (retry == 5) {
             logger.error("获取" + beatmap.getBeatmapId() + "的背景图，失败五次");
+        }
+        if(resizedBG==null){
+            throw new NullPointerException();
         }
         return resizedBG;
 
