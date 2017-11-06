@@ -1,42 +1,10 @@
 package top.mothership.cabbage.pojo;
 
+import lombok.Data;
+
+@Data
 public class User {
     private int userId;
     private String role;
     private String QQ;
-
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "userId=" + userId +
-                ", role='" + role + '\'' +
-                ", QQ='" + QQ + '\'' +
-                '}';
-    }
-
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public String getQQ() {
-        return QQ;
-    }
-
-    public void setQQ(String QQ) {
-        this.QQ = QQ;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
 }

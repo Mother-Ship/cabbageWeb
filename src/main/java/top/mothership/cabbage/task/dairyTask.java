@@ -14,7 +14,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import top.mothership.cabbage.mapper.BaseMapper;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.ApiUtil;
-import top.mothership.cabbage.util.Constant;
+import top.mothership.cabbage.util.Overall;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -71,7 +71,7 @@ public class dairyTask {
     }
     @Scheduled(cron = "0 0 4 * * ?")
     public void clearTodayImages() {
-        final Path path = Paths.get(Constant.CABBAGE_CONFIG.getString("path") + "\\data\\image");
+        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image");
         SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {

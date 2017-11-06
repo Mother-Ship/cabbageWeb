@@ -9,7 +9,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.ibatis.jdbc.Null;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -28,11 +27,8 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
@@ -240,7 +236,7 @@ public class WebPageUtil {
                 }
                 //读取返回结果
                 bg = ImageIO.read(httpConnection.getInputStream());
-                Matcher m = Pattern.compile(Constant.DOWNLOAD_FILENAME_REGEX)
+                Matcher m = Pattern.compile(Overall.DOWNLOAD_FILENAME_REGEX)
                         .matcher(httpConnection.getHeaderFields().get("Content-Disposition").get(0));
                 m.find();
                 resizedBG = Convert1366_768(bg);
@@ -392,7 +388,7 @@ public class WebPageUtil {
         return null;
     }
 
-    public void getOsuFile(Beatmap beatmap) {
+    public File getOsuFile(Beatmap beatmap) {
         HttpURLConnection httpConnection;
         byte[] osuFile;
         int retry = 0;
@@ -406,7 +402,7 @@ public class WebPageUtil {
 
         if (osu.length() > 0 && (beatmap.getApproved() == 1 || beatmap.getApproved() == 2)) {
             //如果beatmap状态是ranked,直接读取
-            return;
+            return osu;
         }
         while (retry < 5) {
             try (FileOutputStream fs = new FileOutputStream(osu)) {
@@ -422,12 +418,11 @@ public class WebPageUtil {
                 }
                 //将返回结果读取为Byte数组
                 osuFile = readInputStream(httpConnection.getInputStream());
-
                 fs.write(osuFile);
 
                 //手动关闭连接
                 httpConnection.disconnect();
-                break;
+                return osu;
             } catch (IOException e) {
                 logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
                 retry++;
@@ -437,6 +432,7 @@ public class WebPageUtil {
         if (retry == 5) {
             logger.error("获取" + beatmap.getBeatmapId() + "的.osu文件，失败五次");
         }
+        return null;
     }
 
     //这个方法只能处理ranked/approved/qualified的.osu文件,在目前的业务逻辑里默认.osu文件是存在的。
@@ -452,14 +448,14 @@ public class WebPageUtil {
             e.printStackTrace();
             return null;
         }
-//        Matcher m = Pattern.compile(Constant.BGLINE_REGEX).matcher(osuFile);
+//        Matcher m = Pattern.compile(Overall.BGLINE_REGEX).matcher(osuFile);
 //        m.find();
 //        if("//Background and Video events".equals(m.group(1))){
 //            bgName = m.group(2);
 //        }else{
 //            bgName = m.group(1);
 //        }
-        Matcher m = Pattern.compile(Constant.BGNAME_REGEX).matcher(osuFile);
+        Matcher m = Pattern.compile(Overall.BGNAME_REGEX).matcher(osuFile);
         if (m.find()) {
             OsuFile result = new OsuFile();
             bgName = m.group(1);
