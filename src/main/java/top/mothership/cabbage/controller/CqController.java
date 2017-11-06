@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
-import top.mothership.cabbage.util.Constant;
+import top.mothership.cabbage.util.CmdUtil;
+import top.mothership.cabbage.util.Overall;
 import top.mothership.cabbage.util.SmokeUtil;
 
-import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,19 +23,21 @@ public class CqController {
 
     private final CqServiceImpl cqService;
     private final SmokeUtil smokeUtil;
+    private final CmdUtil cmdUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     private Matcher m;
 
     @Autowired
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil) {
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CmdUtil cmdUtil) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
+        this.cmdUtil = cmdUtil;
     }
 
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public String cqMsgPrase(@RequestBody CqMsg cqMsg) throws Exception{
-        String cmdRegex = Constant.MAIN_FILTER_REGEX;
+        String cmdRegex = Overall.MAIN_FILTER_REGEX;
         //待整理业务逻辑
         switch (cqMsg.getPostType()){
             case "message":
@@ -46,8 +48,8 @@ public class CqController {
                 msg = msg.replaceAll("&#44;", ",");
                 cqMsg.setMessage(msg);
                 String msgWithoutImage;
-                if (msg.matches(Constant.IMG_REGEX)) {
-                    msgWithoutImage = msg.replaceAll(Constant.SINGLE_IMG_REGEX, "");
+                if (msg.matches(Overall.IMG_REGEX)) {
+                    msgWithoutImage = msg.replaceAll(Overall.SINGLE_IMG_REGEX, "");
                 } else {
                     msgWithoutImage = msg;
                 }
@@ -71,7 +73,7 @@ public class CqController {
                     case "private":
                         //如果是私聊消息，覆盖掉正则表达式（识别汉字）
                         //不必考虑线程安全问题，每次进入这个方法，cmdRegex都会被重置为没有汉字的版本
-                        cmdRegex = Constant.MAIN_FILTER_REGEX_CHINESE;
+                        cmdRegex = Overall.MAIN_FILTER_REGEX_CHINESE;
                         if (msgWithoutImage.matches(cmdRegex)) {
                             logger.info("开始处理" + cqMsg.getUserId() + "发送的命令");
                         }
@@ -97,7 +99,7 @@ public class CqController {
                 break;
             case "event":
                 if(cqMsg.getEvent().equals("group_increase")) {
-                    cqService.praseNewsPaper(cqMsg);
+                    cmdUtil.praseNewsPaper(cqMsg);
                 }
                 if(cqMsg.getEvent().equals("group_admin")){
                     logger.info("检测到群管变动："+cqMsg.getUserId()+"，操作为"+cqMsg.getSubType());
@@ -108,7 +110,7 @@ public class CqController {
                 //只有是加群请求的时候才进入
                 if(cqMsg.getRequestType().equals("group")&&cqMsg.getSubType().equals("invite")){
                     logger.info("已将"+cqMsg.getUserId()+"将白菜邀请入"+cqMsg.getGroupId()+"的请求进行暂存");
-                    cqService.stashInviteRequest(cqMsg);
+                    cmdUtil.stashInviteRequest(cqMsg);
                 }
 
                 break;

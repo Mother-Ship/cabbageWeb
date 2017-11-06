@@ -12,14 +12,17 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
 @Component
-public class DbUtil {
+public class DbFileUtil {
 private final ApiUtil apiUtil;
     private final ScoreUtil scoreUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
     @Autowired
-    public DbUtil(ApiUtil apiUtil,ScoreUtil scoreUtil) {
+    public DbFileUtil(ApiUtil apiUtil, ScoreUtil scoreUtil) {
         this.apiUtil = apiUtil;
         this.scoreUtil =scoreUtil;
     }

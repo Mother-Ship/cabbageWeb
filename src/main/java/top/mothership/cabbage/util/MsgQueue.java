@@ -12,10 +12,6 @@ public class MsgQueue {
     private CqMsg[] msgs = new CqMsg[100];
     //避免空指针
     private CqMsg msg =new CqMsg();
-
-
-
-
     public boolean isRepeat(){
 
         int count =0;
@@ -113,8 +109,8 @@ public class MsgQueue {
     private boolean isThisRepeat(int i){
         String msgFromGroup;
         String msgFromArray;
-        msgFromArray = msgs[i].getMessage().replaceAll(Constant.REPEAT_FILTER_REGEX, "");
-        msgFromGroup = msg.getMessage().replaceAll(Constant.REPEAT_FILTER_REGEX, "");
+        msgFromArray = msgs[i].getMessage().replaceAll(Overall.REPEAT_FILTER_REGEX, "");
+        msgFromGroup = msg.getMessage().replaceAll(Overall.REPEAT_FILTER_REGEX, "");
 
         if("".equals(msgFromArray)){
             msgFromArray = msgs[i].getMessage();
@@ -124,6 +120,6 @@ public class MsgQueue {
         }
         return msgFromArray
                 .equals(msgFromGroup)
-                && !msg.getMessage().matches(Constant.SINGLE_IMG_REGEX) && msg.getMessage().length() >= 3;
+                && !msg.getMessage().matches(Overall.SINGLE_IMG_REGEX) && msg.getMessage().length() >= 3;
     }
 }

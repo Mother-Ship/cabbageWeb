@@ -1,7 +1,13 @@
 package top.mothership.cabbage.pojo.osu;
 
+import lombok.Getter;
+import lombok.Setter;
+
+
 public class OsuFile {
     private Integer version;
+    @Setter
+    @Getter
     private String bgName;
     private String audioFilename;
     private Integer audioLeadin;
@@ -13,11 +19,4 @@ public class OsuFile {
     private Boolean letterboxInBreaks;
     private Boolean wideScreenStoryBoard;
 
-    public String getBgName() {
-        return bgName;
-    }
-
-    public void setBgName(String bgName) {
-        this.bgName = bgName;
-    }
 }
