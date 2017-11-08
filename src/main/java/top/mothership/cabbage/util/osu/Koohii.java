@@ -1,10 +1,10 @@
-package top.mothership.cabbage.util;
+package top.mothership.cabbage.util.osu;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * pure java implementation of github.com/Francesco149/oppai-ng .

@@ -1,25 +1,32 @@
-package top.mothership.cabbage.util;
+package top.mothership.cabbage.util.qq;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.mapper.BaseMapper;
+import top.mothership.cabbage.mapper.ResDAO;
+import top.mothership.cabbage.mapper.UserDAO;
+import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.Userinfo;
+import top.mothership.cabbage.util.Overall;
+import top.mothership.cabbage.util.osu.ApiUtil;
+import top.mothership.cabbage.util.osu.ScoreUtil;
+import top.mothership.cabbage.util.osu.WebPageUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Date;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
 @Component
 public class CmdUtil {
     private final ApiUtil apiUtil;
@@ -27,17 +34,21 @@ public class CmdUtil {
     private ImgUtil imgUtil;
     private WebPageUtil webPageUtil;
     private ScoreUtil scoreUtil;
-    private BaseMapper baseMapper;
+    private UserDAO userDAO;
+    private UserInfoDAO userInfoDAO;
+    private ResDAO resDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
-    public CmdUtil(ApiUtil apiUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, ScoreUtil scoreUtil, BaseMapper baseMapper) {
+    public CmdUtil(ApiUtil apiUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, ScoreUtil scoreUtil, UserDAO userDAO, UserInfoDAO userInfoDAO, ResDAO resDAO) {
         this.apiUtil = apiUtil;
         this.cqUtil = cqUtil;
         this.imgUtil = imgUtil;
         this.webPageUtil = webPageUtil;
         this.scoreUtil = scoreUtil;
-        this.baseMapper = baseMapper;
+        this.userDAO = userDAO;
+        this.userInfoDAO = userInfoDAO;
+        this.resDAO = resDAO;
     }
 
     public void praseNewsPaper(CqMsg cqMsg) {
@@ -77,7 +88,7 @@ public class CmdUtil {
     public void stashInviteRequest(CqMsg cqMsg) {
         java.util.Date s = Calendar.getInstance().getTime();
         Overall.inviteRequests.put(cqMsg, "否");
-        cqMsg.setMessage("有新的拉群邀请，请注意查收："+cqMsg);
+        cqMsg.setMessage("有新的拉群邀请，请注意查收：" + cqMsg);
         cqMsg.setMessageType("private");
         cqMsg.setUserId(1335734657L);
         cqUtil.sendMsg(cqMsg);
@@ -113,13 +124,13 @@ public class CmdUtil {
         logger.info("开始调用API查询" + userFromAPI.getUserName() + "的信息");
         if (day > 0) {
             regIfFirstUse(userFromAPI);
-            userInDB = baseMapper.getUserInfo(userFromAPI.getUserId(), date);
+            userInDB = userInfoDAO.getUserInfo(userFromAPI.getUserId(), date);
             if (userInDB == null) {
-                userInDB = baseMapper.getNearestUserInfo(userFromAPI.getUserId(), date);
+                userInDB = userInfoDAO.getNearestUserInfo(userFromAPI.getUserId(), date);
                 near = true;
             }
         }
-        role = baseMapper.getUser(null, userFromAPI.getUserId()).getRole();
+        role = userDAO.getUser(null, userFromAPI.getUserId()).getRole();
         if (role == null) {
             role = "creep";
         }
@@ -138,6 +149,9 @@ public class CmdUtil {
             //dev得在最后面
             if (o1.equals("dev")) {
                 return 1;
+            }
+            if (o2.equals("dev")) {
+                return -1;
             }
             return o1.compareTo(o2);
         });
@@ -161,14 +175,14 @@ public class CmdUtil {
     }
 
     public void regIfFirstUse(Userinfo userFromAPI) {
-        if (baseMapper.getUser(null, userFromAPI.getUserId()) == null) {
+        if (userDAO.getUser(null, userFromAPI.getUserId()) == null) {
             logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
             //构造User对象写入数据库
             User user = new User();
             user.setUserId(userFromAPI.getUserId());
             user.setRole("creep");
             user.setQQ("0");
-            baseMapper.addUser(user);
+            userDAO.addUser(user);
             //构造日历对象和List
             Calendar c = Calendar.getInstance();
             if (c.get(Calendar.HOUR_OF_DAY) < 4) {
@@ -176,7 +190,7 @@ public class CmdUtil {
             }
             userFromAPI.setQueryDate(new java.sql.Date(c.getTime().getTime()));
             //写入一行userinfo
-            baseMapper.addUserInfo(userFromAPI);
+            userInfoDAO.addUserInfo(userFromAPI);
         }
     }
 
@@ -267,16 +281,16 @@ public class CmdUtil {
 
 
         //只有这个QQ对应的id是0
-        User userFromDB = baseMapper.getUser(fromQQ, null);
+        User userFromDB = userDAO.getUser(fromQQ, null);
         if (userFromDB == null) {
             //只有这个id对应的QQ是null
-            userFromDB = baseMapper.getUser(null, userId);
+            userFromDB = userDAO.getUser(null, userId);
             if (userFromDB.getQQ().equals("0")) {
                 //由于reg方法中已经进行过登记了,所以这用的应该是update操作
                 User user = new User();
                 user.setUserId(userId);
                 user.setQQ(fromQQ);
-                baseMapper.updateUser(user);
+                userDAO.updateUser(user);
                 cqMsg.setMessage("将" + username + "绑定到" + fromQQ + "成功。");
             } else {
                 cqMsg.setMessage("你的osu!账号已经绑定了" + userFromDB.getQQ() + "，如果发生错误请联系妈妈船。");
@@ -301,7 +315,7 @@ public class CmdUtil {
             if (userFromAPI != null) {
                 //查找userRole数据库
 
-                if (baseMapper.getUser(null, userFromAPI.getUserId()) == null) {
+                if (userDAO.getUser(null, userFromAPI.getUserId()) == null) {
                     //如果userRole库中没有这个用户
                     //构造User对象写入数据库
                     logger.info("开始将用户" + userFromAPI.getUserName() + "添加到数据库。");
@@ -310,7 +324,7 @@ public class CmdUtil {
                     //2017-10-19 15:28:37新增加用户时候直接将用户组改为指定用户组
                     user.setRole(role);
                     user.setQQ("0");
-                    baseMapper.addUser(user);
+                    userDAO.addUser(user);
 
                     Calendar c = Calendar.getInstance();
                     if (c.get(Calendar.HOUR_OF_DAY) < 4) {
@@ -318,7 +332,7 @@ public class CmdUtil {
                     }
                     userFromAPI.setQueryDate(new Date(c.getTime().getTime()));
 
-                    baseMapper.addUserInfo(userFromAPI);
+                    userInfoDAO.addUserInfo(userFromAPI);
 
                     if (usernames.length == 1) {
                         logger.info("新增单个用户，绘制名片");
@@ -329,7 +343,7 @@ public class CmdUtil {
                 } else {
                     //进行Role更新
 
-                    User user = baseMapper.getUser(null, userFromAPI.getUserId());
+                    User user = userDAO.getUser(null, userFromAPI.getUserId());
                     //拿到原先的user，把role拼上去，塞回去
                     String newRole;
                     //如果当前的用户组是creep，就直接改成现有的组
@@ -339,7 +353,7 @@ public class CmdUtil {
                         newRole = user.getRole() + "," + role;
                     }
                     user.setRole(newRole);
-                    baseMapper.updateUser(user);
+                    userDAO.updateUser(user);
                     doneList.add(userFromAPI.getUserName());
                 }
 
@@ -388,7 +402,7 @@ public class CmdUtil {
                 //查找userRole数据库
 
                 //进行Role更新
-                User user = baseMapper.getUser(null, userFromAPI.getUserId());
+                User user = userDAO.getUser(null, userFromAPI.getUserId());
                 if (user == null) {
                     notUsedList.add(userFromAPI.getUserName());
                     //直接忽略掉下面的，进行下一次循环
@@ -411,7 +425,7 @@ public class CmdUtil {
 
                 lastUserOldRole = user.getRole();
                 user.setRole(newRole);
-                baseMapper.updateUser(user);
+                userDAO.updateUser(user);
                 doneList.add(userFromAPI.getUserName());
             } else {
                 nullList.add(username);
@@ -444,13 +458,13 @@ public class CmdUtil {
     public void checkPPOverflow(String role, CqMsg cqMsg) {
         logger.info("开始检查" + role + "用户组中超限的玩家。");
         String resp;
-        List<Integer> list = baseMapper.listUserIdByRole(role);
+        List<Integer> list = userDAO.listUserIdByRole(role);
         List<String> overflowList = new ArrayList<>();
         for (Integer aList : list) {
             //这里没有做多用户组。2017-10-25 17:39:10修正
 //            if (Arrays.asList(aList.getRole().split(",")).contains(role)) {
             //拿到用户最接近今天的数据（因为是最接近所以也不用打补丁了）
-            Userinfo userinfo = baseMapper.getNearestUserInfo(aList, new Date(Calendar.getInstance().getTimeInMillis()));
+            Userinfo userinfo = userInfoDAO.getNearestUserInfo(aList, new Date(Calendar.getInstance().getTimeInMillis()));
             //如果PP超过了警戒线，请求API拿到最新PP
             if (userinfo.getPpRaw() > Integer.valueOf(Overall.CABBAGE_CONFIG.getString(role + "RiskPP"))) {
                 logger.info("开始从API获取" + aList + "的信息");
@@ -475,16 +489,23 @@ public class CmdUtil {
     }
 
     public void downloadBG(String URL, String target, CqMsg cqMsg) throws IOException {
-        BufferedImage bg;
-        logger.info("开始根据URL下载新背景。");
-        bg = ImageIO.read(new URL(URL));
-
+        BufferedImage tmp = ImageIO.read(new URL(URL));
+        //这个方法从QQ直接发送图片+程序下载，改为采用URL写入到硬盘，到现在改为存入数据库+打破目录限制，只不过命令依然叫!sudo bg……
         //并不需要删除旧图片
+        //从写硬盘改为写数据库
 
-        logger.info("开始将新背景写入硬盘");
-        ImageIO.write(bg, "png", new File(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img\\stat\\" + target + ".png"));
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            ImageIO.write(tmp, "png", out);
+            tmp.flush();
+            byte[] imgBytes = out.toByteArray();
+            resDAO.addResource(target + ".png", imgBytes);
+        } catch (IOException e) {
+            e.getMessage();
 
-        cqMsg.setMessage("修改用户/用户组" + target + "的背景图成功。");
+        }
+//        ImageIO.write(bg, "png", new File(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img\\stat\\" + target + ".png"));
+
+        cqMsg.setMessage("修改组件" + target + ".png成功。");
         cqUtil.sendMsg(cqMsg);
     }
 
@@ -503,7 +524,7 @@ public class CmdUtil {
             return;
         }
         String filename = imgUtil.drawResult(userFromAPI, score, beatmap);
-        cqMsg.setMessage("[CQ:image,file=base64://" +filename+ "]");
+        cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
         cqUtil.sendMsg(cqMsg);
     }
 
@@ -513,7 +534,7 @@ public class CmdUtil {
         cl.add(Calendar.DATE, -day);
         java.sql.Date date = new Date(cl.getTimeInMillis());
 
-        List<Integer> list = baseMapper.listUserIdByRole(role);
+        List<Integer> list = userDAO.listUserIdByRole(role);
         List<String> afkList = new ArrayList<>();
         logger.info("开始查询" + role + "用户组中" + day + "天前的AFK玩家");
         for (Integer aList : list) {
@@ -540,7 +561,7 @@ public class CmdUtil {
         score.get(0).setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
         score.get(0).setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
         String filename = imgUtil.drawFirstRank(beatmap, score.get(0), userFromAPI, score.get(0).getScore() - score.get(1).getScore());
-        cqMsg.setMessage("[CQ:image,file=base64://" +filename+ "]");
+        cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
         cqUtil.sendMsg(cqMsg);
     }
 
@@ -607,9 +628,10 @@ public class CmdUtil {
                 + String.valueOf(Math.round(scoreUtil.calcPP(score, beatmap).getPp())) + "PP");
         cqUtil.sendMsg(cqMsg);
     }
+
     public void listPP(String role, CqMsg cqMsg) {
         logger.info("开始检查" + role + "用户组中所有人的PP");
-        List<Integer> list = baseMapper.listUserIdByRole(role);
+        List<Integer> list = userDAO.listUserIdByRole(role);
         String resp;
         if (list.size() > 0) {
             resp = role + "用户组中所有人的PP：";

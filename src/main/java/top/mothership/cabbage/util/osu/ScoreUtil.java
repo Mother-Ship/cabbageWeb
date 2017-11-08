@@ -1,6 +1,8 @@
-package top.mothership.cabbage.util;
+package top.mothership.cabbage.util.osu;
 
 
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+import com.twelvemonkeys.imageio.stream.ByteArrayImageInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +12,8 @@ import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
 
 import java.io.*;
-import java.text.DecimalFormat;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.ResourceBundle;
-import java.util.Set;
 
 @Component
 public class ScoreUtil {
@@ -89,9 +88,8 @@ public class ScoreUtil {
 
     public OppaiResult calcPP(Score score, Beatmap beatmap) {
         logger.info("开始计算PP");
-        File osuFile = webPageUtil.getOsuFile(beatmap);
-        try (InputStreamReader isr = new InputStreamReader(new FileInputStream(osuFile), "UTF-8");
-                 BufferedReader in = new BufferedReader(isr);) {
+        String osuFile = webPageUtil.getOsuFile(beatmap);
+        try (BufferedReader in = new BufferedReader(new StringReader(osuFile))) {
             //日后再说，暂时不去按自己的想法改造它……万一作者日后放出更新呢..
             //把这种充满静态内部类，PPv2Params没有有参构造、成员变量给包访问权限、没有get/set的危险东西局限在这个方法里，不要在外面用就是了……%
             Koohii.Map map = new Koohii.Parser().map(in);
@@ -108,29 +106,27 @@ public class ScoreUtil {
             p.combo = score.getMaxCombo();
             Koohii.PPv2 pp = new Koohii.PPv2(p);
 
-            OppaiResult oppaiResult = new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
+            //            //单项PP大于1000直接取个位数……这个可能不需要了
+//            if (Math.round(oppaiResult.getAimPp()) > 1000) {
+//                oppaiResult.setAimPp(Math.round(oppaiResult.getAimPp()) % 10);
+//                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
+//            }
+//            if (Math.round(oppaiResult.getAccPp()) > 1000) {
+//                oppaiResult.setAccPp(Math.round(oppaiResult.getAccPp()) % 10);
+//                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
+//            }
+//            if (Math.round(oppaiResult.getSpeedPp()) > 1000) {
+//                oppaiResult.setSpeedPp(Math.round(oppaiResult.getSpeedPp()) % 10);
+//                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
+//            }
+
+            return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
                     //Java实现如果出错会抛出异常，象征性给个0和null
                     0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
                     //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
                     map.od, map.ar, map.cs, map.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
                     //scoreVersion只能是V1了，
                     1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, pp.aim, pp.speed, pp.acc, pp.total);
-            //单项PP大于1000直接取个位数……
-            if (Math.round(oppaiResult.getAimPp()) > 1000) {
-                oppaiResult.setAimPp(Math.round(oppaiResult.getAimPp()) % 10);
-                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
-            }
-            if (Math.round(oppaiResult.getAccPp()) > 1000) {
-                oppaiResult.setAccPp(Math.round(oppaiResult.getAccPp()) % 10);
-                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
-            }
-            if (Math.round(oppaiResult.getSpeedPp()) > 1000) {
-                oppaiResult.setSpeedPp(Math.round(oppaiResult.getSpeedPp()) % 10);
-                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
-            }
-
-            return oppaiResult;
-
         } catch (IOException e) {
             logger.error("离线计算PP出错");
             logger.error(e.getMessage());

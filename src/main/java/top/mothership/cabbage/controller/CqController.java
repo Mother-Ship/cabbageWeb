@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
-import top.mothership.cabbage.util.CmdUtil;
 import top.mothership.cabbage.util.Overall;
-import top.mothership.cabbage.util.SmokeUtil;
+import top.mothership.cabbage.util.qq.CmdUtil;
+import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,23 +60,14 @@ public class CqController {
                             //增加一个时间戳（划掉）插件自带了Time
 //                            cqMsg.setTime(Calendar.getInstance().getTimeInMillis());
                             smokeUtil.praseSmoke(cqMsg);
-                        if (msgWithoutImage.matches(cmdRegex)) {
-                            logger.info("开始处理群" + cqMsg.getGroupId() + "的成员" + cqMsg.getUserId() + "发送的命令");
-                        }
                         break;
 
                     case "discuss":
-                        if (msgWithoutImage.matches(cmdRegex)) {
-                            logger.info("开始处理讨论组" + cqMsg.getDiscussId() + "的成员" + cqMsg.getUserId() + "发送的命令");
-                        }
                         break;
                     case "private":
                         //如果是私聊消息，覆盖掉正则表达式（识别汉字）
                         //不必考虑线程安全问题，每次进入这个方法，cmdRegex都会被重置为没有汉字的版本
                         cmdRegex = Overall.MAIN_FILTER_REGEX_CHINESE;
-                        if (msgWithoutImage.matches(cmdRegex)) {
-                            logger.info("开始处理" + cqMsg.getUserId() + "发送的命令");
-                        }
                         break;
                 }
                 if (msgWithoutImage.matches(cmdRegex)) {
@@ -102,14 +93,12 @@ public class CqController {
                     cmdUtil.praseNewsPaper(cqMsg);
                 }
                 if(cqMsg.getEvent().equals("group_admin")){
-                    logger.info("检测到群管变动："+cqMsg.getUserId()+"，操作为"+cqMsg.getSubType());
                     smokeUtil.loadGroupAdmins();
                 }
                 break;
             case "request":
                 //只有是加群请求的时候才进入
                 if(cqMsg.getRequestType().equals("group")&&cqMsg.getSubType().equals("invite")){
-                    logger.info("已将"+cqMsg.getUserId()+"将白菜邀请入"+cqMsg.getGroupId()+"的请求进行暂存");
                     cmdUtil.stashInviteRequest(cqMsg);
                 }
 

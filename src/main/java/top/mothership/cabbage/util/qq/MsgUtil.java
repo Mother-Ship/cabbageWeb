@@ -1,4 +1,4 @@
-package top.mothership.cabbage.util;
+package top.mothership.cabbage.util.qq;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

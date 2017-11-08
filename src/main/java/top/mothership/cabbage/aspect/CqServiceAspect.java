@@ -7,7 +7,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
-import top.mothership.cabbage.util.CqUtil;
+import top.mothership.cabbage.util.qq.CqUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

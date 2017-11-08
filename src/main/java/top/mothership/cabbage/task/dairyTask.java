@@ -11,10 +11,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
-import top.mothership.cabbage.mapper.BaseMapper;
+import top.mothership.cabbage.mapper.UserDAO;
+import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.osu.Userinfo;
-import top.mothership.cabbage.util.ApiUtil;
 import top.mothership.cabbage.util.Overall;
+import top.mothership.cabbage.util.osu.ApiUtil;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -27,14 +28,16 @@ import java.util.*;
 @Component
 public class dairyTask {
     private Logger logger = LogManager.getLogger(this.getClass());
-    private BaseMapper baseMapper;
+    private UserDAO userDAO;
+    private UserInfoDAO userInfoDAO;
     private ApiUtil apiUtil;
     private final JavaMailSender javaMailSender;
     private final FreeMarkerConfigurer freeMarkerConfigurer;
 
     @Autowired
-    public dairyTask(BaseMapper baseMapper, ApiUtil apiUtil, JavaMailSender javaMailSender, FreeMarkerConfigurer freeMarkerConfigurer) {
-        this.baseMapper = baseMapper;
+    public dairyTask(UserDAO userDAO, UserInfoDAO userInfoDAO, ApiUtil apiUtil, JavaMailSender javaMailSender, FreeMarkerConfigurer freeMarkerConfigurer) {
+        this.userDAO = userDAO;
+        this.userInfoDAO = userInfoDAO;
         this.apiUtil = apiUtil;
         this.javaMailSender = javaMailSender;
         this.freeMarkerConfigurer = freeMarkerConfigurer;
@@ -45,16 +48,16 @@ public class dairyTask {
         java.util.Date start = Calendar.getInstance().getTime();
         Calendar cl = Calendar.getInstance();
         cl.add(Calendar.DATE, -1);
-        baseMapper.clearTodayInfo(new Date(cl.getTimeInMillis()));
+        userInfoDAO.clearTodayInfo(new Date(cl.getTimeInMillis()));
         logger.info("开始进行每日登记");
-        List<Integer> list = baseMapper.listUserIdByRole(null);
+        List<Integer> list = userDAO.listUserIdByRole(null);
         List<Integer> nullList = new ArrayList<>();
         for (Integer aList : list) {
             Userinfo userinfo = apiUtil.getUser(null, String.valueOf(aList));
             if (userinfo != null) {
                 //将日期改为一天前写入
                 userinfo.setQueryDate(new java.sql.Date(Calendar.getInstance().getTimeInMillis() - 1000 * 3600 * 24));
-                baseMapper.addUserInfo(userinfo);
+                userInfoDAO.addUserInfo(userinfo);
                 logger.info("将" + userinfo.getUserName() + "的数据录入成功");
             } else {
                 nullList.add(aList);
