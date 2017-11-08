@@ -1,4 +1,4 @@
-package top.mothership.cabbage.util;
+package top.mothership.cabbage.util.qq;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

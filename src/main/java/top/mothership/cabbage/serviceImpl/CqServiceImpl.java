@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import top.mothership.cabbage.mapper.BaseMapper;
+import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.CoolQ.CqResponse;
 import top.mothership.cabbage.pojo.CoolQ.QQInfo;
@@ -12,7 +12,10 @@ import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.Userinfo;
-import top.mothership.cabbage.util.*;
+import top.mothership.cabbage.util.MsgQueue;
+import top.mothership.cabbage.util.Overall;
+import top.mothership.cabbage.util.osu.ApiUtil;
+import top.mothership.cabbage.util.qq.*;
 
 import java.sql.Date;
 import java.text.SimpleDateFormat;
@@ -28,15 +31,15 @@ public class CqServiceImpl {
     private final CqUtil cqUtil;
     private final CmdUtil cmdUtil;
     private final MsgUtil msgUtil;
-    private BaseMapper baseMapper;
+    private UserDAO userDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
-    public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, BaseMapper baseMapper, CmdUtil cmdUtil) {
+    public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, UserDAO userDAO, CmdUtil cmdUtil) {
         this.apiUtil = apiUtil;
         this.msgUtil = msgUtil;
         this.cqUtil = cqUtil;
-        this.baseMapper = baseMapper;
+        this.userDAO = userDAO;
         this.cmdUtil = cmdUtil;
     }
 
@@ -57,6 +60,9 @@ public class CqServiceImpl {
             case "stat":
                 //先分割出一个username，再尝试使用带数字的正则去匹配
                 day = 1;
+                //屏蔽掉用户没有输入用户名时候的异常
+                if(m.group(2).equals(""))
+                    return;
                 username = m.group(2).substring(1);
 
                 m = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
@@ -85,7 +91,12 @@ public class CqServiceImpl {
             case "bp":
             case "bps":
                 num = 0;
+                //屏蔽掉用户没有输入用户名时候的异常
+                if(m.group(2).equals(""))
+                    return;
                 username = m.group(2).substring(1);
+                if(username.equals(""))
+                    return;
                 Matcher m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m2.find()) {
                     cqMsg.setMessage(m2.group(3));
@@ -122,7 +133,7 @@ public class CqServiceImpl {
                 break;
             case "statme":
                 day = 1;
-                user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null);
+                user = userDAO.getUser(String.valueOf(cqMsg.getUserId()), null);
                 if (user == null) {
                     cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
                     cqUtil.sendMsg(cqMsg);
@@ -149,7 +160,7 @@ public class CqServiceImpl {
             case "bpme":
             case "bpmes":
                 num = 0;
-                user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null);
+                user = userDAO.getUser(String.valueOf(cqMsg.getUserId()), null);
                 if (user == null) {
                     cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
                     cqUtil.sendMsg(cqMsg);
@@ -179,7 +190,7 @@ public class CqServiceImpl {
                 break;
             case "recent":
             case "rs":
-                user = baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null);
+                user = userDAO.getUser(String.valueOf(cqMsg.getUserId()), null);
                 if (user == null) {
                     cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
                     cqUtil.sendMsg(cqMsg);
@@ -229,7 +240,7 @@ public class CqServiceImpl {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                if (scores.get(0).getUserId() != baseMapper.getUser(String.valueOf(cqMsg.getUserId()), null).getUserId()) {
+                if (scores.get(0).getUserId() != userDAO.getUser(String.valueOf(cqMsg.getUserId()), null).getUserId()) {
                     cqMsg.setMessage("不是你打的#1不给看哦。\n如果你确定是你打的，看看是不是没登记osu!id？(使用!setid命令)");
                     cqUtil.sendMsg(cqMsg);
                     return;
@@ -394,7 +405,7 @@ public class CqServiceImpl {
                     logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                     return;
                 }
-                User user = baseMapper.getUser(null, userFromAPI.getUserId());
+                User user = userDAO.getUser(null, userFromAPI.getUserId());
                 if (user == null) {
                     cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "没有使用过白菜。请先用add命令添加。");
                 } else {
@@ -572,7 +583,7 @@ public class CqServiceImpl {
                 break;
             case "unbind":
                 QQ = m.group(2).substring(1);
-                user = baseMapper.getUser(QQ, null);
+                user = userDAO.getUser(QQ, null);
                 if (user == null) {
                     cqMsg.setMessage("该QQ没有绑定用户……");
                     cqUtil.sendMsg(cqMsg);
@@ -580,7 +591,7 @@ public class CqServiceImpl {
                     return;
                 }
                 user.setQQ("0");
-                baseMapper.updateUser(user);
+                userDAO.updateUser(user);
                 cqMsg.setMessage("QQ" + QQ + "的绑定信息已经清除");
                 cqUtil.sendMsg(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");

@@ -1,28 +1,27 @@
-package top.mothership.cabbage.util;
+package top.mothership.cabbage.util.qq;
 
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import sun.misc.BASE64Encoder;
+import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.Userinfo;
+import top.mothership.cabbage.util.Overall;
+import top.mothership.cabbage.util.osu.ScoreUtil;
+import top.mothership.cabbage.util.osu.WebPageUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -37,51 +36,54 @@ import java.util.regex.Pattern;
 public class ImgUtil {
     //2017-9-8 13:55:42我他妈是个智障……没初始化的map我在下面用
     private static Map<String, BufferedImage> images;
+    private WebPageUtil webPageUtil;
+    private ScoreUtil scoreUtil;
+    private static ResDAO resDAO;
 
-    static {
-        //将静态代码块改成方法，方便外部调用
+    @Autowired
+    public ImgUtil(WebPageUtil webPageUtil, ScoreUtil scoreUtil, ResDAO resDAO) {
+        this.webPageUtil = webPageUtil;
+        this.scoreUtil = scoreUtil;
+        ImgUtil.resDAO = resDAO;
+        //放在构造函数内初始化
         loadCache();
     }
-
     public static void loadCache() {
         //调用NIO遍历那些可以加载一次的文件
         //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
         images = new HashMap<>();
-        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img");
-        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                images.put(file.getFileName().toString(), ImageIO.read(file.toFile()));
-                return super.visitFile(file, attrs);
-            }
-        };
-        try {
-            java.nio.file.Files.walkFileTree(path, finder);
-        } catch (IOException e) {
-            e.printStackTrace();
+        //逻辑改为从数据库加载
+        List<Map<String,Object>> list = resDAO.getResource();
+        for(Map<String,Object> aList:list){
+           String name =  (String)aList.get("name");
+           byte[] data=  (byte[])aList.get("data");
+           try(ByteArrayInputStream in =new ByteArrayInputStream(data)){
+                images.put(name,ImageIO.read(in));
+           } catch (IOException e) {
+               e.printStackTrace();
+           }
         }
+//        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img");
+//        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
+//            @Override
+//            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+//                images.put(file.getFileName().toString(), ImageIO.read(file.toFile()));
+//                return super.visitFile(file, attrs);
+//            }
+//        };
+//        try {
+//            java.nio.file.Files.walkFileTree(path, finder);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
     }
-
-    private WebPageUtil webPageUtil;
-    private ScoreUtil scoreUtil;
-
-    @Autowired
-    public ImgUtil(WebPageUtil webPageUtil, ScoreUtil scoreUtil) {
-        this.webPageUtil = webPageUtil;
-        this.scoreUtil = scoreUtil;
-    }
-
     //为线程安全，将当前时间毫秒数加入文件名并返回
     public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean near, int scoreRank) {
         BufferedImage ava = webPageUtil.getAvatar(userFromAPI.getUserId());
-
         BufferedImage bg;
-
-
         BufferedImage layout = getCopyImage(images.get(Overall.CABBAGE_CONFIG.getString("layout")));
-
         BufferedImage scoreRankBG = getCopyImage(images.get(Overall.CABBAGE_CONFIG.getString("scoreRankBG")));
-
         BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
         try {
             bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId()) + ".png"));
@@ -95,7 +97,6 @@ public class ImgUtil {
             }
 
         }
-
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
         //绘制布局和用户组
 
@@ -403,7 +404,13 @@ public class ImgUtil {
         //这个none是为了BP节省代码，在这里移除掉
         mods.remove("None");
         //离线计算PP
-        OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+        OppaiResult oppaiResult = null;
+        try {
+            oppaiResult = scoreUtil.calcPP(score, beatmap);
+        }catch (Exception e){
+            //如果acc过低
+            System.err.println(e.getMessage());
+        }
         boolean defaultBG = false;
         bg = webPageUtil.getBG(beatmap);
         if (bg == null) {
@@ -580,7 +587,7 @@ public class ImgUtil {
 
             //底端PP面板，在oppai计算结果不是null的时候
             if (oppaiResult != null) {
-                g2.drawImage(images.get("zpp.png"), 570, 700, null);
+                g2.drawImage(images.get("ppBanner.png"), 570, 700, null);
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setPaint(Color.decode("#ff66a9"));
                 g2.setFont(new Font("Gayatri", 0, 60));

@@ -1,4 +1,4 @@
-package top.mothership.cabbage.util;
+package top.mothership.cabbage.util.osu;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

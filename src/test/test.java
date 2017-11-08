@@ -3,24 +3,31 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import top.mothership.cabbage.mapper.BaseMapper;
-import top.mothership.cabbage.pojo.osu.Beatmap;
-import top.mothership.cabbage.pojo.osu.Score;
-import top.mothership.cabbage.util.ApiUtil;
-import top.mothership.cabbage.util.ScoreUtil;
+import top.mothership.cabbage.mapper.ResDAO;
+import top.mothership.cabbage.mapper.UserDAO;
+import top.mothership.cabbage.util.Overall;
+import top.mothership.cabbage.util.osu.ApiUtil;
+import top.mothership.cabbage.util.osu.ScoreUtil;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Date;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:spring/spring-*.xml")
 public class test {
     @Autowired
-    private BaseMapper baseMapper;
+    private ResDAO resDAO;
     @Autowired
     private ApiUtil apiUtil;
     @Autowired
@@ -261,7 +268,75 @@ public class test {
 //            map.put(beatmap, scores);
 //        }
 //        System.out.println("");
+//        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\res");
+//        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
+//            @Override
+//            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+//                System.out.println(file.getFileName());
+//                BufferedImage tmp = ImageIO.read(file.toFile());
+//                try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+//                    ImageIO.write(tmp, "png", out);
+//                   tmp.flush();
+//                    byte[] imgBytes = out.toByteArray();
+//                    resDAO.addResource(file.getFileName().toString(),imgBytes);
+//                } catch (IOException e) {
+//                    e.getMessage();
+//                    return null;
+//                }
+//
+//                return super.visitFile(file, attrs);
+//            }
+//        };
+//        try {
+//            java.nio.file.Files.walkFileTree(path, finder);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+        class stack {
+            private Object[] data;
+            private int size;
+            private int top = -1;
+            public stack (int[] arr){
+                size = arr.length;
+                data = new Object[size];
+            }
+            public boolean empty() {
+                return (top==-1);
+            }//判空
+            public boolean push(int[] arr){
+                for(int i = 0; i < size; i++) {
+                    data[++top] = arr[i];
+                }
+                return true;
+            }//进栈
+            void traverse() {
+                for(int re = data.length - 1; re >= 0; re --) {
+                    System.out.println(data[re]+" ");
+                }
+            }//遍历输出
+            public Object pop() {
+                if(empty()){
+                    throw new RuntimeException("Empty");
+                }else{
+                    return data[top--];
+                }
+            }//出栈
+            public void clear() {
+                top = -1;
+            }//清栈
 
+
+        }
+        int[] a = {3,5,76,2,45,77,43};
+        stack wut = new stack(a);
+        wut.push(a);
+        System.out.println("Output: ");
+        wut.traverse();
+        System.out.println(wut.top);
+        wut.pop();
+        System.out.println(wut.top);
+        wut.clear();
+        System.out.println(wut.top);
     }
 
     //

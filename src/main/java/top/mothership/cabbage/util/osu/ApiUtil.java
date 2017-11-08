@@ -1,4 +1,4 @@
-package top.mothership.cabbage.util;
+package top.mothership.cabbage.util.osu;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
