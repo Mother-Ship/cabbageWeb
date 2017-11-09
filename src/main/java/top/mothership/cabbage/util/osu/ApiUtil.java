@@ -54,14 +54,20 @@ public class ApiUtil {
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Score.class);
     }
 
-    public List<Score> getScore(Integer bid,Integer rank){
+    public List<Score> getFirstScore(Integer bid,Integer rank){
         String result = accessAPI("first", null, null, String.valueOf(bid),null,rank);
         result = "["+result+"]";
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
                 .fromJson(result, new TypeToken<List<Score>>(){}.getType());
 
     }
+    public List<Score> getScore(Integer bid,String uid){
+        String result = accessAPI("score", uid, "string", String.valueOf(bid),null,null);
+        result = "["+result+"]";
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
+                .fromJson(result, new TypeToken<List<Score>>(){}.getType());
 
+    }
     private String praseUid(String apiType, String username, String userId) {
         String result;
         if (username != null && userId == null) {
@@ -104,6 +110,10 @@ public class ApiUtil {
                 break;
             case "first":
                 URL = getScoreURL + "?k=" + key + "&limit="+rank+"&b=" + bid;
+                failLog = "谱面" + bid + "请求API：get_scores失败五次";
+                break;
+            case "score":
+                URL = getScoreURL + "?k=" + key + "&type=" + uidType + "&u=" + uid+"&b=" + bid;
                 failLog = "谱面" + bid + "请求API：get_scores失败五次";
                 break;
             default:

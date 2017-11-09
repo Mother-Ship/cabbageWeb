@@ -61,7 +61,7 @@ public class CqServiceImpl {
                 //先分割出一个username，再尝试使用带数字的正则去匹配
                 day = 1;
                 //屏蔽掉用户没有输入用户名时候的异常
-                if(m.group(2).equals(""))
+                if("".equals(m.group(2)))
                     return;
                 username = m.group(2).substring(1);
 
@@ -92,7 +92,7 @@ public class CqServiceImpl {
             case "bps":
                 num = 0;
                 //屏蔽掉用户没有输入用户名时候的异常
-                if(m.group(2).equals(""))
+                if("".equals(m.group(2)))
                     return;
                 username = m.group(2).substring(1);
                 if(username.equals(""))
@@ -127,6 +127,9 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "setid":
+                //屏蔽掉用户没有输入用户名时候的异常
+                if("".equals(m.group(2)))
+                    return;
                 username = m.group(2).substring(1);
                 cmdUtil.bindQQAndOsu(username, Long.toString(cqMsg.getUserId()), cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
@@ -234,7 +237,7 @@ public class CqServiceImpl {
                     return;
                 }
                 //一次性取2个
-                List<Score> scores = apiUtil.getScore(bid, 2);
+                List<Score> scores = apiUtil.getFirstScore(bid, 2);
                 if (scores.size() == 0) {
                     cqMsg.setMessage("提供的bid没有找到#1成绩。");
                     cqUtil.sendMsg(cqMsg);
@@ -610,7 +613,7 @@ public class CqServiceImpl {
                     return;
                 }
                 //一次性取2个
-                List<Score> score = apiUtil.getScore(bid, 2);
+                List<Score> score = apiUtil.getFirstScore(bid, 2);
                 if (score.size() == 0) {
                     cqMsg.setMessage("提供的bid没有找到#1成绩。");
                     cqUtil.sendMsg(cqMsg);

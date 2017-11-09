@@ -129,14 +129,12 @@ private final ApiUtil apiUtil;
         }
         return map;
     }
-    private byte readByte(DataInputStream reader) throws IOException
-    {
+    private byte readByte(DataInputStream reader) throws IOException {
         // 1 byte
         return reader.readByte();
     }
 
-    private short readShort(DataInputStream reader) throws IOException
-    {
+    private short readShort(DataInputStream reader) throws IOException {
         // 2 bytes, little endian
         byte[] bytes = new byte[2];
         reader.readFully(bytes);
@@ -144,8 +142,7 @@ private final ApiUtil apiUtil;
         return bb.getShort();
     }
 
-    private int readInt(DataInputStream reader) throws IOException
-    {
+    private int readInt(DataInputStream reader) throws IOException {
         // 4 bytes, little endian
         byte[] bytes = new byte[4];
         reader.readFully(bytes);
@@ -153,8 +150,7 @@ private final ApiUtil apiUtil;
         return bb.getInt();
     }
 
-    private long readLong(DataInputStream reader) throws IOException
-    {
+    private long readLong(DataInputStream reader) throws IOException {
         // 8 bytes, little endian
         byte[] bytes = new byte[8];
         reader.readFully(bytes);
@@ -162,24 +158,20 @@ private final ApiUtil apiUtil;
         return bb.getLong();
     }
 
-    private int readULEB128(DataInputStream reader) throws IOException
-    {
+    private int readULEB128(DataInputStream reader) throws IOException {
         // variable bytes, little endian
         // MSB says if there will be more bytes. If cleared,
         // that byte is the last.
         int value = 0;
-        for (int shift = 0; shift < 32; shift += 7)
-        {
+        for (int shift = 0; shift < 32; shift += 7) {
             byte b = reader.readByte();
             value |= ((int) b & 0x7F) << shift;
-
             if (b >= 0) return value; // MSB is zero. End of value.
         }
         throw new IOException("ULEB128 too large");
     }
 
-    private float readSingle(DataInputStream reader) throws IOException
-    {
+    private float readSingle(DataInputStream reader) throws IOException {
         // 4 bytes, little endian
         byte[] bytes = new byte[4];
        reader.readFully(bytes);
@@ -187,8 +179,7 @@ private final ApiUtil apiUtil;
         return bb.getFloat();
     }
 
-    private double readDouble(DataInputStream reader) throws IOException
-    {
+    private double readDouble(DataInputStream reader) throws IOException {
         // 8 bytes little endian
         byte[] bytes = new byte[8];
         reader.readFully(bytes);
@@ -196,14 +187,12 @@ private final ApiUtil apiUtil;
         return bb.getDouble();
     }
 
-    private boolean readBoolean(DataInputStream reader) throws IOException
-    {
+    private boolean readBoolean(DataInputStream reader) throws IOException {
         // 1 byte, zero = false, non-zero = true
         return reader.readBoolean();
     }
 
-    private String readString(DataInputStream reader) throws IOException
-    {
+    private String readString(DataInputStream reader) throws IOException {
         // variable length
         // 00 = empty string
         // 0B <length> <char>* = normal string
@@ -222,8 +211,7 @@ private final ApiUtil apiUtil;
         return new String(utf8bytes, "UTF-8");
     }
 
-    private Date readDate(DataInputStream reader) throws IOException
-    {
+    private Date readDate(DataInputStream reader) throws IOException {
         long ticks = readLong(reader);
         long TICKS_AT_EPOCH = 621355968000000000L;
         long TICKS_PER_MILLISECOND = 10000;
