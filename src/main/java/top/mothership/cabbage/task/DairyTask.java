@@ -26,7 +26,7 @@ import java.sql.Date;
 import java.util.*;
 
 @Component
-public class dairyTask {
+public class DairyTask {
     private Logger logger = LogManager.getLogger(this.getClass());
     private UserDAO userDAO;
     private UserInfoDAO userInfoDAO;
@@ -35,7 +35,7 @@ public class dairyTask {
     private final FreeMarkerConfigurer freeMarkerConfigurer;
 
     @Autowired
-    public dairyTask(UserDAO userDAO, UserInfoDAO userInfoDAO, ApiUtil apiUtil, JavaMailSender javaMailSender, FreeMarkerConfigurer freeMarkerConfigurer) {
+    public DairyTask(UserDAO userDAO, UserInfoDAO userInfoDAO, ApiUtil apiUtil, JavaMailSender javaMailSender, FreeMarkerConfigurer freeMarkerConfigurer) {
         this.userDAO = userDAO;
         this.userInfoDAO = userInfoDAO;
         this.apiUtil = apiUtil;
