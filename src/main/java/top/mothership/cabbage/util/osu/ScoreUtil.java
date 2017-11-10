@@ -1,8 +1,6 @@
 package top.mothership.cabbage.util.osu;
 
 
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
-import com.twelvemonkeys.imageio.stream.ByteArrayImageInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +9,9 @@ import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.LinkedHashMap;
 import java.util.ResourceBundle;
 

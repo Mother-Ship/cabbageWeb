@@ -272,7 +272,7 @@ public class CqServiceImpl {
                     hour = 6L;
                 }
                 logger.info(cqMsg.getUserId() + "被自己禁言" + hour + "小时。");
-                cqMsg.setMessage("[CQ:record,file=zou_hao_bu_song.wav]");
+                cqMsg.setMessage("[CQ:record,file=base64://"+Overall.ZOU_HAO_BU_SONG+"]");
                 cqUtil.sendMsg(cqMsg);
                 cqMsg.setMessageType("smoke");
                 cqMsg.setDuration((int) (hour * 3600));
@@ -510,7 +510,7 @@ public class CqServiceImpl {
                     cqUtil.sendMsg(cqMsg);
                 } else {
                     logger.info(QQ + "被" + cqMsg.getUserId() + "禁言" + sec + "秒。");
-                    cqMsg.setMessage("[CQ:record,file=all_dead.mp3]");
+                    cqMsg.setMessage("[CQ:record,file=base64://"+Overall.ALL_DEAD+"]");
                     cqUtil.sendMsg(cqMsg);
                     cqMsg.setMessageType("smoke");
                     cqMsg.setDuration(sec);

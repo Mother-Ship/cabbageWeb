@@ -228,7 +228,7 @@ public class CmdUtil {
         if (num == 0) {
             logger.info("筛选今日BP成功");
             if (todayBP.size() == 0) {
-                cqMsg.setMessage("[CQ:record,file=wan_bu_liao_la.wav]");
+                cqMsg.setMessage("[CQ:record,file=base64://"+Overall.WAN_BU_LIAO_LA+"]");
                 cqUtil.sendMsg(cqMsg);
                 cqMsg.setMessage("玩家" + userinfo.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
                 cqUtil.sendMsg(cqMsg);
@@ -592,7 +592,8 @@ public class CmdUtil {
 
             cqMsg.setMessage("https://osu.ppy.sh/b/" + score.getBeatmapId() + "\n"
                     + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]"
-                    + " , " + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
+                    +score.getMaxCombo()+"x/"+beatmap.getMaxCombo()+"x，"+score.getCountMiss() + "*miss , "
+                    + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
                     + " (" + new DecimalFormat("###.00").format(
                     100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
                             / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
@@ -619,8 +620,9 @@ public class CmdUtil {
             return;
         }
         cqMsg.setMessage("https://osu.ppy.sh/b/" + score.getBeatmapId() + "\n"
-                + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]"
-                + " , " + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
+                + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n"
+                +score.getMaxCombo()+"x/"+beatmap.getMaxCombo()+"x，"+score.getCountMiss() + "*miss , "
+                + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
                 + " (" + new DecimalFormat("###.00").format(
                 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"

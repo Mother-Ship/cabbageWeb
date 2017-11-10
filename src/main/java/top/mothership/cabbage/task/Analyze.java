@@ -1,6 +1,5 @@
 package top.mothership.cabbage.task;
 
-import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -47,17 +46,17 @@ public class Analyze {
                                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
                                 + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", "
                                 + score.getPp() + "PP");
-//                        cqUtil.sendMsg(cqMsg);
+                        cqUtil.sendMsg(cqMsg);
                     }
                 }else{
                     cqMsg.setMessage(aList + "玩家在谱面" + bList + "没有成绩。" );
-//                    cqUtil.sendMsg(cqMsg);
+                    cqUtil.sendMsg(cqMsg);
                 }
                 tmp2.put(bList,tmp);
             }
             scores.put(aList,tmp2);
         }
-        System.out.println("完成");
+//        System.out.println("完成");
     }
 
 
