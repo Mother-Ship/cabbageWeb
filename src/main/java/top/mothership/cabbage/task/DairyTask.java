@@ -72,30 +72,35 @@ public class DairyTask {
         }
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
     }
-    @Scheduled(cron = "0 0 4 * * ?")
-    public void clearTodayImages() {
-        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image");
-        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (!file.toString().contains("resource")
-                        && !file.toString().contains("!help")
-                        && !file.toString().contains("!smokeAll")
-                        && !file.toString().contains("!helpTrick")) {
-                    System.out.println("正在删除" + file.toString());
-                    Files.delete(file);
-                }
-                return super.visitFile(file, attrs);
-            }
-        };
-        try {
-
-            Files.walkFileTree(path, finder);
-        } catch (IOException e) {
-            logger.error("清空临时文件时出现异常，"+e.getMessage());
-        }
-
-    }
+//    @Scheduled(cron = "0 0 4 * * ?")
+//    public void clearTodayImages() {
+//        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image");
+//        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
+//            @Override
+//            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+//                    System.out.println("正在删除" + file.toString());
+//                    Files.delete(file);
+//                return super.visitFile(file, attrs);
+//            }
+//        };
+//        final Path path2 = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\record");
+//        SimpleFileVisitor<Path> finder2 = new SimpleFileVisitor<Path>() {
+//            @Override
+//            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+//                System.out.println("正在删除" + file.toString());
+//                Files.delete(file);
+//                return super.visitFile(file, attrs);
+//            }
+//        };
+//        try {
+//
+//            Files.walkFileTree(path, finder);
+//            Files.walkFileTree(path2, finder2);
+//        } catch (IOException e) {
+//            logger.error("清空临时文件时出现异常，"+e.getMessage());
+//        }
+//
+//    }
 
 
     private void sendMail(String target, Map<String, String> map) {

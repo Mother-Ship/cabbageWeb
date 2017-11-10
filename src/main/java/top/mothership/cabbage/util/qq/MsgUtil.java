@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
+import top.mothership.cabbage.util.Overall;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -57,7 +58,7 @@ public class MsgUtil {
                 return true;
             }
         } catch (java.lang.NumberFormatException e) {
-            cqMsg.setMessage("[CQ:record,file=ay_ay_ay.wav]");
+            cqMsg.setMessage("[CQ:record,file=base64://"+ Overall.AYA_YA_YA+"]");
             cqUtil.sendMsg(cqMsg);
             logger.info("给的BP数目不是int");
             return false;
