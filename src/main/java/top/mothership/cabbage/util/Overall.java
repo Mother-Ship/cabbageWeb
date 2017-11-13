@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 public class Overall {
+    //用于存放常量
     public final static String MAIN_FILTER_REGEX = "[!！]([^ \\u4e00-\\u9fa5]+)([\\u892a\\u88d9\\u9000\\u7fa4\\u767d\\u83dcA-Za-z0-9\\[\\] :#-_]*+)";
     public final static String IMG_REGEX = ".*\\[CQ:image,file=(.+)\\].*";
     public final static String SINGLE_IMG_REGEX = "\\[CQ:image,file=(.+)\\]";
