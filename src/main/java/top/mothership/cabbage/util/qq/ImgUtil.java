@@ -303,13 +303,13 @@ public class ImgUtil {
         return drawImage(bg);
     }
 
-    public String drawUserBP(Userinfo userFromAPI, LinkedHashMap<Score, Integer> map) {
+    public String drawUserBP(Userinfo userFromAPI, List<Score> list) {
 
         //计算最终宽高
         int Height = images.get(Overall.CABBAGE_CONFIG.getString("bptop")).getHeight();
         int HeightPoint = 0;
         int Width = images.get(Overall.CABBAGE_CONFIG.getString("bptop")).getWidth();
-        for (Score aList : map.keySet()) {
+        for (Score aList : list) {
             if (aList.getBeatmapName().length() <= Integer.valueOf(Overall.CABBAGE_CONFIG.getString("bplimit"))) {
                 Height = Height + images.get(Overall.CABBAGE_CONFIG.getString("bpmid2")).getHeight();
             } else {
@@ -337,7 +337,7 @@ public class ImgUtil {
         HeightPoint = HeightPoint + bpTop.getHeight();
 
         //开始绘制每行的bp
-        for (Score aList : map.keySet()) {
+        for (Score aList : list) {
             String acc = new DecimalFormat("###.00").format(
                     100.0 * (6 * aList.getCount300() + 2 * aList.getCount100() + aList.getCount50())
                             / (6 * (aList.getCount50() + aList.getCount100() + aList.getCount300() + aList.getCountMiss())));
@@ -361,10 +361,10 @@ public class ImgUtil {
                     new SimpleDateFormat("MM-dd HH:mm").format(aList.getDate().getTime()), "bp" + a + "Datex", "bp" + a + "Datey");
             //绘制Num和Weight
             draw(g3, "bpNumColor", "bpNumFont", "bpNumSize",
-                    String.valueOf(map.get(aList) + 1), "bp" + a + "Numx", "bp" + a + "Numy");
+                    String.valueOf(aList.getBpId() + 1), "bp" + a + "Numx", "bp" + a + "Numy");
 
             draw(g3, "bpWeightColor", "bpWeightFont", "bpWeightSize",
-                    new DecimalFormat("##0.00").format(100 * Math.pow(0.95, map.get(aList))) + "%", "bp" + a + "Weightx", "bp" + a + "Weighty");
+                    new DecimalFormat("##0.00").format(100 * Math.pow(0.95, aList.getBpId())) + "%", "bp" + a + "Weightx", "bp" + a + "Weighty");
 
             //绘制MOD
             draw(g3, "bpModColor", "bpModFont", "bpModSize", mods, "bp" + a + "Modx", "bp" + a + "Mody");

@@ -19,7 +19,8 @@ public class Score {
     private Integer size;
     //这个可能是get_scores的score_id值
     private Long onlineId;
-
+    //用于存储BP的位数
+    private Integer bpId;
     private Long score;
 @SerializedName("maxcombo")
     private Integer maxCombo;
