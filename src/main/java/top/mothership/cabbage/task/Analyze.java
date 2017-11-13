@@ -30,33 +30,33 @@ public class Analyze {
         this.scoreUtil = scoreUtil;
         cqMsg.setUserId(1335734657L);
         cqMsg.setMessageType("private");
-//        //初始化时候加载一次
-//        for(String aList:targetUser){
-//            Map<Integer,List<Score>> tmp2 = new HashMap<>();
-//            for(Integer bList:targetMap){
-//                List<Score> tmp = apiUtil.getScore(bList,aList);
-//                Beatmap beatmap = apiUtil.getBeatmap(bList);
-//                if(tmp.size()>0) {
-//                    for (Score score : tmp) {
-//                        cqMsg.setMessage(aList + "玩家在谱面" + bList + "的成绩为：\n"
-//                               +score.getMaxCombo()+"x/"+beatmap.getMaxCombo()+"x，"
-//                                + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
-//                                + " (" + new DecimalFormat("###.00").format(
-//                                100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
-//                                        / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
-//                                + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", "
-//                                + score.getPp() + "PP");
+        //初始化时候加载一次
+        for(String aList:targetUser){
+            Map<Integer,List<Score>> tmp2 = new HashMap<>();
+            for(Integer bList:targetMap){
+                List<Score> tmp = apiUtil.getScore(bList,aList);
+                Beatmap beatmap = apiUtil.getBeatmap(bList);
+                if(tmp.size()>0) {
+                    for (Score score : tmp) {
+                        cqMsg.setMessage(aList + "玩家在谱面" + bList + "的成绩为：\n"
+                               +score.getMaxCombo()+"x/"+beatmap.getMaxCombo()+"x，"
+                                + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
+                                + " (" + new DecimalFormat("###.00").format(
+                                100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
+                                        / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
+                                + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", "
+                                + score.getPp() + "PP");
 //                        cqUtil.sendMsg(cqMsg);
-//                    }
-//                }else{
-//                    cqMsg.setMessage(aList + "玩家在谱面" + bList + "没有成绩。" );
+                    }
+                }else{
+                    cqMsg.setMessage(aList + "玩家在谱面" + bList + "没有成绩。" );
 //                    cqUtil.sendMsg(cqMsg);
-//                }
-//                tmp2.put(bList,tmp);
-//            }
-//            scores.put(aList,tmp2);
-//        }
-//        System.out.println("完成");
+                }
+                tmp2.put(bList,tmp);
+            }
+            scores.put(aList,tmp2);
+        }
+
     }
 
 

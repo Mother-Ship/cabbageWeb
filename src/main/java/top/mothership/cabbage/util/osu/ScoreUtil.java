@@ -93,7 +93,7 @@ public class ScoreUtil {
             //日后再说，暂时不去按自己的想法改造它……万一作者日后放出更新呢..
             //把这种充满静态内部类，PPv2Params没有有参构造、成员变量给包访问权限、没有get/set的危险东西局限在这个方法里，不要在外面用就是了……%
             Koohii.Map map = new Koohii.Parser().map(in);
-            Koohii.DiffCalc stars = new Koohii.DiffCalc().calc(map);
+            Koohii.DiffCalc stars = new Koohii.DiffCalc().calc(map,score.getEnabledMods());
             Koohii.PPv2Parameters p = new Koohii.PPv2Parameters();
             p.beatmap = map;
             p.aim_stars = stars.aim;
