@@ -219,12 +219,13 @@ public class CmdUtil {
         //BP功能就不登记了吧
         logger.info("开始获取玩家" + userinfo.getUserName() + "的BP");
         List<Score> bps = apiUtil.getBP(userinfo.getUserName(), null);
-        LinkedHashMap<Score, Integer> todayBP = new LinkedHashMap<>();
+        ArrayList<Score> todayBP = new ArrayList<>();
 
         for (int i = 0; i < bps.size(); i++) {
             //对BP进行遍历，如果产生时间晚于当天凌晨4点
             if (bps.get(i).getDate().after(c.getTime())) {
-                todayBP.put(bps.get(i), i);
+                bps.get(i).setBpId(i);
+                todayBP.add(bps.get(i));
             }
         }
 
@@ -239,7 +240,7 @@ public class CmdUtil {
                 return;
             }
 
-            for (Score aList : todayBP.keySet()) {
+            for (Score aList : todayBP) {
                 //对BP进行遍历，请求API将名称写入
                 logger.info("正在获取Beatmap id为" + aList.getBeatmapId() + "的谱面的名称");
                 Beatmap map = apiUtil.getBeatmap(aList.getBeatmapId());
