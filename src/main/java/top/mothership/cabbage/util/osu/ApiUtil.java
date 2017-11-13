@@ -29,42 +29,42 @@ public class ApiUtil {
 
     public Userinfo getUser(String username, String userId) {
         String result = praseUid("user", username, userId);
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Userinfo.class);
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("YYYY-MM-dd HH:mm:ss").create().fromJson(result, Userinfo.class);
     }
 
     public Beatmap getBeatmap(Integer bid) {
         String result = accessAPI("beatmap", null, null, String.valueOf(bid),null,null);
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Beatmap.class);
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("YYYY-MM-dd HH:mm:ss").create().fromJson(result, Beatmap.class);
     }
     public Beatmap getBeatmap(String hash) {
         String result = accessAPI("beatmapHash", null, null, null,String.valueOf(hash),null);
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Beatmap.class);
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("YYYY-MM-dd HH:mm:ss").create().fromJson(result, Beatmap.class);
     }
     public List<Score> getBP(String username, String userId) {
         String result = praseUid("bp", username, userId);
         //由于这里用到List，手动补上双括号
         result = "["+result+"]";
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("YYYY-MM-dd HH:mm:ss").create()
                 .fromJson(result, new TypeToken<List<Score>>() {
         }.getType());
     }
 
     public Score getRecent(String username, String userId) {
         String result = praseUid("recent", username, userId);
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(result, Score.class);
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("YYYY-MM-dd HH:mm:ss").create().fromJson(result, Score.class);
     }
 
     public List<Score> getFirstScore(Integer bid,Integer rank){
         String result = accessAPI("first", null, null, String.valueOf(bid),null,rank);
         result = "["+result+"]";
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("YYYY-MM-dd HH:mm:ss").create()
                 .fromJson(result, new TypeToken<List<Score>>(){}.getType());
 
     }
     public List<Score> getScore(Integer bid,String uid){
         String result = accessAPI("score", uid, "string", String.valueOf(bid),null,null);
         result = "["+result+"]";
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("YYYY-MM-dd HH:mm:ss").create()
                 .fromJson(result, new TypeToken<List<Score>>(){}.getType());
 
     }

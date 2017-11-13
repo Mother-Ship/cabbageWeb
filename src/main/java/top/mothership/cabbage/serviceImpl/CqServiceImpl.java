@@ -67,6 +67,7 @@ public class CqServiceImpl {
 
                 m = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m.find()) {
+                    //传入检查日期参数的方法，必须要把消息体改为日期，否则那个方法没办法发送消息
                     cqMsg.setMessage(m.group(3));
                     if (!msgUtil.CheckDayParam(cqMsg)) {
                         return;

@@ -130,9 +130,12 @@ public class CmdUtil {
                 near = true;
             }
         }
-        role = userDAO.getUser(null, userFromAPI.getUserId()).getRole();
-        if (role == null) {
+        //之前有一个逻辑错误：如果day=0而且该用户没有用过白菜，userDAO.getUser是null。
+        User user = userDAO.getUser(null, userFromAPI.getUserId());
+        if (user == null) {
             role = "creep";
+        }else{
+            role = user.getRole();
         }
         roles = Arrays.asList(role.split(","));
         //此处自定义实现排序方法
