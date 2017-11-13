@@ -19,6 +19,7 @@ import top.mothership.cabbage.util.osu.WebPageUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -36,7 +37,7 @@ public class CmdUtil {
     private ScoreUtil scoreUtil;
     private UserDAO userDAO;
     private UserInfoDAO userInfoDAO;
-    private ResDAO resDAO;
+    private static ResDAO resDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
@@ -48,9 +49,39 @@ public class CmdUtil {
         this.scoreUtil = scoreUtil;
         this.userDAO = userDAO;
         this.userInfoDAO = userInfoDAO;
-        this.resDAO = resDAO;
+        CmdUtil.resDAO = resDAO;
+        loadCache();
     }
+    public static void loadCache() {
+        //调用NIO遍历那些可以加载一次的文件
+        //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
+        ImgUtil.images = new HashMap<>();
+        //逻辑改为从数据库加载
+        List<Map<String,Object>> list = resDAO.getResource();
+        for(Map<String,Object> aList:list){
+            String name =  (String)aList.get("name");
+            byte[] data=  (byte[])aList.get("data");
+            try(ByteArrayInputStream in =new ByteArrayInputStream(data)){
+                ImgUtil.images.put(name,ImageIO.read(in));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+//        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img");
+//        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
+//            @Override
+//            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+//                images.put(file.getFileName().toString(), ImageIO.read(file.toFile()));
+//                return super.visitFile(file, attrs);
+//            }
+//        };
+//        try {
+//            java.nio.file.Files.walkFileTree(path, finder);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
+    }
     public void praseNewsPaper(CqMsg cqMsg) {
         java.util.Date s = Calendar.getInstance().getTime();
         logger.info("开始处理" + cqMsg.getUserId() + "在" + cqMsg.getGroupId() + "群的加群请求");
@@ -511,6 +542,8 @@ public class CmdUtil {
 
         cqMsg.setMessage("修改组件" + target + ".png成功。");
         cqUtil.sendMsg(cqMsg);
+        //手动调用重载缓存
+        loadCache();
     }
 
     public void getRecent(Userinfo userFromAPI, CqMsg cqMsg) throws Exception {

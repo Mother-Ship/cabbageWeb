@@ -34,49 +34,16 @@ import java.util.regex.Pattern;
 @Scope(proxyMode = ScopedProxyMode.TARGET_CLASS, value = "prototype")
 public class ImgUtil {
     //2017-9-8 13:55:42我他妈是个智障……没初始化的map我在下面用
-    private static Map<String, BufferedImage> images;
+    public static Map<String, BufferedImage> images;
     private WebPageUtil webPageUtil;
     private ScoreUtil scoreUtil;
-    private static ResDAO resDAO;
 
     @Autowired
-    public ImgUtil(WebPageUtil webPageUtil, ScoreUtil scoreUtil, ResDAO resDAO) {
+    public ImgUtil(WebPageUtil webPageUtil, ScoreUtil scoreUtil) {
         this.webPageUtil = webPageUtil;
         this.scoreUtil = scoreUtil;
-        ImgUtil.resDAO = resDAO;
-        //放在构造函数内初始化
-        loadCache();
     }
-    public static void loadCache() {
-        //调用NIO遍历那些可以加载一次的文件
-        //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
-        images = new HashMap<>();
-        //逻辑改为从数据库加载
-        List<Map<String,Object>> list = resDAO.getResource();
-        for(Map<String,Object> aList:list){
-           String name =  (String)aList.get("name");
-           byte[] data=  (byte[])aList.get("data");
-           try(ByteArrayInputStream in =new ByteArrayInputStream(data)){
-                images.put(name,ImageIO.read(in));
-           } catch (IOException e) {
-               e.printStackTrace();
-           }
-        }
-//        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\img");
-//        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
-//            @Override
-//            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-//                images.put(file.getFileName().toString(), ImageIO.read(file.toFile()));
-//                return super.visitFile(file, attrs);
-//            }
-//        };
-//        try {
-//            java.nio.file.Files.walkFileTree(path, finder);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 
-    }
     //为线程安全，将当前时间毫秒数加入文件名并返回
     public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean near, int scoreRank) {
         BufferedImage ava = webPageUtil.getAvatar(userFromAPI.getUserId());

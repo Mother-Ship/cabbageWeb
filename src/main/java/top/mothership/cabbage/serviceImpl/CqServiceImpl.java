@@ -435,8 +435,7 @@ public class CqServiceImpl {
                     return;
                 }
                 cmdUtil.downloadBG(URL, target, cqMsg);
-                //手动调用重载缓存
-                ImgUtil.loadCache();
+
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "recent":
