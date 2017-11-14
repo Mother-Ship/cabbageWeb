@@ -127,7 +127,7 @@ public class ScoreUtil {
                     map.od, map.ar, map.cs, map.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
                     //scoreVersion只能是V1了，
                     1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, pp.aim, pp.speed, pp.acc, pp.total);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("离线计算PP出错");
             logger.error(e.getMessage());
             return null;
