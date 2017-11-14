@@ -8,8 +8,10 @@ import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
+import top.mothership.cabbage.pojo.CoolQ.QQInfo;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.Overall;
@@ -656,15 +658,19 @@ public class CmdUtil {
             cqUtil.sendMsg(cqMsg);
             return;
         }
-        cqMsg.setMessage("https://osu.ppy.sh/b/" + score.getBeatmapId() + "\n"
+        OppaiResult oppaiResult  = scoreUtil.calcPP(score, beatmap);
+        String resp = "https://osu.ppy.sh/b/" + score.getBeatmapId() + "\n"
                 + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n"
                 +score.getMaxCombo()+"x/"+beatmap.getMaxCombo()+"x，"+score.getCountMiss() + "*miss , "
                 + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
                 + " (" + new DecimalFormat("###.00").format(
                 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
-                + "Played by " + userFromAPI.getUserName() + ", " + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", "
-                + String.valueOf(Math.round(scoreUtil.calcPP(score, beatmap).getPp())) + "PP");
+                + "Played by " + userFromAPI.getUserName() + ", " + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", ";
+        if(oppaiResult!=null){
+            resp+= String.valueOf(Math.round(oppaiResult.getPp())) + "PP";
+        }
+        cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
     }
 
@@ -687,6 +693,66 @@ public class CmdUtil {
 
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
+    }
+    public void sendHelp(CqMsg cqMsg){
+        String img;
+        if ((int) (Math.random() * 10) == 1) {
+            logger.info("QQ" + cqMsg.getUserId() + "抽中了1/10的几率，触发了Trick");
+            img = imgUtil.drawImage(ImgUtil.images.get("helpTrick.png"));
+            cqMsg.setMessage("[CQ:image,file=base64://"+img+"]");
+        } else {
+            img = imgUtil.drawImage(ImgUtil.images.get("help.png"));
+        }
+        cqMsg.setMessage("[CQ:image,file=base64://"+img+"]");
+        cqUtil.sendMsg(cqMsg);
+    }
+    public void smoke(CqMsg cqMsg){
+        int index;
+        String msg = cqMsg.getMessage();
+        int sec;
+        String QQ;
+        try {
+            //改为!sudo smoke @xx 600这样的格式
+            index = msg.indexOf("]");
+            sec = Integer.valueOf(msg.substring(index + 2));
+            //!sudo smoke [CQ:at,qq=1012621328] 600
+            QQ = msg.substring(22, index);
+        } catch (NumberFormatException e) {
+            try {
+                index = msg.indexOf("]");
+                QQ = msg.substring(22, index);
+                sec = 600;
+            } catch (IndexOutOfBoundsException e1) {
+                cqMsg.setMessage("字符串处理异常。");
+                cqUtil.sendMsg(cqMsg);
+                logger.info("字符串处理异常");
+                return;
+            }
+        }
+        if ("all".equals(QQ)) {
+            List<QQInfo> memberList = cqUtil.getGroupMembers(cqMsg.getGroupId()).getData();
+            cqMsg.setMessageType("smoke");
+            cqMsg.setDuration(sec);
+            String operator = cqMsg.getUserId().toString();
+            for (QQInfo aList : memberList) {
+                cqMsg.setUserId(aList.getUserId());
+                cqUtil.sendMsg(cqMsg);
+                logger.info(aList.getUserId() + "被" + operator + "禁言" + sec + "秒。");
+            }
+            String img = imgUtil.drawImage(ImgUtil.images.get("smokeAll.png"));
+            cqMsg.setMessage("[CQ:image,file=base64://"+img+"]");
+            cqMsg.setMessageType("group");
+            cqUtil.sendMsg(cqMsg);
+        } else {
+            logger.info(QQ + "被" + cqMsg.getUserId() + "禁言" + sec + "秒。");
+            cqMsg.setMessage("[CQ:record,file=base64://"+Overall.ALL_DEAD+"]");
+            cqUtil.sendMsg(cqMsg);
+            cqMsg.setMessageType("smoke");
+            cqMsg.setDuration(sec);
+            cqMsg.setUserId(Long.valueOf(QQ));
+            cqUtil.sendMsg(cqMsg);
+
+        }
     }
 //    private void login(User user, String pwd, CqMsg cqMsg) throws IOException {
 //        Userinfo userFromAPI = apiUtil.getUser(null, String.valueOf(user.getUserId()));

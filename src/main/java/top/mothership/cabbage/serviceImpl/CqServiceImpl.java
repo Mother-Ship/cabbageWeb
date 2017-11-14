@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.CoolQ.CqResponse;
@@ -41,6 +42,7 @@ public class CqServiceImpl {
         this.cqUtil = cqUtil;
         this.userDAO = userDAO;
         this.cmdUtil = cmdUtil;
+
     }
 
 
@@ -215,13 +217,7 @@ public class CqServiceImpl {
                 break;
 
             case "help":
-                if ((int) (Math.random() * 10) == 1) {
-                    logger.info("QQ" + cqMsg.getUserId() + "抽中了1/10的几率，触发了Trick");
-                    cqMsg.setMessage("[CQ:image,file=!helpTrick.png]");
-                } else {
-                    cqMsg.setMessage("[CQ:image,file=!help.png]");
-                }
-                cqUtil.sendMsg(cqMsg);
+                cmdUtil.sendHelp(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "fp":
@@ -358,7 +354,6 @@ public class CqServiceImpl {
         Matcher m = Pattern.compile(Overall.ADMIN_CMD_REGEX).matcher(msg);
         m.find();
         int day;
-        int sec;
         String username;
         String target;
         String URL;
@@ -477,47 +472,7 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "smoke":
-                try {
-                    //改为!sudo smoke @xx 600这样的格式
-                    index = msg.indexOf("]");
-                    sec = Integer.valueOf(msg.substring(index + 2));
-                    //!sudo smoke [CQ:at,qq=1012621328] 600
-                    QQ = msg.substring(22, index);
-                } catch (NumberFormatException e) {
-                    try {
-                        index = msg.indexOf("]");
-                        QQ = msg.substring(22, index);
-                        sec = 600;
-                    } catch (IndexOutOfBoundsException e1) {
-                        cqMsg.setMessage("字符串处理异常。");
-                        cqUtil.sendMsg(cqMsg);
-                        logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                        return;
-                    }
-                }
-                if ("all".equals(QQ)) {
-                    List<QQInfo> memberList = cqUtil.getGroupMembers(cqMsg.getGroupId()).getData();
-                    cqMsg.setMessageType("smoke");
-                    cqMsg.setDuration(sec);
-                    String operator = cqMsg.getUserId().toString();
-                    for (QQInfo aList : memberList) {
-                        cqMsg.setUserId(aList.getUserId());
-                        cqUtil.sendMsg(cqMsg);
-                        logger.info(aList.getUserId() + "被" + operator + "禁言" + sec + "秒。");
-                    }
-                    cqMsg.setMessage("[CQ:image,file=!smokeAll.jpg]");
-                    cqMsg.setMessageType("group");
-                    cqUtil.sendMsg(cqMsg);
-                } else {
-                    logger.info(QQ + "被" + cqMsg.getUserId() + "禁言" + sec + "秒。");
-                    cqMsg.setMessage("[CQ:record,file=base64://"+Overall.ALL_DEAD+"]");
-                    cqUtil.sendMsg(cqMsg);
-                    cqMsg.setMessageType("smoke");
-                    cqMsg.setDuration(sec);
-                    cqMsg.setUserId(Long.valueOf(QQ));
-                    cqUtil.sendMsg(cqMsg);
-
-                }
+                cmdUtil.smoke(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "smokeAll":

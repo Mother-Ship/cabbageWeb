@@ -72,7 +72,7 @@ public class CqController {
                 }
                 if (msgWithoutImage.matches(cmdRegex)) {
                     //如果检测到命令，直接把消息中的图片去掉
-
+                    logger.info("有新命令："+cqMsg);
                     cqMsg.setMessage(msgWithoutImage);
                     m = Pattern.compile(cmdRegex).matcher(msgWithoutImage);
                     m.find();
