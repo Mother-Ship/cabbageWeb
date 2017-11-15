@@ -1,22 +1,33 @@
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import top.mothership.cabbage.mapper.ResDAO;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Date;
+
 //
-//@RunWith(SpringJUnit4ClassRunner.class)
-//@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
 public class test {
-//    @Autowired
-//    private ResDAO resDAO;
-//    @Autowired
+    @Autowired
+    private ResDAO resDAO;
+
+    //    @Autowired
 //    private ApiUtil apiUtil;
 //    @Autowired
 //    private ScoreUtil scoreUtil;
     @Test
     public void Test() throws IOException {
+        Object o =resDAO.getBGBySidAndName(485056, "cherry_blossoms_kantoku_artist_Wallpaper HD_2560x1440_www.paperhi.com.jpg");
+        byte[] img = (byte[]) o;
+
+        System.out.println();
 //        System.out.println("mp4".compareTo("mp5"));
 //        System.out.println("mp3".compareTo("mp4"));
 //        System.out.println("dev".compareTo("mp4"));
@@ -174,63 +185,63 @@ public class test {
 //        } catch (IOException e) {
 //
 //        }
-        DataInputStream reader = new DataInputStream(new FileInputStream("D:\\scores.db"));
-        DataOutputStream writer = new DataOutputStream(new FileOutputStream("E:\\scores.db"));
-        int version = readInt(reader);
-        int count = readInt(reader);
-        writeInt(writer,version);
-        writeInt(writer,count);
+//        DataInputStream reader = new DataInputStream(new FileInputStream("D:\\scores.db"));
+//        DataOutputStream writer = new DataOutputStream(new FileOutputStream("E:\\scores.db"));
+//        int version = readInt(reader);
+//        int count = readInt(reader);
+//        writeInt(writer,version);
+//        writeInt(writer,count);
+//
+////        Map<Beatmap, List<Score>> map = new LinkedHashMap<>(count);
+//        for (int i = 0; i < count; i++) {
+//            String md5 = readString(reader);
+//            writeString(writer,md5);
+////            Beatmap beatmap = apiUtil.getBeatmap(md5);
+//            int scoreCount = readInt(reader);
+////            List<Score> scores = new ArrayList<>(scoreCount);
+//            writeInt(writer,scoreCount);
+//            for (int i2 = 0; i2 < scoreCount; i2++) {
+//                byte mode = readByte(reader);
+//                int scoreVersion = readInt(reader);
+//                String mapMd5 = readString(reader);
+//                String username = readString(reader);
+//                String repMd5 = readString(reader);
+//                short count300 = readShort(reader);
+//                short count100 = readShort(reader);
+//                short count50 = readShort(reader);
+//                short countGeki = readShort(reader);
+//                short countKatu = readShort(reader);
+//                short countMiss = readShort(reader);
+//                int scoreValue = readInt(reader);
+//                int maxCombo = readInt(reader);
+//                boolean perfect = readBoolean(reader);
+//                int mods = readInt(reader);
+////                String empty = readString(reader);
+//                long timestamps = readLong(reader);
+//                int size = readInt(reader);
+//                writeByte(writer,mode);
+//                writeInt(writer,20070916);
+//                writeString(writer,mapMd5);
+//                writeString(writer,username);
+//                writeString(writer,repMd5);
+//                writeShort(writer,count300);
+//                writeShort(writer,count100);
+//                writeShort(writer,count50);
+//                writeShort(writer,countGeki);
+//                writeShort(writer,countKatu);
+//                writeShort(writer,countMiss);
+//                writeInt(writer,scoreValue);
+//                writeInt(writer,maxCombo);
+//                writeBoolean(writer,perfect);
+//                writeInt(writer,mods);
+//                writeLong(writer,timestamps);
+//                writeInt(writer,size);
+//                long onlineId = readLong(reader);
+//
+//
+//                writeLong(writer,onlineId);
 
-//        Map<Beatmap, List<Score>> map = new LinkedHashMap<>(count);
-        for (int i = 0; i < count; i++) {
-            String md5 = readString(reader);
-            writeString(writer,md5);
-//            Beatmap beatmap = apiUtil.getBeatmap(md5);
-            int scoreCount = readInt(reader);
-//            List<Score> scores = new ArrayList<>(scoreCount);
-            writeInt(writer,scoreCount);
-            for (int i2 = 0; i2 < scoreCount; i2++) {
-                byte mode = readByte(reader);
-                int scoreVersion = readInt(reader);
-                String mapMd5 = readString(reader);
-                String username = readString(reader);
-                String repMd5 = readString(reader);
-                short count300 = readShort(reader);
-                short count100 = readShort(reader);
-                short count50 = readShort(reader);
-                short countGeki = readShort(reader);
-                short countKatu = readShort(reader);
-                short countMiss = readShort(reader);
-                int scoreValue = readInt(reader);
-                int maxCombo = readInt(reader);
-                boolean perfect = readBoolean(reader);
-                int mods = readInt(reader);
-//                String empty = readString(reader);
-                long timestamps = readLong(reader);
-                int size = readInt(reader);
-                writeByte(writer,mode);
-                writeInt(writer,20070916);
-                writeString(writer,mapMd5);
-                writeString(writer,username);
-                writeString(writer,repMd5);
-                writeShort(writer,count300);
-                writeShort(writer,count100);
-                writeShort(writer,count50);
-                writeShort(writer,countGeki);
-                writeShort(writer,countKatu);
-                writeShort(writer,countMiss);
-                writeInt(writer,scoreValue);
-                writeInt(writer,maxCombo);
-                writeBoolean(writer,perfect);
-                writeInt(writer,mods);
-                writeLong(writer,timestamps);
-                writeInt(writer,size);
-                long onlineId = readLong(reader);
-
-
-                writeLong(writer,onlineId);
-
-            }
+//            }
 //                LinkedHashMap<String,String> modsMap = scoreUtil.convertMOD(mods);
 //                score.setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
 //                score.setCount50(count50);
@@ -275,8 +286,8 @@ public class test {
 //                scores.add(score);
 //            }
 //            map.put(beatmap, scores);
-        }
-        System.out.println("");
+//        }
+//        System.out.println("");
 //        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image\\resource\\res");
 //        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
 //            @Override
@@ -309,7 +320,8 @@ public class test {
         // 1 byte
         return reader.readByte();
     }
-    private void writeByte(DataOutputStream writer,byte v) throws IOException{
+
+    private void writeByte(DataOutputStream writer, byte v) throws IOException {
         writer.writeByte(v);
     }
 
@@ -322,14 +334,13 @@ public class test {
         return bb.getShort();
     }
 
-    private void writeShort(DataOutputStream writer,short n) throws IOException{
+    private void writeShort(DataOutputStream writer, short n) throws IOException {
         //低字节在前的byte数组
         byte[] b = new byte[2];
         b[0] = (byte) (n & 0xff);
         b[1] = (byte) (n >> 8 & 0xff);
         writer.write(b);
     }
-
 
 
     private int readInt(DataInputStream reader) throws IOException {
@@ -339,7 +350,8 @@ public class test {
         ByteBuffer bb = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
         return bb.getInt();
     }
-    private void writeInt(DataOutputStream writer,int n) throws IOException{
+
+    private void writeInt(DataOutputStream writer, int n) throws IOException {
         byte[] b = new byte[4];
         b[0] = (byte) (n & 0xff);
         b[1] = (byte) (n >> 8 & 0xff);
@@ -355,7 +367,8 @@ public class test {
         ByteBuffer bb = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
         return bb.getLong();
     }
-    private void writeLong(DataOutputStream writer,long n) throws IOException{
+
+    private void writeLong(DataOutputStream writer, long n) throws IOException {
         byte[] b = new byte[8];
         b[0] = (byte) (n & 0xff);
         b[1] = (byte) (n >> 8 & 0xff);
@@ -367,7 +380,8 @@ public class test {
         b[7] = (byte) (n >> 56 & 0xff);
         writer.write(b);
     }
-//该方法把字节数组解码并读取为int，我需要一个传入int并写入自洁 数组的方法
+
+    //该方法把字节数组解码并读取为int，我需要一个传入int并写入自洁 数组的方法
     private int readULEB128(DataInputStream reader) throws IOException {
         // variable bytes, little endian
         // MSB says if there will be more bytes. If cleared,
@@ -382,8 +396,8 @@ public class test {
         throw new IOException("ULEB128 too large");
     }
 
-    private void writeULEB128(DataOutputStream writer,int value) throws IOException{
-        if(value<0)
+    private void writeULEB128(DataOutputStream writer, int value) throws IOException {
+        if (value < 0)
             throw new IOException("ULEB128 must >0");
         ArrayList<Byte> bytes = new ArrayList<>();
         do {
@@ -411,7 +425,7 @@ public class test {
         return bb.getFloat();
     }
 
-    private void writeSingle(DataOutputStream writer,float n) throws IOException{
+    private void writeSingle(DataOutputStream writer, float n) throws IOException {
         byte[] b = new byte[4];
         int l = Float.floatToIntBits(n);
         for (int i = 0; i < 4; i++) {
@@ -429,7 +443,7 @@ public class test {
         return bb.getDouble();
     }
 
-    private void writeDouble(DataOutputStream writer,double n) throws IOException{
+    private void writeDouble(DataOutputStream writer, double n) throws IOException {
         byte[] b = new byte[8];
         long l = Double.doubleToLongBits(n);
         for (int i = 0; i < 4; i++) {
@@ -444,10 +458,12 @@ public class test {
         // 1 byte, zero = false, non-zero = true
         return reader.readBoolean();
     }
-    private void writeBoolean(DataOutputStream writer,boolean n)throws  IOException{
-            byte[] b = new byte[1];
-            if(n)b[0]=1;else b[0]=0;
-            writer.write(b);
+
+    private void writeBoolean(DataOutputStream writer, boolean n) throws IOException {
+        byte[] b = new byte[1];
+        if (n) b[0] = 1;
+        else b[0] = 0;
+        writer.write(b);
 
     }
 
@@ -470,12 +486,12 @@ public class test {
         return new String(utf8bytes, "UTF-8");
     }
 
-    private void writeString( DataOutputStream writer,String n) throws IOException{
-        if("".equals(n)) {
+    private void writeString(DataOutputStream writer, String n) throws IOException {
+        if ("".equals(n)) {
             writer.writeByte(0);
-        }else{
+        } else {
             writer.writeByte(11);
-            writeULEB128(writer,n.length());
+            writeULEB128(writer, n.length());
             writer.write(n.getBytes("UTF-8"));
         }
     }
@@ -489,9 +505,9 @@ public class test {
         return new Date((ticks - TICKS_AT_EPOCH) / TICKS_PER_MILLISECOND);
     }
 
-    private void writeDate(DataOutputStream writer,Date date) throws IOException{
-        long ticks = date.getTime()*10000L+621355968000000000L;
-        writeLong(writer,ticks);
+    private void writeDate(DataOutputStream writer, Date date) throws IOException {
+        long ticks = date.getTime() * 10000L + 621355968000000000L;
+        writeLong(writer, ticks);
     }
 
 

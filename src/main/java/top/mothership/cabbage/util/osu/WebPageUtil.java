@@ -191,7 +191,7 @@ public class WebPageUtil {
                         if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
                             //扩展名直接从文件里取
                             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                                ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().indexOf(".") + 1), out);
+                                ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
                                 resizedBG.flush();
                                 byte[] imgBytes = out.toByteArray();
                                 resDAO.addBG(Integer.valueOf(beatmap.getBeatmapSetId()), osuFile.getBgName(), imgBytes);
@@ -260,7 +260,8 @@ public class WebPageUtil {
                 if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
                     //扩展名直接从文件里取
                     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                        ImageIO.write(resizedBG, m.group(0).substring(m.group(0).indexOf(".") + 1), out);
+                        //修正扩展名为最后一个点后面的内容2017-11-15 13:17:56
+                        ImageIO.write(resizedBG, m.group(0).substring(m.group(0).lastIndexOf(".") + 1), out);
                         resizedBG.flush();
                         img = out.toByteArray();
                         resDAO.addBG(Integer.valueOf(beatmap.getBeatmapSetId()), m.group(0), img);
