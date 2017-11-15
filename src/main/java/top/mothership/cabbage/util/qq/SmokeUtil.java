@@ -30,6 +30,7 @@ public class SmokeUtil {
         for (String smokeGroup : smokeGroups) {
             groupAdmins.put(Long.valueOf(smokeGroup), cqUtil.getGroupAdmins(Long.valueOf(smokeGroup)));
         }
+        logger.info("读取群管理员完成");
     }
 
     @Autowired

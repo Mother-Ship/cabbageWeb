@@ -18,6 +18,7 @@ import top.mothership.cabbage.util.Overall;
 import top.mothership.cabbage.util.osu.ApiUtil;
 import top.mothership.cabbage.util.qq.*;
 
+import javax.annotation.PostConstruct;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -342,17 +343,18 @@ public class CqServiceImpl {
 
     public void praseAdminCmd(CqMsg cqMsg) throws Exception {
         java.util.Date s = Calendar.getInstance().getTime();
-
-        if (!Overall.ADMIN_LIST.contains(String.valueOf(cqMsg.getUserId()))) {
-            //如果没有权限
+        String msg = cqMsg.getMessage();
+        Matcher m = Pattern.compile(Overall.ADMIN_CMD_REGEX).matcher(msg);
+        m.find();
+        if (!Overall.ADMIN_LIST.contains(String.valueOf(cqMsg.getUserId()))
+                &&!(cqMsg.getUserId()==1427922341&&"bg".equals(m.group(1)))) {
+            //如果QQ不包括在ADMIN_LIST，并且不是欧根要求改BG
             cqMsg.setMessage("[CQ:face,id=14]？");
             cqUtil.sendMsg(cqMsg);
             return;
 
         }
-        String msg = cqMsg.getMessage();
-        Matcher m = Pattern.compile(Overall.ADMIN_CMD_REGEX).matcher(msg);
-        m.find();
+
         int day;
         String username;
         String target;
@@ -488,10 +490,17 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "listInvite":
+                if(!"private".equals(cqMsg.getMessage())){
+                    cqMsg.setMessage("已经私聊返回结果，请查看，如果没有收到请添加好友。");
+                    cqUtil.sendMsg(cqMsg);
+                    cqMsg.setMessageType("private");
+                }
                 if (Overall.inviteRequests.size() > 0) {
                     resp = "以下是白菜本次启动期间收到的加群邀请：";
                     for (CqMsg aList : Overall.inviteRequests.keySet()) {
-                        resp = resp.concat("\n" + "Flag：" + aList.getFlag() + "，群号：" + aList.getGroupId() + "，已通过：" + Overall.inviteRequests.get(aList));
+                        resp = resp.concat("\n" + "Flag：" + aList.getFlag() + "，群号：" + aList.getGroupId()
+                                + "，邀请人："+aList.getUserId()+"，时间："+new SimpleDateFormat("HH:mm:ss").
+                                format(new Date(aList.getTime() * 1000L))+"已通过：" + Overall.inviteRequests.get(aList));
                     }
                 } else {
                     resp = "本次启动白菜没有收到加群邀请。";
@@ -518,16 +527,17 @@ public class CqServiceImpl {
                             SmokeUtil.msgQueues.put(aList.getGroupId(), new MsgQueue());
                         }
                     }
+                    CqMsg cqMsg1 = new CqMsg();
+                    cqMsg1.setMessage("Flag为：" + flag + "的邀请被"+cqMsg.getUserId()+"通过");
+                    cqMsg1.setMessageType("private");
+                    cqMsg1.setUserId(1335734657L);
+                    cqUtil.sendMsg(cqMsg1);
                     cqMsg.setMessage("已通过Flag为：" + flag + "的邀请");
-                    cqUtil.sendMsg(cqMsg);
-                    cqMsg.setMessage("有其他管理员通过Flag为：" + flag + "的邀请，消息体："+cqMsg);
-                    cqMsg.setMessageType("private");
-                    cqMsg.setUserId(1335734657L);
                     cqUtil.sendMsg(cqMsg);
                 }else{
                     cqMsg.setMessage("通过Flag为：" + flag + "的邀请失败，返回信息："+cqResponse);
                     cqUtil.sendMsg(cqMsg);
-                    cqMsg.setMessage("有其他管理员通过Flag为：" + flag + "的邀请失败，消息体："+cqMsg+"，返回信息："+cqResponse);
+                    cqMsg.setMessage("通过Flag为：" + flag + "的邀请失败，消息体："+cqMsg+"，返回信息："+cqResponse);
                     cqMsg.setMessageType("private");
                     cqMsg.setUserId(1335734657L);
                     cqUtil.sendMsg(cqMsg);
@@ -614,7 +624,14 @@ public class CqServiceImpl {
         }
 
     }
-
+    @PostConstruct
+    private void notifyInitComplete(){
+        CqMsg cqMsg = new CqMsg();
+        cqMsg.setMessage("初始化完成，欢迎使用");
+        cqMsg.setMessageType("private");
+        cqMsg.setUserId(1335734657L);
+        cqUtil.sendMsg(cqMsg);
+    }
 
 
 

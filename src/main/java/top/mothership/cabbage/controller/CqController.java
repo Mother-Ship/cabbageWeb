@@ -36,13 +36,13 @@ public class CqController {
     }
 
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
-    public String cqMsgPrase(@RequestBody CqMsg cqMsg) throws Exception{
+    public String cqMsgPrase(@RequestBody CqMsg cqMsg) throws Exception {
         String cmdRegex = Overall.MAIN_FILTER_REGEX;
         //待整理业务逻辑
-        switch (cqMsg.getPostType()){
+        switch (cqMsg.getPostType()) {
             case "message":
                 //转义
-                String msg  = cqMsg.getMessage();
+                String msg = cqMsg.getMessage();
                 msg = msg.replaceAll("&#91;", "[");
                 msg = msg.replaceAll("&#93;", "]");
                 msg = msg.replaceAll("&#44;", ",");
@@ -56,12 +56,11 @@ public class CqController {
                 //识别消息类型
                 switch (cqMsg.getMessageType()) {
                     case "group":
-                            //直接将群消息传入禁言处理
-                            //增加一个时间戳（划掉）插件自带了Time
+                        //直接将群消息传入禁言处理
+                        //增加一个时间戳（划掉）插件自带了Time
 //                            cqMsg.setTime(Calendar.getInstance().getTimeInMillis());
-                            smokeUtil.praseSmoke(cqMsg);
+                        smokeUtil.praseSmoke(cqMsg);
                         break;
-
                     case "discuss":
                         break;
                     case "private":
@@ -72,7 +71,19 @@ public class CqController {
                 }
                 if (msgWithoutImage.matches(cmdRegex)) {
                     //如果检测到命令，直接把消息中的图片去掉
-                    logger.info("有新命令："+cqMsg);
+                    String log = "";
+                    switch (cqMsg.getMessageType()) {
+                        case "group":
+                            log+="群"+cqMsg.getGroupId()+"成员"+cqMsg.getUserId()+"发送了命令"+cqMsg.getMessage();
+                            break;
+                        case "discuss":
+                            log+="讨论组"+cqMsg.getDiscussId()+"成员"+cqMsg.getUserId()+"发送了命令"+cqMsg.getMessage();
+                            break;
+                        case "private":
+                            log+="用户"+cqMsg.getUserId()+"发送了命令"+cqMsg.getMessage();
+                            break;
+                    }
+                    logger.info(log);
                     cqMsg.setMessage(msgWithoutImage);
                     m = Pattern.compile(cmdRegex).matcher(msgWithoutImage);
                     m.find();
@@ -89,19 +100,18 @@ public class CqController {
                 }
                 break;
             case "event":
-                if(cqMsg.getEvent().equals("group_increase")) {
+                if (cqMsg.getEvent().equals("group_increase")) {
                     cmdUtil.praseNewsPaper(cqMsg);
                 }
-                if(cqMsg.getEvent().equals("group_admin")){
+                if (cqMsg.getEvent().equals("group_admin")) {
                     smokeUtil.loadGroupAdmins();
                 }
                 break;
             case "request":
                 //只有是加群请求的时候才进入
-                if(cqMsg.getRequestType().equals("group")&&cqMsg.getSubType().equals("invite")){
+                if (cqMsg.getRequestType().equals("group") && cqMsg.getSubType().equals("invite")) {
                     cmdUtil.stashInviteRequest(cqMsg);
                 }
-
                 break;
             default:
                 logger.error("传入无法识别的Request，可能是HTTPAPI插件已经更新");

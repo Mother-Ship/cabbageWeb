@@ -54,17 +54,18 @@ public class CmdUtil {
         CmdUtil.resDAO = resDAO;
         loadCache();
     }
+
     public static void loadCache() {
         //调用NIO遍历那些可以加载一次的文件
         //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
         ImgUtil.images = new HashMap<>();
         //逻辑改为从数据库加载
-        List<Map<String,Object>> list = resDAO.getResource();
-        for(Map<String,Object> aList:list){
-            String name =  (String)aList.get("name");
-            byte[] data=  (byte[])aList.get("data");
-            try(ByteArrayInputStream in =new ByteArrayInputStream(data)){
-                ImgUtil.images.put(name,ImageIO.read(in));
+        List<Map<String, Object>> list = resDAO.getResource();
+        for (Map<String, Object> aList : list) {
+            String name = (String) aList.get("name");
+            byte[] data = (byte[]) aList.get("data");
+            try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
+                ImgUtil.images.put(name, ImageIO.read(in));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -84,6 +85,7 @@ public class CmdUtil {
 //        }
 
     }
+
     public void praseNewsPaper(CqMsg cqMsg) {
         java.util.Date s = Calendar.getInstance().getTime();
         logger.info("开始处理" + cqMsg.getUserId() + "在" + cqMsg.getGroupId() + "群的加群请求");
@@ -120,11 +122,17 @@ public class CmdUtil {
 
     public void stashInviteRequest(CqMsg cqMsg) {
         java.util.Date s = Calendar.getInstance().getTime();
+        //这里是存引用……所以后面返回是null
         Overall.inviteRequests.put(cqMsg, "否");
-        cqMsg.setMessage("有新的拉群邀请，请注意查收：" + cqMsg);
-        cqMsg.setMessageType("private");
-        cqMsg.setUserId(1335734657L);
-        cqUtil.sendMsg(cqMsg);
+        CqMsg cqMsg1 = new CqMsg();
+        cqMsg1.setMessage("有新的拉群邀请，请注意查收：" + "Flag：" + cqMsg.getFlag() + "，群号：" + cqMsg.getGroupId()
+                + "，邀请人：" + cqMsg.getUserId() + "，时间：" + new SimpleDateFormat("HH:mm:ss").
+                format(new Date(cqMsg.getTime() * 1000L)));
+        cqMsg1.setMessageType("private");
+        for (String i : Overall.ADMIN_LIST) {
+            cqMsg.setUserId(Long.valueOf(i));
+            cqUtil.sendMsg(cqMsg1);
+        }
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
     }
 
@@ -167,7 +175,7 @@ public class CmdUtil {
         User user = userDAO.getUser(null, userFromAPI.getUserId());
         if (user == null) {
             role = "creep";
-        }else{
+        } else {
             role = user.getRole();
         }
         roles = Arrays.asList(role.split(","));
@@ -265,7 +273,7 @@ public class CmdUtil {
         if (num == 0) {
             logger.info("筛选今日BP成功");
             if (todayBP.size() == 0) {
-                cqMsg.setMessage("[CQ:record,file=base64://"+Overall.WAN_BU_LIAO_LA+"]");
+                cqMsg.setMessage("[CQ:record,file=base64://" + Overall.WAN_BU_LIAO_LA + "]");
                 cqUtil.sendMsg(cqMsg);
                 cqMsg.setMessage("玩家" + userinfo.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
                 cqUtil.sendMsg(cqMsg);
@@ -631,7 +639,7 @@ public class CmdUtil {
 
             cqMsg.setMessage("https://osu.ppy.sh/b/" + score.getBeatmapId() + "\n"
                     + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]"
-                    +score.getMaxCombo()+"x/"+beatmap.getMaxCombo()+"x，"+score.getCountMiss() + "*miss , "
+                    + score.getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，" + score.getCountMiss() + "*miss , "
                     + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
                     + " (" + new DecimalFormat("###.00").format(
                     100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
@@ -658,17 +666,17 @@ public class CmdUtil {
             cqUtil.sendMsg(cqMsg);
             return;
         }
-        OppaiResult oppaiResult  = scoreUtil.calcPP(score, beatmap);
+        OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
         String resp = "https://osu.ppy.sh/b/" + score.getBeatmapId() + "\n"
                 + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n"
-                +score.getMaxCombo()+"x/"+beatmap.getMaxCombo()+"x，"+score.getCountMiss() + "*miss , "
+                + score.getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，" + score.getCountMiss() + "*miss , "
                 + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
                 + " (" + new DecimalFormat("###.00").format(
                 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
                 + "Played by " + userFromAPI.getUserName() + ", " + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", ";
-        if(oppaiResult!=null){
-            resp+= String.valueOf(Math.round(oppaiResult.getPp())) + "PP";
+        if (oppaiResult != null) {
+            resp += String.valueOf(Math.round(oppaiResult.getPp())) + "PP";
         }
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
@@ -694,19 +702,21 @@ public class CmdUtil {
         cqMsg.setMessage(resp);
         cqUtil.sendMsg(cqMsg);
     }
-    public void sendHelp(CqMsg cqMsg){
+
+    public void sendHelp(CqMsg cqMsg) {
         String img;
         if ((int) (Math.random() * 10) == 1) {
             logger.info("QQ" + cqMsg.getUserId() + "抽中了1/10的几率，触发了Trick");
             img = imgUtil.drawImage(ImgUtil.images.get("helpTrick.png"));
-            cqMsg.setMessage("[CQ:image,file=base64://"+img+"]");
+            cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
         } else {
             img = imgUtil.drawImage(ImgUtil.images.get("help.png"));
         }
-        cqMsg.setMessage("[CQ:image,file=base64://"+img+"]");
+        cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
         cqUtil.sendMsg(cqMsg);
     }
-    public void smoke(CqMsg cqMsg){
+
+    public void smoke(CqMsg cqMsg) {
         int index;
         String msg = cqMsg.getMessage();
         int sec;
@@ -740,12 +750,12 @@ public class CmdUtil {
                 logger.info(aList.getUserId() + "被" + operator + "禁言" + sec + "秒。");
             }
             String img = imgUtil.drawImage(ImgUtil.images.get("smokeAll.png"));
-            cqMsg.setMessage("[CQ:image,file=base64://"+img+"]");
+            cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
             cqMsg.setMessageType("group");
             cqUtil.sendMsg(cqMsg);
         } else {
             logger.info(QQ + "被" + cqMsg.getUserId() + "禁言" + sec + "秒。");
-            cqMsg.setMessage("[CQ:record,file=base64://"+Overall.ALL_DEAD+"]");
+            cqMsg.setMessage("[CQ:record,file=base64://" + Overall.ALL_DEAD + "]");
             cqUtil.sendMsg(cqMsg);
             cqMsg.setMessageType("smoke");
             cqMsg.setDuration(sec);
