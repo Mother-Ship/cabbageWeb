@@ -9,36 +9,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-/**
- * <h3>概要:</h3><p>CaptchaComponent</p>
- * <h3>功能:</h3><p>图片认证码工具类</p>
- * <h3>履历:</h3>
- * <li>2017年5月16日  v0.1 版本内容: 新建</li>
- *
- * @author 粱桂钊
- * @since 0.1
- */
 @Component
 public class CaptchaUtil {
     // 图片的宽度
     private static final int CAPTCHA_WIDTH = 90;
     // 图片的高度
-    private static final int CAPTCHA_HEIGHT = 20;
+    private static final int CAPTCHA_HEIGHT = 40;
     // 验证码的个数
     private static final int CAPTCHA_CODECOUNT = 4;
 
-    private static final int XX = 15;
-    private static final int CAPTCHA_FONT_HEIGHT = 18;
-    private static final int CAPTCHA_CODE_Y = 16;
+    private static final int CAPTCHA_CODE_X = 15;
+    private static final int CAPTCHA_FONT_HEIGHT = 26   ;
+    private static final int CAPTCHA_CODE_Y = 28;
     private static final char[] codeSequence = {
             'A', 'B', 'C', 'D', 'E', 'F', 'G',
             'H', 'I', 'J', 'K', 'L', 'M', 'N',
             'O', 'P', 'Q', 'R', 'S', 'T',
             'U', 'V', 'W', 'X', 'Y', 'Z',
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-
-    // 过期时间为60秒
-    private static final long EXPIRE_MINUTES = 60;
 
     public Map<String, Object> genCaptcha() {
 
@@ -59,9 +47,9 @@ public class CaptchaUtil {
         // 画边框
         g.setColor(Color.BLACK);
         g.drawRect(0, 0, CAPTCHA_WIDTH - 1, CAPTCHA_HEIGHT - 1);
-        // 随机产生40条干扰线，使图象中的认证码不易被其它程序探测到。
+        // 随机产生干扰线，使图象中的认证码不易被其它程序探测到。
         g.setColor(Color.BLACK);
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 20; i++) {
             int x = random.nextInt(CAPTCHA_WIDTH);
             int y = random.nextInt(CAPTCHA_HEIGHT);
             int xl = random.nextInt(12);
@@ -77,12 +65,13 @@ public class CaptchaUtil {
             // 得到随机产生的验证码数字
             String code = String.valueOf(codeSequence[random.nextInt(36)]);
             // 产生随机的颜色分量来构造颜色值，这样输出的每位数字的颜色值都将不同
-            red = random.nextInt(255);
-            green = random.nextInt(255);
-            blue = random.nextInt(255);
+            //RGB小于180，避免字母颜色过亮
+            red = random.nextInt(200);
+            green = random.nextInt(200);
+            blue = random.nextInt(200);
             // 用随机产生的颜色将验证码绘制到图像中
             g.setColor(new Color(red, green, blue));
-            g.drawString(code, (i + 1) * XX, CAPTCHA_CODE_Y);
+            g.drawString(code, (i + 1) * CAPTCHA_CODE_X, CAPTCHA_CODE_Y);
             // 将产生的随机数组合在一起
             randomCode.append(code);
         }

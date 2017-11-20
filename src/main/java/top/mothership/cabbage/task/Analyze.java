@@ -18,11 +18,17 @@ public class Analyze {
     private final ApiUtil apiUtil;
     private CqUtil cqUtil;
     private ScoreUtil scoreUtil;
-    List<String> targetUser = Arrays.asList("iamapen","yiku","Miyazawakase","bless_von","Sisters10086","baka_151","ye__ow");
-    List<Integer> targetMap = Arrays.asList(547229,261725,195548,923329,176549,880023,917430,1327955,307289,1053842,363008,178643,193523,418725);
-    Map<String,Map<Integer,List<Score>>> scores = new LinkedHashMap<>();
+    List<Integer> baQiang = Arrays.asList(3924736,4110293,7680789,7853092,3665920,3004781,2992539);
+    List<Integer> guanGuang = Arrays.asList(8794603,9003283,8012734,8762031,8214694,4439269,6226190);
+    List<Integer> targetMapR1 = Arrays.asList(547229,261725,195548,923329,176549,880023,917430,1327955,307289,1053842,363008,178643,193523,418725);
+    List<Integer> targetMapR2 = Arrays.asList(404550,1242792,1078109,776600,103403,
+            270363,419189,
+            1328722,742829,
+            136910,1246270,363043,
+            1442768,662095,825985,996113,
+            870152);
     CqMsg cqMsg = new CqMsg();
-
+//770677061
     @Autowired
     public Analyze(ApiUtil apiUtil, CqUtil cqUtil, ScoreUtil scoreUtil) {
         this.apiUtil = apiUtil;
@@ -31,35 +37,37 @@ public class Analyze {
         cqMsg.setUserId(1335734657L);
         cqMsg.setMessageType("private");
         //初始化时候加载一次
-//        for(String aList:targetUser){
-//            Map<Integer,List<Score>> tmp2 = new HashMap<>();
-//            for(Integer bList:targetMap){
-//                List<Score> tmp = apiUtil.getScore(bList,aList);
-//                Beatmap beatmap = apiUtil.getBeatmap(bList);
-//                if(tmp.size()>0) {
-//                    for (Score score : tmp) {
-//                        cqMsg.setMessage(aList + "玩家在谱面" + bList + "的成绩为：\n"
-//                               +score.getMaxCombo()+"x/"+beatmap.getMaxCombo()+"x，"
-//                                + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
-//                                + " (" + new DecimalFormat("###.00").format(
-//                                100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
-//                                        / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
-//                                + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", "
-//                                + score.getPp() + "PP");
-//                        cqUtil.sendMsg(cqMsg);
-//                    }
-//                }else{
-//                    cqMsg.setMessage(aList + "玩家在谱面" + bList + "没有成绩。" );
-//                    cqUtil.sendMsg(cqMsg);
-//                }
-//                tmp2.put(bList,tmp);
-//            }
-//            scores.put(aList,tmp2);
-//        }
-
+//        initScore();
     }
 
+    private void initScore(){
+        for(String aList:targetUser){
+            Map<Integer,List<Score>> tmp2 = new HashMap<>();
+            for(Integer bList:targetMap){
+                List<Score> tmp = apiUtil.getScore(bList,aList);
+                Beatmap beatmap = apiUtil.getBeatmap(bList);
+                if(tmp.size()>0) {
+                    for (Score score : tmp) {
+                        cqMsg.setMessage(aList + "玩家在谱面" + bList + "的成绩为：\n"
+                                +score.getMaxCombo()+"x/"+beatmap.getMaxCombo()+"x，"
+                                + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
+                                + " (" + new DecimalFormat("###.00").format(
+                                100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
+                                        / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
+                                + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", "
+                                + score.getPp() + "PP");
+                        cqUtil.sendMsg(cqMsg);
+                    }
+                }else{
+                    cqMsg.setMessage(aList + "玩家在谱面" + bList + "没有成绩。" );
+                    cqUtil.sendMsg(cqMsg);
+                }
+                tmp2.put(bList,tmp);
+            }
+            scores.put(aList,tmp2);
+        }
 
+    }
     @Scheduled(cron = "0 0 * * * ? ")
     public void analyze(){
 
@@ -72,7 +80,7 @@ public class Analyze {
                 List<Score> lastTmp = tmp2.get(bList);
                 Beatmap beatmap = apiUtil.getBeatmap(bList);
                 if(tmp.size()!=lastTmp.size()){
-                    for (Score score : tmp) {
+                    for (int i=0;i<lastTmp.size();i++) {
                         cqMsg.setMessage(aList + "玩家在谱面" + bList + "有成绩更新，新的成绩为：\n"
                                 +score.getMaxCombo()+"x/"+beatmap.getMaxCombo()+"x，"
                               + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")

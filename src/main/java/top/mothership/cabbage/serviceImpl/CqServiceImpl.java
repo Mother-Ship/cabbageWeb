@@ -76,6 +76,10 @@ public class CqServiceImpl {
                         return;
                     }
                     day = Integer.valueOf(m.group(3));
+                    //屏蔽掉用户没有输入用户名时候的异常
+                    if("".equals(m.group(2)))
+                        return;
+
                     username = m.group(2).substring(1);
                 }
                 if ("白菜".equals(username)) {
@@ -108,6 +112,9 @@ public class CqServiceImpl {
                         return;
                     }
                     num = Integer.valueOf(m2.group(3));
+                    //屏蔽掉用户没有输入用户名时候的异常
+                    if("".equals(m.group(2)))
+                        return;
                     username = m2.group(2).substring(1);
                 }
                 if ("白菜".equals(username)) {

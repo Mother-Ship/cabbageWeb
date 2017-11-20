@@ -42,7 +42,7 @@ public class DairyTask {
         this.javaMailSender = javaMailSender;
         this.freeMarkerConfigurer = freeMarkerConfigurer;
     }
-
+    //似乎每分钟并发也就600+，不需要加延迟……
     @Scheduled(cron = "0 0 4 * * ?")
     public void importUserInfo() {
         java.util.Date start = Calendar.getInstance().getTime();

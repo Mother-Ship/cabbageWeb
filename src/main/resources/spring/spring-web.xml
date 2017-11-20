@@ -26,8 +26,21 @@
 
     <!--4）扫描service所在包-->
     <context:component-scan base-package="top.mothership.cabbage"/>
-    <!--&lt;!&ndash;5）扫描工具类&ndash;&gt;-->
-    <!--<context:component-scan base-package="top.mothership.cabbage.util"/>-->
+    <!--5）配置拦截器-->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="top.mothership.cabbage.interceptors.BaseInterceptor" />
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/api/login"/>
+            <bean class="top.mothership.cabbage.interceptors.UserInterceptor" />
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/api/code"/>
+            <bean class="top.mothership.cabbage.interceptors.CodeInterceptor" />
+        </mvc:interceptor>
+    </mvc:interceptors>
     <!--6）配置事务并注入连接池-->
     <bean id="transactionManager"
           class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
