@@ -145,7 +145,6 @@ public class CqUtil {
         List<Long> result = new ArrayList<>();
         for(int i=0;i<members.size();i++){
             if(members.get(i).getRole().equals("admin")){
-
                 result.add(members.get(i).getUserId());
             }
         }

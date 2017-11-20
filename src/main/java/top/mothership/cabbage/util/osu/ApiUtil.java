@@ -28,7 +28,7 @@ public class ApiUtil {
     private Logger logger = LogManager.getLogger(this.getClass());
 
     public Userinfo getUser(String username, String userId) {
-        String result = praseUid("user", username, userId);
+        String result = filterUid("user", username, userId);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Userinfo.class);
     }
 
@@ -41,7 +41,7 @@ public class ApiUtil {
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Beatmap.class);
     }
     public List<Score> getBP(String username, String userId) {
-        String result = praseUid("bp", username, userId);
+        String result = filterUid("bp", username, userId);
         //由于这里用到List，手动补上双括号
         result = "["+result+"]";
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
@@ -50,7 +50,7 @@ public class ApiUtil {
     }
 
     public Score getRecent(String username, String userId) {
-        String result = praseUid("recent", username, userId);
+        String result = filterUid("recent", username, userId);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Score.class);
     }
 
@@ -61,14 +61,14 @@ public class ApiUtil {
                 .fromJson(result, new TypeToken<List<Score>>(){}.getType());
 
     }
-    public List<Score> getScore(Integer bid,String uid){
-        String result = accessAPI("score", uid, "string", String.valueOf(bid),null,null);
+    public List<Score> getScore(Integer bid,Integer uid){
+        String result = accessAPI("score", String.valueOf(uid), "id", String.valueOf(bid),null,null);
         result = "["+result+"]";
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
                 .fromJson(result, new TypeToken<List<Score>>(){}.getType());
 
     }
-    private String praseUid(String apiType, String username, String userId) {
+    private String filterUid(String apiType, String username, String userId) {
         String result;
         if (username != null && userId == null) {
             result = accessAPI(apiType, username, "string", null,null,null);

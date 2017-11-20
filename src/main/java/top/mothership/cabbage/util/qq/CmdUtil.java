@@ -40,7 +40,7 @@ public class CmdUtil {
     private UserDAO userDAO;
     private UserInfoDAO userInfoDAO;
     private static ResDAO resDAO;
-    private Logger logger = LogManager.getLogger(this.getClass());
+    private static Logger logger = LogManager.getLogger(CmdUtil.class);
 
     @Autowired
     public CmdUtil(ApiUtil apiUtil, CqUtil cqUtil, ImgUtil imgUtil, WebPageUtil webPageUtil, ScoreUtil scoreUtil, UserDAO userDAO, UserInfoDAO userInfoDAO, ResDAO resDAO) {

@@ -4,19 +4,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import top.mothership.cabbage.mapper.ResDAO;
+import top.mothership.cabbage.mapper.ScoresDAO;
+import top.mothership.cabbage.pojo.osu.Score;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 //
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:spring/spring-*.xml")
 public class test {
     @Autowired
-    private ResDAO resDAO;
+    private ScoresDAO scoresDAO;
 
     //    @Autowired
 //    private ApiUtil apiUtil;
@@ -312,7 +316,8 @@ public class test {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-
+        List<Score> lastTmp = scoresDAO.getScoreByUidAndBid(1,1);
+        System.out.println("");
     }
 
     //
