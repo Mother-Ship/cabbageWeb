@@ -24,10 +24,10 @@ public class test {
 //    private ScoreUtil scoreUtil;
     @Test
     public void Test() throws IOException {
-        Object o =resDAO.getBGBySidAndName(485056, "cherry_blossoms_kantoku_artist_Wallpaper HD_2560x1440_www.paperhi.com.jpg");
-        byte[] img = (byte[]) o;
-
-        System.out.println();
+//        Object o =resDAO.getBGBySidAndName(485056, "cherry_blossoms_kantoku_artist_Wallpaper HD_2560x1440_www.paperhi.com.jpg");
+//        byte[] img = (byte[]) o;
+//
+//        System.out.println();
 //        System.out.println("mp4".compareTo("mp5"));
 //        System.out.println("mp3".compareTo("mp4"));
 //        System.out.println("dev".compareTo("mp4"));

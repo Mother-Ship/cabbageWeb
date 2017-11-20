@@ -7,37 +7,28 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import top.mothership.cabbage.mapper.RedisDAO;
-import top.mothership.cabbage.util.CaptchaUtil;
+import top.mothership.cabbage.serviceImpl.UserServiceImpl;
 
 @RestController
-@RequestMapping(value = "/api/user",produces = {"application/json;charset=UTF-8"})
+@RequestMapping(value = "/api", produces = {"application/json;charset=UTF-8"})
 public class UserController {
-    @Autowired
-    private CaptchaUtil captchaUtil;
-    private RedisDAO redisDAO;
+    private final UserServiceImpl userService;
     private Logger logger = LogManager.getLogger(this.getClass());
-    @RequestMapping(value = "/login",method = RequestMethod.POST)
+
+    @Autowired
+    public UserController(UserServiceImpl userService) {
+        this.userService = userService;
+    }
+
+
+
+
+    @RequestMapping(value = "/code", method = RequestMethod.GET)
     @CrossOrigin(origins = "http://localhost")
-    public String login(){
-
-
+    public String getCode() {
         return null;
     }
-    @RequestMapping(value = "/code",method = RequestMethod.GET)
-    @CrossOrigin(origins = "http://localhost")
-    public String getCode(){
 
-
-        return null;
-    }
-    @RequestMapping(value = "/verify",method = RequestMethod.POST)
-    @CrossOrigin(origins = "http://localhost")
-    public String verify(){
-
-
-        return null;
-    }
 
 //    @RequestMapping(value = "/upload",method = RequestMethod.POST)
 //    @CrossOrigin(origins = "http://localhost")

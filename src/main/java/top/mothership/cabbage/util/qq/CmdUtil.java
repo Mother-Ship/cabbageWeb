@@ -306,7 +306,6 @@ public class CmdUtil {
                 cqUtil.sendMsg(cqMsg);
             }
         }
-
     }
 
     public void bindQQAndOsu(String username, String fromQQ, CqMsg cqMsg) {
@@ -387,7 +386,6 @@ public class CmdUtil {
                     addList.add(userFromAPI.getUserName());
                 } else {
                     //进行Role更新
-
                     User user = userDAO.getUser(null, userFromAPI.getUserId());
                     //拿到原先的user，把role拼上去，塞回去
                     String newRole;

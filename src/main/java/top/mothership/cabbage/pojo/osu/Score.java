@@ -8,7 +8,7 @@ import java.util.Date;
 public class Score {
     //仅用于get_user_best
     private Integer beatmapId;
-    //这个不在API返回值
+    //这个不在API返回值，画BP的时候手动拼接的
     private String beatmapName;
     //这六个仅仅用于db解析
     private Byte mode;
