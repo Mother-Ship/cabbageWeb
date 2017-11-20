@@ -17,7 +17,7 @@ public interface ScoresDAO {
             ",#{score.score},#{score.maxCombo},#{score.count50}" +
             ",#{score.count100},#{score.count300},#{score.countMiss}" +
             ",#{score.countKatu},#{score.countGeki},#{score.perfect}" +
-            ",#{score.enableMods},#{score.date},#{score.rank}" +
+            ",#{score.enabledMods},#{score.date},#{score.rank}" +
             ",#{score.pp},#{score.userId},#{score.username},#{score.onlineId})")
     Integer addScore(@Param("score") Score score);
 
