@@ -52,9 +52,6 @@ public class Analyze {
                 Beatmap beatmap = apiUtil.getBeatmap(bList);
                 String username = apiUtil.getUser(null, String.valueOf(aList)).getUserName();
                 if (tmp.size() == 0) {
-                    cqMsg.setMessage(username + "玩家在谱面" + bList + "没有成绩。");
-                    cqMsg.setUserId(1335734657L);
-                    cqUtil.sendMsg(cqMsg);
                     continue;
                 }
                 if (tmp.size() != lastTmp.size()) {
@@ -63,7 +60,7 @@ public class Analyze {
                         Score score;
                         if (i <= lastTmp.size() - 1) {
                             //如果取到的成绩相同，跳出本次循环
-                            if (!tmp.get(i).getDate().equals(lastTmp.get(i).getDate())) {
+                            if (tmp.get(i).getDate().getTime()==(lastTmp.get(i).getDate().getTime())) {
                                 continue;
                             }
                             //否则取到成绩
@@ -86,7 +83,7 @@ public class Analyze {
                     }
                 } else {
                     for (int i = 0; i < lastTmp.size(); i++) {
-                        if (!tmp.get(i).getDate().equals(lastTmp.get(i).getDate())) {
+                        if (tmp.get(i).getDate().getTime()!=(lastTmp.get(i).getDate().getTime())) {
                             cqMsg.setMessage(username + "玩家在谱面" + bList + "有成绩更新，新的成绩为：\n"
                                     + tmp.get(i).getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，"
                                     + scoreUtil.convertMOD(tmp.get(i).getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
@@ -113,9 +110,6 @@ public class Analyze {
                 Beatmap beatmap = apiUtil.getBeatmap(bList);
                 String username = apiUtil.getUser(null, String.valueOf(aList)).getUserName();
                 if (tmp.size() == 0) {
-                    cqMsg.setMessage(username + "玩家在谱面" + bList + "没有成绩。");
-                    cqMsg.setUserId(770677061L);
-                    cqUtil.sendMsg(cqMsg);
                     continue;
                 }
                 if (tmp.size() != lastTmp.size()) {
@@ -124,7 +118,7 @@ public class Analyze {
                         Score score;
                         if (i <= lastTmp.size() - 1) {
                             //如果取到的成绩相同，跳出本次循环
-                            if (!tmp.get(i).getDate().equals(lastTmp.get(i).getDate())) {
+                            if (tmp.get(i).getDate().getTime()==(lastTmp.get(i).getDate().getTime())) {
                                 continue;
                             }
                             //否则取到成绩
@@ -147,7 +141,7 @@ public class Analyze {
                     }
                 } else {
                     for (int i = 0; i < lastTmp.size(); i++) {
-                        if (!tmp.get(i).getDate().equals(lastTmp.get(i).getDate())) {
+                        if (tmp.get(i).getDate().getTime()!=(lastTmp.get(i).getDate().getTime())) {
                             cqMsg.setMessage(username + "玩家在谱面" + bList + "有成绩更新，新的成绩为：\n"
                                     + tmp.get(i).getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，"
                                     + scoreUtil.convertMOD(tmp.get(i).getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
