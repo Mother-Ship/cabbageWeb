@@ -18,7 +18,7 @@ public interface ScoresDAO {
             ",#{score.count100},#{score.count300},#{score.countMiss}" +
             ",#{score.countKatu},#{score.countGeki},#{score.perfect}" +
             ",#{score.enabledMods},#{score.date},#{score.rank}" +
-            ",#{score.pp},#{score.userId},#{score.username},#{score.onlineId})")
+            ",#{score.pp},#{score.userId},#{score.userName},#{score.onlineId})")
     Integer addScore(@Param("score") Score score);
 
     @Select("SELECT * FROM `scores` WHERE `user_id` = #{userId} ")
