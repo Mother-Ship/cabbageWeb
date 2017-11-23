@@ -39,20 +39,25 @@ public class UserController {
 
     @RequestMapping(value = "/userinfo/{username}", method = RequestMethod.GET)
 //    @CrossOrigin(origins = "http://localhost")
-    public String userInfo(@PathVariable String username, @RequestParam("start") @DateTimeFormat(pattern="yyyyMMdd")Date start, @RequestParam("limit") int limit) {
+    public String userInfo(@PathVariable String username, @RequestParam("start") @DateTimeFormat(pattern="yyyyMMdd")Date start,
+                           @RequestParam("limit") int limit) {
+        //去osu api验证用户名是否存在
         Userinfo now = apiUtil.getUser(username,null);
-        if (now == null){
+        if (now == null)
             return new Gson().toJson(new WebResponse<>("user not found", null));
-        }
-        if(new Date(start.getTime()+(1000L*3600L*24L*(long)(limit-1))).after(Calendar.getInstance().getTime())){
+        //取到最接近8.29的那条记录
+        Userinfo earliest = userInfoDAO.getNearestUserInfo(now.getUserId(),new java.sql.Date(1503936000000L));
+        if (earliest == null)
+            return new Gson().toJson(new WebResponse<>("user not registered", null));
+        //判断传入日期是否比最早的记录早，是则返回错误+最早的记录时间
+        if(start.before(earliest.getQueryDate()))
+            return new Gson().toJson(new WebResponse<>("start date is too early", earliest.getQueryDate()));
+        //判断最早的记录+传入的天数是否比今天晚
+        if(new Date(start.getTime()+(1000L*3600L*24L*(long)(limit-1))).after(Calendar.getInstance().getTime()))
             return new Gson().toJson(new WebResponse<>("end date is too late", null));
-        }
-        if(start.before(new Date(1503936000000L))){
-            return new Gson().toJson(new WebResponse<>("start date is too early", null));
-        }
         List<Userinfo> list = new ArrayList<>();
-        for(int i=0;i<limit;i++){
-            Userinfo tmp = userInfoDAO.getUserInfo(now.getUserId(),new java.sql.Date(start.getTime()+(1000*3600*24*i)));
+        for(long i=0;i<limit;i++){
+            Userinfo tmp = userInfoDAO.getUserInfo(now.getUserId(),new java.sql.Date(start.getTime()+(1000L*3600L*24L*i)));
             list.add(tmp);
         }
 
