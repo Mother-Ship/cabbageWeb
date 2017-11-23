@@ -61,8 +61,6 @@ public class CqController {
 //                            cqMsg.setTime(Calendar.getInstance().getTimeInMillis());
                         smokeUtil.praseSmoke(cqMsg);
                         break;
-                    case "discuss":
-                        break;
                     case "private":
                         //如果是私聊消息，覆盖掉正则表达式（识别汉字）
                         //不必考虑线程安全问题，每次进入这个方法，cmdRegex都会被重置为没有汉字的版本

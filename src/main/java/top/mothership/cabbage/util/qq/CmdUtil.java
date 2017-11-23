@@ -130,7 +130,8 @@ public class CmdUtil {
                 format(new Date(cqMsg.getTime() * 1000L)));
         cqMsg1.setMessageType("private");
         for (String i : Overall.ADMIN_LIST) {
-            cqMsg.setUserId(Long.valueOf(i));
+            //debug 这里设置的userid 应该是cqmsg1的，之前漏了个1
+            cqMsg1.setUserId(Long.valueOf(i));
             cqUtil.sendMsg(cqMsg1);
         }
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
@@ -182,15 +183,15 @@ public class CmdUtil {
         //此处自定义实现排序方法
         //dev>分群>主群>比赛
         roles.sort((o1, o2) -> {
-            //mp5s得在mp5及其他分部前面
+            //mp5s优先级得低于mp5
             if (o1.contains("mp5s") && (o2.equals("mp5") || o2.equals("mp5mc") || o2.equals("mp5chart"))) {
                 return -1;
             }
-            //mp4s得在mp4前面
+            //mp4s<mp4
             if (o1.contains("mp4s") && o2.equals("mp4")) {
                 return -1;
             }
-            //dev得在最后面
+            //dev大于一切
             if (o1.equals("dev")) {
                 return 1;
             }

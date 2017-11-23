@@ -373,9 +373,8 @@ public class ImgUtil {
         OppaiResult oppaiResult = null;
         try {
             oppaiResult = scoreUtil.calcPP(score, beatmap);
-        }catch (Exception e){
+        }catch (Exception ignore){
             //如果acc过低
-            System.err.println(e.getMessage());
         }
         boolean defaultBG = false;
         bg = webPageUtil.getBG(beatmap);
