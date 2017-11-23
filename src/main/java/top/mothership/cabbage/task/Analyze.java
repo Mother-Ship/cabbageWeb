@@ -106,8 +106,7 @@ public class Analyze {
             }
 
         }
-        cqMsg.setMessage("成绩扫描完成");
-        cqUtil.sendMsg(cqMsg);
+
         cqMsg.setUserId(770677061L);
         for (Integer aList : baQiang) {
             for (Integer bList : targetMapR2) {
@@ -168,7 +167,5 @@ public class Analyze {
             }
 
         }
-        cqMsg.setMessage("成绩扫描完成");
-        cqUtil.sendMsg(cqMsg);
     }
 }
