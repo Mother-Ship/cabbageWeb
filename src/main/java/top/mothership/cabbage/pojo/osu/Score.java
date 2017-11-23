@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.Date;
 @Data
 public class Score {
-    //仅用于get_user_best
+    //仅用于get_user_best,其他API没有
     private Integer beatmapId;
     //这个不在API返回值，画BP的时候手动拼接的
     private String beatmapName;

@@ -39,21 +39,22 @@ public class Analyze {
         this.scoreUtil = scoreUtil;
         this.scoresDAO = scoresDAO;
         cqMsg.setMessageType("private");
-        //初始化时候加载一次
     }
 
-    @Scheduled(cron = "0 50 * * * ? ")
+    @Scheduled(cron = "0 * * * * ? ")
     public void analyze() {
+        cqMsg.setUserId(1335734657L);
         for (Integer aList : guanGuang) {
             for (Integer bList : targetMapR2) {
                 //对每个bid
                 List<Score> tmp = apiUtil.getScore(bList, aList);
-                List<Score> lastTmp = scoresDAO.getScoreByUidAndBid(aList, bList);
-                Beatmap beatmap = apiUtil.getBeatmap(bList);
-                String username = apiUtil.getUser(null, String.valueOf(aList)).getUserName();
+                List<Score> lastTmp = scoresDAO.getLastScoreByUidAndBid(aList, bList);
+
                 if (tmp.size() == 0) {
                     continue;
                 }
+                Beatmap beatmap = apiUtil.getBeatmap(bList);
+                String username = apiUtil.getUser(null, String.valueOf(aList)).getUserName();
                 if (tmp.size() != lastTmp.size()) {
                     for (int i = 0; i < tmp.size(); i++) {
                         //在原有成绩的范畴内
@@ -69,6 +70,7 @@ public class Analyze {
                             //在原有成绩的范畴外，直接取成绩
                             score = tmp.get(i);
                         }
+
                         cqMsg.setMessage(username + "玩家在谱面" + bList + "有成绩更新，新的成绩为：\n"
                                 + score.getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，"
                                 + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
@@ -77,8 +79,9 @@ public class Analyze {
                                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
                                 + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", "
                                 + score.getPp() + "PP");
-                        cqMsg.setUserId(1335734657L);
+
                         cqUtil.sendMsg(cqMsg);
+                        score.setBeatmapId(bList);
                         scoresDAO.addScore(score);
                     }
                 } else {
@@ -92,8 +95,9 @@ public class Analyze {
                                             / (6 * (tmp.get(i).getCount50() + tmp.get(i).getCount100() + tmp.get(i).getCount300() + tmp.get(i).getCountMiss()))) + "%)\n"
                                     + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(tmp.get(i).getDate()) + ", "
                                     + tmp.get(i).getPp() + "PP");
-                            cqMsg.setUserId(1335734657L);
+
                             cqUtil.sendMsg(cqMsg);
+                            tmp.get(i).setBeatmapId(bList);
                             scoresDAO.addScore(tmp.get(i));
                         }
                     }
@@ -102,11 +106,14 @@ public class Analyze {
             }
 
         }
+        cqMsg.setMessage("成绩扫描完成");
+        cqUtil.sendMsg(cqMsg);
+        cqMsg.setUserId(770677061L);
         for (Integer aList : baQiang) {
             for (Integer bList : targetMapR2) {
                 //对每个bid
                 List<Score> tmp = apiUtil.getScore(bList, aList);
-                List<Score> lastTmp = scoresDAO.getScoreByUidAndBid(aList, bList);
+                List<Score> lastTmp = scoresDAO.getLastScoreByUidAndBid(aList, bList);
                 Beatmap beatmap = apiUtil.getBeatmap(bList);
                 String username = apiUtil.getUser(null, String.valueOf(aList)).getUserName();
                 if (tmp.size() == 0) {
@@ -135,8 +142,9 @@ public class Analyze {
                                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
                                 + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", "
                                 + score.getPp() + "PP");
-                        cqMsg.setUserId(770677061L);
+
                         cqUtil.sendMsg(cqMsg);
+        score.setBeatmapId(bList);
                         scoresDAO.addScore(score);
                     }
                 } else {
@@ -150,8 +158,8 @@ public class Analyze {
                                             / (6 * (tmp.get(i).getCount50() + tmp.get(i).getCount100() + tmp.get(i).getCount300() + tmp.get(i).getCountMiss()))) + "%)\n"
                                     + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(tmp.get(i).getDate()) + ", "
                                     + tmp.get(i).getPp() + "PP");
-                            cqMsg.setUserId(770677061L);
                             cqUtil.sendMsg(cqMsg);
+        tmp.get(i).setBeatmapId(bList);
                             scoresDAO.addScore(tmp.get(i));
                         }
                     }
@@ -160,6 +168,7 @@ public class Analyze {
             }
 
         }
-
+        cqMsg.setMessage("成绩扫描完成");
+        cqUtil.sendMsg(cqMsg);
     }
 }

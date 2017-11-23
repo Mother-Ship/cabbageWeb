@@ -316,7 +316,7 @@ public class test {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-        List<Score> lastTmp = scoresDAO.getScoreByUidAndBid(1,1);
+//        List<Score> lastTmp = scoresDAO.getScoreByUidAndBid(1,1);
         System.out.println("");
     }
 

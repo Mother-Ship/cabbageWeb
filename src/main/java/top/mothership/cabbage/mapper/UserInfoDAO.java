@@ -24,7 +24,8 @@ public interface UserInfoDAO{
     @Select("SELECT * FROM `userinfo` WHERE `user_id` = #{userId}")
     List<Userinfo> listUserInfoByUserId(@Param("userId") Integer userId);
 
-    @Select("SELECT * , abs(UNIX_TIMESTAMP(queryDate) - UNIX_TIMESTAMP(#{queryDate})) AS ds FROM `userinfo`  WHERE `user_id` = #{userId} ORDER BY ds ASC LIMIT 1")
+    @Select("SELECT * , abs(UNIX_TIMESTAMP(queryDate) - UNIX_TIMESTAMP(#{queryDate})) AS ds " +
+            "FROM `userinfo`  WHERE `user_id` = #{userId} ORDER BY ds ASC LIMIT 1")
     Userinfo getNearestUserInfo(@Param("userId") Integer userId, @Param("queryDate") Date queryDate);
 
     @Select("SELECT * FROM `userinfo` WHERE `user_id` = #{userId} AND `queryDate` = #{queryDate}")
