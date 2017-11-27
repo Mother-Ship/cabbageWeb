@@ -397,7 +397,13 @@ public class CmdUtil {
                     if ("creep".equals(user.getRole())) {
                         newRole = role;
                     } else {
-                        newRole = user.getRole() + "," + role;
+                        //当用户不在想要添加的用户组的时候才添加 2017-11-27 20:45:20
+                        if(!Arrays.asList(user.getRole().split(",")).contains(role)) {
+                            newRole = user.getRole() + "," + role;
+                        }else{
+                            newRole = user.getRole();
+                        }
+
                     }
                     user.setRole(newRole);
                     userDAO.updateUser(user);
@@ -460,6 +466,8 @@ public class CmdUtil {
                 //这里如果不把Arrays.asList传入构造函数，而是直接使用会有个Unsupported异常
                 //因为Arrays.asList做出的List是不可变的
                 List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
+                //2017-11-27 21:04:36 增强健壮性，只有在含有这个role的时候才进行移除
+                if(roles.contains(role))
                 roles.remove(role);
                 if ("all".equals(role) || roles.size() == 0) {
                     newRole = "creep";
@@ -692,10 +700,11 @@ public class CmdUtil {
             resp = role + "用户组中所有人的PP：";
 
             for (Integer aList : list) {
-
                 Userinfo userinfo = apiUtil.getUser(null, aList);
-                logger.info(userinfo.getUserName() + "的PP是" + userinfo.getPpRaw());
-                resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw());
+                if(userinfo!=null) {
+                    logger.info(userinfo.getUserName() + "的PP是" + userinfo.getPpRaw());
+                    resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw());
+                }
             }
         } else {
             resp = role + "用户组没有成员。";
@@ -771,7 +780,39 @@ public class CmdUtil {
 
         logger.info("开始处理"+userFromAPI.getUserName()+"进行的谱面搜索，关键词为："+keyword);
         //比较菜，手动补齐参数
-        if(!(keyword.endsWith("]")&&keyword.endsWith(")")))
+        if(!(keyword.endsWith("]")||keyword.endsWith(")")))
+            keyword+="[]()";
+        if(keyword.endsWith("]"))
+            keyword+="()";
+        Matcher m2 = Pattern.compile(Overall.OSU_SEARCH_KETWORD).matcher(keyword);
+        if(!m2.find()){
+            cqMsg.setMessage("请使用歌手-歌曲标题[难度名](麻婆名)格式。难度名和麻婆名可以省略。");
+            cqUtil.sendMsg(cqMsg);
+        }else {
+
+            Beatmap beatmap =  webPageUtil.searchBeatmap(m2.group(1),m2.group(2),m2.group(3),m2.group(4));
+            if(beatmap == null){
+                cqMsg.setMessage("根据提供的关键词："+keyword+"没有找到任何谱面。");
+                cqUtil.sendMsg(cqMsg);
+                return;
+            }
+            List<Score> scores = apiUtil.getScore(beatmap.getBeatmapId(),user.getUserId());
+            if(scores.size()>0) {
+                String filename = imgUtil.drawResult(userFromAPI, scores.get(0), beatmap);
+                cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+            }else{
+                cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"+beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]("+beatmap.getCreator()+")，你在该谱面没有成绩。");
+            }
+            cqUtil.sendMsg(cqMsg);
+        }
+
+
+    }
+    public void searchBeatmap(String keyword,CqMsg cqMsg) {
+
+        logger.info("开始处理"+cqMsg.getUserId()+"进行的谱面搜索，关键词为："+keyword);
+        //比较菜，手动补齐参数
+        if(!(keyword.endsWith("]")||keyword.endsWith(")")))
             keyword+="[]()";
         if(keyword.endsWith("]"))
             keyword+="()";
@@ -783,14 +824,14 @@ public class CmdUtil {
             Beatmap beatmap =  webPageUtil.searchBeatmap(m2.group(1),m2.group(2),m2.group(3),m2.group(4));
             if(beatmap == null){
                 cqMsg.setMessage("根据提供的关键词："+keyword+"没有找到任何谱面。");
-            }
-            List<Score> scores = apiUtil.getScore(beatmap.getBeatmapId(),user.getUserId());
-            if(scores.size()>0) {
-                String filename = imgUtil.drawResult(userFromAPI, scores.get(0), beatmap);
-                cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+                cqUtil.sendMsg(cqMsg);
+                return;
             }else{
-                cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"+beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]("+beatmap.getCreator()+")，你在该谱面没有成绩。");
+                String filename = imgUtil.drawImage(webPageUtil.convert1366_768(webPageUtil.getBG(beatmap)));
+                cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]"+"\n"+"https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
+                        + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n");
             }
+
             cqUtil.sendMsg(cqMsg);
         }
 

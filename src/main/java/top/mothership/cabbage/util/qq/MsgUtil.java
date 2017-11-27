@@ -19,10 +19,10 @@ public class MsgUtil {
         this.cqUtil = cqUtil;
     }
 
-    public boolean CheckDayParam(CqMsg cqMsg) {
+    public boolean CheckDayParam(String msg,CqMsg cqMsg) {
         try {
             //此处传入的Message必须是切好的#后面的数据
-            int day = Integer.valueOf(cqMsg.getMessage());
+            int day = Integer.valueOf(msg);
             if (day > (int) ((new java.util.Date().getTime() - new SimpleDateFormat("yyyy-MM-dd").parse("2007-09-16").getTime()) / 1000 / 60 / 60 / 24)) {
                 cqMsg.setMessage("你要找史前时代的数据吗。");
                 cqUtil.sendMsg(cqMsg);
@@ -46,9 +46,9 @@ public class MsgUtil {
         return true;
     }
 
-    public boolean CheckBPNumParam(CqMsg cqMsg){
+    public boolean CheckBPNumParam(String msg,CqMsg cqMsg){
         try {
-            int num = Integer.valueOf(cqMsg.getMessage());
+            int num = Integer.valueOf(msg);
             if (num < 0 || num > 100) {
                 cqMsg.setMessage("其他人看不到的东西，白菜也看不到啦。");
                 cqUtil.sendMsg(cqMsg);
@@ -64,9 +64,9 @@ public class MsgUtil {
             return false;
         }
     }
-    public boolean CheckBidParam(CqMsg cqMsg){
+    public boolean CheckBidParam(String msg,CqMsg cqMsg){
         try {
-            int bid = Integer.valueOf(cqMsg.getMessage());
+            int bid = Integer.valueOf(msg);
             return true;
         } catch (java.lang.NumberFormatException e) {
             cqMsg.setMessage("It's a disastah!!");

@@ -32,6 +32,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -467,22 +468,24 @@ public class WebPageUtil {
         } else return null;
 
     }
-    public Beatmap searchBeatmap(String artist,String title,String mapper,String diffName){
+    public Beatmap searchBeatmap(String artist,String title,String diffName,String mapper){
         int retry = 0;
         String output = null;
         Beatmap beatmap = null;
         while (retry < 5) {
             HttpURLConnection httpConnection;
             try {
+                String URL = osuSearchURL+"?title="+URLEncoder.encode(title,"UTF-8")+"&artist="+URLEncoder.encode(artist,"UTF-8")
+                        +"&mapper="+URLEncoder.encode(mapper,"UTF-8")+"&diff_name="+URLEncoder.encode(diffName,"UTF-8")
+                        +"&statuses=Ranked&modes=Standard&query_order=favorites";
+
                 httpConnection =
-                        (HttpURLConnection) new URL(osuSearchURL+"?title="+title+"&artist="+artist
-                                +"&mapper="+mapper+"&diff_name="+diffName
-                                +"&statuses=Ranked&modes=Standard&query_order=favorites").openConnection();
+                        (HttpURLConnection) new URL(URL).openConnection();
                 //设置请求头
                 httpConnection.setRequestMethod("GET");
-                httpConnection.setRequestProperty("Accept", "application/json");
                 httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
                 httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);
+                httpConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.40 Safari/537.36");
                 if (httpConnection.getResponseCode() != 200) {
                     logger.info("HTTP GET请求失败: " + httpConnection.getResponseCode() + "，正在重试第" + (retry + 1) + "次");
                     retry++;
@@ -547,7 +550,7 @@ public class WebPageUtil {
     }
 
 
-    private BufferedImage convert1366_768(BufferedImage bg) {
+    public BufferedImage convert1366_768(BufferedImage bg) {
         BufferedImage resizedBG;
         //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
         int resizedWeight = 1366;

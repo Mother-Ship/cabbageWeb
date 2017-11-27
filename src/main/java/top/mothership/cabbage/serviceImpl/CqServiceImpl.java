@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.CoolQ.CqResponse;
@@ -16,7 +15,10 @@ import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.MsgQueue;
 import top.mothership.cabbage.util.Overall;
 import top.mothership.cabbage.util.osu.ApiUtil;
-import top.mothership.cabbage.util.qq.*;
+import top.mothership.cabbage.util.qq.CmdUtil;
+import top.mothership.cabbage.util.qq.CqUtil;
+import top.mothership.cabbage.util.qq.MsgUtil;
+import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.annotation.PostConstruct;
 import java.sql.Date;
@@ -71,8 +73,8 @@ public class CqServiceImpl {
                 m = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m.find()) {
                     //传入检查日期参数的方法，必须要把消息体改为日期，否则那个方法没办法发送消息
-                    cqMsg.setMessage(m.group(3));
-                    if (!msgUtil.CheckDayParam(cqMsg)) {
+
+                    if (!msgUtil.CheckDayParam(m.group(3),cqMsg)) {
                         return;
                     }
                     day = Integer.valueOf(m.group(3));
@@ -111,8 +113,7 @@ public class CqServiceImpl {
                 username = m.group(2).substring(1);
                 Matcher m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m2.find()) {
-                    cqMsg.setMessage(m2.group(3));
-                    if (!msgUtil.CheckBPNumParam(cqMsg)) {
+                    if (!msgUtil.CheckBPNumParam(m2.group(3),cqMsg)) {
                         return;
                     }
                     num = Integer.valueOf(m2.group(3));
@@ -163,8 +164,7 @@ public class CqServiceImpl {
                 }
                 m = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m.find()) {
-                    cqMsg.setMessage(m.group(3));
-                    if (!msgUtil.CheckDayParam(cqMsg)) {
+                    if (!msgUtil.CheckDayParam(m.group(3),cqMsg)) {
                         return;
                     }
                     day = Integer.valueOf(m.group(3));
@@ -196,8 +196,7 @@ public class CqServiceImpl {
                 }
                 m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m2.find()) {
-                    cqMsg.setMessage(m2.group(3));
-                    if (!msgUtil.CheckBPNumParam(cqMsg)) {
+                    if (!msgUtil.CheckBPNumParam(m2.group(3),cqMsg)) {
                         return;
                     }
                     num = Integer.valueOf(m2.group(3));
@@ -237,9 +236,7 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "fp":
-
-                cqMsg.setMessage(m.group(2).substring(1));
-                if (!msgUtil.CheckBidParam(cqMsg)) {
+                if (!msgUtil.CheckBidParam(m.group(2).substring(1),cqMsg)) {
                     return;
                 }
                 Integer bid = Integer.valueOf(m.group(2).substring(1));
@@ -300,7 +297,7 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "me":
-                String keyword = m.group(2);
+                String keyword = m.group(2).substring(1);
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
                     cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
@@ -313,8 +310,81 @@ public class CqServiceImpl {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                cmdUtil.getMyScore(keyword ,user,userFromAPI, cqMsg);
+                cmdUtil.getMyScore(keyword, user, userFromAPI, cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+            case "add":
+                //面向mp4 5 chart组，相当于!setid+!sudo add
+                List<Long> mpChartMember = new ArrayList<>();
+                //加入两个chart组群员
+                for (QQInfo q : cqUtil.getGroupMembers(517183331L).getData()) {
+                    mpChartMember.add(q.getUserId());
+                }
+                for (QQInfo q : cqUtil.getGroupMembers(635731109L).getData()) {
+                    mpChartMember.add(q.getUserId());
+                }
+                if (!mpChartMember.contains(cqMsg.getUserId())) {
+                    cqMsg.setMessage("[CQ:face,id=14]？");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                switch (String.valueOf(cqMsg.getGroupId())) {
+                    case "564679329":
+                        //MP4
+                        msg = m.group(2).substring(1);
+                        username = msg.substring(0, msg.indexOf(":"));
+                        msg = msg.substring(msg.indexOf(":") + 1);
+                        Long QQ = Long.valueOf(msg.substring(24, msg.indexOf("]")));
+                        cmdUtil.addUserRole(new String[]{username}, "mp4", cqMsg);
+                        cmdUtil.bindQQAndOsu(username,QQ,cqMsg);
+                        break;
+                    case "201872650":
+                        //MP5
+                        msg = m.group(2).substring(1);
+                        username = msg.substring(0, msg.indexOf(":"));
+                        msg = msg.substring(msg.indexOf(":") + 1);
+                        QQ = Long.valueOf(msg.substring(24, msg.indexOf("]")));
+                        cmdUtil.addUserRole(new String[]{username}, "mp5", cqMsg);
+                        cmdUtil.bindQQAndOsu(username,QQ,cqMsg);
+                        break;
+                    default:
+                        cqMsg.setMessage("请不要在mp4/5群之外的地方使用。");
+                        cqUtil.sendMsg(cqMsg);
+                        return;
+                }
+                break;
+            case "del":
+                mpChartMember = new ArrayList<>();
+                //加入两个chart组群员
+                for (QQInfo q : cqUtil.getGroupMembers(517183331L).getData()) {
+                    mpChartMember.add(q.getUserId());
+                }
+                for (QQInfo q : cqUtil.getGroupMembers(635731109L).getData()) {
+                    mpChartMember.add(q.getUserId());
+                }
+                if (!mpChartMember.contains(cqMsg.getUserId())) {
+                    cqMsg.setMessage("[CQ:face,id=14]？");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                switch (String.valueOf(cqMsg.getGroupId())) {
+                    case "564679329":
+                        username = m.group(2).substring(1);
+                        cmdUtil.removeUserRole(new String[]{username},"mp4",cqMsg);
+                        break;
+                    case "201872650":
+                        username = m.group(2).substring(1);
+                        cmdUtil.removeUserRole(new String[]{username},"mp5",cqMsg);
+                        break;
+                    default:
+                        cqMsg.setMessage("请不要在mp4/5群之外的地方使用。");
+                        cqUtil.sendMsg(cqMsg);
+                        return;
+                }
+                break;
+            case "search":
+                 keyword = m.group(2).substring(1);
+                cmdUtil.searchBeatmap(keyword,cqMsg);
                 break;
 //邮箱验证码没什么样本……还是不搞了，这块注释掉吧
 //            case "login":
@@ -446,7 +516,17 @@ public class CqServiceImpl {
                 cqUtil.sendMsg(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
-
+            case "checku":
+               Integer userId = Integer.valueOf(m.group(2).substring(1));
+                user = userDAO.getUser(null, userId);
+                if (user == null) {
+                    cqMsg.setMessage("玩家" + userId + "没有使用过白菜。请先用add命令添加。");
+                } else {
+                    cqMsg.setMessage("玩家" + userId + "的用户组是" + user.getRole() + "，被Ban状态："+(user.getBanned().equals(1)));
+                }
+                cqUtil.sendMsg(cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
             case "褪裙":
             case "退群":
                 role = m.group(2).substring(1);
@@ -596,8 +676,7 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "fp":
-                cqMsg.setMessage(m.group(2).substring(1));
-                if (!msgUtil.CheckBidParam(cqMsg)) {
+                if (!msgUtil.CheckBidParam(m.group(2).substring(1),cqMsg)) {
                     return;
                 }
                 Integer bid = Integer.valueOf(m.group(2).substring(1));
@@ -652,7 +731,7 @@ public class CqServiceImpl {
                 cmdUtil.listPP(role, cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
-            case "find":
+            case "findPlayer":
                 username = m.group(2).substring(1);
                 List<User> list = userDAO.listUserIdByUname(username);
                 if (list.size() > 0) {
@@ -671,7 +750,7 @@ public class CqServiceImpl {
                 cqUtil.sendMsg(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
-            case "scan":
+            case "scanCard":
                 CqResponse<List<QQInfo>> cqResponse1 = cqUtil.getGroupMembers(cqMsg.getGroupId());
                 resp = "找到以下玩家群名片不含完整id：\n";
                 for (QQInfo qqInfo : cqResponse1.getData()) {
