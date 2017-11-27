@@ -70,19 +70,19 @@ public class CqServiceImpl {
                     return;
                 username = m.group(2).substring(1);
 
-                m = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
-                if (m.find()) {
+                Matcher m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
+                if (m2.find()) {
                     //传入检查日期参数的方法，必须要把消息体改为日期，否则那个方法没办法发送消息
 
-                    if (!msgUtil.CheckDayParam(m.group(3),cqMsg)) {
+                    if (!msgUtil.CheckDayParam(m2.group(3), cqMsg)) {
                         return;
                     }
-                    day = Integer.valueOf(m.group(3));
+                    day = Integer.valueOf(m2.group(3));
                     //屏蔽掉用户没有输入用户名时候的异常
-                    if ("".equals(m.group(2)))
+                    if ("".equals(m2.group(2)))
                         return;
 
-                    username = m.group(2).substring(1);
+                    username = m2.group(2).substring(1);
                 }
                 if ("白菜".equals(username)) {
                     cqMsg.setMessage("唉，没人疼没人爱，我是地里一颗小白菜。");
@@ -111,7 +111,7 @@ public class CqServiceImpl {
                 if ("".equals(m.group(2)))
                     return;
                 username = m.group(2).substring(1);
-                Matcher m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
+                m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m2.find()) {
                     if (!msgUtil.CheckBPNumParam(m2.group(3),cqMsg)) {
                         return;
