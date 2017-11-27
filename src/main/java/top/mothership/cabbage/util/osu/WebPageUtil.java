@@ -44,7 +44,7 @@ import java.util.zip.ZipInputStream;
 
 @Component
 public class WebPageUtil {
-    private Logger logger = LogManager.getLogger(this.getClass());
+    private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
     private final String getAvaURL = "https://a.ppy.sh/";
     private final String getUserURL = "https://osu.ppy.sh/u/";
     private final String getUserProfileURL = "https://osu.ppy.sh/pages/include/profile-general.php?u=";
@@ -52,9 +52,9 @@ public class WebPageUtil {
     private final String getOsuURL = "https://osu.ppy.sh/osu/";
     private final String osuSearchURL = "http://osusearch.com/query/";
     private final String ppPlusURL = "https://syrin.me/pp+/u/";
-    private HashMap<Integer, Document> map = new HashMap<>();
-    private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
     private final ResDAO resDAO;
+    private Logger logger = LogManager.getLogger(this.getClass());
+    private HashMap<Integer, Document> map = new HashMap<>();
 
     @Autowired
     public WebPageUtil(ResDAO resDAO) {
@@ -232,10 +232,10 @@ public class WebPageUtil {
         BufferedImage resizedBG = null;
         OsuFile osuFile = praseOsuFile(beatmap);
         //这里dao层需要使用object，然后再这里转换为数组，于是判断非空就得用null而不是.length。
-        byte[] img = (byte[])resDAO.getBGBySidAndName(Integer.valueOf(beatmap.getBeatmapSetId()),osuFile.getBgName());
-        if(img!=null){
-            try(ByteArrayInputStream in =new ByteArrayInputStream(img)){
-                return  ImageIO.read(in);
+        byte[] img = (byte[]) resDAO.getBGBySidAndName(Integer.valueOf(beatmap.getBeatmapSetId()), osuFile.getBgName());
+        if (img != null) {
+            try (ByteArrayInputStream in = new ByteArrayInputStream(img)) {
+                return ImageIO.read(in);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -414,7 +414,7 @@ public class WebPageUtil {
     public String getOsuFile(Beatmap beatmap) {
         HttpURLConnection httpConnection;
         String osuFile = resDAO.getOsuFileBybid(Integer.valueOf(beatmap.getBeatmapId()));
-        if(osuFile!=null)
+        if (osuFile != null)
             return osuFile;
         int retry = 0;
         //获取.osu的逻辑和获取BG不一样，Qua的图BG不缓存，而.osu必须缓存
@@ -434,8 +434,8 @@ public class WebPageUtil {
                     continue;
                 }
                 //将返回结果读取为Byte数组
-                osuFile = new String(readInputStream(httpConnection.getInputStream()),"UTF-8");
-                resDAO.addOsuFile(Integer.valueOf(beatmap.getBeatmapId()),osuFile);
+                osuFile = new String(readInputStream(httpConnection.getInputStream()), "UTF-8");
+                resDAO.addOsuFile(Integer.valueOf(beatmap.getBeatmapId()), osuFile);
                 //手动关闭连接
                 httpConnection.disconnect();
                 return osuFile;
@@ -466,16 +466,24 @@ public class WebPageUtil {
         } else return null;
 
     }
-    public Beatmap searchBeatmap(String artist,String title,String diffName,String mapper){
+
+    public Beatmap searchBeatmap(String artist, String title, String diffName, String mapper) {
         int retry = 0;
         String output = null;
         Beatmap beatmap = null;
         while (retry < 5) {
             HttpURLConnection httpConnection;
             try {
-                String URL = osuSearchURL+"?title="+URLEncoder.encode(title,"UTF-8")+"&artist="+URLEncoder.encode(artist,"UTF-8")
-                        +"&mapper="+URLEncoder.encode(mapper,"UTF-8")+"&diff_name="+URLEncoder.encode(diffName,"UTF-8")
-                        + "&modes=Standard&query_order=play_count";
+                String URL = osuSearchURL;
+                if (!"".equals(title))
+                    URL += "?title=" + URLEncoder.encode(title, "UTF-8");
+                if (!"".equals(artist))
+                    URL += "&artist=" + URLEncoder.encode(artist, "UTF-8");
+                if (!"".equals(mapper))
+                    URL += "&mapper=" + URLEncoder.encode(mapper, "UTF-8");
+                if (!"".equals(diffName))
+                    URL += "&diff_name=" + URLEncoder.encode(diffName, "UTF-8");
+                URL += "&modes=Standard&query_order=play_count";
 
                 httpConnection =
                         (HttpURLConnection) new URL(URL).openConnection();
@@ -499,8 +507,8 @@ public class WebPageUtil {
                 }
                 OsuSearchResp osuSearchResp = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                         .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(tmp2.toString(), OsuSearchResp.class);
-                if(osuSearchResp.getResultCount()>0){
-                    beatmap =  osuSearchResp.getBeatmaps().get(0);
+                if (osuSearchResp.getResultCount() > 0) {
+                    beatmap = osuSearchResp.getBeatmaps().get(0);
                 }
                 //手动关闭流
                 httpConnection.disconnect();
@@ -519,8 +527,8 @@ public class WebPageUtil {
         return null;
     }
 
-    public Map<String,Integer> getPPPlus(int uid) {
-        Map<String,Integer> map = new HashMap<>();
+    public Map<String, Integer> getPPPlus(int uid) {
+        Map<String, Integer> map = new HashMap<>();
         int retry = 0;
         Document doc = null;
         while (retry < 5) {
@@ -538,12 +546,12 @@ public class WebPageUtil {
             return null;
         }
         Elements link = doc.select("tr[class*=perform]");
-        map.put("Jump",Integer.valueOf(link.get(2).children().get(1).text().replaceAll("[p,]","")));
-        map.put("Flow",Integer.valueOf(link.get(3).children().get(1).text().replaceAll("[p,]","")));
-        map.put("Precision",Integer.valueOf(link.get(4).children().get(1).text().replaceAll("[p,]","")));
-        map.put("Speed",Integer.valueOf(link.get(5).children().get(1).text().replaceAll("[p,]","")));
-        map.put("Stamina",Integer.valueOf(link.get(6).children().get(1).text().replaceAll("[p,]","")));
-        map.put("Accuracy",Integer.valueOf(link.get(7).children().get(1).text().replaceAll("[p,]","")));
+        map.put("Jump", Integer.valueOf(link.get(2).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Flow", Integer.valueOf(link.get(3).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Precision", Integer.valueOf(link.get(4).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Speed", Integer.valueOf(link.get(5).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Stamina", Integer.valueOf(link.get(6).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Accuracy", Integer.valueOf(link.get(7).children().get(1).text().replaceAll("[p,]", "")));
         return map;
     }
 

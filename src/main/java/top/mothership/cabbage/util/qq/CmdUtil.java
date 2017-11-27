@@ -336,7 +336,7 @@ public class CmdUtil {
         if (userFromDB == null) {
             //只有这个id对应的QQ是null
             userFromDB = userDAO.getUser(null, userId);
-            if (userFromDB.getQQ().equals("0")) {
+            if (userFromDB.getQQ() == 0) {
                 //由于reg方法中已经进行过登记了,所以这用的应该是update操作
                 User user = new User();
                 user.setUserId(userId);
@@ -789,7 +789,8 @@ public class CmdUtil {
             keyword+="()";
         Matcher m2 = Pattern.compile(Overall.OSU_SEARCH_KETWORD).matcher(keyword);
         if(!m2.find()){
-            cqMsg.setMessage("请使用歌手-歌曲标题[难度名](麻婆名)格式。难度名和麻婆名可以省略。");
+            cqMsg.setMessage("请使用歌手-歌曲标题[难度名](麻婆名)格式。\n" +
+                    "歌手、难度名和麻婆名可以省略(但横线、方括号和圆括号不能省略)");
             cqUtil.sendMsg(cqMsg);
         }else {
 
@@ -832,7 +833,7 @@ public class CmdUtil {
             }else{
                 String filename = imgUtil.drawBeatmap(beatmap);
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]"+"\n"+"https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
-                        + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n");
+                        + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
             }
 
             cqUtil.sendMsg(cqMsg);
