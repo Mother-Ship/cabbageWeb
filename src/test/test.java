@@ -1,5 +1,8 @@
+import org.jsoup.Jsoup;
+import org.jsoup.select.Elements;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -7,6 +10,7 @@ import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.ScoresDAO;
 import top.mothership.cabbage.pojo.osu.Score;
 
+import javax.swing.text.Document;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -14,13 +18,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 //
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
+//@RunWith(SpringJUnit4ClassRunner.class)
+//@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
 public class test {
-    @Autowired
-    private ScoresDAO scoresDAO;
+//    @Autowired
+//    private ScoresDAO scoresDAO;
 
     //    @Autowired
 //    private ApiUtil apiUtil;
@@ -317,7 +323,21 @@ public class test {
 //            e.printStackTrace();
 //        }
 //        List<Score> lastTmp = scoresDAO.getScoreByUidAndBid(1,1);
-        System.out.println("");
+//        System.out.println("");
+//        org.jsoup.nodes.Document doc = Jsoup.connect("https://syrin.me/pp+/u/2545898/").timeout(10000).get();
+//        Elements link = doc.select("tr[class*=perform]");
+//        System.out.println(link.get(2).children().get(1).text().replaceAll("[p,]",""));
+//        System.out.println(link.get(3).children().get(1).text());
+//        System.out.println(link.get(4).children().get(1).text());
+//        System.out.println(link.get(5).children().get(1).text());
+//        System.out.println(link.get(6).children().get(1).text());
+//        System.out.println(link.get(7).children().get(1).text());
+//        String a = "lily-scarlet-rose[0108]()";
+//       Matcher m = Pattern.compile("^([^-]*)-(.*)\\[(.*)]\\((.*)\\)").matcher(a);
+//       m.find();
+//      for(int i=0;i<=m.groupCount();i++)
+//          System.out.println(m.group(i));
+//      System.out.println(m.group(4));
     }
 
     //

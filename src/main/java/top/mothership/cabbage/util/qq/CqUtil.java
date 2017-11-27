@@ -150,19 +150,7 @@ public class CqUtil {
         }
         return result;
     }
-    public String getCard(Long QQ,Long groupId){
-        List<QQInfo> members = getGroupMembers(groupId).getData();
-        for(int i=0;i<members.size();i++){
-            if(members.get(i).getUserId().equals(QQ)){
-                if("".equals(members.get(i).getCard())){
-                    return members.get(i).getNickname();
-                }else{
-                    return members.get(i).getCard();
-                }
-            }
-        }
-        return "";
-    }
+
     public Long getOwner(Long groupId){
         List<QQInfo> members = getGroupMembers(groupId).getData();
         for(int i=0;i<members.size();i++){
@@ -171,5 +159,38 @@ public class CqUtil {
             }
         }
         return 0L;
+    }
+    public CqResponse<QQInfo> getGroupMember(Long groupId,Long userId) {
+        String URL = baseURL + "/get_group_member_info";
+        HttpURLConnection httpConnection;
+        try {
+            CqMsg cqMsg = new CqMsg();
+            cqMsg.setGroupId(groupId);
+            cqMsg.setUserId(userId);
+            httpConnection =
+                    (HttpURLConnection) new URL(URL).openConnection();
+            httpConnection.setRequestMethod("POST");
+            httpConnection.setRequestProperty("Accept", "application/json");
+            httpConnection.setRequestProperty("Content-Type", "application/json");
+            httpConnection.setDoOutput(true);
+
+            OutputStream os = httpConnection.getOutputStream();
+            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes("UTF-8"));
+            os.flush();
+            os.close();
+            BufferedReader responseBuffer =
+                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()),"UTF-8"));
+            StringBuilder tmp2 = new StringBuilder();
+            String tmp;
+            while ((tmp = responseBuffer.readLine()) != null) {
+                tmp2.append(tmp);
+            }
+            //采用泛型封装，接住变化无穷的data
+            return new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<QQInfo>>() {}.getType());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 }

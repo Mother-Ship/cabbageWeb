@@ -1,5 +1,8 @@
 package top.mothership.cabbage.util.osu;
 
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -19,15 +22,14 @@ import org.springframework.stereotype.Component;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OsuFile;
+import top.mothership.cabbage.pojo.osu.OsuSearchResp;
+import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.util.Overall;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.ParseException;
@@ -49,6 +51,8 @@ public class WebPageUtil {
     private final String getUserProfileURL = "https://osu.ppy.sh/pages/include/profile-general.php?u=";
     private final String getBGURL = "http://bloodcat.com/osu/i/";
     private final String getOsuURL = "https://osu.ppy.sh/osu/";
+    private final String osuSearchURL = "http://osusearch.com/query/";
+    private final String ppPlusURL = "https://syrin.me/pp+/u/";
     private HashMap<Integer, Document> map = new HashMap<>();
     private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
     private final ResDAO resDAO;
@@ -463,6 +467,85 @@ public class WebPageUtil {
         } else return null;
 
     }
+    public Beatmap searchBeatmap(String artist,String title,String mapper,String diffName){
+        int retry = 0;
+        String output = null;
+        Beatmap beatmap = null;
+        while (retry < 5) {
+            HttpURLConnection httpConnection;
+            try {
+                httpConnection =
+                        (HttpURLConnection) new URL(osuSearchURL+"?title="+title+"&artist="+artist
+                                +"&mapper="+mapper+"&diff_name="+diffName
+                                +"&statuses=Ranked&modes=Standard&query_order=favorites").openConnection();
+                //设置请求头
+                httpConnection.setRequestMethod("GET");
+                httpConnection.setRequestProperty("Accept", "application/json");
+                httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
+                httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);
+                if (httpConnection.getResponseCode() != 200) {
+                    logger.info("HTTP GET请求失败: " + httpConnection.getResponseCode() + "，正在重试第" + (retry + 1) + "次");
+                    retry++;
+                    continue;
+                }
+                //读取返回结果
+                BufferedReader responseBuffer =
+                        new BufferedReader(new InputStreamReader((httpConnection.getInputStream())));
+                StringBuilder tmp2 = new StringBuilder();
+                String tmp;
+                while ((tmp = responseBuffer.readLine()) != null) {
+                    tmp2.append(tmp);
+                }
+                OsuSearchResp osuSearchResp = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                        .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(tmp2.toString(), OsuSearchResp.class);
+                if(osuSearchResp.getResultCount()>0){
+                    beatmap =  osuSearchResp.getBeatmaps().get(0);
+                }
+                //手动关闭流
+                httpConnection.disconnect();
+                responseBuffer.close();
+                return beatmap;
+            } catch (IOException e) {
+                logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
+                retry++;
+            }
+        }
+
+        if (retry == 5) {
+            logger.error("搜索谱面失败");
+            return null;
+        }
+        return null;
+    }
+
+    public Map<String,Integer> getPPPlus(int uid) {
+        Map<String,Integer> map = new HashMap<>();
+        int retry = 0;
+        Document doc = null;
+        while (retry < 5) {
+            try {
+                logger.info("正在获取" + uid + "的PP+数据");
+                doc = Jsoup.connect(ppPlusURL + uid).timeout((int) Math.pow(2, retry + 1) * 1000).get();
+                break;
+            } catch (IOException e) {
+                logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
+                retry++;
+            }
+        }
+        if (retry == 5) {
+            logger.error("玩家" + uid + "访问PP+失败五次");
+            return null;
+        }
+        Elements link = doc.select("tr[class*=perform]");
+        map.put("Jump",Integer.valueOf(link.get(2).children().get(1).text().replaceAll("[p,]","")));
+        map.put("Flow",Integer.valueOf(link.get(3).children().get(1).text().replaceAll("[p,]","")));
+        map.put("Precision",Integer.valueOf(link.get(4).children().get(1).text().replaceAll("[p,]","")));
+        map.put("Speed",Integer.valueOf(link.get(5).children().get(1).text().replaceAll("[p,]","")));
+        map.put("Stamina",Integer.valueOf(link.get(6).children().get(1).text().replaceAll("[p,]","")));
+        map.put("Accuracy",Integer.valueOf(link.get(7).children().get(1).text().replaceAll("[p,]","")));
+        return map;
+    }
+
 
     private BufferedImage convert1366_768(BufferedImage bg) {
         BufferedImage resizedBG;

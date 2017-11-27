@@ -47,7 +47,6 @@ public class CqServiceImpl {
     }
 
 
-
     public void praseCmd(CqMsg cqMsg) throws Exception {
         java.util.Date s = Calendar.getInstance().getTime();
         String msg = cqMsg.getMessage();
@@ -61,10 +60,11 @@ public class CqServiceImpl {
         int num;
         switch (m.group(1)) {
             case "stat":
+            case "statu":
                 //先分割出一个username，再尝试使用带数字的正则去匹配
                 day = 1;
                 //屏蔽掉用户没有输入用户名时候的异常
-                if("".equals(m.group(2)))
+                if ("".equals(m.group(2)))
                     return;
                 username = m.group(2).substring(1);
 
@@ -77,7 +77,7 @@ public class CqServiceImpl {
                     }
                     day = Integer.valueOf(m.group(3));
                     //屏蔽掉用户没有输入用户名时候的异常
-                    if("".equals(m.group(2)))
+                    if ("".equals(m.group(2)))
                         return;
 
                     username = m.group(2).substring(1);
@@ -87,7 +87,11 @@ public class CqServiceImpl {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiUtil.getUser(username, null);
+                if (m.group(1).equals("statu")) {
+                    userFromAPI = apiUtil.getUser(null, Integer.valueOf(username));
+                } else {
+                    userFromAPI = apiUtil.getUser(username, null);
+                }
                 if (userFromAPI == null) {
                     cqMsg.setMessage("没有从osu!api获取到" + username + "的玩家信息。");
                     cqUtil.sendMsg(cqMsg);
@@ -98,13 +102,13 @@ public class CqServiceImpl {
                 break;
             case "bp":
             case "bps":
+            case "bpu":
+            case "bpus":
                 num = 0;
                 //屏蔽掉用户没有输入用户名时候的异常
-                if("".equals(m.group(2)))
+                if ("".equals(m.group(2)))
                     return;
                 username = m.group(2).substring(1);
-                if(username.equals(""))
-                    return;
                 Matcher m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m2.find()) {
                     cqMsg.setMessage(m2.group(3));
@@ -113,7 +117,7 @@ public class CqServiceImpl {
                     }
                     num = Integer.valueOf(m2.group(3));
                     //屏蔽掉用户没有输入用户名时候的异常
-                    if("".equals(m.group(2)))
+                    if ("".equals(m2.group(2)))
                         return;
                     username = m2.group(2).substring(1);
                 }
@@ -123,7 +127,11 @@ public class CqServiceImpl {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiUtil.getUser(username, null);
+                if (m.group(1).equals("bpu") || m.group(1).equals("bpus")) {
+                    userFromAPI = apiUtil.getUser(null, Integer.valueOf(username));
+                } else {
+                    userFromAPI = apiUtil.getUser(username, null);
+                }
                 if (userFromAPI == null) {
                     cqMsg.setMessage("没有从osu!api获取到" + username + "的玩家信息。");
                     cqUtil.sendMsg(cqMsg);
@@ -139,15 +147,15 @@ public class CqServiceImpl {
                 break;
             case "setid":
                 //屏蔽掉用户没有输入用户名时候的异常
-                if("".equals(m.group(2)))
+                if ("".equals(m.group(2)))
                     return;
                 username = m.group(2).substring(1);
-                cmdUtil.bindQQAndOsu(username, Long.toString(cqMsg.getUserId()), cqMsg);
+                cmdUtil.bindQQAndOsu(username, cqMsg.getUserId(), cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "statme":
                 day = 1;
-                user = userDAO.getUser(String.valueOf(cqMsg.getUserId()), null);
+                user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
                     cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
                     cqUtil.sendMsg(cqMsg);
@@ -162,7 +170,7 @@ public class CqServiceImpl {
                     day = Integer.valueOf(m.group(3));
                 }
 
-                userFromAPI = apiUtil.getUser(null, String.valueOf(user.getUserId()));
+                userFromAPI = apiUtil.getUser(null, user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage("API没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
                     cqUtil.sendMsg(cqMsg);
@@ -174,13 +182,13 @@ public class CqServiceImpl {
             case "bpme":
             case "bpmes":
                 num = 0;
-                user = userDAO.getUser(String.valueOf(cqMsg.getUserId()), null);
+                user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
                     cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiUtil.getUser(null, String.valueOf(user.getUserId()));
+                userFromAPI = apiUtil.getUser(null, user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage("API没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
                     cqUtil.sendMsg(cqMsg);
@@ -204,13 +212,13 @@ public class CqServiceImpl {
                 break;
             case "recent":
             case "rs":
-                user = userDAO.getUser(String.valueOf(cqMsg.getUserId()), null);
+                user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
                     cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiUtil.getUser(null, String.valueOf(user.getUserId()));
+                userFromAPI = apiUtil.getUser(null, user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage("API没有获取到QQ" + cqMsg.getUserId() + "绑定的" + user.getUserId() + "玩家的信息。");
                     cqUtil.sendMsg(cqMsg);
@@ -248,7 +256,7 @@ public class CqServiceImpl {
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
-                if (scores.get(0).getUserId() != userDAO.getUser(String.valueOf(cqMsg.getUserId()), null).getUserId()) {
+                if (scores.get(0).getUserId() != userDAO.getUser(cqMsg.getUserId(), null).getUserId()) {
                     cqMsg.setMessage("不是你打的#1不给看哦。\n如果你确定是你打的，看看是不是没登记osu!id？(使用!setid命令)");
                     cqUtil.sendMsg(cqMsg);
                     return;
@@ -277,7 +285,7 @@ public class CqServiceImpl {
                     hour = 6L;
                 }
                 logger.info(cqMsg.getUserId() + "被自己禁言" + hour + "小时。");
-                cqMsg.setMessage("[CQ:record,file=base64://"+Overall.ZOU_HAO_BU_SONG+"]");
+                cqMsg.setMessage("[CQ:record,file=base64://" + Overall.ZOU_HAO_BU_SONG + "]");
                 cqUtil.sendMsg(cqMsg);
                 cqMsg.setMessageType("smoke");
                 cqMsg.setDuration((int) (hour * 3600));
@@ -291,7 +299,23 @@ public class CqServiceImpl {
                 }
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
-
+            case "me":
+                String keyword = m.group(2);
+                user = userDAO.getUser(cqMsg.getUserId(), null);
+                if (user == null) {
+                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                userFromAPI = apiUtil.getUser(null, user.getUserId());
+                if (userFromAPI == null) {
+                    cqMsg.setMessage("API没有获取到QQ" + cqMsg.getUserId() + "绑定的" + user.getUserId() + "玩家的信息。");
+                    cqUtil.sendMsg(cqMsg);
+                    return;
+                }
+                cmdUtil.getMyScore(keyword ,user,userFromAPI, cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
 //邮箱验证码没什么样本……还是不搞了，这块注释掉吧
 //            case "login":
 //                pwd = m.group(2).substring(1);
@@ -354,7 +378,7 @@ public class CqServiceImpl {
         Matcher m = Pattern.compile(Overall.ADMIN_CMD_REGEX).matcher(msg);
         m.find();
         if (!Overall.ADMIN_LIST.contains(String.valueOf(cqMsg.getUserId()))
-                &&!(cqMsg.getUserId()==1427922341&&"bg".equals(m.group(1)))) {
+                && !(cqMsg.getUserId() == 1427922341 && "bg".equals(m.group(1)))) {
             //如果QQ不包括在ADMIN_LIST，并且不是欧根要求改BG
             cqMsg.setMessage("[CQ:face,id=14]？");
             cqUtil.sendMsg(cqMsg);
@@ -368,7 +392,7 @@ public class CqServiceImpl {
         String URL;
         String[] usernames;
         String role;
-        String QQ;
+        Long QQ;
         String resp = "";
         String flag;
         int index;
@@ -454,7 +478,7 @@ public class CqServiceImpl {
                 }
                 if (m.group(1).equals("rs")) {
                     cmdUtil.getSimpleRecent(userFromAPI, cqMsg);
-                }else {
+                } else {
                     cmdUtil.getRecent(userFromAPI, cqMsg);
                 }
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
@@ -497,7 +521,7 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "listInvite":
-                if(!"private".equals(cqMsg.getMessage())){
+                if (!"private".equals(cqMsg.getMessage())) {
                     cqMsg.setMessage("已经私聊返回结果，请查看，如果没有收到请添加好友。");
                     cqUtil.sendMsg(cqMsg);
                     cqMsg.setMessageType("private");
@@ -506,8 +530,8 @@ public class CqServiceImpl {
                     resp = "以下是白菜本次启动期间收到的加群邀请：";
                     for (CqMsg aList : Overall.inviteRequests.keySet()) {
                         resp = resp.concat("\n" + "Flag：" + aList.getFlag() + "，群号：" + aList.getGroupId()
-                                + "，邀请人："+aList.getUserId()+"，时间："+new SimpleDateFormat("HH:mm:ss").
-                                format(new Date(aList.getTime() * 1000L))+"已通过：" + Overall.inviteRequests.get(aList));
+                                + "，邀请人：" + aList.getUserId() + "，时间：" + new SimpleDateFormat("HH:mm:ss").
+                                format(new Date(aList.getTime() * 1000L)) + "已通过：" + Overall.inviteRequests.get(aList));
                     }
                 } else {
                     resp = "本次启动白菜没有收到加群邀请。";
@@ -535,16 +559,16 @@ public class CqServiceImpl {
                         }
                     }
                     CqMsg cqMsg1 = new CqMsg();
-                    cqMsg1.setMessage("Flag为：" + flag + "的邀请被"+cqMsg.getUserId()+"通过");
+                    cqMsg1.setMessage("Flag为：" + flag + "的邀请被" + cqMsg.getUserId() + "通过");
                     cqMsg1.setMessageType("private");
                     cqMsg1.setUserId(1335734657L);
                     cqUtil.sendMsg(cqMsg1);
                     cqMsg.setMessage("已通过Flag为：" + flag + "的邀请");
                     cqUtil.sendMsg(cqMsg);
-                }else{
-                    cqMsg.setMessage("通过Flag为：" + flag + "的邀请失败，返回信息："+cqResponse);
+                } else {
+                    cqMsg.setMessage("通过Flag为：" + flag + "的邀请失败，返回信息：" + cqResponse);
                     cqUtil.sendMsg(cqMsg);
-                    cqMsg.setMessage("通过Flag为：" + flag + "的邀请失败，消息体："+cqMsg+"，返回信息："+cqResponse);
+                    cqMsg.setMessage("通过Flag为：" + flag + "的邀请失败，消息体：" + cqMsg + "，返回信息：" + cqResponse);
                     cqMsg.setMessageType("private");
                     cqMsg.setUserId(1335734657L);
                     cqUtil.sendMsg(cqMsg);
@@ -557,7 +581,7 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "unbind":
-                QQ = m.group(2).substring(1);
+                QQ = Long.valueOf(m.group(2).substring(1));
                 user = userDAO.getUser(QQ, null);
                 if (user == null) {
                     cqMsg.setMessage("该QQ没有绑定用户……");
@@ -565,7 +589,7 @@ public class CqServiceImpl {
                     logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                     return;
                 }
-                user.setQQ("0");
+                user.setQQ(0L);
                 userDAO.updateUser(user);
                 cqMsg.setMessage("QQ" + QQ + "的绑定信息已经清除");
                 cqUtil.sendMsg(cqMsg);
@@ -598,23 +622,23 @@ public class CqServiceImpl {
             case "listMsg":
                 //照例使用艾特
                 index = msg.indexOf("]");
-                QQ = msg.substring(24, index);
+                QQ = Long.valueOf(msg.substring(24, index));
                 if ("all".equals(QQ)) {
                     resp = "啥玩意啊 咋回事啊";
                 } else {
                     ArrayList<CqMsg> msgs = SmokeUtil.msgQueues.get(cqMsg.getGroupId()).getMsgsByQQ(Long.valueOf(QQ));
-                    String card = cqUtil.getCard(Long.valueOf(QQ), cqMsg.getGroupId());
+                    String card = cqUtil.getGroupMember(cqMsg.getGroupId(), Long.valueOf(QQ)).getData().getCard();
                     if (msgs.size() == 0) {
                         resp = "没有" + QQ + "的最近消息。";
                     } else if (msgs.size() <= 10) {
                         for (int i = 0; i < msgs.size(); i++) {
-                            resp = resp.concat(card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
-                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n");
+                            resp += card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
+                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n";
                         }
                     } else {
                         for (int i = msgs.size() - 10; i < msgs.size(); i++) {
-                            resp = resp.concat(card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
-                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n");
+                            resp += card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
+                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n";
                         }
                     }
                 }
@@ -628,18 +652,55 @@ public class CqServiceImpl {
                 cmdUtil.listPP(role, cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
+            case "find":
+                username = m.group(2).substring(1);
+                List<User> list = userDAO.listUserIdByUname(username);
+                if (list.size() > 0) {
+                    resp = "找到以下玩家曾用/现用名是" + username + "：\n";
+                    for (User u : list) {
+                        resp += "现用名：" + u.getCurrentUname() + "，曾用名：" + u.getLegacyUname() + "，uid：" + u.getUserId();
+                        if (u.getQQ() != null) {
+                            resp += "，QQ：" + u.getQQ();
+                        }
+                        resp += "\n";
+                    }
+                } else {
+                    resp = "没有找到现用/曾用" + username + "作为用户名的玩家。";
+                }
+                cqMsg.setMessage(resp);
+                cqUtil.sendMsg(cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+            case "scan":
+                CqResponse<List<QQInfo>> cqResponse1 = cqUtil.getGroupMembers(cqMsg.getGroupId());
+                resp = "找到以下玩家群名片不含完整id：\n";
+                for (QQInfo qqInfo : cqResponse1.getData()) {
+                    //根据QQ获取user
+                    user = userDAO.getUser(qqInfo.getUserId(), null);
+                    if (user != null) {
+                        userFromAPI = apiUtil.getUser(null, user.getUserId());
+                        String card = cqUtil.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
+                        if (!card.contains(userFromAPI.getUserName())) {
+                            resp += "osu! id：" + userFromAPI.getUserName() + "，QQ：" + qqInfo.getUserId() + "，群名片：" + card + "\n";
+                        }
+                    }
+                }
+                cqMsg.setMessage(resp);
+                cqUtil.sendMsg(cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
         }
 
     }
+
     @PostConstruct
-    private void notifyInitComplete(){
+    private void notifyInitComplete() {
         CqMsg cqMsg = new CqMsg();
         cqMsg.setMessage("初始化完成，欢迎使用");
         cqMsg.setMessageType("private");
         cqMsg.setUserId(1335734657L);
         cqUtil.sendMsg(cqMsg);
     }
-
 
 
 }

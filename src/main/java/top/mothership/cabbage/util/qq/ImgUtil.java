@@ -530,12 +530,12 @@ public class ImgUtil {
         //指定颜色
         g2.setPaint(Color.decode("#FFFFFF"));
         //指定字体
-        g2.setFont(new Font("Ubuntu", 0, 24));
+        g2.setFont(new Font("Aller light", 0, 29));
         //指定坐标
         g2.drawString(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]", 7, 26);
-        g2.setFont(new Font("Ubuntu", 0, 20));
+        g2.setFont(new Font("Aller", 0, 20));
         g2.drawString("Beatmap by " + beatmap.getCreator(), 7, 52);
-        g2.drawString("Played by " + userFromAPI.getUserName() + " on " + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ".", 7, 74);
+        g2.drawString("Played by " + userFromAPI.getUserName() + " on " + new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(score.getDate()) + ".", 7, 74);
 
         if (oppaiResult != null) {
 

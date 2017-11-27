@@ -1,5 +1,6 @@
 package top.mothership.cabbage.util.qq;
 
+import com.alibaba.druid.sql.dialect.mysql.ast.MysqlForeignKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,8 @@ import java.sql.Date;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class CmdUtil {
@@ -226,7 +229,7 @@ public class CmdUtil {
             User user = new User();
             user.setUserId(userFromAPI.getUserId());
             user.setRole("creep");
-            user.setQQ("0");
+            user.setQQ(0L);
             userDAO.addUser(user);
             //构造日历对象和List
             Calendar c = Calendar.getInstance();
@@ -309,7 +312,7 @@ public class CmdUtil {
         }
     }
 
-    public void bindQQAndOsu(String username, String fromQQ, CqMsg cqMsg) {
+    public void bindQQAndOsu(String username, Long fromQQ, CqMsg cqMsg) {
         Userinfo userinfo = apiUtil.getUser(username, null);
 
         //这彩蛋没意思，去了
@@ -341,7 +344,7 @@ public class CmdUtil {
                 cqMsg.setMessage("你的osu!账号已经绑定了" + userFromDB.getQQ() + "，如果发生错误请联系妈妈船。");
             }
         } else {
-            userinfo = apiUtil.getUser(null, String.valueOf(userFromDB.getUserId()));
+            userinfo = apiUtil.getUser(null, userFromDB.getUserId());
             cqMsg.setMessage("你的QQ已经绑定了" + userinfo.getUserName() + "，如果发生错误请联系妈妈船。");
         }
         cqUtil.sendMsg(cqMsg);
@@ -368,7 +371,7 @@ public class CmdUtil {
                     user.setUserId(userFromAPI.getUserId());
                     //2017-10-19 15:28:37新增加用户时候直接将用户组改为指定用户组
                     user.setRole(role);
-                    user.setQQ("0");
+                    user.setQQ(0L);
                     userDAO.addUser(user);
 
                     Calendar c = Calendar.getInstance();
@@ -512,7 +515,7 @@ public class CmdUtil {
             //如果PP超过了警戒线，请求API拿到最新PP
             if (userinfo.getPpRaw() > Integer.valueOf(Overall.CABBAGE_CONFIG.getString(role + "RiskPP"))) {
                 logger.info("开始从API获取" + aList + "的信息");
-                userinfo = apiUtil.getUser(null, String.valueOf(aList));
+                userinfo = apiUtil.getUser(null, aList);
                 if (userinfo.getPpRaw() > Integer.valueOf(Overall.CABBAGE_CONFIG.getString(role + "PP")) + 0.49) {
                     logger.info("玩家" + aList + "超限，已记录");
                     overflowList.add(userinfo.getUserName());
@@ -557,7 +560,7 @@ public class CmdUtil {
 
     public void getRecent(Userinfo userFromAPI, CqMsg cqMsg) throws Exception {
         logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
-        Score score = apiUtil.getRecent(null, userFromAPI.getUserName());
+        Score score = apiUtil.getRecent(null, userFromAPI.getUserId());
         if (score == null) {
             cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有游戏记录。");
             cqUtil.sendMsg(cqMsg);
@@ -587,7 +590,7 @@ public class CmdUtil {
 //            if (Arrays.asList(aList.getRole().split(",")).contains(role)
 //                    && webPageUtil.getLastActive(aList.getUserId()).before(date)) {
             if (webPageUtil.getLastActive(aList).before(date)) {
-                afkList.add(apiUtil.getUser(null, String.valueOf(aList)).getUserName());
+                afkList.add(apiUtil.getUser(null, aList).getUserName());
             }
         }
         resp = "查询" + role + "用户组中，最后登录时间早于" + day + "天前的AFK玩家完成。";
@@ -602,7 +605,7 @@ public class CmdUtil {
 
     public void getFristRank(Beatmap beatmap, List<Score> score, CqMsg cqMsg) throws Exception {
 
-        Userinfo userFromAPI = apiUtil.getUser(null, String.valueOf(score.get(0).getUserId()));
+        Userinfo userFromAPI = apiUtil.getUser(null, score.get(0).getUserId());
         //为了日志+和BP的PP计算兼容
         score.get(0).setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
         score.get(0).setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
@@ -653,7 +656,7 @@ public class CmdUtil {
 
     public void getSimpleRecent(Userinfo userFromAPI, CqMsg cqMsg) {
         logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
-        Score score = apiUtil.getRecent(null, userFromAPI.getUserName());
+        Score score = apiUtil.getRecent(null, userFromAPI.getUserId());
         if (score == null) {
             cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有游戏记录。");
             cqUtil.sendMsg(cqMsg);
@@ -690,7 +693,7 @@ public class CmdUtil {
 
             for (Integer aList : list) {
 
-                Userinfo userinfo = apiUtil.getUser(null, String.valueOf(aList));
+                Userinfo userinfo = apiUtil.getUser(null, aList);
                 logger.info(userinfo.getUserName() + "的PP是" + userinfo.getPpRaw());
                 resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw());
             }
@@ -762,6 +765,36 @@ public class CmdUtil {
             cqUtil.sendMsg(cqMsg);
 
         }
+    }
+
+    public void getMyScore(String keyword,User user,Userinfo userFromAPI, CqMsg cqMsg) {
+
+        logger.info("开始处理"+userFromAPI.getUserName()+"进行的谱面搜索，关键词为："+keyword);
+        //比较菜，手动补齐参数
+        if(!(keyword.endsWith("]")&&keyword.endsWith(")")))
+            keyword+="[]()";
+        if(keyword.endsWith("]"))
+            keyword+="()";
+        Matcher m2 = Pattern.compile(Overall.OSU_SEARCH_KETWORD).matcher(keyword);
+        if(!m2.find()){
+            cqMsg.setMessage("请使用歌手-歌曲标题[难度名](麻婆名)格式。难度名和麻婆名可以省略。");
+            cqUtil.sendMsg(cqMsg);
+        }else {
+            Beatmap beatmap =  webPageUtil.searchBeatmap(m2.group(1),m2.group(2),m2.group(3),m2.group(4));
+            if(beatmap == null){
+                cqMsg.setMessage("根据提供的关键词："+keyword+"没有找到任何谱面。");
+            }
+            List<Score> scores = apiUtil.getScore(beatmap.getBeatmapId(),user.getUserId());
+            if(scores.size()>0) {
+                String filename = imgUtil.drawResult(userFromAPI, scores.get(0), beatmap);
+                cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+            }else{
+                cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"+beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]("+beatmap.getCreator()+")，你在该谱面没有成绩。");
+            }
+            cqUtil.sendMsg(cqMsg);
+        }
+
+
     }
 //    private void login(User user, String pwd, CqMsg cqMsg) throws IOException {
 //        Userinfo userFromAPI = apiUtil.getUser(null, String.valueOf(user.getUserId()));

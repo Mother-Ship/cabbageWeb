@@ -1,5 +1,9 @@
 package top.mothership.cabbage.task;
 
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import org.apache.logging.log4j.LogManager;
@@ -13,6 +17,7 @@ import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
+import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.Overall;
 import top.mothership.cabbage.util.osu.ApiUtil;
@@ -51,24 +56,30 @@ public class DairyTask {
         userInfoDAO.clearTodayInfo(new Date(cl.getTimeInMillis()));
         logger.info("开始进行每日登记");
         List<Integer> list = userDAO.listUserIdByRole(null);
-        List<Integer> nullList = new ArrayList<>();
         for (Integer aList : list) {
-            Userinfo userinfo = apiUtil.getUser(null, String.valueOf(aList));
+            User user = userDAO.getUser(null,aList);
+            Userinfo userinfo = apiUtil.getUser(null, aList);
             if (userinfo != null) {
                 //将日期改为一天前写入
                 userinfo.setQueryDate(new java.sql.Date(Calendar.getInstance().getTimeInMillis() - 1000 * 3600 * 24));
                 userInfoDAO.addUserInfo(userinfo);
                 logger.info("将" + userinfo.getUserName() + "的数据录入成功");
+                if(!userinfo.getUserName().equals(user.getCurrentUname())){
+                    //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
+                    List<String> legacyUname =  new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {}.getType());
+                    legacyUname.add(user.getCurrentUname());
+                    user.setLegacyUname(new Gson().toJson(legacyUname));
+                    user.setCurrentUname(userinfo.getUserName());
+                    logger.info("检测到玩家" + userinfo.getUserName() + "改名，已登记");
+                }
+                //如果能获取到userinfo，就把banned设置为0
+                user.setBanned(0);
+                userDAO.updateUser(user);
             } else {
-                nullList.add(aList);
+               //将null的用户直接设为banned
+                user.setBanned(1);
+                userDAO.updateUser(user);
             }
-        }
-        if (nullList.size() > 0) {
-            logger.info("以下玩家没有在官网抓取到数据，正在发送邮件：" + nullList);
-            Map<String, String> map = new HashMap<>();
-            map.put("nullList", nullList.toString());
-            sendMail("1335734657@qq.com", map);
-            sendMail("2307282906@qq.com", map);
         }
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
     }
@@ -103,30 +114,30 @@ public class DairyTask {
     }
 
 
-    private void sendMail(String target, Map<String, String> map) {
-        String content;
-        Template template = null;
-        try {
-            template = freeMarkerConfigurer.getConfiguration().getTemplate("mail.ftl");
-            content = FreeMarkerTemplateUtils.processTemplateIntoString(template, map);
-            //创建多媒体邮件
-            MimeMessage mmm = javaMailSender.createMimeMessage();
-            //修改邮件体
-            MimeMessageHelper mmh = new MimeMessageHelper(mmm, true, "UTF-8");
-            //设置发件人信息
-            mmh.setFrom("1335734657@qq.com");
-            //收件人
-            mmh.setTo(target);
-            //主题
-            mmh.setSubject("数据录入结果通知");
-            //内容
-            mmh.setText(content, true);
-            //送出
-            javaMailSender.send(mmm);
-        } catch (MessagingException | IOException | TemplateException e) {
-            e.printStackTrace();
-        }
+//    private void sendMail(String target, Map<String, String> map) {
+//        String content;
+//        Template template = null;
+//        try {
+//            template = freeMarkerConfigurer.getConfiguration().getTemplate("mail.ftl");
+//            content = FreeMarkerTemplateUtils.processTemplateIntoString(template, map);
+//            //创建多媒体邮件
+//            MimeMessage mmm = javaMailSender.createMimeMessage();
+//            //修改邮件体
+//            MimeMessageHelper mmh = new MimeMessageHelper(mmm, true, "UTF-8");
+//            //设置发件人信息
+//            mmh.setFrom("1335734657@qq.com");
+//            //收件人
+//            mmh.setTo(target);
+//            //主题
+//            mmh.setSubject("数据录入结果通知");
+//            //内容
+//            mmh.setText(content, true);
+//            //送出
+//            javaMailSender.send(mmm);
+//        } catch (MessagingException | IOException | TemplateException e) {
+//            e.printStackTrace();
+//        }
 
 
-    }
+//    }
 }
