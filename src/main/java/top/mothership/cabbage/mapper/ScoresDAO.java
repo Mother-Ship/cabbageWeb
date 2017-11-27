@@ -12,7 +12,7 @@ import java.util.List;
 @Mapper
 @Repository
 public interface ScoresDAO {
-    @Insert("INSERT INTO `scores` VALUES (null,#{score.beatmapId},#{score.mode},#{score.scoreVersion}" +
+    @Insert("REPLACE INTO `scores` VALUES (null,#{score.beatmapId},#{score.mode},#{score.scoreVersion}" +
             ",#{score.mapMd5},#{score.repMd5},#{score.size}" +
             ",#{score.score},#{score.maxCombo},#{score.count50}" +
             ",#{score.count100},#{score.count300},#{score.countMiss}" +
@@ -23,12 +23,8 @@ public interface ScoresDAO {
 
     @Select("SELECT * FROM `scores` WHERE `user_id` = #{userId} ")
     List<Score> getScoreByUserid(@Param("userId")Integer userId);
-//按score反向排列，以符合多mod成绩API的返回顺序
-    @Select("select t.* from " +
-            "(SELECT * FROM `scores` " +
-            "WHERE `user_id` = #{userId} " +
-            "AND `beatmap_id` = #{beatmapId} " +
-            "group by `enabled_mods` order by `date` desc)" +
-            "as t order by `score` desc")
+
+    //不排了， 之前成绩不保留在数据库
+    @Select("SELECT * FROM `scores` WHERE `user_id` = #{userId} AND `beatmap_id` = #{beatmapId} order by `score` desc")
     List<Score> getLastScoreByUidAndBid(@Param("userId")Integer userId,@Param("beatmapId") Integer beatmapId);
 }
