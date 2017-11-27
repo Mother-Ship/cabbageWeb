@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
@@ -18,13 +17,14 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -594,13 +594,16 @@ public class ImgUtil {
         try {
             bg = webPageUtil.getBG(beatmap);
         } catch (NullPointerException e) {
-            //随机抽取一个bg
-            String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
-            bg = getCopyImage(images.get(RandomBG));
+            bg = webPageUtil.getBGBackup(beatmap);
+            if (bg == null) {
+                //随机抽取一个bg
+                String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
+                bg = getCopyImage(images.get(RandomBG));
+            }
         }
         //缩略图
 
-        bg2 = getCopyImage(bg).getScaledInstance(161, 121, Image.SCALE_SMOOTH);
+        bg2 = webPageUtil.resizeImg(getCopyImage(bg), 161, 121);
 
         //拉伸裁剪原bg
 
@@ -780,6 +783,158 @@ public class ImgUtil {
 
     }
 
+    public String drawBeatmap(Beatmap beatmap) {
+        BufferedImage bg;
+        Image bg2;
+        Score score = new Score();
+        score.setEnabledMods(0);
+        score.setCount50(0);
+        score.setCount100(0);
+        score.setCount300(-1);
+        score.setCountMiss(0);
+        score.setMaxCombo(-1);
+        OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+
+        try {
+            bg = webPageUtil.getBG(beatmap);
+        } catch (NullPointerException e) {
+            bg = webPageUtil.getBGBackup(beatmap);
+            if (bg == null) {
+                //随机抽取一个bg
+                String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
+                bg = getCopyImage(images.get(RandomBG));
+            }
+        }
+        //缩略图
+        bg2 = webPageUtil.resizeImg(getCopyImage(bg), 161, 121);
+
+        //拉伸裁剪原bg
+        Image bgTmp = bg.getScaledInstance(1580, 888, Image.SCALE_SMOOTH);
+        bg = new BufferedImage(1580, 888, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D bGr = bg.createGraphics();
+        bGr.drawImage(bgTmp, 0, 0, null);
+        bGr.dispose();
+        bg = bg.getSubimage(0, 0, 1580, 286);
+
+
+        Graphics2D g2 = bg.createGraphics();
+        //全局平滑
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        //画好布局
+        g2.drawImage(images.get("infoLayout.png"), 0, 0, null);
+        //Ranked状态
+        g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
+        //歌曲信息（这里不能是null）
+        String title = "";
+        //source artist
+        if (!beatmap.getSource().equals("")) {
+            title = unicodeToString(beatmap.getSource());
+            //换用Java实现之后这里不是Null而是""了
+            if (!"".equals(oppaiResult.getArtistUnicode())) {
+                title = title.concat(" (" + oppaiResult.getArtistUnicode() + ") ");
+            } else {
+                title = title.concat(" (" + oppaiResult.getArtist() + ") ");
+            }
+        } else {
+            if (!"".equals(oppaiResult.getArtistUnicode())) {
+                title = title.concat(oppaiResult.getArtistUnicode());
+            } else {
+                title = title.concat(oppaiResult.getArtist());
+            }
+        }
+        //artist
+
+        //title
+        if (!"".equals(oppaiResult.getTitleUnicode())) {
+            title = title.concat(" - " + oppaiResult.getTitleUnicode());
+        } else {
+            title = title.concat(" - " + oppaiResult.getTitle());
+        }
+        title = title.concat(" [" + oppaiResult.getVersion() + "]");
+
+        //白色字体
+        g2.setPaint(Color.decode("#FFFFFF"));
+
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 32));
+        g2.drawString(title, 54, 31);
+
+        //作者信息
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
+        g2.drawString("作者：" + oppaiResult.getCreator(), 54, 54);
+        //长度、bpm、物件数
+        g2.setFont(new Font("微软雅黑", Font.BOLD, 23));
+        String length = "";
+        //加入自动补0
+        g2.drawString("长度：" + String.format("%02d", Integer.valueOf(beatmap.getTotalLength()) / 60) + ":"
+                + String.format("%02d", Integer.valueOf(beatmap.getTotalLength()) % 60)
+                + "  BPM：" + Math.round(Float.valueOf(beatmap.getBpm()))
+                + "  物件数：" + new DecimalFormat("###,###").format((oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners())), 7, 80);
+
+        //圈数、滑条数、转盘数
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
+        g2.drawString("圈数：" + new DecimalFormat("###,###").format(oppaiResult.getNumCircles())
+                + "  滑条数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSliders())
+                + "  转盘数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSpinners()), 7, 108);
+
+        //四围、难度
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        g2.drawString("CS:" + beatmap.getDiffSize() + " AR:" + beatmap.getDiffApproach()
+                + " OD:" + beatmap.getDiffOverall() + " HP:" + beatmap.getDiffDrain()
+                + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(beatmap.getDifficultyRating())), 7, 125);
+
+
+        //谱面的Rank状态
+        g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
+        //右侧title
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 31));
+        g2.setPaint(Color.decode("#000000"));
+        if (!"".equals(oppaiResult.getTitleUnicode())) {
+            g2.drawString(oppaiResult.getTitleUnicode(), 982, 196);
+        } else {
+            g2.drawString(oppaiResult.getTitle(), 982, 196);
+        }
+        g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
+        //artist//creator
+        if (!"".equals(oppaiResult.getArtistUnicode())) {
+            g2.drawString(oppaiResult.getArtistUnicode() + " // " + oppaiResult.getCreator(), 982, 223);
+        } else {
+            g2.drawString(oppaiResult.getArtist() + " // " + oppaiResult.getCreator(), 982, 223);
+        }
+        //难度名
+        g2.setFont(new Font("微软雅黑", Font.BOLD, 22));
+        g2.drawString(oppaiResult.getVersion(), 982, 245);
+        //小星星
+        String[] b = String.valueOf(beatmap.getDifficultyRating()).split("\\.");
+        //取出难度的整数部分，画上对应的star
+        for (int i = 0; i < Integer.valueOf(b[0]); i++) {
+            g2.drawImage(images.get("fpStar.png"), 984 + 44 * i, 250, null);
+        }
+
+        //取出小数部分，缩放star并绘制在对应的地方
+        float c = Integer.valueOf(b[1].substring(0, 1)) / 10F;
+        //小于0.04的宽高会是0，
+        if (c > 0.04) {
+            g2.drawImage(images.get("fpStar.png").getScaledInstance((int) (25 * c), (int) (25 * c), Image.SCALE_SMOOTH),
+                    (int) (984 + (Integer.valueOf(b[0])) * 44), (int) (250 + (1 - c) * 12.5), null);
+        }
+        //缩略图
+        g2.drawImage(bg2, 762, 162, null);
+
+        g2.setPaint(Color.decode("#ff66a9"));
+        g2.setFont(new Font("Gayatri", 0, 60));
+        if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
+            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 55, 271);
+        } else {
+            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 40, 271);
+        }
+        g2.setFont(new Font("Gayatri", 0, 48));
+        g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 273, 276);
+        g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())), 371, 276);
+        g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())), 469, 276);
+        return drawImage(bg);
+
+    }
 
     public BufferedImage getCopyImage(BufferedImage bi) {
 //        return bi.getSubimage(0, 0, bi.getWidth(), bi.getHeight());

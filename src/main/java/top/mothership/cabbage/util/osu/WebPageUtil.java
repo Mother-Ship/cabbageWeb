@@ -2,7 +2,6 @@ package top.mothership.cabbage.util.osu;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -23,7 +22,6 @@ import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OsuFile;
 import top.mothership.cabbage.pojo.osu.OsuSearchResp;
-import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.util.Overall;
 
 import javax.imageio.ImageIO;
@@ -139,7 +137,7 @@ public class WebPageUtil {
             //登录成功
             DefaultHttpClient httpclient2 = new DefaultHttpClient();
             OsuFile osuFile = praseOsuFile(beatmap);
-            if (osuFile.getBgName() == null) {
+            if (osuFile == null) {
                 logger.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
                 return null;
             }
@@ -190,7 +188,7 @@ public class WebPageUtil {
                         BufferedImage bg = ImageIO.read(in);
                         //懒得重构成方法了_(:з」∠)_
                         //我错了 我不偷懒了_(:з」∠)_
-                        BufferedImage resizedBG = convert1366_768(bg);
+                        BufferedImage resizedBG = resizeImg(bg, 1366, 768);
                         //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
                         //在谱面rank状态是Ranked或者Approved时，写入硬盘
                         if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
@@ -260,7 +258,7 @@ public class WebPageUtil {
                 Matcher m = Pattern.compile(Overall.DOWNLOAD_FILENAME_REGEX)
                         .matcher(httpConnection.getHeaderFields().get("Content-Disposition").get(0));
                 m.find();
-                resizedBG = convert1366_768(bg);
+                resizedBG = resizeImg(bg, 1366, 768);
                 //在谱面rank状态是Ranked或者Approved时，写入硬盘
                 if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
                     //扩展名直接从文件里取
@@ -477,7 +475,7 @@ public class WebPageUtil {
             try {
                 String URL = osuSearchURL+"?title="+URLEncoder.encode(title,"UTF-8")+"&artist="+URLEncoder.encode(artist,"UTF-8")
                         +"&mapper="+URLEncoder.encode(mapper,"UTF-8")+"&diff_name="+URLEncoder.encode(diffName,"UTF-8")
-                        +"&statuses=Ranked&modes=Standard&query_order=favorites";
+                        + "&modes=Standard&query_order=play_count";
 
                 httpConnection =
                         (HttpURLConnection) new URL(URL).openConnection();
@@ -550,19 +548,20 @@ public class WebPageUtil {
     }
 
 
-    public BufferedImage convert1366_768(BufferedImage bg) {
+    public BufferedImage resizeImg(BufferedImage bg, Integer weight, Integer height) {
+        //让图片肯定不会变形，但是会切掉东西的拉伸
         BufferedImage resizedBG;
         //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
-        int resizedWeight = 1366;
-        int resizedHeight = (int) Math.ceil((float) bg.getHeight() / bg.getWidth() * 1366);
-        int heightDiff = ((resizedHeight - 768) / 2);
+        int resizedWeight = weight;
+        int resizedHeight = (int) Math.ceil((float) bg.getHeight() / bg.getWidth() * weight);
+        int heightDiff = ((resizedHeight - height) / 2);
         int widthDiff = 0;
         //如果算出重画之后的高<768(遇到金盏花这种特别宽的)
-        if (resizedHeight < 768) {
-            resizedWeight = (int) Math.ceil((float) bg.getWidth() / bg.getHeight() * 768);
-            resizedHeight = 768;
+        if (resizedHeight < height) {
+            resizedWeight = (int) Math.ceil((float) bg.getWidth() / bg.getHeight() * height);
+            resizedHeight = height;
             heightDiff = 0;
-            widthDiff = ((resizedWeight - 1366) / 2);
+            widthDiff = ((resizedWeight - weight) / 2);
         }
         //把BG横向拉到1366;
         //忘记在这里处理了
@@ -572,10 +571,10 @@ public class WebPageUtil {
         g.dispose();
 
         //切割图片
-        resizedBG = new BufferedImage(1366, 768, BufferedImage.TYPE_INT_RGB);
-        for (int x = 0; x < 1366; x++) {
+        resizedBG = new BufferedImage(weight, height, BufferedImage.TYPE_INT_RGB);
+        for (int x = 0; x < weight; x++) {
             //这里之前用了原bg拉伸之前的分辨率，难怪报错
-            for (int y = 0; y < 768; y++) {
+            for (int y = 0; y < height; y++) {
                 resizedBG.setRGB(x, y, resizedBGTmp.getRGB(x + widthDiff, y + heightDiff));
             }
         }

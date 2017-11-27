@@ -1,6 +1,5 @@
 package top.mothership.cabbage.util.qq;
 
-import com.alibaba.druid.sql.dialect.mysql.ast.MysqlForeignKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -187,7 +186,11 @@ public class CmdUtil {
         //dev>分群>主群>比赛
         roles.sort((o1, o2) -> {
             //mp5s优先级得低于mp5
-            if (o1.contains("mp5s") && (o2.equals("mp5") || o2.equals("mp5mc") || o2.equals("mp5chart"))) {
+//            if (o1.contains("mp5s") && (o2.equals("mp5") || o2.equals("mp5mc") || o2.equals("mp5chart"))) {
+//                return -1;
+//            }
+            //比赛期间mp5s优先级比mp5高，只比mc和chart低
+            if (o1.contains("mp5s") && (o2.equals("mp5mc") || o2.equals("mp5chart"))) {
                 return -1;
             }
             //mp4s<mp4
@@ -827,7 +830,7 @@ public class CmdUtil {
                 cqUtil.sendMsg(cqMsg);
                 return;
             }else{
-                String filename = imgUtil.drawImage(webPageUtil.convert1366_768(webPageUtil.getBG(beatmap)));
+                String filename = imgUtil.drawBeatmap(beatmap);
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]"+"\n"+"https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
                         + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n");
             }
