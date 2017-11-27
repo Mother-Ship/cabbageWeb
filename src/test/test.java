@@ -1,37 +1,33 @@
-import org.jsoup.Jsoup;
-import org.jsoup.select.Elements;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import top.mothership.cabbage.mapper.ResDAO;
-import top.mothership.cabbage.mapper.ScoresDAO;
+import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
+import top.mothership.cabbage.util.osu.ApiUtil;
+import top.mothership.cabbage.util.osu.ScoreUtil;
 
-import javax.swing.text.Document;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 //
-//@RunWith(SpringJUnit4ClassRunner.class)
-//@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
 public class test {
 //    @Autowired
 //    private ScoresDAO scoresDAO;
 
-    //    @Autowired
-//    private ApiUtil apiUtil;
-//    @Autowired
-//    private ScoreUtil scoreUtil;
+    @Autowired
+    private ApiUtil apiUtil;
+    @Autowired
+    private ScoreUtil scoreUtil;
     @Test
     public void Test() throws IOException {
 //        Object o =resDAO.getBGBySidAndName(485056, "cherry_blossoms_kantoku_artist_Wallpaper HD_2560x1440_www.paperhi.com.jpg");
@@ -338,6 +334,16 @@ public class test {
 //      for(int i=0;i<=m.groupCount();i++)
 //          System.out.println(m.group(i));
 //      System.out.println(m.group(4));
+        Score score = new Score();
+        score.setEnabledMods(0);
+        score.setCount50(0);
+        score.setCount100(0);
+        score.setCount300(-1);
+        score.setCountMiss(0);
+        score.setMaxCombo(-1);
+        Beatmap beatmap = apiUtil.getBeatmap(53554);
+        OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+        System.out.println(oppaiResult.getPp());
     }
 
     //
