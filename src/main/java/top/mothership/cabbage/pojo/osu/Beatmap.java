@@ -10,27 +10,27 @@ public class Beatmap {
     private Integer beatmapSetId;
 
     private Integer beatmapId;
-    @SerializedName("beatmap_status")
+    @SerializedName(value = "beatmap_status",alternate = {"approved"})
     private Integer approved;
 
     private String totalLength;
-    @SerializedName("play_length")
+    @SerializedName(value = "play_length",alternate = {"hit_length"})
     private String hitLength;
-    @SerializedName("difficulty_name")
+    @SerializedName(value ="difficulty_name",alternate = {"version"})
     private String version;
 
     private String fileMd5;
-    @SerializedName("difficulty_cs")
+    @SerializedName(value ="difficulty_cs",alternate = {"diff_size"})
     private String diffSize;
-    @SerializedName("difficulty_od")
+    @SerializedName(value ="difficulty_od",alternate = {"diff_overall"})
     private String diffOverall;
-    @SerializedName("difficulty_ar")
+    @SerializedName(value ="difficulty_ar",alternate = {"diff_approach"})
     private String diffApproach;
-    @SerializedName("difficulty_hp")
+    @SerializedName(value ="difficulty_hp",alternate = {"diff_drain"})
     private String diffDrain;
-    @SerializedName("gamemode")
+    @SerializedName(value ="gamemode",alternate = {"mode"})
     private String mode;
-    @SerializedName("date")
+    @SerializedName(value ="date",alternate = {"approved_date"})
     private String approvedDate;
 
     private String lastUpdate;
@@ -38,7 +38,7 @@ public class Beatmap {
     private String artist;
 
     private String title;
-    @SerializedName("mapper")
+    @SerializedName(value ="mapper",alternate = {"creator"})
     private String creator;
 
     private String bpm;
@@ -50,7 +50,7 @@ public class Beatmap {
     private String genreId;
 
     private String languageId;
-    @SerializedName("favorites")
+    @SerializedName(value ="favorites",alternate = {"favourite_count"})
     private String favouriteCount;
     @SerializedName("playcount")
     private String playCount;

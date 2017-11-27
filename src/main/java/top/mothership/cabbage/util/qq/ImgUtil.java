@@ -377,8 +377,9 @@ public class ImgUtil {
             //如果acc过低
         }
         boolean defaultBG = false;
-        bg = webPageUtil.getBG(beatmap);
-        if (bg == null) {
+        try {
+            bg = webPageUtil.getBG(beatmap);
+        }catch (NullPointerException e){
             bg = webPageUtil.getBGBackup(beatmap);
             if (bg == null) {
                 //随机抽取一个bg

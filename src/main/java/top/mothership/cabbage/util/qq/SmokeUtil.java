@@ -14,12 +14,12 @@ import java.util.*;
 public class SmokeUtil {
     //对所有群开启消息记录
     private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
-//    private static List<String> smokeGroups = Arrays.asList(rb.getString("smokeGroups").split(","));
-    private static List<String> smokeGroups = Arrays.asList(rb.getString("smokeGroupsDev").split(","));
+    private static List<String> smokeGroups = Arrays.asList(rb.getString("smokeGroups").split(","));
+//    private static List<String> smokeGroups = Arrays.asList(rb.getString("smokeGroupsDev").split(","));
     private Logger logger = LogManager.getLogger(this.getClass());
     private final CqUtil cqUtil;
     public static Map<Long, MsgQueue> msgQueues = new HashMap<>();
-    private static Map<Long, List<Long>> groupAdmins;
+    public static Map<Long, List<Long>> groupAdmins;
 
 
     //而读取管理员则独立成为方法，方便刷新

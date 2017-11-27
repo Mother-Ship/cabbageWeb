@@ -332,7 +332,7 @@ public class test {
 //        System.out.println(link.get(5).children().get(1).text());
 //        System.out.println(link.get(6).children().get(1).text());
 //        System.out.println(link.get(7).children().get(1).text());
-//        String a = "lily-scarlet-rose[0108]()";
+//        String a = "demetori-world's end[Extra](happy30)\n";
 //       Matcher m = Pattern.compile("^([^-]*)-(.*)\\[(.*)]\\((.*)\\)").matcher(a);
 //       m.find();
 //      for(int i=0;i<=m.groupCount();i++)
