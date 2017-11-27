@@ -21,6 +21,7 @@ public class Overall {
     public final static String BGNAME_REGEX = "(?<=[\\d*],[\\d*],\")(?:.*\\\\)*(.*\\.(?i)(jpg|png|jpeg))";
     public final static String DOWNLOAD_FILENAME_REGEX ="(?<=filename=\")([^\";]*)";
     public final static String ADD_FRIEND_REGEX = "<div class='centrep'>\\n<a href='([^']*)";
+    public final static String OSU_SEARCH_KETWORD = "^([^-]*)-(.*)\\[(.*)]\\((.*)\\)";
     public static List<String> ADMIN_LIST = Arrays.asList(Overall.CABBAGE_CONFIG.getString("admin").split(","));
     public static LinkedHashMap<CqMsg, String> inviteRequests = new LinkedHashMap<>();
     public final static String ALL_DEAD = "//uwxAAAGv2jHvTzAAWMxWa3ObABAGQm47aIeS+MchBCEFwNA6DTOtD1Gr1er1erwAAAggAAAAAA" +

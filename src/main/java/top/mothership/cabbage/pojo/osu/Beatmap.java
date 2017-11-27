@@ -5,31 +5,32 @@ import lombok.Data;
 
 @Data
 public class Beatmap {
+    //提供兼容osu search的API
     @SerializedName("beatmapset_id")
-    private String beatmapSetId;
+    private Integer beatmapSetId;
 
-    private String beatmapId;
-
+    private Integer beatmapId;
+    @SerializedName("beatmap_status")
     private Integer approved;
 
     private String totalLength;
-
+    @SerializedName("play_length")
     private String hitLength;
-
+    @SerializedName("difficulty_name")
     private String version;
 
     private String fileMd5;
-
+    @SerializedName("difficulty_cs")
     private String diffSize;
-
+    @SerializedName("difficulty_od")
     private String diffOverall;
-
+    @SerializedName("difficulty_ar")
     private String diffApproach;
-
+    @SerializedName("difficulty_hp")
     private String diffDrain;
-
+    @SerializedName("gamemode")
     private String mode;
-
+    @SerializedName("date")
     private String approvedDate;
 
     private String lastUpdate;
@@ -37,7 +38,7 @@ public class Beatmap {
     private String artist;
 
     private String title;
-
+    @SerializedName("mapper")
     private String creator;
 
     private String bpm;
@@ -49,14 +50,14 @@ public class Beatmap {
     private String genreId;
 
     private String languageId;
-
+    @SerializedName("favorites")
     private String favouriteCount;
     @SerializedName("playcount")
     private String playCount;
-    @SerializedName("passCount")
+    @SerializedName("passcount")
     private String passCount;
 
     private String maxCombo;
-    @SerializedName("difficultyrating")
+    @SerializedName(value = "difficultyrating", alternate = {"difficulty"})
     private String difficultyRating;
 }

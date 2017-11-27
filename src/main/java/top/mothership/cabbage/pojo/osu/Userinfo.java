@@ -6,6 +6,7 @@ import lombok.Data;
 import java.util.Date;
 @Data
 public class Userinfo {
+    //不写入数据库
     @SerializedName("username")
     private String userName;
     private int userId;

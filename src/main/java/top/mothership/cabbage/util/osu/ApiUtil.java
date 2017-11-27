@@ -27,7 +27,7 @@ public class ApiUtil {
     private final String key = "25559acca3eea3e2c730cd65ee8a6b2da55b52c0";
     private Logger logger = LogManager.getLogger(this.getClass());
 
-    public Userinfo getUser(String username, String userId) {
+    public Userinfo getUser(String username, Integer userId) {
         String result = filterUid("user", username, userId);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Userinfo.class);
     }
@@ -40,7 +40,7 @@ public class ApiUtil {
         String result = accessAPI("beatmapHash", null, null, null,String.valueOf(hash),null);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Beatmap.class);
     }
-    public List<Score> getBP(String username, String userId) {
+    public List<Score> getBP(String username, Integer userId) {
         String result = filterUid("bp", username, userId);
         //由于这里用到List，手动补上双括号
         result = "["+result+"]";
@@ -49,9 +49,10 @@ public class ApiUtil {
         }.getType());
     }
 
-    public Score getRecent(String username, String userId) {
+    public Score getRecent(String username, Integer userId) {
         String result = filterUid("recent", username, userId);
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Score.class);
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Score.class);
     }
 
     public List<Score> getFirstScore(Integer bid,Integer rank){
@@ -68,7 +69,7 @@ public class ApiUtil {
                 .fromJson(result, new TypeToken<List<Score>>(){}.getType());
 
     }
-    private String filterUid(String apiType, String username, String userId) {
+    private String filterUid(String apiType, String username, Integer userId) {
         String result;
         if (username != null && userId == null) {
             result = accessAPI(apiType, username, "string", null,null,null);
