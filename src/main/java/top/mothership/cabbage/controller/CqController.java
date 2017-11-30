@@ -72,13 +72,13 @@ public class CqController {
                     String log = "";
                     switch (cqMsg.getMessageType()) {
                         case "group":
-                            log+="群"+cqMsg.getGroupId()+"成员"+cqMsg.getUserId()+"发送了命令"+cqMsg.getMessage();
+                            log += "群" + cqMsg.getGroupId() + "成员" + cqMsg.getUserId() + "发送了命令" + cqMsg.getMessage();
                             break;
                         case "discuss":
-                            log+="讨论组"+cqMsg.getDiscussId()+"成员"+cqMsg.getUserId()+"发送了命令"+cqMsg.getMessage();
+                            log += "讨论组" + cqMsg.getDiscussId() + "成员" + cqMsg.getUserId() + "发送了命令" + cqMsg.getMessage();
                             break;
                         case "private":
-                            log+="用户"+cqMsg.getUserId()+"发送了命令"+cqMsg.getMessage();
+                            log += "用户" + cqMsg.getUserId() + "发送了命令" + cqMsg.getMessage();
                             break;
                     }
                     logger.info(log);
@@ -88,9 +88,16 @@ public class CqController {
                     switch (m.group(1)) {
                         //处理命令
                         case "sudo":
+                            m = Pattern.compile(Overall.CMD_REGEX).matcher(msg);
+                            switch (m.group(1)) {
+
+
+                            }
                             cqService.praseAdminCmd(cqMsg);
                             break;
                         default:
+                            m = Pattern.compile(Overall.CMD_REGEX).matcher(msg);
+
                             cqService.praseCmd(cqMsg);
                             break;
                     }
@@ -113,7 +120,6 @@ public class CqController {
                 break;
             default:
                 logger.error("传入无法识别的Request，可能是HTTPAPI插件已经更新");
-
         }
         //先写返回null吧，如果以后有直接返回的逻辑也可以直接return
         return null;

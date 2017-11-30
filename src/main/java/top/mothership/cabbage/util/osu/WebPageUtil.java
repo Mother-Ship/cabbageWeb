@@ -8,6 +8,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
@@ -475,19 +476,24 @@ public class WebPageUtil {
             HttpURLConnection httpConnection;
             try {
                 String URL = osuSearchURL;
+                List<NameValuePair> params = new LinkedList<>();
                 if (!"".equals(title))
-                    URL += "?title=" + URLEncoder.encode(title, "UTF-8");
+                    params.add(new BasicNameValuePair("title", title));
                 if (!"".equals(artist))
-                    URL += "&artist=" + URLEncoder.encode(artist, "UTF-8");
+                    params.add(new BasicNameValuePair("artist", artist));
                 if (!"".equals(mapper))
-                    URL += "&mapper=" + URLEncoder.encode(mapper, "UTF-8");
+                    params.add(new BasicNameValuePair("mapper", mapper));
                 if (!"".equals(diffName))
-                    URL += "&diff_name=" + URLEncoder.encode(diffName, "UTF-8");
-                URL += "&modes=Standard&query_order=play_count";
+                    params.add(new BasicNameValuePair("diff_name", diffName));
+                params.add(new BasicNameValuePair("modes", "Standard"));
+                params.add(new BasicNameValuePair("query_order", "play_count"));
+
+                URL+= "?"+URLEncodedUtils.format(params, "utf-8");
 
                 httpConnection =
                         (HttpURLConnection) new URL(URL).openConnection();
                 //设置请求头
+
                 httpConnection.setRequestMethod("GET");
                 httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
                 httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);

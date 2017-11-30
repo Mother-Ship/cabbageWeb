@@ -1,10 +1,13 @@
 package top.mothership.cabbage.serviceImpl;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.mapper.UserDAO;
+import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.CoolQ.CqResponse;
 import top.mothership.cabbage.pojo.CoolQ.QQInfo;
@@ -35,17 +38,18 @@ public class CqServiceImpl {
     private final CqUtil cqUtil;
     private final CmdUtil cmdUtil;
     private final MsgUtil msgUtil;
+    private final UserInfoDAO userInfoDAO;
     private UserDAO userDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
-    public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, UserDAO userDAO, CmdUtil cmdUtil) {
+    public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, UserDAO userDAO, CmdUtil cmdUtil, UserInfoDAO userInfoDAO) {
         this.apiUtil = apiUtil;
         this.msgUtil = msgUtil;
         this.cqUtil = cqUtil;
         this.userDAO = userDAO;
         this.cmdUtil = cmdUtil;
-
+        this.userInfoDAO = userInfoDAO;
     }
 
 
@@ -73,7 +77,6 @@ public class CqServiceImpl {
                 Matcher m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m2.find()) {
                     //传入检查日期参数的方法，必须要把消息体改为日期，否则那个方法没办法发送消息
-
                     if (!msgUtil.CheckDayParam(m2.group(3), cqMsg)) {
                         return;
                     }
@@ -81,7 +84,6 @@ public class CqServiceImpl {
                     //屏蔽掉用户没有输入用户名时候的异常
                     if ("".equals(m2.group(2)))
                         return;
-
                     username = m2.group(2).substring(1);
                 }
                 if ("白菜".equals(username)) {
@@ -90,7 +92,25 @@ public class CqServiceImpl {
                     return;
                 }
                 if (m.group(1).equals("statu")) {
-                    userFromAPI = apiUtil.getUser(null, Integer.valueOf(username));
+                    user = userDAO.getUser(null, Integer.valueOf(username));
+                    if (user != null && user.getBanned() == 1) {
+                        //当数据库查到该玩家，并且被ban时
+                        userFromAPI = userInfoDAO.getNearestUserInfo(user.getUserId(), new Date(new java.util.Date().getTime()));
+                        if (user.getCurrentUname() != null) {
+                            userFromAPI.setUserName(user.getCurrentUname());
+                        } else {
+                            List<String> list = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
+                            }.getType());
+                            if (list.size() > 0) {
+                                userFromAPI.setUserName(list.get(0));
+                            } else {
+                                userFromAPI.setUserName(String.valueOf(user.getUserId()));
+                            }
+                        }
+                        day = 0;
+                    } else {
+                        userFromAPI = apiUtil.getUser(null, Integer.valueOf(username));
+                    }
                 } else {
                     userFromAPI = apiUtil.getUser(username, null);
                 }
@@ -113,7 +133,7 @@ public class CqServiceImpl {
                 username = m.group(2).substring(1);
                 m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m2.find()) {
-                    if (!msgUtil.CheckBPNumParam(m2.group(3),cqMsg)) {
+                    if (!msgUtil.CheckBPNumParam(m2.group(3), cqMsg)) {
                         return;
                     }
                     num = Integer.valueOf(m2.group(3));
@@ -158,19 +178,36 @@ public class CqServiceImpl {
                 day = 1;
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
-                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
+                    cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
                 m = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m.find()) {
-                    if (!msgUtil.CheckDayParam(m.group(3),cqMsg)) {
+                    if (!msgUtil.CheckDayParam(m.group(3), cqMsg)) {
                         return;
                     }
                     day = Integer.valueOf(m.group(3));
                 }
+                if (user.getBanned() == 1) {
+                    //当数据库查到该玩家，并且被ban时
+                    userFromAPI = userInfoDAO.getNearestUserInfo(user.getUserId(), new Date(new java.util.Date().getTime()));
+                    if (user.getCurrentUname() != null) {
+                        userFromAPI.setUserName(user.getCurrentUname());
+                    } else {
+                        List<String> list = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
+                        }.getType());
+                        if (list.size() > 0) {
+                            userFromAPI.setUserName(list.get(0));
+                        } else {
+                            userFromAPI.setUserName(String.valueOf(user.getUserId()));
+                        }
+                    }
+                    day = 0;
+                } else {
+                    userFromAPI = apiUtil.getUser(null, user.getUserId());
+                }
 
-                userFromAPI = apiUtil.getUser(null, user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage("API没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
                     cqUtil.sendMsg(cqMsg);
@@ -184,7 +221,7 @@ public class CqServiceImpl {
                 num = 0;
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
-                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
+                    cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
@@ -196,7 +233,7 @@ public class CqServiceImpl {
                 }
                 m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
                 if (m2.find()) {
-                    if (!msgUtil.CheckBPNumParam(m2.group(3),cqMsg)) {
+                    if (!msgUtil.CheckBPNumParam(m2.group(3), cqMsg)) {
                         return;
                     }
                     num = Integer.valueOf(m2.group(3));
@@ -213,7 +250,7 @@ public class CqServiceImpl {
             case "rs":
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
-                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
+                    cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
@@ -236,7 +273,7 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "fp":
-                if (!msgUtil.CheckBidParam(m.group(2).substring(1),cqMsg)) {
+                if (!msgUtil.CheckBidParam(m.group(2).substring(1), cqMsg)) {
                     return;
                 }
                 Integer bid = Integer.valueOf(m.group(2).substring(1));
@@ -300,7 +337,7 @@ public class CqServiceImpl {
                 String keyword = m.group(2).substring(1);
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
-                    cqMsg.setMessage("你没有绑定默认id。请使用!setid <你的osu!id> 命令。");
+                    cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
                     cqUtil.sendMsg(cqMsg);
                     return;
                 }
@@ -312,6 +349,10 @@ public class CqServiceImpl {
                 }
                 cmdUtil.getMyScore(keyword, user, userFromAPI, cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+            case "search":
+                keyword = m.group(2).substring(1);
+                cmdUtil.searchBeatmap(keyword, cqMsg);
                 break;
             case "add":
                 //面向mp4 5 chart组，相当于!setid+!sudo add
@@ -330,25 +371,27 @@ public class CqServiceImpl {
                 }
                 switch (String.valueOf(cqMsg.getGroupId())) {
                     case "564679329":
+                    case "517183331":
                         //MP4
                         msg = m.group(2).substring(1);
                         username = msg.substring(0, msg.indexOf(":"));
                         msg = msg.substring(msg.indexOf(":") + 1);
-                        Long QQ = Long.valueOf(msg.substring(24, msg.indexOf("]")));
+                        Long QQ = Long.valueOf(msg);
                         cmdUtil.addUserRole(new String[]{username}, "mp4", cqMsg);
-                        cmdUtil.bindQQAndOsu(username,QQ,cqMsg);
+                        cmdUtil.bindQQAndOsu(username, QQ, cqMsg);
                         break;
                     case "201872650":
+                    case "635731109":
                         //MP5
                         msg = m.group(2).substring(1);
                         username = msg.substring(0, msg.indexOf(":"));
                         msg = msg.substring(msg.indexOf(":") + 1);
-                        QQ = Long.valueOf(msg.substring(24, msg.indexOf("]")));
+                        QQ = Long.valueOf(msg);
                         cmdUtil.addUserRole(new String[]{username}, "mp5", cqMsg);
-                        cmdUtil.bindQQAndOsu(username,QQ,cqMsg);
+                        cmdUtil.bindQQAndOsu(username, QQ, cqMsg);
                         break;
                     default:
-                        cqMsg.setMessage("请不要在mp4/5群之外的地方使用。");
+                        cqMsg.setMessage("请不要在mp4/5/chart群之外的地方使用。");
                         cqUtil.sendMsg(cqMsg);
                         return;
                 }
@@ -369,23 +412,22 @@ public class CqServiceImpl {
                 }
                 switch (String.valueOf(cqMsg.getGroupId())) {
                     case "564679329":
+                    case "517183331":
                         username = m.group(2).substring(1);
-                        cmdUtil.removeUserRole(new String[]{username},"mp4",cqMsg);
+                        cmdUtil.removeUserRole(new String[]{username}, "mp4", cqMsg);
                         break;
                     case "201872650":
+                    case "635731109":
                         username = m.group(2).substring(1);
-                        cmdUtil.removeUserRole(new String[]{username},"mp5",cqMsg);
+                        cmdUtil.removeUserRole(new String[]{username}, "mp5", cqMsg);
                         break;
                     default:
-                        cqMsg.setMessage("请不要在mp4/5群之外的地方使用。");
+                        cqMsg.setMessage("请不要在mp4/5/chart群之外的地方使用。");
                         cqUtil.sendMsg(cqMsg);
                         return;
                 }
                 break;
-            case "search":
-                 keyword = m.group(2).substring(1);
-                cmdUtil.searchBeatmap(keyword,cqMsg);
-                break;
+
 //邮箱验证码没什么样本……还是不搞了，这块注释掉吧
 //            case "login":
 //                pwd = m.group(2).substring(1);
@@ -517,12 +559,12 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "checku":
-               Integer userId = Integer.valueOf(m.group(2).substring(1));
+                Integer userId = Integer.valueOf(m.group(2).substring(1));
                 user = userDAO.getUser(null, userId);
                 if (user == null) {
                     cqMsg.setMessage("玩家" + userId + "没有使用过白菜。请先用add命令添加。");
                 } else {
-                    cqMsg.setMessage("玩家" + userId + "的用户组是" + user.getRole() + "，被Ban状态："+(user.getBanned().equals(1)));
+                    cqMsg.setMessage("玩家" + userId + "的用户组是" + user.getRole() + "，被Ban状态：" + (user.getBanned().equals(1)));
                 }
                 cqUtil.sendMsg(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
@@ -676,7 +718,7 @@ public class CqServiceImpl {
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
             case "fp":
-                if (!msgUtil.CheckBidParam(m.group(2).substring(1),cqMsg)) {
+                if (!msgUtil.CheckBidParam(m.group(2).substring(1), cqMsg)) {
                     return;
                 }
                 Integer bid = Integer.valueOf(m.group(2).substring(1));
@@ -759,7 +801,8 @@ public class CqServiceImpl {
                     if (user != null) {
                         userFromAPI = apiUtil.getUser(null, user.getUserId());
                         String card = cqUtil.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
-                        if (!card.contains(userFromAPI.getUserName())) {
+                        if (!card.toLowerCase(Locale.CHINA).replace("_", " ")
+                                .contains(userFromAPI.getUserName().toLowerCase(Locale.CHINA).replace("_", " "))) {
                             resp += "osu! id：" + userFromAPI.getUserName() + "，QQ：" + qqInfo.getUserId() + "，群名片：" + card + "\n";
                         }
                     }
@@ -767,6 +810,81 @@ public class CqServiceImpl {
                 cqMsg.setMessage(resp);
                 cqUtil.sendMsg(cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+            case "help":
+                resp = "!sudo add xxx,xxx:yyy 将xxx,xxx添加到yyy用户组。\n" +
+                        "!sudo del xxx:yyy 将xxx的用户组中yyy删除，如果不带:yyy则重置为默认（creep）。\n" +
+                        "!sudo check xxx 查询xxx的用户组。\n" +
+                        "!sudo 褪裙 xxx 查询xxx用户组中多少人超过PP上线。\n" +
+                        "!sudo bg xxx:http://123 将给定连接中的图以xxx.png的文件名写入数据库。\n" +
+                        "!sudo recent xxx 查询他人的recent。\n" +
+                        "!sudo afk n:xxx 查询xxx用户组中，n天以上没有登录的玩家(以官网为准)。\n" +
+                        "!sudo smoke @xxx n 在白菜是管理的群，把被艾特的人禁言n秒。\n" +
+                        "（艾特全体成员则遍历群成员并禁言）\n" +
+                        "!sudo smokeAll/unsmokeAll 开关全员禁言。\n" +
+                        "!sudo listInvite 列举当前的加群邀请（无论在哪里使用都会私聊返回结果）。\n" +
+                        "!sudo handleInvite n 通过Flag为n的邀请。\n" +
+                        "!sudo clearInvite 清空邀请列表。\n" +
+                        "!sudo unbind qq 解绑某个QQ对应的id（找到该QQ对应的uid，并将QQ改为0）。\n" +
+                        "!sudo fp bid 打印给定bid的#1。\n" +
+                        "!sudo listMsg @xxx 打印被艾特的人最近的10条消息。在对方撤回消息时起作用。\n" +
+                        "!sudo PP xxx 查询xxx组中所有成员PP（一般用于比赛计算Cost）。\n" +
+                        "!sudo findPlayer xxx 查询曾用/现用xxx用户名的玩家。\n" +
+                        "!sudo scanCard 扫描所在群的所有绑定了QQ的群成员，检测群名片是否包含完整id（无视大小写，并且会自动识别横线/空格）。\n" +
+                        "!sudo checkBind @xxx 打印被艾特的人的id绑定情况。\n" +
+                        "!sudo checkGroupBind xxx 打印该群所有成员是否绑定id，以及绑定id是否在mp4/5组内。特别的，不带参数会将群号设置为当前消息的群号。（只支持mp4/5群）\n"
+                ;
+
+
+                cqMsg.setMessage(resp);
+                cqUtil.sendMsg(cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+            case "checkBind":
+                QQ = Long.valueOf(msg.substring(19));
+                user = userDAO.getUser(QQ, null);
+                if (user != null) {
+                    resp = "QQ" + QQ + "绑定的osu! uid为：" + user.getUserId() + "，用户组：" + user.getRole() + "，是否被Ban：" + (user.getBanned() == 1);
+                } else {
+                    resp = "QQ" + QQ + "没有绑定osuid。";
+                }
+                cqMsg.setMessage(resp);
+                cqUtil.sendMsg(cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+                break;
+
+            case "checkGroupBind":
+                if ("".equals(m.group(2))) {
+                    cqResponse1 = cqUtil.getGroupMembers(cqMsg.getGroupId());
+                } else {
+                    cqResponse1 = cqUtil.getGroupMembers(Long.valueOf(m.group(2).substring(1)));
+                }
+                for (QQInfo qqInfo : cqResponse1.getData()) {
+                    //根据QQ获取user
+                    user = userDAO.getUser(qqInfo.getUserId(), null);
+                    String card = cqUtil.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
+                    if (user != null) {
+                        List<String> roles = Arrays.asList(user.getRole().split(","));
+                        switch (String.valueOf(cqResponse1.getData().get(0).getGroupId())) {
+                            case "201872650":
+                                if (!roles.contains("mp5")) {
+                                    resp += "QQ： " + qqInfo.getUserId() + " 绑定的id不在mp5用户组，osu! uid：" + user.getUserId() + "，用户组：" + user.getRole() + "。\n";
+                                }
+                                break;
+                            case "564679329":
+                                if (!roles.contains("mp4")) {
+                                    resp += "QQ： " + qqInfo.getUserId() + " 绑定的id不在mp4用户组，osu! uid：" + user.getUserId() + "，用户组：" + user.getRole() + "。\n";
+                                }
+                                break;
+                        }
+                    } else {
+                        resp += "QQ： " + qqInfo.getUserId() + " 没有绑定id，群名片是：" + card + "\n";
+                    }
+                }
+                cqMsg.setMessage(resp);
+                cqUtil.sendMsg(cqMsg);
+                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
+
                 break;
         }
 
