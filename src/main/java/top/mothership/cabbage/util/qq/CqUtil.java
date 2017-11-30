@@ -44,6 +44,9 @@ public class CqUtil {
             case "handleInvite":
                 URL = baseURL + "/set_group_add_request";
                 break;
+            case "kick":
+                URL = baseURL + "/set_group_kick";
+                break;
             default:
                 return null;
         }

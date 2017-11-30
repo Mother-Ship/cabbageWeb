@@ -233,6 +233,7 @@ public class CmdUtil {
             user.setUserId(userFromAPI.getUserId());
             user.setRole("creep");
             user.setQQ(0L);
+            user.setBanned(1);
             userDAO.addUser(user);
             //构造日历对象和List
             Calendar c = Calendar.getInstance();
@@ -375,6 +376,7 @@ public class CmdUtil {
                     //2017-10-19 15:28:37新增加用户时候直接将用户组改为指定用户组
                     user.setRole(role);
                     user.setQQ(0L);
+                    user.setBanned(1);
                     userDAO.addUser(user);
 
                     Calendar c = Calendar.getInstance();
@@ -780,7 +782,14 @@ public class CmdUtil {
     }
 
     public void getMyScore(String keyword,User user,Userinfo userFromAPI, CqMsg cqMsg) {
-
+        if ("112177148".equals(String.valueOf(cqMsg.getGroupId()))
+                || "677545541".equals(String.valueOf(cqMsg.getGroupId()))
+                || "234219559".equals(String.valueOf(cqMsg.getGroupId()))
+                || "201872650".equals(String.valueOf(cqMsg.getGroupId()))
+                || "564679329".equals(String.valueOf(cqMsg.getGroupId()))) {
+            logger.info(cqMsg.getUserId() + "触发了赛群/4 5群禁用!me命令。");
+            return;
+        }
         logger.info("开始处理"+userFromAPI.getUserName()+"进行的谱面搜索，关键词为："+keyword);
         //比较菜，手动补齐参数
         if(!(keyword.endsWith("]")||keyword.endsWith(")")))
@@ -789,8 +798,8 @@ public class CmdUtil {
             keyword+="()";
         Matcher m2 = Pattern.compile(Overall.OSU_SEARCH_KETWORD).matcher(keyword);
         if(!m2.find()){
-            cqMsg.setMessage("请使用歌手-歌曲标题[难度名](麻婆名)格式。\n" +
-                    "歌手、难度名和麻婆名可以省略(但横线、方括号和圆括号不能省略)");
+            cqMsg.setMessage("请使用艺术家-歌曲标题[难度名](麻婆名)格式。\n" +
+                    "所有参数都可以省略(但横线、方括号和圆括号不能省略)");
             cqUtil.sendMsg(cqMsg);
         }else {
 
@@ -813,7 +822,14 @@ public class CmdUtil {
 
     }
     public void searchBeatmap(String keyword,CqMsg cqMsg) {
-
+        if ("112177148".equals(String.valueOf(cqMsg.getGroupId()))
+                || "677545541".equals(String.valueOf(cqMsg.getGroupId()))
+                || "234219559".equals(String.valueOf(cqMsg.getGroupId()))
+                || "201872650".equals(String.valueOf(cqMsg.getGroupId()))
+                || "564679329".equals(String.valueOf(cqMsg.getGroupId()))) {
+            logger.info(cqMsg.getUserId() + "触发了赛群/4 5群禁用!search命令。");
+            return;
+        }
         logger.info("开始处理"+cqMsg.getUserId()+"进行的谱面搜索，关键词为："+keyword);
         //比较菜，手动补齐参数
         if(!(keyword.endsWith("]")||keyword.endsWith(")")))
@@ -822,7 +838,8 @@ public class CmdUtil {
             keyword+="()";
         Matcher m2 = Pattern.compile(Overall.OSU_SEARCH_KETWORD).matcher(keyword);
         if(!m2.find()){
-            cqMsg.setMessage("请使用歌手-歌曲标题[难度名](麻婆名)格式。难度名和麻婆名可以省略。");
+            cqMsg.setMessage("请使用艺术家-歌曲标题[难度名](麻婆名)格式。\n" +
+                    "所有参数都可以省略(但横线、方括号和圆括号不能省略)");
             cqUtil.sendMsg(cqMsg);
         }else {
             Beatmap beatmap =  webPageUtil.searchBeatmap(m2.group(1),m2.group(2),m2.group(3),m2.group(4));

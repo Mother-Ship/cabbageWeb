@@ -1,3 +1,6 @@
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,18 +19,22 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 //
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
+//@RunWith(SpringJUnit4ClassRunner.class)
+//@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
 public class test {
 //    @Autowired
 //    private ScoresDAO scoresDAO;
 
-    @Autowired
-    private ApiUtil apiUtil;
-    @Autowired
-    private ScoreUtil scoreUtil;
+    //    @Autowired
+//    private ApiUtil apiUtil;
+//    @Autowired
+//    private ScoreUtil scoreUtil;
     @Test
     public void Test() throws IOException {
 //        Object o =resDAO.getBGBySidAndName(485056, "cherry_blossoms_kantoku_artist_Wallpaper HD_2560x1440_www.paperhi.com.jpg");
@@ -328,22 +335,38 @@ public class test {
 //        System.out.println(link.get(5).children().get(1).text());
 //        System.out.println(link.get(6).children().get(1).text());
 //        System.out.println(link.get(7).children().get(1).text());
-//        String a = "demetori-world's end[Extra](happy30)\n";
+//        String a = "-[]()";
 //       Matcher m = Pattern.compile("^([^-]*)-(.*)\\[(.*)]\\((.*)\\)").matcher(a);
-//       m.find();
-//      for(int i=0;i<=m.groupCount();i++)
-//          System.out.println(m.group(i));
-//      System.out.println(m.group(4));
-        Score score = new Score();
-        score.setEnabledMods(0);
-        score.setCount50(0);
-        score.setCount100(0);
-        score.setCount300(-1);
-        score.setCountMiss(0);
-        score.setMaxCombo(-1);
-        Beatmap beatmap = apiUtil.getBeatmap(53554);
-        OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
-        System.out.println(oppaiResult.getPp());
+//       if(m.find()) {
+//           for (int i = 0; i <= m.groupCount(); i++)
+//               System.out.println(m.group(i));
+//       }else{
+//           System.out.println("false");
+//       }
+//        System.out.println("Tm的".toLowerCase(Locale.CHINA));
+//        Score score = new Score();
+//        score.setEnabledMods(0);
+//        score.setCount50(0);
+//        score.setCount100(0);
+//        score.setCount300(-1);
+//        score.setCountMiss(0);
+//        score.setMaxCombo(-1);
+//        Beatmap beatmap = apiUtil.getBeatmap(53554);
+//        OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+//        System.out.println(oppaiResult.getPp());
+//        String msg = "mother ship:[CQ:at,qq=1335734657]";
+//        String username = msg.substring(0, msg.indexOf(":"));
+//        System.out.println(username);
+//        msg = msg.substring(msg.indexOf(":") + 1);
+//        System.out.println(msg);
+//        Long QQ = Long.valueOf(msg.substring(10, msg.indexOf("]")));
+//
+//        System.out.println(QQ);
+        List<String> legacyUname =  new GsonBuilder().create().fromJson("[]", new TypeToken<List<String>>() {}.getType());
+        legacyUname.add("Mother Ship");
+        legacyUname.add("Mother Ship");
+        legacyUname.add("Mother Ship");
+        System.out.println(new Gson().toJson(legacyUname));
     }
 
     //

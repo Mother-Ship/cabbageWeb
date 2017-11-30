@@ -37,8 +37,8 @@ public interface UserDAO {
     @Select("<script>"
             + "SELECT * FROM `userrole` "
             + "<if test=\"username != null\">"
-            + "WHERE `legacy_uname` LIKE CONCAT('%{',#{username},'}%') "
-            + "OR `current_uname` LIKE CONCAT('%{',#{username},'}%') "
+            + "WHERE `legacy_uname` LIKE CONCAT('%\"',#{username},'\"%') "
+            + "OR `current_uname` = #{username} "
            + " </if>"
             + "</script>")
     List<User> listUserIdByUname(@Param("username") String username);
