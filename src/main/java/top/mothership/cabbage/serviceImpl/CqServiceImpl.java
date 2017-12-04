@@ -6,6 +6,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import top.mothership.cabbage.consts.PatternConsts;
+import top.mothership.cabbage.manager.ApiManager;
+import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
@@ -15,41 +18,239 @@ import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.Userinfo;
-import top.mothership.cabbage.util.MsgQueue;
 import top.mothership.cabbage.util.Overall;
 import top.mothership.cabbage.util.osu.ApiUtil;
-import top.mothership.cabbage.util.qq.CmdUtil;
-import top.mothership.cabbage.util.qq.CqUtil;
-import top.mothership.cabbage.util.qq.MsgUtil;
-import top.mothership.cabbage.util.qq.SmokeUtil;
+import top.mothership.cabbage.util.qq.*;
 
 import javax.annotation.PostConstruct;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * The type Cq service.
+ */
 @Service
 public class CqServiceImpl {
 
 
-    private final ApiUtil apiUtil;
-    private final CqUtil cqUtil;
+    private final ApiManager apiManager;
+    private final CqManager cqManager;
     private final CmdUtil cmdUtil;
     private final MsgUtil msgUtil;
     private final UserInfoDAO userInfoDAO;
     private UserDAO userDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
 
+    /**
+     * Instantiates a new Cq service.
+     *
+     * @param apiManager  the api manager
+     * @param cqManager   the cq manager
+     * @param msgUtil     the msg util
+     * @param userDAO     the user dao
+     * @param cmdUtil     the cmd util
+     * @param userInfoDAO the user info dao
+     */
     @Autowired
-    public CqServiceImpl(ApiUtil apiUtil, MsgUtil msgUtil, CqUtil cqUtil, UserDAO userDAO, CmdUtil cmdUtil, UserInfoDAO userInfoDAO) {
-        this.apiUtil = apiUtil;
+    public CqServiceImpl(ApiManager apiManager, CqManager cqManager, MsgUtil msgUtil, UserDAO userDAO, CmdUtil cmdUtil, UserInfoDAO userInfoDAO) {
+        this.apiManager = apiManager;
+        this.cqManager = cqManager;
         this.msgUtil = msgUtil;
-        this.cqUtil = cqUtil;
         this.userDAO = userDAO;
         this.cmdUtil = cmdUtil;
         this.userInfoDAO = userInfoDAO;
+    }
+
+
+    /**
+     * 处理statu/stat/statme的方法。
+     *
+     * @param cqMsg QQ消息体
+     */
+    public void statUserInfo(CqMsg cqMsg) {
+        //明天好好用文字整理下逻辑吧……
+        String msg = cqMsg.getMessage();
+        Matcher cmdRegex = PatternConsts.CMD_REGEX_NUM.matcher(msg);
+        String username = null;
+        //预定义变量
+        int day;
+        User user = null;
+        Userinfo userFromAPI;
+        boolean near = false;
+        Userinfo userInDB = null;
+        String role;
+        int scoreRank;
+        List<String> roles;
+        //首先尝试解析数字，对各种数字异常情况进行处理并返回
+        if (!"".equals(cmdRegex.group(3))) {
+            try {
+                day = Integer.valueOf(cmdRegex.group(3));
+                if (day < 0) {
+                    cqMsg.setMessage("白菜不会预知未来。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                if (LocalDate.now().isAfter(LocalDate.of(2007, 9, 16).plusDays(day))) {
+                    cqMsg.setMessage("你要找史前时代的数据吗。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+            } catch (java.lang.NumberFormatException e) {
+                cqMsg.setMessage("假使这些完全……不能用的参数，你再给他传一遍，你等于……你也等于……你也有泽任吧？");
+                cqManager.sendMsg(cqMsg);
+                return;
+            }
+        }
+
+
+        //对statme和statu，取出对应的user信息
+        switch (cmdRegex.group(1)) {
+            case "statme":
+                user = userDAO.getUser(cqMsg.getUserId(), null);
+                if(user==null){
+                    cqMsg.setMessage("你没有绑定osu!id。请使用!setid 你的osuid 命令。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                if (user.getBanned() == 1) {
+                    //当数据库查到该玩家，并且被ban时，从数据库里取出最新的一份userinfo伪造
+                    userFromAPI = userInfoDAO.getNearestUserInfo(user.getUserId(), new Date(Instant.now().toEpochMilli()));
+                    //尝试补上当前用户名
+                    if (user.getCurrentUname() != null) {
+                        userFromAPI.setUserName(user.getCurrentUname());
+                    } else {
+                        List<String> list = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
+                        }.getType());
+                        if (list.size() > 0) {
+                            userFromAPI.setUserName(list.get(0));
+                        } else {
+                            userFromAPI.setUserName(String.valueOf(user.getUserId()));
+                        }
+                    }
+                    day = 0;
+                } else {
+                    userFromAPI = apiManager.getUser(null, user.getUserId());
+                }
+                break;
+            case "statu":
+                username = cmdRegex.group(2);
+                user = userDAO.getUser(null, Integer.valueOf(username));
+                if (user != null && user.getBanned() == 1) {
+                    //当数据库查到该玩家，并且被ban时，从数据库里取出最新的一份userinfo伪造
+                    userFromAPI = userInfoDAO.getNearestUserInfo(user.getUserId(), new Date(Instant.now().toEpochMilli()));
+                    //尝试补上当前用户名
+                    if (user.getCurrentUname() != null) {
+                        userFromAPI.setUserName(user.getCurrentUname());
+                    } else {
+                        List<String> list = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
+                        }.getType());
+                        if (list.size() > 0) {
+                            userFromAPI.setUserName(list.get(0));
+                        } else {
+                            userFromAPI.setUserName(String.valueOf(user.getUserId()));
+                        }
+                    }
+                    day = 0;
+                } else {
+                    userFromAPI = apiManager.getUser(null, Integer.valueOf(username));
+                }
+                break;
+            case "stat":
+                username = cmdRegex.group(2);
+                userFromAPI = apiManager.getUser(username, null);
+                if (userFromAPI == null) {
+                    cqMsg.setMessage("没有从osu!api获取到" + username + "的玩家信息。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                user = userDAO.getUser(null, userFromAPI.getUserId());
+                //处理彩蛋
+                if ("白菜".equals(username)) {
+                    cqMsg.setMessage("唉，没人疼没人爱，我是地里一颗小白菜。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
+
+//如果day=0则不检验也不获取数据库中的userinfo（不写入数据库，避免预先查过之后add不到）
+        if (day > 0) {
+            regIfFirstUse(userFromAPI);
+            userInDB = userInfoDAO.getUserInfo(userFromAPI.getUserId(), date);
+            if (userInDB == null) {
+                userInDB = userInfoDAO.getNearestUserInfo(userFromAPI.getUserId(), date);
+                near = true;
+            }
+        }
+
+
+        //生成数天前的java.sql.date
+        Date date = new Date(cl.getTimeInMillis());
+
+
+        if (userFromAPI.getUserId() == 3) {
+            cqMsg.setMessage("你们总是想查BanchoBot。\n可是BanchoBot已经很累了，她不想被查。\n她想念自己的小ppy，而不是被逼着查PP。\n你有考虑过这些吗？没有！你只考虑过你自己。");
+            cqUtil.sendMsg(cqMsg);
+            return;
+        }
+
+        //之前有一个逻辑错误：如果day=0而且该用户没有用过白菜，userDAO.getUser是null。
+        User
+        if (user == null) {
+            role = "creep";
+        } else {
+            role = user.getRole();
+        }
+        roles = Arrays.asList(role.split(","));
+        //此处自定义实现排序方法
+        //dev>分群>主群>比赛
+        roles.sort((o1, o2) -> {
+            //mp5s优先级得低于mp5
+//            if (o1.contains("mp5s") && (o2.equals("mp5") || o2.equals("mp5mc") || o2.equals("mp5chart"))) {
+//                return -1;
+//            }
+            //比赛期间mp5s优先级比mp5高，只比mc和chart低
+            if (o1.contains("mp5s") && (o2.equals("mp5mc") || o2.equals("mp5chart"))) {
+                return -1;
+            }
+            //mp4s<mp4
+            if (o1.contains("mp4s") && o2.equals("mp4")) {
+                return -1;
+            }
+            //dev大于一切
+            if (o1.equals("dev")) {
+                return 1;
+            }
+            if (o2.equals("dev")) {
+                return -1;
+            }
+            return o1.compareTo(o2);
+        });
+        Collections.reverse(roles);
+
+        //获取score rank
+        //gust？
+        if (userFromAPI.getUserId() == 1244312
+                || userFromAPI.getUserId() == 6149313
+                || userFromAPI.getUserId() == 3213720
+                //MFA
+                || userFromAPI.getUserId() == 6854920) {
+            scoreRank = webPageUtil.getRank(userFromAPI.getRankedScore(), 1, 10000);
+        } else {
+            scoreRank = webPageUtil.getRank(userFromAPI.getRankedScore(), 1, 2000);
+        }
+        //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
+        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), day, near, scoreRank);
+        cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
+        cqManager.sendMsg(cqMsg);
     }
 
 
@@ -62,66 +263,8 @@ public class CqServiceImpl {
         Userinfo userFromAPI;
         User user;
         Beatmap beatmap;
-        int day;
         int num;
         switch (m.group(1)) {
-            case "stat":
-            case "statu":
-                //先分割出一个username，再尝试使用带数字的正则去匹配
-                day = 1;
-                //屏蔽掉用户没有输入用户名时候的异常
-                if ("".equals(m.group(2)))
-                    return;
-                username = m.group(2).substring(1);
-
-                Matcher m2 = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
-                if (m2.find()) {
-                    //传入检查日期参数的方法，必须要把消息体改为日期，否则那个方法没办法发送消息
-                    if (!msgUtil.CheckDayParam(m2.group(3), cqMsg)) {
-                        return;
-                    }
-                    day = Integer.valueOf(m2.group(3));
-                    //屏蔽掉用户没有输入用户名时候的异常
-                    if ("".equals(m2.group(2)))
-                        return;
-                    username = m2.group(2).substring(1);
-                }
-                if ("白菜".equals(username)) {
-                    cqMsg.setMessage("唉，没人疼没人爱，我是地里一颗小白菜。");
-                    cqUtil.sendMsg(cqMsg);
-                    return;
-                }
-                if (m.group(1).equals("statu")) {
-                    user = userDAO.getUser(null, Integer.valueOf(username));
-                    if (user != null && user.getBanned() == 1) {
-                        //当数据库查到该玩家，并且被ban时
-                        userFromAPI = userInfoDAO.getNearestUserInfo(user.getUserId(), new Date(new java.util.Date().getTime()));
-                        if (user.getCurrentUname() != null) {
-                            userFromAPI.setUserName(user.getCurrentUname());
-                        } else {
-                            List<String> list = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
-                            }.getType());
-                            if (list.size() > 0) {
-                                userFromAPI.setUserName(list.get(0));
-                            } else {
-                                userFromAPI.setUserName(String.valueOf(user.getUserId()));
-                            }
-                        }
-                        day = 0;
-                    } else {
-                        userFromAPI = apiUtil.getUser(null, Integer.valueOf(username));
-                    }
-                } else {
-                    userFromAPI = apiUtil.getUser(username, null);
-                }
-                if (userFromAPI == null) {
-                    cqMsg.setMessage("没有从osu!api获取到" + username + "的玩家信息。");
-                    cqUtil.sendMsg(cqMsg);
-                    return;
-                }
-                cmdUtil.statUserInfo(userFromAPI, day, cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
             case "bp":
             case "bps":
             case "bpu":
@@ -174,48 +317,7 @@ public class CqServiceImpl {
                 cmdUtil.bindQQAndOsu(username, cqMsg.getUserId(), cqMsg);
                 logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
                 break;
-            case "statme":
-                day = 1;
-                user = userDAO.getUser(cqMsg.getUserId(), null);
-                if (user == null) {
-                    cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
-                    cqUtil.sendMsg(cqMsg);
-                    return;
-                }
-                m = Pattern.compile(Overall.CMD_REGEX_NUM).matcher(msg);
-                if (m.find()) {
-                    if (!msgUtil.CheckDayParam(m.group(3), cqMsg)) {
-                        return;
-                    }
-                    day = Integer.valueOf(m.group(3));
-                }
-                if (user.getBanned() == 1) {
-                    //当数据库查到该玩家，并且被ban时
-                    userFromAPI = userInfoDAO.getNearestUserInfo(user.getUserId(), new Date(new java.util.Date().getTime()));
-                    if (user.getCurrentUname() != null) {
-                        userFromAPI.setUserName(user.getCurrentUname());
-                    } else {
-                        List<String> list = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
-                        }.getType());
-                        if (list.size() > 0) {
-                            userFromAPI.setUserName(list.get(0));
-                        } else {
-                            userFromAPI.setUserName(String.valueOf(user.getUserId()));
-                        }
-                    }
-                    day = 0;
-                } else {
-                    userFromAPI = apiUtil.getUser(null, user.getUserId());
-                }
 
-                if (userFromAPI == null) {
-                    cqMsg.setMessage("API没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
-                    cqUtil.sendMsg(cqMsg);
-                    return;
-                }
-                cmdUtil.statUserInfo(userFromAPI, day, cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
             case "bpme":
             case "bpmes":
                 num = 0;
@@ -484,411 +586,7 @@ public class CqServiceImpl {
     }
 
 
-    public void praseAdminCmd(CqMsg cqMsg) throws Exception {
-        java.util.Date s = Calendar.getInstance().getTime();
-        String msg = cqMsg.getMessage();
-        Matcher m = Pattern.compile(Overall.ADMIN_CMD_REGEX).matcher(msg);
-        m.find();
-        if (!Overall.ADMIN_LIST.contains(String.valueOf(cqMsg.getUserId()))
-                && !(cqMsg.getUserId() == 1427922341 && "bg".equals(m.group(1)))) {
-            //如果QQ不包括在ADMIN_LIST，并且不是欧根要求改BG
-            cqMsg.setMessage("[CQ:face,id=14]？");
-            cqUtil.sendMsg(cqMsg);
-            return;
 
-        }
-
-        int day;
-        String username;
-        String target;
-        String URL;
-        String[] usernames;
-        String role;
-        Long QQ;
-        String resp = "";
-        String flag;
-        int index;
-        switch (m.group(1)) {
-            case "add":
-                index = m.group(2).indexOf(":");
-                if (index == -1) {
-                    //如果拿不到
-                    cqMsg.setMessage("没有指定用户组。");
-                    cqUtil.sendMsg(cqMsg);
-                    return;
-                }
-                usernames = m.group(2).substring(1, index).split(",");
-                role = m.group(2).substring(index + 1);
-                logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：" + role);
-                cmdUtil.addUserRole(usernames, role, cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "del":
-                index = m.group(2).indexOf(":");
-                if (index == -1) {
-                    //如果拿不到
-                    usernames = m.group(2).substring(1).split(",");
-                    logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：All");
-                    cmdUtil.removeUserRole(usernames, "all", cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    break;
-                } else {
-                    usernames = m.group(2).substring(1, index).split(",");
-                    role = m.group(2).substring(index + 1);
-                    logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：" + role);
-                    cmdUtil.removeUserRole(usernames, role, cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    break;
-                }
-            case "check":
-                username = m.group(2).substring(1);
-                Userinfo userFromAPI = apiUtil.getUser(username, null);
-                if (userFromAPI == null) {
-                    cqMsg.setMessage("API没有获取到玩家" + username + "的信息。");
-                    cqUtil.sendMsg(cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    return;
-                }
-                User user = userDAO.getUser(null, userFromAPI.getUserId());
-                if (user == null) {
-                    cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "没有使用过白菜。请先用add命令添加。");
-                } else {
-                    cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "的用户组是" + user.getRole() + "。");
-                }
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "checku":
-                Integer userId = Integer.valueOf(m.group(2).substring(1));
-                user = userDAO.getUser(null, userId);
-                if (user == null) {
-                    cqMsg.setMessage("玩家" + userId + "没有使用过白菜。请先用add命令添加。");
-                } else {
-                    cqMsg.setMessage("玩家" + userId + "的用户组是" + user.getRole() + "，被Ban状态：" + (user.getBanned().equals(1)));
-                }
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "褪裙":
-            case "退群":
-                role = m.group(2).substring(1);
-                cmdUtil.checkPPOverflow(role, cqMsg);
-                break;
-            case "bg":
-                try {
-                    URL = m.group(2).substring(m.group(2).indexOf("http"));
-                    target = m.group(2).substring(1, m.group(2).indexOf("http") - 1);
-                } catch (IndexOutOfBoundsException e) {
-                    cqMsg.setMessage("字符串处理异常。");
-                    cqUtil.sendMsg(cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    return;
-                }
-                cmdUtil.downloadBG(URL, target, cqMsg);
-
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "recent":
-            case "rs":
-                username = m.group(2).substring(1);
-                userFromAPI = apiUtil.getUser(username, null);
-                if (userFromAPI == null) {
-                    cqMsg.setMessage("没有获取到玩家" + username + "的信息。");
-                    cqUtil.sendMsg(cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    return;
-                }
-                if (m.group(1).equals("rs")) {
-                    cmdUtil.getSimpleRecent(userFromAPI, cqMsg);
-                } else {
-                    cmdUtil.getRecent(userFromAPI, cqMsg);
-                }
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "afk":
-                try {
-                    index = m.group(2).substring(1).indexOf(":");
-                    if (index == -1) {
-                        role = "mp5";
-                        day = Integer.valueOf(m.group(2).substring(1));
-                    } else {
-                        //这里因为字符串最前面有个空格，所以得是index+2
-                        role = m.group(2).substring(index + 2);
-                        day = Integer.valueOf(m.group(2).substring(1).substring(0, index));
-                    }
-                } catch (IndexOutOfBoundsException e) {
-                    cqMsg.setMessage("字符串处理异常。");
-                    cqUtil.sendMsg(cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    return;
-                }
-                logger.info("检测到管理员对" + role + "用户组" + day + "天前的AFK玩家查询");
-                cmdUtil.checkAfkPlayer(role, day, cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "smoke":
-                cmdUtil.smoke(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "smokeAll":
-                cqMsg.setMessageType("smokeAll");
-                cqMsg.setEnable(true);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "unsmokeAll":
-                cqMsg.setMessageType("smokeAll");
-                cqMsg.setEnable(false);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "listInvite":
-                if (!"private".equals(cqMsg.getMessage())) {
-                    cqMsg.setMessage("已经私聊返回结果，请查看，如果没有收到请添加好友。");
-                    cqUtil.sendMsg(cqMsg);
-                    cqMsg.setMessageType("private");
-                }
-                if (Overall.inviteRequests.size() > 0) {
-                    resp = "以下是白菜本次启动期间收到的加群邀请：";
-                    for (CqMsg aList : Overall.inviteRequests.keySet()) {
-                        resp = resp.concat("\n" + "Flag：" + aList.getFlag() + "，群号：" + aList.getGroupId()
-                                + "，邀请人：" + aList.getUserId() + "，时间：" + new SimpleDateFormat("HH:mm:ss").
-                                format(new Date(aList.getTime() * 1000L)) + "已通过：" + Overall.inviteRequests.get(aList));
-                    }
-                } else {
-                    resp = "本次启动白菜没有收到加群邀请。";
-                }
-                cqMsg.setMessage(resp);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "handleInvite":
-                flag = m.group(2).substring(1);
-                logger.info("正在通过对Flag为：" + flag + "的邀请");
-                //开启一个新消息用来通过邀请
-                CqMsg newMsg = new CqMsg();
-                newMsg.setFlag(flag);
-                newMsg.setApprove(true);
-                newMsg.setType("invite");
-                newMsg.setMessageType("handleInvite");
-                CqResponse cqResponse = cqUtil.sendMsg(newMsg);
-                if (cqResponse.getRetCode() == 0) {
-                    for (CqMsg aList : Overall.inviteRequests.keySet()) {
-                        if (aList.getFlag().equals(flag)) {
-                            Overall.inviteRequests.replace(aList, "是");
-                            //通过新群邀请时，向消息队列Map中添加一个消息队列对象
-                            SmokeUtil.msgQueues.put(aList.getGroupId(), new MsgQueue());
-                        }
-                    }
-                    CqMsg cqMsg1 = new CqMsg();
-                    cqMsg1.setMessage("Flag为：" + flag + "的邀请被" + cqMsg.getUserId() + "通过");
-                    cqMsg1.setMessageType("private");
-                    cqMsg1.setUserId(1335734657L);
-                    cqUtil.sendMsg(cqMsg1);
-                    cqMsg.setMessage("已通过Flag为：" + flag + "的邀请");
-                    cqUtil.sendMsg(cqMsg);
-                } else {
-                    cqMsg.setMessage("通过Flag为：" + flag + "的邀请失败，返回信息：" + cqResponse);
-                    cqUtil.sendMsg(cqMsg);
-                    cqMsg.setMessage("通过Flag为：" + flag + "的邀请失败，消息体：" + cqMsg + "，返回信息：" + cqResponse);
-                    cqMsg.setMessageType("private");
-                    cqMsg.setUserId(1335734657L);
-                    cqUtil.sendMsg(cqMsg);
-                }
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "clearInvite":
-                logger.info("正在清理邀请请求");
-                Overall.inviteRequests.clear();
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "unbind":
-                QQ = Long.valueOf(m.group(2).substring(1));
-                user = userDAO.getUser(QQ, null);
-                if (user == null) {
-                    cqMsg.setMessage("该QQ没有绑定用户……");
-                    cqUtil.sendMsg(cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    return;
-                }
-                user.setQQ(0L);
-                userDAO.updateUser(user);
-                cqMsg.setMessage("QQ" + QQ + "的绑定信息已经清除");
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "fp":
-                if (!msgUtil.CheckBidParam(m.group(2).substring(1), cqMsg)) {
-                    return;
-                }
-                Integer bid = Integer.valueOf(m.group(2).substring(1));
-                Beatmap beatmap = apiUtil.getBeatmap(bid);
-                if (beatmap == null) {
-                    cqMsg.setMessage("提供的bid没有找到谱面信息。");
-                    cqUtil.sendMsg(cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    return;
-                }
-                //一次性取2个
-                List<Score> score = apiUtil.getFirstScore(bid, 2);
-                if (score.size() == 0) {
-                    cqMsg.setMessage("提供的bid没有找到#1成绩。");
-                    cqUtil.sendMsg(cqMsg);
-                    logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                    return;
-                }
-                cmdUtil.getFristRank(beatmap, score, cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "listMsg":
-                //照例使用艾特
-                index = msg.indexOf("]");
-                QQ = Long.valueOf(msg.substring(24, index));
-                if ("all".equals(QQ)) {
-                    resp = "啥玩意啊 咋回事啊";
-                } else {
-                    ArrayList<CqMsg> msgs = SmokeUtil.msgQueues.get(cqMsg.getGroupId()).getMsgsByQQ(Long.valueOf(QQ));
-                    String card = cqUtil.getGroupMember(cqMsg.getGroupId(), Long.valueOf(QQ)).getData().getCard();
-                    if (msgs.size() == 0) {
-                        resp = "没有" + QQ + "的最近消息。";
-                    } else if (msgs.size() <= 10) {
-                        for (int i = 0; i < msgs.size(); i++) {
-                            resp += card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
-                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n";
-                        }
-                    } else {
-                        for (int i = msgs.size() - 10; i < msgs.size(); i++) {
-                            resp += card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
-                                    format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n";
-                        }
-                    }
-                }
-                cqMsg.setMessage(resp);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "pp":
-            case "PP":
-                role = m.group(2).substring(1);
-                cmdUtil.listPP(role, cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "findPlayer":
-                username = m.group(2).substring(1);
-                List<User> list = userDAO.listUserIdByUname(username);
-                if (list.size() > 0) {
-                    resp = "找到以下玩家曾用/现用名是" + username + "：\n";
-                    for (User u : list) {
-                        resp += "现用名：" + u.getCurrentUname() + "，曾用名：" + u.getLegacyUname() + "，uid：" + u.getUserId();
-                        if (u.getQQ() != null) {
-                            resp += "，QQ：" + u.getQQ();
-                        }
-                        resp += "\n";
-                    }
-                } else {
-                    resp = "没有找到现用/曾用" + username + "作为用户名的玩家。";
-                }
-                cqMsg.setMessage(resp);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "scanCard":
-                CqResponse<List<QQInfo>> cqResponse1 = cqUtil.getGroupMembers(cqMsg.getGroupId());
-                resp = "找到以下玩家群名片不含完整id：\n";
-                for (QQInfo qqInfo : cqResponse1.getData()) {
-                    //根据QQ获取user
-                    user = userDAO.getUser(qqInfo.getUserId(), null);
-                    if (user != null) {
-                        userFromAPI = apiUtil.getUser(null, user.getUserId());
-                        String card = cqUtil.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
-                        if (!card.toLowerCase(Locale.CHINA).replace("_", " ")
-                                .contains(userFromAPI.getUserName().toLowerCase(Locale.CHINA).replace("_", " "))) {
-                            resp += "osu! id：" + userFromAPI.getUserName() + "，QQ：" + qqInfo.getUserId() + "，群名片：" + card + "\n";
-                        }
-                    }
-                }
-                cqMsg.setMessage(resp);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "help":
-                resp = "!sudo add xxx,xxx:yyy 将xxx,xxx添加到yyy用户组。\n" +
-                        "!sudo del xxx:yyy 将xxx的用户组中yyy删除，如果不带:yyy则重置为默认（creep）。\n" +
-                        "!sudo check xxx 查询xxx的用户组。\n" +
-                        "!sudo 褪裙 xxx 查询xxx用户组中多少人超过PP上线。\n" +
-                        "!sudo bg xxx:http://123 将给定连接中的图以xxx.png的文件名写入数据库。\n" +
-                        "!sudo recent xxx 查询他人的recent。\n" +
-                        "!sudo afk n:xxx 查询xxx用户组中，n天以上没有登录的玩家(以官网为准)。\n" +
-                        "!sudo smoke @xxx n 在白菜是管理的群，把被艾特的人禁言n秒。\n" +
-                        "（艾特全体成员则遍历群成员并禁言）\n" +
-                        "!sudo smokeAll/unsmokeAll 开关全员禁言。\n" +
-                        "!sudo listInvite 列举当前的加群邀请（无论在哪里使用都会私聊返回结果）。\n" +
-                        "!sudo handleInvite n 通过Flag为n的邀请。\n" +
-                        "!sudo clearInvite 清空邀请列表。\n" +
-                        "!sudo unbind qq 解绑某个QQ对应的id（找到该QQ对应的uid，并将QQ改为0）。\n" +
-                        "!sudo fp bid 打印给定bid的#1。\n" +
-                        "!sudo listMsg @xxx 打印被艾特的人最近的10条消息。在对方撤回消息时起作用。\n" +
-                        "!sudo PP xxx 查询xxx组中所有成员PP（一般用于比赛计算Cost）。\n" +
-                        "!sudo findPlayer xxx 查询曾用/现用xxx用户名的玩家。\n" +
-                        "!sudo scanCard 扫描所在群的所有绑定了QQ的群成员，检测群名片是否包含完整id（无视大小写，并且会自动识别横线/空格）。\n" +
-                        "!sudo checkBind @xxx 打印被艾特的人的id绑定情况。\n" +
-                        "!sudo checkGroupBind xxx 打印该群所有成员是否绑定id，以及绑定id是否在mp4/5组内。特别的，不带参数会将群号设置为当前消息的群号。（只支持mp4/5群）\n"
-                ;
-
-
-                cqMsg.setMessage(resp);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-            case "checkBind":
-                QQ = Long.valueOf(msg.substring(19));
-                user = userDAO.getUser(QQ, null);
-                if (user != null) {
-                    resp = "QQ" + QQ + "绑定的osu! uid为：" + user.getUserId() + "，用户组：" + user.getRole() + "，是否被Ban：" + (user.getBanned() == 1);
-                } else {
-                    resp = "QQ" + QQ + "没有绑定osuid。";
-                }
-                cqMsg.setMessage(resp);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-                break;
-
-            case "checkGroupBind":
-                if ("".equals(m.group(2))) {
-                    cqResponse1 = cqUtil.getGroupMembers(cqMsg.getGroupId());
-                } else {
-                    cqResponse1 = cqUtil.getGroupMembers(Long.valueOf(m.group(2).substring(1)));
-                }
-                for (QQInfo qqInfo : cqResponse1.getData()) {
-                    //根据QQ获取user
-                    user = userDAO.getUser(qqInfo.getUserId(), null);
-                    String card = cqUtil.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
-                    if (user != null) {
-                        List<String> roles = Arrays.asList(user.getRole().split(","));
-                        switch (String.valueOf(cqResponse1.getData().get(0).getGroupId())) {
-                            case "201872650":
-                                if (!roles.contains("mp5")) {
-                                    resp += "QQ： " + qqInfo.getUserId() + " 绑定的id不在mp5用户组，osu! uid：" + user.getUserId() + "，用户组：" + user.getRole() + "。\n";
-                                }
-                                break;
-                            case "564679329":
-                                if (!roles.contains("mp4")) {
-                                    resp += "QQ： " + qqInfo.getUserId() + " 绑定的id不在mp4用户组，osu! uid：" + user.getUserId() + "，用户组：" + user.getRole() + "。\n";
-                                }
-                                break;
-                        }
-                    } else {
-                        resp += "QQ： " + qqInfo.getUserId() + " 没有绑定id，群名片是：" + card + "\n";
-                    }
-                }
-                cqMsg.setMessage(resp);
-                cqUtil.sendMsg(cqMsg);
-                logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - s.getTime()) + "ms。");
-
-                break;
-        }
-
-    }
 
     @PostConstruct
     private void notifyInitComplete() {

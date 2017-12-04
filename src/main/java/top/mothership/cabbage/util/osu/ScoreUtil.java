@@ -10,7 +10,6 @@ import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.LinkedHashMap;
 import java.util.ResourceBundle;

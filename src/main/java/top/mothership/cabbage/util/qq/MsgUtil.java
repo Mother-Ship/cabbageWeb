@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.util.Overall;
 
@@ -12,26 +13,27 @@ import java.text.SimpleDateFormat;
 
 @Component
 public class MsgUtil {
-    private final CqUtil cqUtil;
+    private final CqManager cqManager;
     private Logger logger = LogManager.getLogger(this.getClass());
     @Autowired
-    public MsgUtil(CqUtil cqUtil) {
-        this.cqUtil = cqUtil;
+    public MsgUtil(CqManager cqManager) {
+        this.cqManager = cqManager;
+
     }
 
-    public boolean CheckDayParam(String msg,CqMsg cqMsg) {
+    public boolean checkdayparam(String msg, CqMsg cqMsg) {
         try {
             //此处传入的Message必须是切好的#后面的数据
             int day = Integer.valueOf(msg);
             if (day > (int) ((new java.util.Date().getTime() - new SimpleDateFormat("yyyy-MM-dd").parse("2007-09-16").getTime()) / 1000 / 60 / 60 / 24)) {
                 cqMsg.setMessage("你要找史前时代的数据吗。");
-                cqUtil.sendMsg(cqMsg);
+                cqManager.sendMsg(cqMsg);
                 logger.info("指定的日期早于osu!首次发布日期");
                 return false;
             }
             if (day < 0) {
                 cqMsg.setMessage("白菜不会预知未来。");
-                cqUtil.sendMsg(cqMsg);
+                cqManager.sendMsg(cqMsg);
                 logger.info("天数不能为负值");
                 return false;
             }
@@ -40,13 +42,13 @@ public class MsgUtil {
             cqUtil.sendMsg(cqMsg);
             logger.info("给的天数不是int值");
             return false;
-        } catch (ParseException e) {
+        } catch (ParseException ignore) {
             //由于解析的是固定字符串，不会出异常，无视
         }
         return true;
     }
 
-    public boolean CheckBPNumParam(String msg,CqMsg cqMsg){
+    public boolean checkbpnumparam(String msg, CqMsg cqMsg){
         try {
             int num = Integer.valueOf(msg);
             if (num < 0 || num > 100) {
@@ -64,7 +66,7 @@ public class MsgUtil {
             return false;
         }
     }
-    public boolean CheckBidParam(String msg,CqMsg cqMsg){
+    public boolean checkbidparam(String msg, CqMsg cqMsg){
         try {
             int bid = Integer.valueOf(msg);
             return true;

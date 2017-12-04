@@ -13,7 +13,8 @@ import top.mothership.cabbage.util.qq.CqUtil;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class Analyze {

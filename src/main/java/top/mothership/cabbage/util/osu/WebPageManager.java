@@ -23,7 +23,7 @@ import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OsuFile;
 import top.mothership.cabbage.pojo.osu.OsuSearchResp;
-import top.mothership.cabbage.util.Overall;
+
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -31,7 +31,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -43,9 +42,13 @@ import java.util.zip.CheckedInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+/**
+ * The type Web page manager.
+ */
 @Component
-public class WebPageUtil {
-    private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
+
+public class WebPageManager {
+
     private final String getAvaURL = "https://a.ppy.sh/";
     private final String getUserURL = "https://osu.ppy.sh/u/";
     private final String getUserProfileURL = "https://osu.ppy.sh/pages/include/profile-general.php?u=";
@@ -57,11 +60,22 @@ public class WebPageUtil {
     private Logger logger = LogManager.getLogger(this.getClass());
     private HashMap<Integer, Document> map = new HashMap<>();
 
+    /**
+     * Instantiates a new Web page manager.
+     *
+     * @param resDAO the res dao
+     */
     @Autowired
-    public WebPageUtil(ResDAO resDAO) {
+    public WebPageManager(ResDAO resDAO) {
         this.resDAO = resDAO;
     }
 
+    /**
+     * Gets avatar.
+     *
+     * @param uid the uid
+     * @return the avatar
+     */
     public BufferedImage getAvatar(int uid) {
         URL avaurl;
         BufferedImage ava;
@@ -109,6 +123,12 @@ public class WebPageUtil {
 
     }
 
+    /**
+     * Gets bg backup.
+     *
+     * @param beatmap the beatmap
+     * @return the bg backup
+     */
     public BufferedImage getBGBackup(Beatmap beatmap) {
         logger.info("开始从官网获取谱面" + beatmap.getBeatmapId() + "的背景");
         DefaultHttpClient client = new DefaultHttpClient();
@@ -225,6 +245,12 @@ public class WebPageUtil {
 
     }
 
+    /**
+     * Gets bg.
+     *
+     * @param beatmap the beatmap
+     * @return the bg
+     */
     public BufferedImage getBG(Beatmap beatmap) {
         logger.info("开始获取谱面" + beatmap.getBeatmapId() + "的背景");
         HttpURLConnection httpConnection;
@@ -290,6 +316,12 @@ public class WebPageUtil {
 
     }
 
+    /**
+     * Gets rep watched.
+     *
+     * @param uid the uid
+     * @return the rep watched
+     */
     public int getRepWatched(int uid) {
         int retry = 0;
         Document doc = null;
@@ -313,6 +345,14 @@ public class WebPageUtil {
         return Integer.valueOf(a);
     }
 
+    /**
+     * Gets rank.
+     *
+     * @param rScore the r score
+     * @param start  the start
+     * @param end    the end
+     * @return the rank
+     */
     public int getRank(long rScore, int start, int end) {
         long endValue = getScore(end);
         if (rScore < endValue || endValue == 0) {
@@ -383,6 +423,12 @@ public class WebPageUtil {
 
     }
 
+    /**
+     * Gets last active.
+     *
+     * @param uid the uid
+     * @return the last active
+     */
     public Date getLastActive(int uid) {
         int retry = 0;
         Document doc = null;
@@ -412,6 +458,12 @@ public class WebPageUtil {
         return null;
     }
 
+    /**
+     * Gets osu file.
+     *
+     * @param beatmap the beatmap
+     * @return the osu file
+     */
     public String getOsuFile(Beatmap beatmap) {
         HttpURLConnection httpConnection;
         String osuFile = resDAO.getOsuFileBybid(Integer.valueOf(beatmap.getBeatmapId()));
@@ -452,7 +504,13 @@ public class WebPageUtil {
         return null;
     }
 
-    //这个方法只能处理ranked/approved/qualified的.osu文件,在目前的业务逻辑里默认.osu文件是存在的。
+    /**
+     * Prase osu file osu file.
+     *
+     * @param beatmap the beatmap
+     * @return the osu file
+     */
+//这个方法只能处理ranked/approved/qualified的.osu文件,在目前的业务逻辑里默认.osu文件是存在的。
     //方法名大包大揽，其实我只能处理出BG名字（
     public OsuFile praseOsuFile(Beatmap beatmap) {
         //先获取
@@ -468,6 +526,15 @@ public class WebPageUtil {
 
     }
 
+    /**
+     * Search beatmap beatmap.
+     *
+     * @param artist   the artist
+     * @param title    the title
+     * @param diffName the diff name
+     * @param mapper   the mapper
+     * @return the beatmap
+     */
     public Beatmap searchBeatmap(String artist, String title, String diffName, String mapper) {
         int retry = 0;
         String output = null;
@@ -533,6 +600,12 @@ public class WebPageUtil {
         return null;
     }
 
+    /**
+     * Gets pp plus.
+     *
+     * @param uid the uid
+     * @return the pp plus
+     */
     public Map<String, Integer> getPPPlus(int uid) {
         Map<String, Integer> map = new HashMap<>();
         int retry = 0;
@@ -562,6 +635,14 @@ public class WebPageUtil {
     }
 
 
+    /**
+     * Resize img buffered image.
+     *
+     * @param bg     the bg
+     * @param weight the weight
+     * @param height the height
+     * @return the buffered image
+     */
     public BufferedImage resizeImg(BufferedImage bg, Integer weight, Integer height) {
         //让图片肯定不会变形，但是会切掉东西的拉伸
         BufferedImage resizedBG;

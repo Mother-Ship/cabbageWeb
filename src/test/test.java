@@ -1,16 +1,5 @@
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import top.mothership.cabbage.pojo.osu.Beatmap;
-import top.mothership.cabbage.pojo.osu.OppaiResult;
-import top.mothership.cabbage.pojo.osu.Score;
-import top.mothership.cabbage.util.osu.ApiUtil;
-import top.mothership.cabbage.util.osu.ScoreUtil;
+import top.mothership.cabbage.consts.PatternConsts;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -19,10 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Locale;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 //
 //@RunWith(SpringJUnit4ClassRunner.class)
@@ -362,11 +348,24 @@ public class test {
 //        Long QQ = Long.valueOf(msg.substring(10, msg.indexOf("]")));
 //
 //        System.out.println(QQ);
-        List<String> legacyUname =  new GsonBuilder().create().fromJson("[]", new TypeToken<List<String>>() {}.getType());
-        legacyUname.add("Mother Ship");
-        legacyUname.add("Mother Ship");
-        legacyUname.add("Mother Ship");
-        System.out.println(new Gson().toJson(legacyUname));
+//        List<String> legacyUname =  new GsonBuilder().create().fromJson("[]", new TypeToken<List<String>>() {}.getType());
+//        legacyUname.add("Mother Ship");
+//        legacyUname.add("Mother Ship");
+//        legacyUname.add("Mother Ship");
+//        System.out.println(new Gson().toJson(legacyUname));
+//        Integer a = 150;
+//        Integer b = 150;
+//        System.out .println(a.equals(b));
+//        System.out .println(a==b);
+
+        String  a = "[CQ:image,file=2324234243.jpg]123";
+        Matcher m = PatternConsts.IMG_REGEX.matcher(a);
+               if(m.find()) {
+           for (int i = 0; i <= m.groupCount(); i++)
+               System.out.println(m.group(i));
+       }else{
+           System.out.println("false");
+       }
     }
 
     //

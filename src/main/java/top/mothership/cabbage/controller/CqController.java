@@ -7,16 +7,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
-import top.mothership.cabbage.util.Overall;
 import top.mothership.cabbage.util.qq.CmdUtil;
 import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-
+/**
+ * CQ控制器，用于处理CQ消息
+ *
+ * @author QHS
+ */
 @RestController
 public class CqController {
 
@@ -26,8 +29,13 @@ public class CqController {
     private final CmdUtil cmdUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
 
-    private Matcher m;
-
+    /**
+     * Spring构造方法自动注入
+     *
+     * @param cqService Service层
+     * @param smokeUtil 负责禁言的工具类
+     * @param cmdUtil   the cmd util
+     */
     @Autowired
     public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CmdUtil cmdUtil) {
         this.cqService = cqService;
@@ -35,9 +43,14 @@ public class CqController {
         this.cmdUtil = cmdUtil;
     }
 
+    /**
+     * Controller主方法
+     *
+     * @param cqMsg 传入的QQ消息
+     * @throws Exception 抛出异常给AOP检测
+     */
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
-    public String cqMsgPrase(@RequestBody CqMsg cqMsg) throws Exception {
-        String cmdRegex = Overall.MAIN_FILTER_REGEX;
+    public void cqMsgParse(@RequestBody CqMsg cqMsg) throws Exception {
         //待整理业务逻辑
         switch (cqMsg.getPostType()) {
             case "message":
@@ -48,27 +61,30 @@ public class CqController {
                 msg = msg.replaceAll("&#44;", ",");
                 cqMsg.setMessage(msg);
                 String msgWithoutImage;
-                if (msg.matches(Overall.IMG_REGEX)) {
-                    msgWithoutImage = msg.replaceAll(Overall.SINGLE_IMG_REGEX, "");
+                Matcher imageMatcher = PatternConsts.IMG_REGEX.matcher(msg);
+                if (imageMatcher.find()) {
+                    //替换掉消息内所有图片
+                    msgWithoutImage = imageMatcher.replaceAll("");
                 } else {
                     msgWithoutImage = msg;
                 }
-                //识别消息类型
+                //识别消息类型，根据是否私聊使用不同的表达式
+                Matcher cmdMatcher = PatternConsts.MAIN_FILTER_REGEX.matcher(msgWithoutImage);
                 switch (cqMsg.getMessageType()) {
                     case "group":
-                        //直接将群消息传入禁言处理
-                        //增加一个时间戳（划掉）插件自带了Time
-//                            cqMsg.setTime(Calendar.getInstance().getTimeInMillis());
-                        smokeUtil.praseSmoke(cqMsg);
+                        smokeUtil.parseSmoke(cqMsg);
                         break;
                     case "private":
                         //如果是私聊消息，覆盖掉正则表达式（识别汉字）
                         //不必考虑线程安全问题，每次进入这个方法，cmdRegex都会被重置为没有汉字的版本
-                        cmdRegex = Overall.MAIN_FILTER_REGEX_CHINESE;
+                        cmdMatcher = PatternConsts.MAIN_FILTER_REGEX_CHINESE.matcher(msgWithoutImage);
+                        break;
+                    default:
                         break;
                 }
-                if (msgWithoutImage.matches(cmdRegex)) {
-                    //如果检测到命令，直接把消息中的图片去掉
+                if (cmdMatcher.find()) {
+                    //如果检测到命令，直接把消息中的图片去掉，避免Service层进行后续处理
+                    cqMsg.setMessage(msgWithoutImage);
                     String log = "";
                     switch (cqMsg.getMessageType()) {
                         case "group":
@@ -80,49 +96,83 @@ public class CqController {
                         case "private":
                             log += "用户" + cqMsg.getUserId() + "发送了命令" + cqMsg.getMessage();
                             break;
+                        default:
+                            break;
                     }
                     logger.info(log);
-                    cqMsg.setMessage(msgWithoutImage);
-                    m = Pattern.compile(cmdRegex).matcher(msgWithoutImage);
-                    m.find();
-                    switch (m.group(1)) {
+                    switch (cmdMatcher.group(1)) {
                         //处理命令
                         case "sudo":
-                            m = Pattern.compile(Overall.CMD_REGEX).matcher(msg);
-                            switch (m.group(1)) {
-
+                            cmdMatcher = PatternConsts.ADMIN_CMD_REGEX.matcher(msg);
+                            switch (cmdMatcher.group(1)) {
+                                case ""
+                                default:
+                                    break;
 
                             }
-                            cqService.praseAdminCmd(cqMsg);
                             break;
                         default:
-                            m = Pattern.compile(Overall.CMD_REGEX).matcher(msg);
+                            cmdMatcher = PatternConsts.CMD_REGEX_NUM.matcher(msg);
+                            switch (cmdMatcher.group(1)) {
+                                case "stat":
+                                case "statu":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        return;
+                                    }
+                                case "statme":
+                                    cqService.statUserInfo(cqMsg);
+                                break;
+                                case "bp":
+                                case "bps":
+                                case "bpu":
+                                case "bpus":
+                                case "bpme":
+                                case "bpmes":
 
-                            cqService.praseCmd(cqMsg);
+                                    break;
+                                case "setid":
+                                    break;
+                                case "recent":
+                                case "rs":
+                                    break;
+                                case "help":
+                                    break;
+                                case "sleep":
+                                    break;
+                                case "fp":
+                                    break;
+                                case "roll":
+                                    break;
+                                case "add":
+                                    break;
+                                case "del":
+                                    break;
+                                default:
+                                    break;
+
+                            }
                             break;
                     }
 
                 }
                 break;
             case "event":
-                if (cqMsg.getEvent().equals("group_increase")) {
+                if ("group_increase".equals(cqMsg.getEvent())) {
                     cmdUtil.praseNewsPaper(cqMsg);
                 }
-                if (cqMsg.getEvent().equals("group_admin")) {
+                if ("group_admin".equals(cqMsg.getEvent())) {
                     smokeUtil.loadGroupAdmins();
                 }
                 break;
             case "request":
                 //只有是加群请求的时候才进入
-                if (cqMsg.getRequestType().equals("group") && cqMsg.getSubType().equals("invite")) {
+                if ("group".equals(cqMsg.getRequestType()) && "invite".equals(cqMsg.getSubType())) {
                     cmdUtil.stashInviteRequest(cqMsg);
                 }
                 break;
             default:
-                logger.error("传入无法识别的Request，可能是HTTPAPI插件已经更新");
+                logger.error("传入无法识别的Request，可能是HTTP API插件已经更新");
         }
-        //先写返回null吧，如果以后有直接返回的逻辑也可以直接return
-        return null;
     }
 
 }
