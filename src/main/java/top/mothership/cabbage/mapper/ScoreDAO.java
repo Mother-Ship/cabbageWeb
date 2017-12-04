@@ -11,7 +11,7 @@ import java.util.List;
 
 @Mapper
 @Repository
-public interface ScoresDAO {
+public interface ScoreDAO {
     @Insert("REPLACE INTO `scores` VALUES (null,#{score.beatmapId},#{score.mode},#{score.scoreVersion}" +
             ",#{score.mapMd5},#{score.repMd5},#{score.size}" +
             ",#{score.score},#{score.maxCombo},#{score.count50}" +

@@ -1,4 +1,4 @@
-package top.mothership.cabbage.util.qq;
+package top.mothership.cabbage.manager;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -20,7 +20,7 @@ import java.util.List;
 
 //将CQ的HTTP API封装为接口，并托管到Spring
 @Component
-public class CqUtil {
+public class CqManager {
     private final String baseURL = "http://localhost:5700";
 
     public CqResponse sendMsg(CqMsg cqMsg) {

@@ -1,29 +1,12 @@
-package top.mothership.cabbage.util;
+package top.mothership.cabbage.consts;
 
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
-
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.ResourceBundle;
-
-public class Overall {
-    //用于存放常量
-    public final static String MAIN_FILTER_REGEX = "[!！]([^ \\u4e00-\\u9fa5]+)([\\u892a\\u88d9\\u9000\\u7fa4\\u767d\\u83dcA-Za-z0-9\\[\\] :#-_]*+)";
-    public final static String IMG_REGEX = ".*\\[CQ:image,file=(.+)\\].*";
-    public final static String SINGLE_IMG_REGEX = "\\[CQ:image,file=(.+)\\]";
-    public final static String ADMIN_CMD_REGEX = "[!！]sudo ([^ ]*)(.*)";
-    public final static String CMD_REGEX = "[!！]([^ ]+)(.*)";
-    public final static String CMD_REGEX_NUM = "[!！]([^ ]+)([^#]*) #(.+)";
-    public final static String MAIN_FILTER_REGEX_CHINESE = "[!！]([^ \\u4e00-\\u9fa5]+)(.*+)";
-    public final static ResourceBundle CABBAGE_CONFIG = ResourceBundle.getBundle("cabbage");
-    public final static String REPEAT_FILTER_REGEX = "[^\\u4e00-\\u9fa5a-zA-Z0-9]";
-    public final static String BGNAME_REGEX = "(?<=[\\d*],[\\d*],\")(?:.*\\\\)*(.*\\.(?i)(jpg|png|jpeg))";
-    public final static String DOWNLOAD_FILENAME_REGEX ="(?<=filename=\")([^\";]*)";
-    public final static String ADD_FRIEND_REGEX = "<div class='centrep'>\\n<a href='([^']*)";
-    public final static String OSU_SEARCH_KETWORD = "^([^-]*)-(.*)\\[(.*)]\\((.*)\\)";
-    public static List<String> ADMIN_LIST = Arrays.asList(Overall.CABBAGE_CONFIG.getString("admin").split(","));
-    public static LinkedHashMap<CqMsg, String> inviteRequests = new LinkedHashMap<>();
+/**
+ * base64处理后的语音。
+ */
+public class Base64Consts {
+    /**
+     * 常量：they are all dead.wav
+     */
     public final static String ALL_DEAD = "//uwxAAAGv2jHvTzAAWMxWa3ObABAGQm47aIeS+MchBCEFwNA6DTOtD1Gr1er1erwAAAggAAAAAA" +
             "AAGAwGFkyZMmTCCBAgQiDEAGAwsmTJkyZMIAAAAAAAAAAAQAwGFkyZMmTJgAAECBAgQIEAGAwGAw" +
             "GAwGAwGAAAAAAAAAAAAQJkyZMmTJkyZAgQIECBAgQJkwGAwGAwGAwsAAAAAAAAAAAAAAMBgMBgMB" +
@@ -596,6 +579,9 @@ public class Overall {
             "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" +
             "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" +
             "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=";
+    /**
+     * 常量：ayayaya.wav
+     */
     public static final String AYA_YA_YA = "//twxAAAC91esSCYU+F2EaM0FJiMVFQurantO7Saf/6pJFaqRWGHhwyaG4tBO4uHadzF5s0itBS1" +
             "bm5cN9zc3NWq4/+b//2mkUUlLUkGDjAw8YnF5cRpDopiuOM7Ow4wsdnZ2cQd////uzjjDkBxBsz/" +
             "6DVITTcTbjSKdQDZKZAZAAq7PWQNSDqAYjGxnQFrjkESaz993rRhiidIeIzL73d33P38xBAnYfEC" +
@@ -1361,6 +1347,9 @@ public class Overall {
             "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" +
             "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" +
             "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+    /**
+     * 常量：玩不了啦.wav
+     */
     public  static String WAN_BU_LIAO_LA = "//uQxAAAEuUlAnWHgAMpJ+c3M4AAAAABjdhYRCQg4riMq3lwzCE1IMwi3kCpzllwEMs2gDBuDgWS" +
             "Vg2wFsFWXsYAADAFYc6rgMkSAnC5qOEnFBEhv9w2NXq9/h48ibxAePHlKPGd/H3R48pqlKfN4ce9" +
             "KU17w3794wKxWRMv2eP/8w37+PRXq9/Hv////m9/i+8Upr/6/+//38c/+IA/ORG/1g+HxGD+oHwf" +
@@ -1611,6 +1600,9 @@ public class Overall {
             "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" +
             "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" +
             "VVVVVVVVVVVVVVVVVVVVVVU=";
+    /**
+     * 常量：走好不送.wav
+     */
     public static final String ZOU_HAO_BU_SONG = "//uQxAAAD9GPIuSZDdLss2a1hiX7AMAAE3MZJ0GIFQTJ1A2sSQtsxVhGHp/kHa4y7tiEgitwmUgf" +
             "ux33LMkIP09cWUpA8HHACCKH7wL3FfNoI4oSH57KfDxViiS/Iu5AeZE3zaTcV6S8GSxgcCknpL8C" +
             "4wzj/tHfIou33vhX5sioou93d4SXenhK3938gybQ9+LB8J1pQogAEpTgUatRgQclExSAYp4RtDnE" +
@@ -1897,5 +1889,4 @@ public class Overall {
             "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" +
             "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" +
             "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg==";
-
 }

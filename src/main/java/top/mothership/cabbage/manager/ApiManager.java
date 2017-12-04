@@ -1,4 +1,4 @@
-package top.mothership.cabbage.util.osu;
+package top.mothership.cabbage.manager;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
@@ -17,7 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 @Component
-public class ApiUtil {
+public class ApiManager {
     private final String getUserURL = "https://osu.ppy.sh/api/get_user";
     private final String getBPURL = "https://osu.ppy.sh/api/get_user_best";
     private final String getMapURL = "https://osu.ppy.sh/api/get_beatmaps";

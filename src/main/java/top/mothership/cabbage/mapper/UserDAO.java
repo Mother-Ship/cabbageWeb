@@ -33,6 +33,7 @@ public interface UserDAO {
             + "OR `role` LIKE CONCAT('%,',#{role}) </if>"
             + "</script>")
     List<Integer> listUserIdByRole(@Param("role") String role);
+
     //改为Gson序列化，只需考虑在中间的问题，同时加入分隔符
     @Select("<script>"
             + "SELECT * FROM `userrole` "
