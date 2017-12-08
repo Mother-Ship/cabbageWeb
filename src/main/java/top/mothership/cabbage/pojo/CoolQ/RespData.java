@@ -5,7 +5,6 @@ import lombok.Data;
 
 @Data
 public class RespData {
-    //API消息中，除了获取某个QQ详情之外情况的返回消息体，目前没有作用
     private Integer id;
     private String nickname;
     @SerializedName("group_name")

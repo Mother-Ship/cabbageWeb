@@ -13,6 +13,7 @@ import top.mothership.cabbage.annotation.UserRoleControl;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
+import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -50,10 +51,16 @@ public class RoleControlAspect {
                 ((MethodSignature)pjp.getSignature()).getParameterTypes()
         ).getAnnotation(UserRoleControl.class);
         if(userRoleControl==null){
-            userRoleControl = (UserRoleControl) pjp.getTarget().getClass().getAnnotations()[1];
+           Annotation[] a =  pjp.getTarget().getClass().getAnnotations();
+           for(Annotation aList:a){
+               if(aList.getClass().equals(UserRoleControl.class)){
+                   userRoleControl = (UserRoleControl) a[1];
+               }
+           }
         }
-        System.out.println(userRoleControl);
-
+        if(userRoleControl==null){
+            return pjp.proceed();
+        }
         if (Arrays.stream(userRoleControl.value()).boxed().collect(Collectors.toList()).contains(cqMsg.getUserId())) {
             return pjp.proceed();
         }else {

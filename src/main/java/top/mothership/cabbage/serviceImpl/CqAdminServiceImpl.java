@@ -271,7 +271,14 @@ public class CqAdminServiceImpl {
         if (user == null) {
             cqMsg.setMessage("玩家" + username + "没有使用过白菜。请先用add命令添加。");
         } else {
-            cqMsg.setMessage("玩家" + username + "的用户组是" + user.getRole() + "，被Ban状态：" + user.isBanned() + "，总复读次数：" + user.getRepeatCount());
+            cqMsg.setMessage("搜索结果：\n"
+                    + "该玩家的用户组是" + user.getRole()
+                    + "\n，osu!id：" + user.getCurrentUname()
+                    + "\n，被Ban状态：" + user.isBanned()
+                    + "\n，QQ：" + user.getQq()
+                    + "\n，osu!uid：" + user.getUserId()+"，\n在开启复读计数的群中："
+                    + "总复读次数：" + user.getRepeatCount()
+                    + "，总发言次数：" + user.getSpeakingCount());
         }
         cqManager.sendMsg(cqMsg);
 
@@ -502,7 +509,6 @@ public class CqAdminServiceImpl {
             cqManager.sendMsg(cqMsg);
         }
     }
-@UserRoleControl({1335734657L})
     public void unbind(CqMsg cqMsg) {
         Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
@@ -587,7 +593,7 @@ public class CqAdminServiceImpl {
         Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String role;
-        if ("".equals(m.group(22))) {
+        if ("".equals(m.group(2))) {
             role = "mp5";
         } else {
             role = m.group(2);
@@ -655,6 +661,9 @@ public class CqAdminServiceImpl {
                 }
             }
         }
+        if(resp.endsWith("\n")){
+            resp = resp.substring(0,resp.length()-1);
+        }
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
@@ -706,7 +715,7 @@ public class CqAdminServiceImpl {
                 "!sudo 褪裙 xxx 查询xxx用户组中多少人超过PP上线。\n" +
                 "!sudo bg xxx:http://123 将给定连接中的图以xxx.png的文件名写入数据库。\n" +
                 "!sudo recent xxx 查询他人的recent。\n" +
-                "!sudo afk n:xxx 查询xxx用户组中，n天以上没有登录的玩家(以官网为准)。\n" +
+                "!sudo afk n:xxx 查询xxx用户组中，n天以上没有登录的玩家(以官网为准，如果不提供用户组，默认为mp5)。\n" +
                 "!sudo smoke @xxx:n 在白菜是管理的群，把被艾特的人禁言n秒。\n" +
                 "（艾特全体成员则遍历群成员并禁言，慎用）\n" +
                 "!sudo listInvite 列举当前的加群邀请（无论在哪里使用都会私聊返回结果）。\n" +
@@ -718,7 +727,8 @@ public class CqAdminServiceImpl {
                 "!sudo PP xxx 查询xxx组中所有成员PP（一般用于比赛计算Cost）。\n" +
                 "!sudo findPlayer xxx 查询曾用/现用xxx用户名的玩家。\n" +
                 "!sudo scanCard 扫描所在群的所有绑定了QQ的群成员，检测群名片是否包含完整id（无视大小写，并且会自动识别横线/空格）。\n" +
-                "!sudo checku xxx 根据QQ查找用户。\n" +
+                "!sudo checku xxx 根据uid查找用户。\n" +
+                "!sudo checkq xxx 根据QQ查找用户。\n" +
                 "!sudo checkGroupBind xxx 打印该群所有成员是否绑定id，以及绑定id是否在mp4/5组内。" +
                 "特别的，不带参数会将群号设置为当前消息的群号。（只支持mp4/5群）\n"+
                 "!sudo repeatStar 打印所有开启复读计数群内，复读发言/所有发言 比值最高的人。" +
@@ -748,6 +758,9 @@ public class CqAdminServiceImpl {
         User user = userDAO.getRepeatStar();
         if(!user.getRepeatCount().equals(0L) && !user.getSpeakingCount().equals(0L) ){
             cqMsg.setMessage("在所有开启复读计数的群中，当前的复读之星为："+user.getQq()+"，总发言数："+user.getSpeakingCount()+"，复读次数："+user.getRepeatCount());
+            cqManager.sendMsg(cqMsg);
+        }else{
+            cqMsg.setMessage("暂时还没有复读之星。");
             cqManager.sendMsg(cqMsg);
         }
     }

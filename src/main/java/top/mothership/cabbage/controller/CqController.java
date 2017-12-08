@@ -131,6 +131,7 @@ public class CqController {
                                     break;
                                 case "check":
                                 case "checku":
+                                case "checkq":
                                     if ("".equals(cmdMatcher.group(2))) {
                                         cqMsg.setMessage("参数错误。");
                                         cqManager.sendMsg(cqMsg);

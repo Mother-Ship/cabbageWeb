@@ -54,6 +54,7 @@ public class DairyTask {
         this.cqManager = cqManager;
     }
 
+
     /**
      * Import user info.
      */
@@ -67,87 +68,143 @@ public class DairyTask {
         logger.info("开始进行每日登记");
         List<Integer> list = userDAO.listUserIdByRole(null);
         for (Integer aList : list) {
-            User user = userDAO.getUser(null,aList);
+            User user = userDAO.getUser(null, aList);
             Userinfo userinfo = apiManager.getUser(null, aList);
             if (userinfo != null) {
                 //将日期改为一天前写入
                 userinfo.setQueryDate(LocalDate.now().minusDays(1));
                 userInfoDAO.addUserInfo(userinfo);
                 logger.info("将" + userinfo.getUserName() + "的数据录入成功");
-                if(!userinfo.getUserName().equals(user.getCurrentUname())){
+                if (!userinfo.getUserName().equals(user.getCurrentUname())) {
                     //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
-                    List<String> legacyUname =  new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {}.getType());
-                    if(user.getCurrentUname()!=null) {
+                    List<String> legacyUname = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
+                    }.getType());
+                    if (user.getCurrentUname() != null) {
                         legacyUname.add(user.getCurrentUname());
                     }
                     user.setLegacyUname(new Gson().toJson(legacyUname));
                     user.setCurrentUname(userinfo.getUserName());
                     logger.info("检测到玩家" + userinfo.getUserName() + "改名，已登记");
                 }
+                //如果用户在mp4组
                 if (Arrays.asList(user.getRole().split(",")).contains("mp4")) {
+                    //并且刷超了
+                    if (userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49) {
+                        CqMsg cqMsg = new CqMsg();
+                        cqMsg.setMessageType("group");
+                        cqMsg.setGroupId(564679329L);
+                        //回溯昨天这时候检查到的pp
+                        Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(2));
+                        //如果昨天这时候的PP存在，并且也超了
+                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49) {
+                            //继续回溯前天这时候的PP
+                            lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(3));
+                            //如果前天这时候的PP存在，并且也超了
+                            if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49) {
+                                //回溯大前天的PP
+                                lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(4));
+                                //如果大前天这个时候也超了，就飞了
+                                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49) {
+                                    if (!user.getQq().equals(0L)) {
+                                        cqMsg.setUserId(user.getQq());
+                                        cqMsg.setMessageType("kick");
+                                        cqManager.sendMsg(cqMsg);
+                                        cqMsg.setMessageType("private");
+                                        cqMsg.setMessage("由于PP超限，已将你移出MP4群。");
+                                        cqManager.sendMsg(cqMsg);
+                                    }
+                                } else {
+                                    //大前天没超
+                                    if (!user.getQq().equals(0L)) {
+                                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。");
+                                        cqManager.sendMsg(cqMsg);
+                                    }
+                                }
+                            } else {
+                                //前天没超
+                                if (!user.getQq().equals(0L)) {
+                                    cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。");
+                                    cqManager.sendMsg(cqMsg);
+                                }
+                                continue;
+                            }
+                        } else {
+                            //昨天没超
+                            if (!user.getQq().equals(0L)) {
+                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。");
+                                cqManager.sendMsg(cqMsg);
+                            }
 
-                   if(userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
-                       CqMsg cqMsg = new CqMsg();
-                       cqMsg.setMessageType("group");
-                       cqMsg.setGroupId(564679329L);
-                    //回溯1天前的PP
-                       Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(aList,LocalDate.now().minusDays(2));
-                       if(lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
-                           //回溯2天前的PP
-                           lastDayUserinfo = userInfoDAO.getUserInfo(aList,LocalDate.now().minusDays(3));
-                           if(lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
-                               //回溯3天前的PP
-                               lastDayUserinfo = userInfoDAO.getUserInfo(aList,LocalDate.now().minusDays(4));
-                               if(lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
-
-                               }else{
-                                   if(!user.getQq().equals(0L)) {
-                                       cqMsg.setUserId(user.getQq());
-                                       cqMsg.setMessageType("kick");
-                                       cqManager.sendMsg(cqMsg);
-                                       cqMsg.setMessageType("private");
-                                       cqMsg.setMessage("由于PP超限，已将你移出MP4群。");
-                                       cqManager.sendMsg(cqMsg);
-                                   }
-                               }
-                           }else{
-                               if(!user.getQq().equals(0L)) {
-                                   cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。");
-                                   cqManager.sendMsg(cqMsg);
-                               }
-
-                               continue;
-                           }
-                       }else{
-                            //如果前一天PP没有超
-                           if(!user.getQq().equals(0L)) {
-                           cqMsg.setMessage("[CQ:at,qq="+user.getQq()+"] 检测到你的PP超限。将会在2天后将你移除。" );
-                           cqManager.sendMsg(cqMsg);
-                       }
-                           continue;
-                       }
-                       if(!user.getQq().equals(0L)){
-                           cqMsg.setMessage("[CQ:at,qq="+user.getQq()+"] 检测到你的PP超限。将会在3天后将你移除。" );
-                           cqManager.sendMsg(cqMsg);
-                       }
-                   }
-                }
-                if (Arrays.asList(user.getRole().split(",")).contains("mp5")) {
-                    if(userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49){
-
+                        }
+                        continue;
                     }
+
                 }
+
+                if (Arrays.asList(user.getRole().split(",")).contains("mp5")) {
+                    //并且刷超了
+                    if (userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49) {
+                        CqMsg cqMsg = new CqMsg();
+                        cqMsg.setMessageType("group");
+                        cqMsg.setGroupId(201872650L);
+                        //回溯昨天这时候检查到的pp
+                        Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(2));
+                        //如果昨天这时候的PP存在，并且也超了
+                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49) {
+                            //继续回溯前天这时候的PP
+                            lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(3));
+                            //如果前天这时候的PP存在，并且也超了
+                            if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49) {
+                                //回溯大前天的PP
+                                lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(4));
+                                //如果大前天这个时候也超了，就飞了
+                                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49) {
+                                    if (!user.getQq().equals(0L)) {
+                                        cqMsg.setUserId(user.getQq());
+                                        cqMsg.setMessageType("kick");
+                                        cqManager.sendMsg(cqMsg);
+                                        cqMsg.setMessageType("private");
+                                        cqMsg.setMessage("由于PP超限，已将你移出MP5群。");
+                                        cqManager.sendMsg(cqMsg);
+                                    }
+                                } else {
+                                    //大前天没超
+                                    if (!user.getQq().equals(0L)) {
+                                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。");
+                                        cqManager.sendMsg(cqMsg);
+                                    }
+                                }
+                            } else {
+                                //前天没超
+                                if (!user.getQq().equals(0L)) {
+                                    cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。");
+                                    cqManager.sendMsg(cqMsg);
+                                }
+                                continue;
+                            }
+                        } else {
+                            //昨天没超
+                            if (!user.getQq().equals(0L)) {
+                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。");
+                                cqManager.sendMsg(cqMsg);
+                            }
+
+                        }
+                        continue;
+                    }
+
+                }
+
                 //如果能获取到userinfo，就把banned设置为0
                 user.setBanned(false);
                 userDAO.updateUser(user);
             } else {
-               //将null的用户直接设为banned
+                //将null的用户直接设为banned
                 user.setBanned(true);
                 logger.info("检测到玩家" + user.getUserId() + "被Ban，已登记");
                 userDAO.updateUser(user);
             }
         }
-        logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
     }
 
     /**
@@ -159,8 +216,8 @@ public class DairyTask {
         SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    System.out.println("正在删除" + file.toString());
-                    Files.delete(file);
+                System.out.println("正在删除" + file.toString());
+                Files.delete(file);
                 return super.visitFile(file, attrs);
             }
         };
@@ -178,7 +235,7 @@ public class DairyTask {
             Files.walkFileTree(path, finder);
             Files.walkFileTree(path2, finder2);
         } catch (IOException e) {
-            logger.error("清空临时文件时出现异常，"+e.getMessage());
+            logger.error("清空临时文件时出现异常，" + e.getMessage());
         }
 
     }
