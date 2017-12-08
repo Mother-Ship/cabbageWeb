@@ -1,5 +1,10 @@
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import top.mothership.cabbage.consts.PatternConsts;
+import top.mothership.cabbage.mapper.UserDAO;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -11,12 +16,13 @@ import java.util.Date;
 import java.util.regex.Matcher;
 
 //
-//@RunWith(SpringJUnit4ClassRunner.class)
-//@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "classpath:spring/spring-*.xml")
 public class test {
 //    @Autowired
 //    private ScoresDAO scoresDAO;
-
+    @Autowired
+    private UserDAO userDAO;
     //    @Autowired
 //    private ApiUtil apiUtil;
 //    @Autowired
@@ -358,14 +364,15 @@ public class test {
 //        System.out .println(a.equals(b));
 //        System.out .println(a==b);
 
-        String  a = "[CQ:image,file=2324234243.jpg]123";
-        Matcher m = PatternConsts.IMG_REGEX.matcher(a);
-               if(m.find()) {
-           for (int i = 0; i <= m.groupCount(); i++)
-               System.out.println(m.group(i));
-       }else{
-           System.out.println("false");
-       }
+//        String  a = "[CQ:image,file=2324234243.jpg]123";
+//        Matcher m = PatternConsts.IMG_REGEX.matcher(a);
+//               if(m.find()) {
+//           for (int i = 0; i <= m.groupCount(); i++)
+//               System.out.println(m.group(i));
+//       }else{
+//           System.out.println("false");
+//       }
+        userDAO.getUser(1335734657L,null);
     }
 
     //

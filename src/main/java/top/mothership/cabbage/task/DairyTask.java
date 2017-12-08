@@ -6,140 +6,156 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
+import top.mothership.cabbage.consts.OverallConsts;
+import top.mothership.cabbage.manager.ApiManager;
+import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Userinfo;
-import top.mothership.cabbage.util.Overall;
-import top.mothership.cabbage.util.osu.ApiUtil;
-import top.mothership.cabbage.util.qq.CqUtil;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
+/**
+ * The type Dairy task.
+ */
 @Component
 public class DairyTask {
     private Logger logger = LogManager.getLogger(this.getClass());
     private UserDAO userDAO;
     private UserInfoDAO userInfoDAO;
-    private ApiUtil apiUtil;
-    private CqUtil cqUtil;
+    private ApiManager apiManager;
+    private CqManager cqManager;
 //    private final JavaMailSender javaMailSender;
 //    private final FreeMarkerConfigurer freeMarkerConfigurer;
 
+    /**
+     * Instantiates a new Dairy task.
+     *
+     * @param userDAO     the user dao
+     * @param userInfoDAO the user info dao
+     * @param apiManager  the api manager
+     * @param cqManager   the cq manager
+     */
     @Autowired
-    public DairyTask(UserDAO userDAO, UserInfoDAO userInfoDAO, ApiUtil apiUtil, JavaMailSender javaMailSender, FreeMarkerConfigurer freeMarkerConfigurer, CqUtil cqUtil) {
+    public DairyTask(UserDAO userDAO, UserInfoDAO userInfoDAO, ApiManager apiManager, CqManager cqManager) {
         this.userDAO = userDAO;
         this.userInfoDAO = userInfoDAO;
-        this.apiUtil = apiUtil;
-//        this.javaMailSender = javaMailSender;
-//        this.freeMarkerConfigurer = freeMarkerConfigurer;
-        this.cqUtil = cqUtil;
+        this.apiManager = apiManager;
+        this.cqManager = cqManager;
     }
-    //似乎每分钟并发也就600+，不需要加延迟……
+
+    /**
+     * Import user info.
+     */
+
     @Scheduled(cron = "0 0 4 * * ?")
     public void importUserInfo() {
+        //似乎每分钟并发也就600+，不需要加延迟……
         java.util.Date start = Calendar.getInstance().getTime();
-        Calendar cl = Calendar.getInstance();
-        cl.add(Calendar.DATE, -1);
-        userInfoDAO.clearTodayInfo(new Date(cl.getTimeInMillis()));
+        //清掉前一天全部信息
+        userInfoDAO.clearTodayInfo(LocalDate.now().minusDays(1));
         logger.info("开始进行每日登记");
         List<Integer> list = userDAO.listUserIdByRole(null);
         for (Integer aList : list) {
             User user = userDAO.getUser(null,aList);
-            Userinfo userinfo = apiUtil.getUser(null, aList);
+            Userinfo userinfo = apiManager.getUser(null, aList);
             if (userinfo != null) {
                 //将日期改为一天前写入
-                userinfo.setQueryDate(new java.sql.Date(Calendar.getInstance().getTimeInMillis() - 1000 * 3600 * 24));
+                userinfo.setQueryDate(LocalDate.now().minusDays(1));
                 userInfoDAO.addUserInfo(userinfo);
                 logger.info("将" + userinfo.getUserName() + "的数据录入成功");
                 if(!userinfo.getUserName().equals(user.getCurrentUname())){
                     //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
                     List<String> legacyUname =  new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {}.getType());
-                    if(user.getCurrentUname()!=null)
-                    legacyUname.add(user.getCurrentUname());
+                    if(user.getCurrentUname()!=null) {
+                        legacyUname.add(user.getCurrentUname());
+                    }
                     user.setLegacyUname(new Gson().toJson(legacyUname));
                     user.setCurrentUname(userinfo.getUserName());
                     logger.info("检测到玩家" + userinfo.getUserName() + "改名，已登记");
                 }
                 if (Arrays.asList(user.getRole().split(",")).contains("mp4")) {
 
-                   if(userinfo.getPpRaw() > Integer.valueOf(Overall.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
+                   if(userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
                        CqMsg cqMsg = new CqMsg();
                        cqMsg.setMessageType("group");
                        cqMsg.setGroupId(564679329L);
                     //回溯1天前的PP
-                       Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(aList,new java.sql.Date(Calendar.getInstance().getTimeInMillis() - 1000 * 3600 * 24*2));
-                       if(lastDayUserinfo.getPpRaw() > Integer.valueOf(Overall.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
+                       Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(aList,LocalDate.now().minusDays(2));
+                       if(lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
                            //回溯2天前的PP
-                           lastDayUserinfo = userInfoDAO.getUserInfo(aList,new java.sql.Date(Calendar.getInstance().getTimeInMillis() - 1000 * 3600 * 24*3));
-                           if(lastDayUserinfo.getPpRaw() > Integer.valueOf(Overall.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
+                           lastDayUserinfo = userInfoDAO.getUserInfo(aList,LocalDate.now().minusDays(3));
+                           if(lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
                                //回溯3天前的PP
-                               lastDayUserinfo = userInfoDAO.getUserInfo(aList,new java.sql.Date(Calendar.getInstance().getTimeInMillis() - 1000 * 3600 * 24*4));
-                               if(lastDayUserinfo.getPpRaw() > Integer.valueOf(Overall.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
+                               lastDayUserinfo = userInfoDAO.getUserInfo(aList,LocalDate.now().minusDays(4));
+                               if(lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49){
 
                                }else{
-                                   if(user.getQQ()!=null) {
-                                       cqMsg.setUserId(user.getQQ());
+                                   if(!user.getQq().equals(0L)) {
+                                       cqMsg.setUserId(user.getQq());
                                        cqMsg.setMessageType("kick");
-                                       cqUtil.sendMsg(cqMsg);
+                                       cqManager.sendMsg(cqMsg);
                                        cqMsg.setMessageType("private");
                                        cqMsg.setMessage("由于PP超限，已将你移出MP4群。");
-                                       cqUtil.sendMsg(cqMsg);
+                                       cqManager.sendMsg(cqMsg);
                                    }
                                }
                            }else{
-                               if(user.getQQ()!=null) {
-                                   cqMsg.setMessage("[CQ:at,qq=" + user.getQQ() + "] 检测到你的PP超限。将会在1天后将你移除。");
-                                   cqUtil.sendMsg(cqMsg);
+                               if(!user.getQq().equals(0L)) {
+                                   cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。");
+                                   cqManager.sendMsg(cqMsg);
                                }
 
                                continue;
                            }
                        }else{
                             //如果前一天PP没有超
-                           if(user.getQQ()!=null){
-                           cqMsg.setMessage("[CQ:at,qq="+user.getQQ()+"] 检测到你的PP超限。将会在2天后将你移除。" );
-                           cqUtil.sendMsg(cqMsg);
+                           if(!user.getQq().equals(0L)) {
+                           cqMsg.setMessage("[CQ:at,qq="+user.getQq()+"] 检测到你的PP超限。将会在2天后将你移除。" );
+                           cqManager.sendMsg(cqMsg);
                        }
                            continue;
                        }
-                       if(user.getQQ()!=null){
-                           cqMsg.setMessage("[CQ:at,qq="+user.getQQ()+"] 检测到你的PP超限。将会在3天后将你移除。" );
-                           cqUtil.sendMsg(cqMsg);
+                       if(!user.getQq().equals(0L)){
+                           cqMsg.setMessage("[CQ:at,qq="+user.getQq()+"] 检测到你的PP超限。将会在3天后将你移除。" );
+                           cqManager.sendMsg(cqMsg);
                        }
                    }
                 }
                 if (Arrays.asList(user.getRole().split(",")).contains("mp5")) {
-                    if(userinfo.getPpRaw() > Integer.valueOf(Overall.CABBAGE_CONFIG.getString("mp5PP")) + 0.49){
+                    if(userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49){
 
                     }
                 }
                 //如果能获取到userinfo，就把banned设置为0
-                user.setBanned(0);
+                user.setBanned(false);
                 userDAO.updateUser(user);
             } else {
                //将null的用户直接设为banned
-                user.setBanned(1);
+                user.setBanned(true);
                 logger.info("检测到玩家" + user.getUserId() + "被Ban，已登记");
                 userDAO.updateUser(user);
             }
         }
         logger.info("处理完毕，共耗费" + (Calendar.getInstance().getTimeInMillis() - start.getTime()) + "ms。");
     }
+
+    /**
+     * Clear today images.
+     */
     @Scheduled(cron = "0 0 4 * * ?")
     public void clearTodayImages() {
-        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "/data/image");
+        final Path path = Paths.get(OverallConsts.CABBAGE_CONFIG.getString("path") + "/data/image");
         SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -148,7 +164,7 @@ public class DairyTask {
                 return super.visitFile(file, attrs);
             }
         };
-        final Path path2 = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "/data/record");
+        final Path path2 = Paths.get(OverallConsts.CABBAGE_CONFIG.getString("path") + "/data/record");
         SimpleFileVisitor<Path> finder2 = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {

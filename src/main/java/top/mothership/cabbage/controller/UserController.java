@@ -6,12 +6,13 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.WebResponse;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.serviceImpl.UserServiceImpl;
-import top.mothership.cabbage.util.osu.ApiUtil;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -23,12 +24,12 @@ public class UserController {
     private final UserServiceImpl userService;
     private Logger logger = LogManager.getLogger(this.getClass());
     private final UserInfoDAO userInfoDAO;
-    private final ApiUtil apiUtil;
+    private final ApiManager apiManager;
     @Autowired
-    public UserController(UserServiceImpl userService, UserInfoDAO userInfoDAO, ApiUtil apiUtil) {
+    public UserController(UserServiceImpl userService, UserInfoDAO userInfoDAO, ApiManager apiManager) {
         this.userService = userService;
         this.userInfoDAO = userInfoDAO;
-        this.apiUtil = apiUtil;
+        this.apiManager = apiManager;
     }
 
     @RequestMapping(value = "/code", method = RequestMethod.GET)
@@ -39,25 +40,29 @@ public class UserController {
 
     @RequestMapping(value = "/userinfo/{username}", method = RequestMethod.GET)
 //    @CrossOrigin(origins = "http://localhost")
-    public String userInfo(@PathVariable String username, @RequestParam("start") @DateTimeFormat(pattern="yyyyMMdd")Date start,
+    public String userInfo(@PathVariable String username, @RequestParam("start") @DateTimeFormat(pattern="yyyyMMdd")LocalDate start,
                            @RequestParam("limit") int limit) {
         //去osu api验证用户名是否存在
-        Userinfo now = apiUtil.getUser(username,null);
-        if (now == null)
+        Userinfo now = apiManager.getUser(username,null);
+        if (now == null) {
             return new Gson().toJson(new WebResponse<>("user not found", null));
+        }
         //取到最接近8.29的那条记录
-        Userinfo earliest = userInfoDAO.getNearestUserInfo(now.getUserId(),new java.sql.Date(1503936000000L));
-        if (earliest == null)
+        Userinfo earliest = userInfoDAO.getNearestUserInfo(now.getUserId(), LocalDate.of(2017,8,29));
+        if (earliest == null) {
             return new Gson().toJson(new WebResponse<>("user not registered", null));
+        }
         //判断传入日期是否比最早的记录早，是则返回错误+最早的记录时间
-        if(start.before(earliest.getQueryDate()))
+        if(start.isBefore(earliest.getQueryDate())) {
             return new Gson().toJson(new WebResponse<>("start date is too early", earliest.getQueryDate()));
+        }
         //判断最早的记录+传入的天数是否比今天晚
-        if(new Date(start.getTime()+(1000L*3600L*24L*(long)(limit-1))).after(Calendar.getInstance().getTime()))
+        if(start.plusDays(limit-1).isAfter(LocalDate.now())) {
             return new Gson().toJson(new WebResponse<>("end date is too late", null));
+        }
         List<Userinfo> list = new ArrayList<>();
         for(long i=0;i<limit;i++){
-            Userinfo tmp = userInfoDAO.getUserInfo(now.getUserId(),new java.sql.Date(start.getTime()+(1000L*3600L*24L*i)));
+            Userinfo tmp = userInfoDAO.getUserInfo(now.getUserId(),start.plusDays(i));
             list.add(tmp);
         }
 

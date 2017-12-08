@@ -3,7 +3,7 @@ package top.mothership.cabbage.pojo.osu;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 @Data
 public class Userinfo {
     //不写入数据库
@@ -24,6 +24,6 @@ public class Userinfo {
     private int countRankSs;
     private int countRankS;
     private int countRankA;
-    private Date queryDate;
+    private LocalDate queryDate;
 
 }

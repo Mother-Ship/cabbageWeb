@@ -3,6 +3,7 @@ package top.mothership.cabbage.interceptors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import top.mothership.cabbage.annotation.NeedLogin;
 import top.mothership.cabbage.mapper.RedisDAO;
 
 import javax.servlet.http.HttpServletRequest;

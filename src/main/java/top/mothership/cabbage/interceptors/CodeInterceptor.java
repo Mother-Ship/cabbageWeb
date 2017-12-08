@@ -3,7 +3,7 @@ package top.mothership.cabbage.interceptors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import top.mothership.cabbage.mapper.RedisDAO;
-import top.mothership.cabbage.util.CaptchaUtil;
+import top.mothership.cabbage.util.web.CaptchaUtil;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -12,14 +12,15 @@ import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
+/**
+ 用来处理验证码的类
+ @author QHS
+ */
 public class CodeInterceptor extends HandlerInterceptorAdapter {
     private final RedisDAO redisDAO;
     private final CaptchaUtil captchaUtil;
 
-    /*
-    前端传入一个参数，我将这个参数和某个具体验证码绑定存入redis，再返回图片
-     */
+
     @Autowired
     public CodeInterceptor(RedisDAO redisDAO, CaptchaUtil captchaUtil) {
         this.redisDAO = redisDAO;
