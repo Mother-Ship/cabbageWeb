@@ -21,8 +21,10 @@ public class PatternConsts {
     public final static Pattern SINGLE_IMG_REGEX =  Pattern.compile("^\\[CQ:image,file=.+]$");
     /**
      * 匹配出sudo命令
+     * 当处理!sudo listInvite类命令时：group(1)为listInvite
+     * 当处理!sudo add xxx类命令是：group(2)为xxx
      */
-    public final static Pattern ADMIN_CMD_REGEX =  Pattern.compile("[!！]sudo ([^ ]*)(.*)");
+    public final static Pattern ADMIN_CMD_REGEX =  Pattern.compile("[!！]sudo ([^ ]*)[ ]?([^:]*)[:]?(.*)");
     /**
      * 匹配出带数字的常规命令
      * 当处理!statme类命令时：group(1)为statme，2和3为""
@@ -30,7 +32,7 @@ public class PatternConsts {
      * !bp xx #n类命令时：group(1)为setid，group(2)为xxx ，3为n，注意group(2)有一个空格
      * !bpme #n类命令时：group(1)为setid，group(2)为""，3为n
      */
-    public final static Pattern CMD_REGEX_NUM =  Pattern.compile("[!！]([^ ]+)[ ]?([^#]*)[ ]?[#]*(.*)");
+    public final static Pattern CMD_REGEX =  Pattern.compile("[!！]([^ ]+)[ ]?([^#]*)[ ]?[#]*(.*)");
     /**
      * 匹配出带中文/特殊符号的命令
      */
@@ -55,7 +57,7 @@ public class PatternConsts {
      * osu search命令的表达式
      * 2017-12-4 10:45:55 现在支持分隔符前后带空格了
      */
-    public final static Pattern OSU_SEARCH_KETWORD =  Pattern.compile("^([^-]*)-[ ]*(.*)[ ]*\\[(.*)][ ]*\\((.*)\\)");
+    public final static Pattern OSU_SEARCH_KETWORD =  Pattern.compile("^([^-]*)-[ ]?(.*)[ ]?\\[(.*)][ ]?\\((.*)\\)");
 
-
+    public final static Pattern UNICODE_TO_STRING = Pattern.compile("(\\\\u(\\p{XDigit}{4}))");
 }

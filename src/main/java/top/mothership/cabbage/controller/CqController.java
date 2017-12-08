@@ -8,11 +8,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import top.mothership.cabbage.consts.PatternConsts;
+import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
+import top.mothership.cabbage.serviceImpl.CqAdminServiceImpl;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
-import top.mothership.cabbage.util.qq.CmdUtil;
 import top.mothership.cabbage.util.qq.SmokeUtil;
 
+import java.util.Locale;
 import java.util.regex.Matcher;
 
 /**
@@ -26,21 +28,23 @@ public class CqController {
 
     private final CqServiceImpl cqService;
     private final SmokeUtil smokeUtil;
-    private final CmdUtil cmdUtil;
+    private final CqAdminServiceImpl cqAdminService;
+    private final CqManager cqManager;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     /**
      * Spring构造方法自动注入
-     *
      * @param cqService Service层
      * @param smokeUtil 负责禁言的工具类
-     * @param cmdUtil   the cmd util
+     * @param cqAdminService
+     * @param cqManager
      */
     @Autowired
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CmdUtil cmdUtil) {
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, CqManager cqManager) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
-        this.cmdUtil = cmdUtil;
+        this.cqAdminService = cqAdminService;
+        this.cqManager = cqManager;
     }
 
     /**
@@ -100,52 +104,191 @@ public class CqController {
                             break;
                     }
                     logger.info(log);
+
+
                     switch (cmdMatcher.group(1)) {
                         //处理命令
                         case "sudo":
                             cmdMatcher = PatternConsts.ADMIN_CMD_REGEX.matcher(msg);
-                            switch (cmdMatcher.group(1)) {
-                                case ""
+                            cmdMatcher.find();
+                            //无视命令大小写
+                            switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
+                                case "add":
+                                    if ("".equals(cmdMatcher.group(2))||"".equals(cmdMatcher.group(3))) {
+                                        cqMsg.setMessage("参数错误。");
+                                        cqManager.sendMsg(cqMsg);
+                                        return;
+                                    }
+                                    cqAdminService.addUserRole(cqMsg);
+                                    break;
+                                case "del":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        cqMsg.setMessage("参数错误。");
+                                        cqManager.sendMsg(cqMsg);
+                                        return;
+                                    }
+                                    cqAdminService.delUserRole(cqMsg);
+                                    break;
+                                case "check":
+                                case "checku":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        cqMsg.setMessage("参数错误。");
+                                        cqManager.sendMsg(cqMsg);
+                                        return;
+                                    }
+                                    cqAdminService.getUserRole(cqMsg);
+                                    break;
+                                case "褪裙":
+                                case "退群":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        cqMsg.setMessage("参数错误。");
+                                        cqManager.sendMsg(cqMsg);
+                                        return;
+                                    }
+                                    cqAdminService.listPPOverflow(cqMsg);
+                                    break;
+                                case "bg":
+                                    if ("".equals(cmdMatcher.group(2))||"".equals(cmdMatcher.group(3))) {
+                                        cqMsg.setMessage("参数错误。");
+                                        cqManager.sendMsg(cqMsg);
+                                        return;
+                                    }
+                                    cqAdminService.addComponent(cqMsg);
+                                    break;
+                                case "recent":
+                                case "rs":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        cqMsg.setMessage("参数错误。");
+                                        cqManager.sendMsg(cqMsg);
+                                        return;
+                                    }
+                                    cqAdminService.recent(cqMsg);
+                                    break;
+                                case "afk":
+                                    cqAdminService.checkAfkPlayer(cqMsg);
+                                    break;
+                                case "smoke":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        cqMsg.setMessage("参数错误。");
+                                        cqManager.sendMsg(cqMsg);
+                                        return;
+                                    }
+                                    cqAdminService.smoke(cqMsg);
+                                    break;
+                                case "listinvite":
+                                    cqAdminService.listInvite(cqMsg);
+                                    break;
+                                case "handleinvite":
+                                    cqAdminService.handleInvite(cqMsg);
+                                    break;
+                                case "clearinvite":
+                                    CqAdminServiceImpl.request.clear();
+                                    cqMsg.setMessage("清除列表成功");
+                                    cqManager.sendMsg(cqMsg);
+                                    return;
+                                case "unbind":
+                                    cqAdminService.unbind(cqMsg);
+                                    break;
+                                case "fp":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        cqMsg.setMessage("参数错误。");
+                                        cqManager.sendMsg(cqMsg);
+                                        return;
+                                    }
+                                    cqAdminService.firstPlace(cqMsg);
+                                    break;
+                                case "listmsg":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        cqMsg.setMessage("参数错误。");
+                                        cqManager.sendMsg(cqMsg);
+                                        return;
+                                    }
+                                    cqAdminService.listMsg(cqMsg);
+                                    break;
+                                case "pp":
+
+                                    cqAdminService.listUserPP(cqMsg);
+                                    break;
+                                case "findplayer":
+                                    cqAdminService.findPlayer(cqMsg);
+                                    break;
+                                case "scancard":
+                                    cqAdminService.scanCard(cqMsg);
+                                    break;
+                                case "checkgroupbind":
+                                    cqAdminService.checkGroupBind(cqMsg);
+                                    break;
+                                case "help":
+                                    cqAdminService.help(cqMsg);
+                                    break;
+                                case "repeatstar":
+                                    cqAdminService.getRepeatStar(cqMsg);
+                                    break;
                                 default:
                                     break;
-
                             }
                             break;
                         default:
-                            cmdMatcher = PatternConsts.CMD_REGEX_NUM.matcher(msg);
+                            cmdMatcher = PatternConsts.CMD_REGEX.matcher(msg);
+                            cmdMatcher.find();
                             switch (cmdMatcher.group(1)) {
                                 case "stat":
                                 case "statu":
+                                    //这两个如果没有第二个参数，则直接返回，避免后续subString的时候出现NPE
                                     if ("".equals(cmdMatcher.group(2))) {
                                         return;
                                     }
                                 case "statme":
                                     cqService.statUserInfo(cqMsg);
-                                break;
+                                    break;
                                 case "bp":
-                                case "bps":
                                 case "bpu":
+                                case "bps":
                                 case "bpus":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        return;
+                                    }
                                 case "bpme":
                                 case "bpmes":
-
+                                    cqService.printBP(cqMsg);
                                     break;
                                 case "setid":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        return;
+                                    }
+                                    cqService.setId(cqMsg);
                                     break;
                                 case "recent":
                                 case "rs":
+                                    cqService.recent(cqMsg);
                                     break;
                                 case "help":
+                                    cqService.help(cqMsg);
                                     break;
                                 case "sleep":
+                                    cqService.sleep(cqMsg);
                                     break;
                                 case "fp":
-                                    break;
-                                case "roll":
+                                    cqService.firstPlace(cqMsg);
                                     break;
                                 case "add":
-                                    break;
                                 case "del":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        return;
+                                    }
+                                    cqService.chartMemberCmd(cqMsg);
+                                    break;
+                                case "me":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        return;
+                                    }
+                                    cqService.myScore(cqMsg);
+                                    break;
+                                case "search":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        return;
+                                    }
+                                    cqService.searchBeatmap(cqMsg);
                                     break;
                                 default:
                                     break;
@@ -158,16 +301,18 @@ public class CqController {
                 break;
             case "event":
                 if ("group_increase".equals(cqMsg.getEvent())) {
-                    cmdUtil.praseNewsPaper(cqMsg);
+                    //新增人口
+                    cqService.welcomeNewsPaper(cqMsg);
                 }
                 if ("group_admin".equals(cqMsg.getEvent())) {
+                    //群管变动
                     smokeUtil.loadGroupAdmins();
                 }
                 break;
             case "request":
                 //只有是加群请求的时候才进入
                 if ("group".equals(cqMsg.getRequestType()) && "invite".equals(cqMsg.getSubType())) {
-                    cmdUtil.stashInviteRequest(cqMsg);
+                    cqAdminService.stashInviteRequest(cqMsg);
                 }
                 break;
             default:

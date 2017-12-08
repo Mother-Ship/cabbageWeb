@@ -4,7 +4,7 @@ import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 @Mapper
 @Repository
@@ -26,13 +26,13 @@ public interface UserInfoDAO{
 
     @Select("SELECT * , abs(UNIX_TIMESTAMP(queryDate) - UNIX_TIMESTAMP(#{queryDate})) AS ds " +
             "FROM `userinfo`  WHERE `user_id` = #{userId} ORDER BY ds ASC LIMIT 1")
-    Userinfo getNearestUserInfo(@Param("userId") Integer userId, @Param("queryDate") Date queryDate);
+    Userinfo getNearestUserInfo(@Param("userId") Integer userId, @Param("queryDate") LocalDate queryDate);
 
     @Select("SELECT * FROM `userinfo` WHERE `user_id` = #{userId} AND `queryDate` = #{queryDate}")
-    Userinfo getUserInfo(@Param("userId") Integer userId, @Param("queryDate") Date queryDate);
+    Userinfo getUserInfo(@Param("userId") Integer userId, @Param("queryDate") LocalDate queryDate);
 
     @Delete("DELETE FROM `userinfo` WHERE `queryDate` = #{queryDate}")
-    void clearTodayInfo(@Param("queryDate") Date queryDate);
+    void clearTodayInfo(@Param("queryDate") LocalDate queryDate);
 }
 
 

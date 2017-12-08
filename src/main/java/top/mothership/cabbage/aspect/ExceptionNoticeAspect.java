@@ -1,26 +1,34 @@
 package top.mothership.cabbage.aspect;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * 用于处理全局异常的类，一旦有异常发生就通过QQ消息通知我
+ * The type Exception notice aspect.
+ *
+ * @author 瞿瀚盛  用于处理全局异常的类，一旦有异常发生就通过QQ消息通知我
  */
 @Component
 @Aspect
 /**
- * @author 瞿瀚盛
+ * 异常通知的优先级必须在拦截之后
  */
-public class CqServiceAspect {
+@Order(2)
+public class ExceptionNoticeAspect {
 private final CqManager cqManager;
 
     /**
@@ -29,7 +37,7 @@ private final CqManager cqManager;
      * @param cqManager 用于发送QQ消息
      */
     @Autowired
-    public CqServiceAspect( CqManager cqManager) {
+    public ExceptionNoticeAspect( CqManager cqManager) {
         this.cqManager = cqManager;
 
     }
@@ -55,8 +63,10 @@ private final CqManager cqManager;
     @Around(value = "aspectjMethod()")
     public Object doAround(ProceedingJoinPoint pjp){
         Object result=null;
+
         try {
             result=pjp.proceed();
+
         } catch (Throwable e) {
 
            String resp = formatter.format(LocalDateTime.now())+
@@ -64,17 +74,27 @@ private final CqManager cqManager;
                    + pjp.getSignature().getName() + "()\n方法入参：";
             Object[] args = pjp.getArgs();
             for (Object arg : args) {
-                resp = resp.concat("\n" +arg.getClass().getName()+ arg);
+                resp = resp.concat("\n类：" +arg.getClass()+ "，值："+arg);
             }
             StackTraceElement[] stackTrace = e.getStackTrace();
             for (StackTraceElement stackTraceElement : stackTrace) {
-                resp = resp.concat("\n    at " + stackTraceElement);
+                if(stackTraceElement.getClassName().contains("top.mothership")) {
+                    resp = resp.concat("\n    at " + stackTraceElement);
+                }else if(stackTraceElement.getClassName().contains("java.")){
+                    resp = resp.concat("\n    at " + stackTraceElement);
+                }else{
+                    if(!resp.endsWith("\n    ……")) {
+                        resp = resp.concat("\n    ……");
+                    }
+                }
+
             }
             CqMsg cqMsg = new CqMsg();
             cqMsg.setMessage(resp);
             cqMsg.setUserId(1335734657L);
             cqMsg.setMessageType("private");
             cqManager.sendMsg(cqMsg);
+
         }
         return result;
     }

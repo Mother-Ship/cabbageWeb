@@ -1,4 +1,4 @@
-package top.mothership.cabbage.interceptors;
+package top.mothership.cabbage.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

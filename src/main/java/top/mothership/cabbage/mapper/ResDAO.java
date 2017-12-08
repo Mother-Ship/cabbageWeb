@@ -14,10 +14,10 @@ import java.util.Map;
 public interface ResDAO {
 
 
-    @Insert("INSERT INTO `osufile` VALUES (null,#{bid},#{filedata})")
-    Integer addOsuFile(@Param("bid")Integer bid,@Param("filedata") String filedata);
+    @Insert("INSERT INTO `osufile` VALUES (null,#{bid},#{data})")
+    Integer addOsuFile(@Param("bid")Integer bid,@Param("data") String data);
 
-    @Select("SELECT `filedata` FROM osufile WHERE `bid` = #{bid} ")
+    @Select("SELECT `data` FROM osufile WHERE `bid` = #{bid} ")
     String getOsuFileBybid(@Param("bid")Integer bid);
 
 

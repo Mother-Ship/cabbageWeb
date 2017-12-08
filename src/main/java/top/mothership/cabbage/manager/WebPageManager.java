@@ -1,4 +1,4 @@
-package top.mothership.cabbage.util.osu;
+package top.mothership.cabbage.manager;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
@@ -19,11 +19,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OsuFile;
 import top.mothership.cabbage.pojo.osu.OsuSearchResp;
-
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -36,7 +36,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.ZipEntry;
@@ -157,7 +156,7 @@ public class WebPageManager {
         if (CookieNames.contains("phpbb3_2cjk5_sid")) {
             //登录成功
             DefaultHttpClient httpclient2 = new DefaultHttpClient();
-            OsuFile osuFile = praseOsuFile(beatmap);
+            OsuFile osuFile = parseOsuFile(beatmap);
             if (osuFile == null) {
                 logger.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
                 return null;
@@ -257,9 +256,9 @@ public class WebPageManager {
         int retry = 0;
         BufferedImage bg;
         BufferedImage resizedBG = null;
-        OsuFile osuFile = praseOsuFile(beatmap);
+        OsuFile osuFile = parseOsuFile(beatmap);
         //这里dao层需要使用object，然后再这里转换为数组，于是判断非空就得用null而不是.length。
-        byte[] img = (byte[]) resDAO.getBGBySidAndName(Integer.valueOf(beatmap.getBeatmapSetId()), osuFile.getBgName());
+        byte[] img = (byte[]) resDAO.getBGBySidAndName(beatmap.getBeatmapSetId(), osuFile.getBgName());
         if (img != null) {
             try (ByteArrayInputStream in = new ByteArrayInputStream(img)) {
                 return ImageIO.read(in);
@@ -282,7 +281,7 @@ public class WebPageManager {
                 }
                 //读取返回结果
                 bg = ImageIO.read(httpConnection.getInputStream());
-                Matcher m = Pattern.compile(Overall.DOWNLOAD_FILENAME_REGEX)
+                Matcher m = PatternConsts.DOWNLOAD_FILENAME_REGEX
                         .matcher(httpConnection.getHeaderFields().get("Content-Disposition").get(0));
                 m.find();
                 resizedBG = resizeImg(bg, 1366, 768);
@@ -488,7 +487,7 @@ public class WebPageManager {
                 }
                 //将返回结果读取为Byte数组
                 osuFile = new String(readInputStream(httpConnection.getInputStream()), "UTF-8");
-                resDAO.addOsuFile(Integer.valueOf(beatmap.getBeatmapId()), osuFile);
+                resDAO.addOsuFile(beatmap.getBeatmapId(), osuFile);
                 //手动关闭连接
                 httpConnection.disconnect();
                 return osuFile;
@@ -512,18 +511,19 @@ public class WebPageManager {
      */
 //这个方法只能处理ranked/approved/qualified的.osu文件,在目前的业务逻辑里默认.osu文件是存在的。
     //方法名大包大揽，其实我只能处理出BG名字（
-    public OsuFile praseOsuFile(Beatmap beatmap) {
+    public OsuFile parseOsuFile(Beatmap beatmap) {
         //先获取
-        String osuFile = resDAO.getOsuFileBybid(Integer.valueOf(beatmap.getBeatmapId()));
+        String osuFile = resDAO.getOsuFileBybid(beatmap.getBeatmapId());
         String bgName;
-        Matcher m = Pattern.compile(Overall.BGNAME_REGEX).matcher(osuFile);
+        Matcher m = PatternConsts.BGNAME_REGEX.matcher(osuFile);
         if (m.find()) {
             OsuFile result = new OsuFile();
             bgName = m.group(1);
             result.setBgName(bgName);
             return result;
-        } else return null;
-
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -542,23 +542,27 @@ public class WebPageManager {
         while (retry < 5) {
             HttpURLConnection httpConnection;
             try {
-                String URL = osuSearchURL;
+                String url = osuSearchURL;
                 List<NameValuePair> params = new LinkedList<>();
-                if (!"".equals(title))
+                if (!"".equals(title)) {
                     params.add(new BasicNameValuePair("title", title));
-                if (!"".equals(artist))
+                }
+                if (!"".equals(artist)) {
                     params.add(new BasicNameValuePair("artist", artist));
-                if (!"".equals(mapper))
+                }
+                if (!"".equals(mapper)) {
                     params.add(new BasicNameValuePair("mapper", mapper));
-                if (!"".equals(diffName))
+                }
+                if (!"".equals(diffName)) {
                     params.add(new BasicNameValuePair("diff_name", diffName));
+                }
                 params.add(new BasicNameValuePair("modes", "Standard"));
                 params.add(new BasicNameValuePair("query_order", "play_count"));
 
-                URL+= "?"+URLEncodedUtils.format(params, "utf-8");
+                url += "?" + URLEncodedUtils.format(params, "utf-8");
 
                 httpConnection =
-                        (HttpURLConnection) new URL(URL).openConnection();
+                        (HttpURLConnection) new URL(url).openConnection();
                 //设置请求头
 
                 httpConnection.setRequestMethod("GET");

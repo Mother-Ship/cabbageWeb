@@ -5,24 +5,29 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.text.DecimalFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
-import java.util.ResourceBundle;
 
+/**
+ * @author QHS
+ */
 @Component
 public class ScoreUtil {
-    private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
     private Logger logger = LogManager.getLogger(this.getClass());
-    private WebPageUtil webPageUtil;
+    private WebPageManager webPageManager;
 
     @Autowired
-    public ScoreUtil(WebPageUtil webPageUtil) {
-        this.webPageUtil = webPageUtil;
+    public ScoreUtil(WebPageManager webPageManager) {
+        this.webPageManager = webPageManager;
     }
 
 
@@ -70,6 +75,8 @@ public class ScoreUtil {
                         case 14:
                             mods.put("PF", "perfect");
                             break;
+                            default:
+                                break;
                     }
                 }
             }
@@ -84,10 +91,26 @@ public class ScoreUtil {
         }
         return mods;
     }
+    public String genScoreString(Score score,Beatmap beatmap,String username){
+        OppaiResult oppaiResult = calcPP(score, beatmap);
+       String resp =  "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
+                + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n"
+                + score.getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，" + score.getCountMiss() + "*miss , "
+                + convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
+                + " (" + new DecimalFormat("###.00").format(
+                100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
+                        / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)";
+        if (oppaiResult != null) {
+            resp += "，"+String.valueOf(Math.round(oppaiResult.getPp())) + "PP\n";
+        }
+        resp+= "Played by " + username + ", " + DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(score.getDate().toInstant()) + ", ";
+        return resp;
+    }
+
 
     public OppaiResult calcPP(Score score, Beatmap beatmap) {
         logger.info("开始计算PP");
-        String osuFile = webPageUtil.getOsuFile(beatmap);
+        String osuFile = webPageManager.getOsuFile(beatmap);
         try (BufferedReader in = new BufferedReader(new StringReader(osuFile))) {
             //日后再说，暂时不去按自己的想法改造它……万一作者日后放出更新呢..
             //把这种充满静态内部类，PPv2Params没有有参构造、成员变量给包访问权限、没有get/set的危险东西局限在这个方法里，不要在外面用就是了……%
@@ -104,21 +127,6 @@ public class ScoreUtil {
             p.nmiss = score.getCountMiss();
             p.combo = score.getMaxCombo();
             Koohii.PPv2 pp = new Koohii.PPv2(p);
-
-            //            //单项PP大于1000直接取个位数……这个可能不需要了
-//            if (Math.round(oppaiResult.getAimPp()) > 1000) {
-//                oppaiResult.setAimPp(Math.round(oppaiResult.getAimPp()) % 10);
-//                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
-//            }
-//            if (Math.round(oppaiResult.getAccPp()) > 1000) {
-//                oppaiResult.setAccPp(Math.round(oppaiResult.getAccPp()) % 10);
-//                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
-//            }
-//            if (Math.round(oppaiResult.getSpeedPp()) > 1000) {
-//                oppaiResult.setSpeedPp(Math.round(oppaiResult.getSpeedPp()) % 10);
-//                oppaiResult.setPp(oppaiResult.getAimPp() + oppaiResult.getAccPp() + oppaiResult.getSpeedPp());
-//            }
-
             return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
                     //Java实现如果出错会抛出异常，象征性给个0和null
                     0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),

@@ -3,13 +3,13 @@ package top.mothership.cabbage.task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.mapper.ScoresDAO;
+import top.mothership.cabbage.manager.ApiManager;
+import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.mapper.ScoreDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
-import top.mothership.cabbage.util.osu.ApiUtil;
 import top.mothership.cabbage.util.osu.ScoreUtil;
-import top.mothership.cabbage.util.qq.CqUtil;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -18,43 +18,43 @@ import java.util.List;
 
 @Component
 public class Analyze {
-    private final ApiUtil apiUtil;
-    private CqUtil cqUtil;
-    private ScoreUtil scoreUtil;
-    private ScoresDAO scoresDAO;
-    List<Integer> tianYuan = Arrays.asList(4850066, 3968377, 3895240, 3986489,4657888, 9597135, 7124237);
-    List<Integer> targetMapR2 = Arrays.asList(404550, 1242792, 1078109, 776600, 103403,
-            270363, 419189,
-            1328722, 742829,
-            136910, 1246270, 363043,
-            1442768, 662095, 825985, 996113,
-            870152);
-    CqMsg cqMsg = new CqMsg();
+    private final ApiManager apiManager;
+    private final CqManager cqManager;
+    private final ScoreUtil scoreUtil;
+    private final ScoreDAO scoreDAO;
+    List<Integer> targetUser = Arrays.asList(7839397, 6678196, 6253301, 7183040,9314367, 7534323);
+    List<Integer> targetMapR3 = Arrays.asList(199535, 556638, 183460, 758189, 1236367,
+            977450, 119853,
+            834589, 982793,
+            335299, 127313, 274365,
+            853094, 582773, 1043393, 202217,
+            368845);
+    private CqMsg cqMsg = new CqMsg();
 
-    //770677061
     @Autowired
-    public Analyze(ApiUtil apiUtil, CqUtil cqUtil, ScoreUtil scoreUtil, ScoresDAO scoresDAO) {
-        this.apiUtil = apiUtil;
-        this.cqUtil = cqUtil;
+    public Analyze(ApiManager apiManager, CqManager cqManager, ScoreUtil scoreUtil, ScoreDAO scoreDAO) {
+        this.apiManager = apiManager;
+        this.cqManager = cqManager;
         this.scoreUtil = scoreUtil;
-        this.scoresDAO = scoresDAO;
+        this.scoreDAO = scoreDAO;
+
         cqMsg.setMessageType("private");
     }
 
     @Scheduled(cron = "0 * * * * ? ")
     public void analyze() {
         cqMsg.setUserId(1335734657L);
-        for (Integer aList : tianYuan) {
-            for (Integer bList : targetMapR2) {
+        for (Integer aList : targetUser) {
+            for (Integer bList : targetMapR3) {
                 //对每个bid
-                List<Score> tmp = apiUtil.getScore(bList, aList);
-                List<Score> lastTmp = scoresDAO.getLastScoreByUidAndBid(aList, bList);
+                List<Score> tmp = apiManager.getScore(bList, aList);
+                List<Score> lastTmp = scoreDAO.getLastScoreByUidAndBid(aList, bList);
 
                 if (tmp.size() == 0) {
                     continue;
                 }
-                Beatmap beatmap = apiUtil.getBeatmap(bList);
-                String username = apiUtil.getUser(null, aList).getUserName();
+                Beatmap beatmap = apiManager.getBeatmap(bList);
+                String username = apiManager.getUser(null, aList).getUserName();
                 if (tmp.size() != lastTmp.size()) {
                     for (int i = 0; i < tmp.size(); i++) {
                         //在原有成绩的范畴内
@@ -71,34 +71,20 @@ public class Analyze {
                             score = tmp.get(i);
                         }
 
-                        cqMsg.setMessage(username + "玩家在谱面" + bList + "有成绩更新，新的成绩为：\n"
-                                + score.getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，"
-                                + scoreUtil.convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
-                                + " (" + new DecimalFormat("###.00").format(
-                                100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
-                                        / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)\n"
-                                + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(score.getDate()) + ", "
-                                + score.getPp() + "PP");
-
-                        cqUtil.sendMsg(cqMsg);
+                        cqMsg.setMessage(username + "玩家有成绩更新，新的成绩为：\n"
+                                +scoreUtil.genScoreString(score,beatmap,username));
+                        cqManager.sendMsg(cqMsg);
                         score.setBeatmapId(bList);
-                        scoresDAO.addScore(score);
+                        scoreDAO.addScore(score);
                     }
                 } else {
                     for (int i = 0; i < lastTmp.size(); i++) {
                         if (tmp.get(i).getDate().getTime()!=(lastTmp.get(i).getDate().getTime())) {
-                            cqMsg.setMessage(username + "玩家在谱面" + bList + "有成绩更新，新的成绩为：\n"
-                                    + tmp.get(i).getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，"
-                                    + scoreUtil.convertMOD(tmp.get(i).getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
-                                    + " (" + new DecimalFormat("###.00").format(
-                                    100.0 * (6 * tmp.get(i).getCount300() + 2 * tmp.get(i).getCount100() + tmp.get(i).getCount50())
-                                            / (6 * (tmp.get(i).getCount50() + tmp.get(i).getCount100() + tmp.get(i).getCount300() + tmp.get(i).getCountMiss()))) + "%)\n"
-                                    + new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(tmp.get(i).getDate()) + ", "
-                                    + tmp.get(i).getPp() + "PP");
-
-                            cqUtil.sendMsg(cqMsg);
+                            cqMsg.setMessage(username + "玩家有成绩更新，新的成绩为：\n"
+                                    +scoreUtil.genScoreString(tmp.get(i),beatmap,username));
+                            cqManager.sendMsg(cqMsg);
                             tmp.get(i).setBeatmapId(bList);
-                            scoresDAO.addScore(tmp.get(i));
+                            scoreDAO.addScore(tmp.get(i));
                         }
                     }
                 }

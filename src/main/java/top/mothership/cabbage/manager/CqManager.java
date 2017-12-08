@@ -146,9 +146,11 @@ public class CqManager {
     public List<Long> getGroupAdmins(Long groupId){
         List<QQInfo> members = getGroupMembers(groupId).getData();
         List<Long> result = new ArrayList<>();
-        for(int i=0;i<members.size();i++){
-            if(members.get(i).getRole().equals("admin")){
-                result.add(members.get(i).getUserId());
+        if(members!=null) {
+            for (int i = 0; i < members.size(); i++) {
+                if (members.get(i).getRole().equals("admin")) {
+                    result.add(members.get(i).getUserId());
+                }
             }
         }
         return result;

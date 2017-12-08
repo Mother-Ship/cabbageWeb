@@ -4,65 +4,104 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.consts.OverallConsts;
+import top.mothership.cabbage.consts.PatternConsts;
+import top.mothership.cabbage.manager.WebPageManager;
+import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.Userinfo;
-import top.mothership.cabbage.util.Overall;
 import top.mothership.cabbage.util.osu.ScoreUtil;
-import top.mothership.cabbage.util.osu.WebPageUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-//2017-11-6 12:50:14改为全部返回BASE64编码
+
 @Component
-//采用原型模式注入，避免出现错群问题
 @Scope(proxyMode = ScopedProxyMode.TARGET_CLASS, value = "prototype")
+/**
+ * 采用原型模式注入，避免出现错群问题
+ * 2017-11-6 12:50:14改为全部返回BASE64编码
+ */
 public class ImgUtil {
-    //2017-9-8 13:55:42我他妈是个智障……没初始化的map我在下面用
+    /**
+     * 采用原型模式注入，避免出现错群问题
+     * 2017-9-8 13:55:42我他妈是个智障……没初始化的map我在下面用
+     */
     public static Map<String, BufferedImage> images;
-    private WebPageUtil webPageUtil;
+    private WebPageManager webPageManager;
     private ScoreUtil scoreUtil;
-
+    private static ResDAO resDAO;
     @Autowired
-    public ImgUtil(WebPageUtil webPageUtil, ScoreUtil scoreUtil) {
-        this.webPageUtil = webPageUtil;
+    public ImgUtil(WebPageManager webPageManager, ScoreUtil scoreUtil, ResDAO resDAO) {
+        this.webPageManager = webPageManager;
         this.scoreUtil = scoreUtil;
+        ImgUtil.resDAO = resDAO;
+        loadCache();
+    }
+    public static void loadCache() {
+        //调用NIO遍历那些可以加载一次的文件
+        //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
+        images = new HashMap<>();
+        //逻辑改为从数据库加载
+        List<Map<String, Object>> list = resDAO.getResource();
+        for (Map<String, Object> aList : list) {
+            String name = (String) aList.get("name");
+            byte[] data = (byte[]) aList.get("data");
+            try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
+                ImgUtil.images.put(name, ImageIO.read(in));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    //为线程安全，将当前时间毫秒数加入文件名并返回
+    /**为线程安全，将当前时间毫秒数加入文件名并返回(被废弃：已经采用base64编码)
+     *
+     * @param userFromAPI 最新用户信息
+     * @param userInDB 作为对比的信息
+     * @param role 用户组
+     * @param day 对比的天数
+     * @param near 是否是接近的数据
+     * @param scoreRank scoreRank
+     * @return
+     */
     public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean near, int scoreRank) {
-        BufferedImage ava = webPageUtil.getAvatar(userFromAPI.getUserId());
+        BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId());
         BufferedImage bg;
-        BufferedImage layout = getCopyImage(images.get(Overall.CABBAGE_CONFIG.getString("layout")));
-        BufferedImage scoreRankBG = getCopyImage(images.get(Overall.CABBAGE_CONFIG.getString("scoreRankBG")));
+        BufferedImage layout = getCopyImage(images.get(OverallConsts.CABBAGE_CONFIG.getString("layout")));
+        BufferedImage scoreRankBG = getCopyImage(images.get(OverallConsts.CABBAGE_CONFIG.getString("scoreRankBG")));
         BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
-        try {
-            bg = getCopyImage(images.get(String.valueOf(userFromAPI.getUserId()) + ".png"));
-        } catch (NullPointerException e) {
+
+        bg = images.get(String.valueOf(userFromAPI.getUserId()) + ".png");
+        if (bg != null) {
+            bg = getCopyImage(bg);
+        } else {
             //现在已经不用再去扫描硬盘了啊
             try {
                 bg = getCopyImage(images.get(role + ".png"));
-            } catch (NullPointerException e2) {
+            } catch (NullPointerException ignore) {
                 //这个异常是在出现了新用户组，但是没有准备这个用户组的右下角标志时候出现
                 return null;
             }
-
         }
+
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
         //绘制布局和用户组
 
@@ -70,7 +109,7 @@ public class ImgUtil {
 
         g2.drawImage(roleBg, 0, 0, null);
         try {
-            g2.drawImage(ava, Integer.decode(Overall.CABBAGE_CONFIG.getString("avax")), Integer.decode(Overall.CABBAGE_CONFIG.getString("avay")), null);
+            g2.drawImage(ava, Integer.decode(OverallConsts.CABBAGE_CONFIG.getString("avax")), Integer.decode(OverallConsts.CABBAGE_CONFIG.getString("avay")), null);
         } catch (NullPointerException e) {
             e.getMessage();
         }
@@ -119,6 +158,7 @@ public class ImgUtil {
                 new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime()), "timex", "timey");
         //---------------------------以上绘制在线部分完成--------------------------------
         //试图查询数据库中指定日期的user
+        //这里应该是不需要防null判断的
         if (day > 0) {
                 /*
                 不带参数：day=1，调用dbUtil拿当天凌晨（数据库中数值是昨天）的数据进行对比
@@ -133,8 +173,10 @@ public class ImgUtil {
                     //如果取到的是模糊数据
                     draw(g2, "tipColor", "tipFont", "tipSize", "请求的日期没有数据", "tipx", "tipy");
                     //算出天数差别
-                    draw(g2, "tipColor", "tipFont", "tipSize", "『对比于" + Long.valueOf(((Calendar.getInstance().getTime().getTime() -
-                            userInDB.getQueryDate().getTime()) / 1000 / 60 / 60 / 24)).toString() + "天前』", "tip2x", "tip2y");
+                    draw(g2, "tipColor", "tipFont", "tipSize", "『对比于" +
+                            ChronoUnit.DAYS.between(userInDB.getQueryDate(),LocalDate.now())
+//                            Long.valueOf(((Calendar.getInstance().getTime().getTime() - .getTime()) / 1000 / 60 / 60 / 24)).toString()
+                            + "天前』", "tip2x", "tip2y");
                 } else {
                     //如果取到的是精确数据
                     draw(g2, "tipColor", "tipFont", "tipSize", "『对比于" + day + "天前』", "tip2x", "tip2y");
@@ -273,21 +315,21 @@ public class ImgUtil {
     public String drawUserBP(Userinfo userFromAPI, List<Score> list) {
 
         //计算最终宽高
-        int Height = images.get(Overall.CABBAGE_CONFIG.getString("bptop")).getHeight();
+        int height = images.get(OverallConsts.CABBAGE_CONFIG.getString("bptop")).getHeight();
         int HeightPoint = 0;
-        int Width = images.get(Overall.CABBAGE_CONFIG.getString("bptop")).getWidth();
+        int Width = images.get(OverallConsts.CABBAGE_CONFIG.getString("bptop")).getWidth();
         for (Score aList : list) {
-            if (aList.getBeatmapName().length() <= Integer.valueOf(Overall.CABBAGE_CONFIG.getString("bplimit"))) {
-                Height = Height + images.get(Overall.CABBAGE_CONFIG.getString("bpmid2")).getHeight();
+            if (aList.getBeatmapName().length() <= Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("bplimit"))) {
+                height = height + images.get(OverallConsts.CABBAGE_CONFIG.getString("bpmid2")).getHeight();
             } else {
-                Height = Height + images.get(Overall.CABBAGE_CONFIG.getString("bpmid3")).getHeight();
+                height = height + images.get(OverallConsts.CABBAGE_CONFIG.getString("bpmid3")).getHeight();
             }
         }
-        BufferedImage result = new BufferedImage(Width, Height, BufferedImage.TYPE_INT_RGB);
+        BufferedImage result = new BufferedImage(Width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = result.createGraphics();
 
         //头部
-        BufferedImage bpTop = getCopyImage(images.get(Overall.CABBAGE_CONFIG.getString("bptop")));
+        BufferedImage bpTop = getCopyImage(images.get(OverallConsts.CABBAGE_CONFIG.getString("bptop")));
         Graphics2D g2 = (Graphics2D) bpTop.getGraphics();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         draw(g2, "bpUnameColor", "bpUnameFont", "bpUnameSize", "Best Performance of " + userFromAPI.getUserName(), "bpUnamex", "bpUnamey");
@@ -311,16 +353,16 @@ public class ImgUtil {
 
             String mods = scoreUtil.convertMOD(aList.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "");
             int a;
-            if (aList.getBeatmapName().length() <= Integer.valueOf(Overall.CABBAGE_CONFIG.getString("bplimit"))) {
+            if (aList.getBeatmapName().length() <= Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("bplimit"))) {
                 a = 2;
             } else {
                 a = 3;
             }
 
-            BufferedImage bpMid = getCopyImage(images.get(Overall.CABBAGE_CONFIG.getString("bpmid" + a)));
+            BufferedImage bpMid = getCopyImage(images.get(OverallConsts.CABBAGE_CONFIG.getString("bpmid" + a)));
             Graphics2D g3 = bpMid.createGraphics();
             //小图标
-            g3.drawImage(images.get(aList.getRank() + "_small.png"), Integer.decode(Overall.CABBAGE_CONFIG.getString("bp" + a + "Rankx")), Integer.decode(Overall.CABBAGE_CONFIG.getString("bp" + a + "Ranky")), null);
+            g3.drawImage(images.get(aList.getRank() + "_small.png"), Integer.decode(OverallConsts.CABBAGE_CONFIG.getString("bp" + a + "Rankx")), Integer.decode(OverallConsts.CABBAGE_CONFIG.getString("bp" + a + "Ranky")), null);
             //绘制文字
             g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             //绘制日期(给的就是北京时间，不转)
@@ -343,12 +385,14 @@ public class ImgUtil {
                             aList.getBeatmapName() + "(" + acc + "%)", "bp2Namex", "bp2Namey");
                     break;
                 case 3:
-                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize", aList.getBeatmapName().substring(0, aList.getBeatmapName().substring(0, Integer.valueOf(Overall.CABBAGE_CONFIG.getString("bplimit")) + 1).lastIndexOf(" ") + 1),
+                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize", aList.getBeatmapName().substring(0, aList.getBeatmapName().substring(0, Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("bplimit")) + 1).lastIndexOf(" ") + 1),
                             "bp3Namex", "bp3Namey");
-                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize", aList.getBeatmapName().substring(aList.getBeatmapName().substring(0, Integer.valueOf(Overall.CABBAGE_CONFIG.getString("bplimit")) + 1).lastIndexOf(" ") + 1, aList.getBeatmapName().length())
+                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize", aList.getBeatmapName().substring(aList.getBeatmapName().substring(0, Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("bplimit")) + 1).lastIndexOf(" ") + 1, aList.getBeatmapName().length())
                                     + "(" + acc + "%)",
                             "bp3Name+1x", "bp3Name+1y");
                     break;
+                    default:
+                        break;
             }
             g3.dispose();
             bpMid.flush();
@@ -373,22 +417,22 @@ public class ImgUtil {
         OppaiResult oppaiResult = null;
         try {
             oppaiResult = scoreUtil.calcPP(score, beatmap);
-        }catch (Exception ignore){
+        } catch (Exception ignore) {
             //如果acc过低
         }
         boolean defaultBG = false;
         try {
-            bg = webPageUtil.getBG(beatmap);
-        }catch (NullPointerException e){
-            bg = webPageUtil.getBGBackup(beatmap);
+            bg = webPageManager.getBG(beatmap);
+        } catch (NullPointerException e) {
+            bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
                 //随机抽取一个bg
-                String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
-                bg = getCopyImage(images.get(RandomBG));
+                String randomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
+                bg = getCopyImage(images.get(randomBG));
                 defaultBG = true;
             }
         }
-        //2017-11-3 17:51:47这里有莫名的空指针，比较迷，在webpageUtil.getBG里加一个判断为空则抛出空指针看看
+        //2017-11-3 17:51:47这里有莫名的空指针，比较迷，在webPageManager.getBG里加一个判断为空则抛出空指针看看
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
         //画上各个元素，这里Images按文件名排序
         //顶端banner(下方也暗化了20%，JAVA自带算法容易导致某些图片生成透明图片)
@@ -589,13 +633,13 @@ public class ImgUtil {
         Image bg2;
         boolean unicode = false;
         //头像
-        BufferedImage ava = webPageUtil.getAvatar(userFromAPI.getUserId());
+        BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId());
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
 
         try {
-            bg = webPageUtil.getBG(beatmap);
+            bg = webPageManager.getBG(beatmap);
         } catch (NullPointerException e) {
-            bg = webPageUtil.getBGBackup(beatmap);
+            bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
                 //随机抽取一个bg
                 String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
@@ -604,7 +648,7 @@ public class ImgUtil {
         }
         //缩略图
 
-        bg2 = webPageUtil.resizeImg(getCopyImage(bg), 161, 121);
+        bg2 = webPageManager.resizeImg(getCopyImage(bg), 161, 121);
 
         //拉伸裁剪原bg
 
@@ -657,9 +701,9 @@ public class ImgUtil {
 
         //白色字体
         g2.setPaint(Color.decode("#FFFFFF"));
-        if(unicode) {
+        if (unicode) {
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 32));
-        }else {
+        } else {
             g2.setFont(new Font("Aller light", Font.PLAIN, 32));
         }
         g2.drawString(title, 54, 31);
@@ -804,9 +848,9 @@ public class ImgUtil {
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
 
         try {
-            bg = webPageUtil.getBG(beatmap);
+            bg = webPageManager.getBG(beatmap);
         } catch (NullPointerException e) {
-            bg = webPageUtil.getBGBackup(beatmap);
+            bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
                 //随机抽取一个bg
                 String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
@@ -814,7 +858,7 @@ public class ImgUtil {
             }
         }
         //缩略图
-        bg2 = webPageUtil.resizeImg(getCopyImage(bg), 161, 121);
+        bg2 = webPageManager.resizeImg(getCopyImage(bg), 161, 121);
 
         //拉伸裁剪原bg
         Image bgTmp = bg.getScaledInstance(1580, 888, Image.SCALE_SMOOTH);
@@ -864,9 +908,9 @@ public class ImgUtil {
 
         //白色字体
         g2.setPaint(Color.decode("#FFFFFF"));
-        if(unicode) {
+        if (unicode) {
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 32));
-        }else {
+        } else {
             g2.setFont(new Font("Aller light", Font.PLAIN, 32));
         }
         g2.drawString(title, 54, 31);
@@ -970,11 +1014,11 @@ public class ImgUtil {
 
     private void draw(Graphics2D g2, String color, String font, String size, String text, String x, String y) {
         //指定颜色
-        g2.setPaint(Color.decode(Overall.CABBAGE_CONFIG.getString(color)));
+        g2.setPaint(Color.decode(OverallConsts.CABBAGE_CONFIG.getString(color)));
         //指定字体
-        g2.setFont(new Font(Overall.CABBAGE_CONFIG.getString(font), Font.PLAIN, Integer.decode(Overall.CABBAGE_CONFIG.getString(size))));
+        g2.setFont(new Font(OverallConsts.CABBAGE_CONFIG.getString(font), Font.PLAIN, Integer.decode(OverallConsts.CABBAGE_CONFIG.getString(size))));
         //指定坐标
-        g2.drawString(text, Integer.decode(Overall.CABBAGE_CONFIG.getString(x)), Integer.decode(Overall.CABBAGE_CONFIG.getString(y)));
+        g2.drawString(text, Integer.decode(OverallConsts.CABBAGE_CONFIG.getString(x)), Integer.decode(OverallConsts.CABBAGE_CONFIG.getString(y)));
 
     }
 
@@ -993,9 +1037,7 @@ public class ImgUtil {
 
 
     private String unicodeToString(String str) {
-
-        Pattern pattern = Pattern.compile("(\\\\u(\\p{XDigit}{4}))");
-        Matcher matcher = pattern.matcher(str);
+        Matcher matcher = PatternConsts.UNICODE_TO_STRING.matcher(str);
         char ch;
         while (matcher.find()) {
             ch = (char) Integer.parseInt(matcher.group(2), 16);
