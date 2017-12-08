@@ -45,7 +45,12 @@ public class SmokeUtil {
         //对所有群开启消息记录
         List<RespData> groups = cqManager.getGroups().getData();
         for (RespData respData : groups) {
-            msgQueues.put(respData.getGroupId(), new MsgQueue());
+            if(!repeatRecordGroups.contains(String.valueOf(respData.getGroupId()))
+                    &&!repeatSmokeGroups.contains(String.valueOf(respData.getGroupId()))) {
+                msgQueues.put(respData.getGroupId(), new MsgQueue(10));
+            }else{
+                msgQueues.put(respData.getGroupId(), new MsgQueue());
+            }
         }
     }
 

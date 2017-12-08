@@ -735,7 +735,7 @@ public class ImgUtil {
         //小头像
         g2.drawImage(ava.getScaledInstance(66, 66, Image.SCALE_SMOOTH), 14, 217, null);
         //id
-        g2.setFont(new Font("Ubuntu", Font.PLAIN, 32));
+        g2.setFont(new Font("Aller", Font.PLAIN, 32));
         //投影
         g2.setPaint(Color.decode("#000000"));
         g2.drawString(userFromAPI.getUserName(), 144, 245);
@@ -811,7 +811,7 @@ public class ImgUtil {
         }
 
         //难度名
-        g2.setFont(new Font("微软雅黑", Font.BOLD, 22));
+        g2.setFont(new Font("Aller", Font.BOLD, 22));
         g2.drawString(oppaiResult.getVersion(), 982, 245);
         //小星星
         String[] b = String.valueOf(beatmap.getDifficultyRating()).split("\\.");
@@ -961,7 +961,7 @@ public class ImgUtil {
         //artist//creator
 
         //难度名
-        g2.setFont(new Font("微软雅黑", Font.BOLD, 22));
+        g2.setFont(new Font("Aller", Font.BOLD, 22));
         g2.drawString(oppaiResult.getVersion(), 982, 245);
         //小星星
         String[] b = String.valueOf(beatmap.getDifficultyRating()).split("\\.");

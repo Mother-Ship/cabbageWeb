@@ -16,7 +16,13 @@ public class MsgQueue {
     private int start = 0;
     private int end = 0;
     private int len = 0;
-    private CqMsg[] msgs = new CqMsg[100];
+    private int N=100;
+    private CqMsg[] msgs = new CqMsg[N];
+    public MsgQueue(){}
+    public MsgQueue(int N) {
+        this.N=N;
+    }
+
     /**
      * 为了避免空指针异常，得new一个
      */
@@ -58,15 +64,15 @@ public class MsgQueue {
         //首先长度增加
         len++;
         //如果0-100都有了消息，那就把start右移一个
-        if (len >= 100) {
-            len = 100;
+        if (len >= N) {
+            len = N;
             start++;
         }
         //如果end已经达到数组最右端，就移到最左端
-        if (end == 100) {
+        if (end == N) {
             end = 0;
         }
-        if (start == 100) {
+        if (start == N) {
             start = 0;
         }
         //把消息存到结束坐标里
