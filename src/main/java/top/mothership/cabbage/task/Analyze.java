@@ -15,8 +15,8 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
-
-@Component
+//比赛打完了 这个类也用不着了
+//@Component
 public class Analyze {
     private final ApiManager apiManager;
     private final CqManager cqManager;
@@ -31,7 +31,7 @@ public class Analyze {
             368845);
     private CqMsg cqMsg = new CqMsg();
 
-    @Autowired
+//    @Autowired
     public Analyze(ApiManager apiManager, CqManager cqManager, ScoreUtil scoreUtil, ScoreDAO scoreDAO) {
         this.apiManager = apiManager;
         this.cqManager = cqManager;
@@ -41,7 +41,7 @@ public class Analyze {
         cqMsg.setMessageType("private");
     }
 
-    @Scheduled(cron = "0 * * * * ? ")
+//    @Scheduled(cron = "0 * * * * ? ")
     public void analyze() {
         cqMsg.setUserId(1335734657L);
         for (Integer aList : targetUser) {

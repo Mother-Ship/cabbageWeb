@@ -472,19 +472,24 @@ public class CqServiceImpl {
         }
         logger.info("尝试将" + userFromAPI.getUserName() + "绑定到QQ：" + cqMsg.getUserId() + "上");
 
-        //只有这个QQ对应的id是0
+        //只有这个QQ对应的id是null
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
             //只有这个id对应的QQ是null
             user = userDAO.getUser(null, userFromAPI.getUserId());
-            if (user.getQq() == 0) {
-                //由于reg方法中已经进行过登记了,所以这用的应该是update操作
-                user.setUserId(userFromAPI.getUserId());
-                user.setQq(cqMsg.getUserId());
-                userDAO.updateUser(user);
-                cqMsg.setMessage("将" + userFromAPI.getUserName() + "绑定到" + cqMsg.getUserId() + "成功。");
-            } else {
-                cqMsg.setMessage("你的osu!账号已经绑定了QQ：" + user.getQq() + "，如果发生错误请联系妈妈船。");
+            if(user==null){
+                user = new User(userFromAPI.getUserId(), "creep", cqMsg.getUserId(), "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
+                userDAO.addUser(user);
+            }else {
+                if (user.getQq() == 0) {
+                    //由于reg方法中已经进行过登记了,所以这用的应该是update操作
+                    user.setUserId(userFromAPI.getUserId());
+                    user.setQq(cqMsg.getUserId());
+                    userDAO.updateUser(user);
+                    cqMsg.setMessage("将" + userFromAPI.getUserName() + "绑定到" + cqMsg.getUserId() + "成功。");
+                } else {
+                    cqMsg.setMessage("你的osu!账号已经绑定了QQ：" + user.getQq() + "，如果发生错误请联系妈妈船。");
+                }
             }
         } else {
             userFromAPI = apiManager.getUser(null, user.getUserId());

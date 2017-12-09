@@ -14,7 +14,9 @@ import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -46,22 +48,37 @@ public class RoleControlAspect {
 
     @Around("aspectjMethod() && args(cqMsg)")
     public Object doAround(ProceedingJoinPoint pjp, CqMsg cqMsg) throws Throwable {
-        UserRoleControl userRoleControl = pjp.getTarget().getClass().getMethod(
+        //取出Class上的注解
+        UserRoleControl userRoleControl = null;
+        List<Long> allowedUser = new ArrayList<>();
+        Annotation[] a =  pjp.getTarget().getClass().getAnnotations();
+        for(Annotation aList:a){
+            if(aList.annotationType().equals(UserRoleControl.class)){
+                userRoleControl = (UserRoleControl) a[1];
+            }
+        }
+        //如果Class上的注解不是null
+        if(userRoleControl!=null) {
+            for(long l:userRoleControl.value()){
+                allowedUser.add(l);
+            }
+        }
+        //同理 取出方法上的注解
+        userRoleControl = pjp.getTarget().getClass().getMethod(
                 pjp.getSignature().getName(),
                 ((MethodSignature)pjp.getSignature()).getParameterTypes()
         ).getAnnotation(UserRoleControl.class);
-        if(userRoleControl==null){
-           Annotation[] a =  pjp.getTarget().getClass().getAnnotations();
-           for(Annotation aList:a){
-               if(aList.getClass().equals(UserRoleControl.class)){
-                   userRoleControl = (UserRoleControl) a[1];
-               }
-           }
+        if(userRoleControl!=null) {
+            for(long l:userRoleControl.value()){
+                allowedUser.add(l);
+            }
         }
-        if(userRoleControl==null){
+        //如果方法和类上都没有注解
+        if(allowedUser.size()==0){
             return pjp.proceed();
         }
-        if (Arrays.stream(userRoleControl.value()).boxed().collect(Collectors.toList()).contains(cqMsg.getUserId())) {
+
+        if (allowedUser.contains(cqMsg.getUserId())) {
             return pjp.proceed();
         }else {
             cqMsg.setMessage("[CQ:face,id=14]？");
