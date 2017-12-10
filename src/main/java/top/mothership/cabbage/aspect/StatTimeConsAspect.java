@@ -23,7 +23,7 @@ public class StatTimeConsAspect {
     private void aspectjMethod() {
     }
     @Around(value = "aspectjMethod()")
-    public Object doAround2(ProceedingJoinPoint pjp) throws Throwable {
+    public Object statTimeCons(ProceedingJoinPoint pjp) throws Throwable {
         Instant s = Instant.now();
         pjp.proceed();
         logger.info("处理完毕，共耗费" + Duration.between(s, Instant.now()).toMillis() + "ms。");

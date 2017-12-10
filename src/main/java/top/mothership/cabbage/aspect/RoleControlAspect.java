@@ -15,9 +15,7 @@ import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @Aspect
@@ -39,52 +37,71 @@ public class RoleControlAspect {
         this.cqManager = cqManager;
 
     }
+
     /**
      * 拦截service层所有方法中带AllowedUser注解的方法
      */
-    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.*.*(..))")
+    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.*.*(top.mothership.cabbage.pojo.CoolQ.CqMsg,..))")
     private void aspectjMethod() {
     }
 
-    @Around("aspectjMethod() && args(cqMsg)")
-    public Object doAround(ProceedingJoinPoint pjp, CqMsg cqMsg) throws Throwable {
+    @Around("aspectjMethod() && args(cqMsg,..)")
+    public Object roleControl(ProceedingJoinPoint pjp, CqMsg cqMsg) throws Throwable {
         //取出Class上的注解
         UserRoleControl userRoleControl = null;
         List<Long> allowedUser = new ArrayList<>();
-        Annotation[] a =  pjp.getTarget().getClass().getAnnotations();
-        for(Annotation aList:a){
-            if(aList.annotationType().equals(UserRoleControl.class)){
+        Annotation[] a = pjp.getTarget().getClass().getAnnotations();
+        for (Annotation aList : a) {
+            if (aList.annotationType().equals(UserRoleControl.class)) {
                 userRoleControl = (UserRoleControl) a[1];
             }
         }
         //如果Class上的注解不是null
-        if(userRoleControl!=null) {
-            for(long l:userRoleControl.value()){
+        if (userRoleControl != null) {
+            for (long l : userRoleControl.value()) {
                 allowedUser.add(l);
             }
         }
         //同理 取出方法上的注解
         userRoleControl = pjp.getTarget().getClass().getMethod(
                 pjp.getSignature().getName(),
-                ((MethodSignature)pjp.getSignature()).getParameterTypes()
+                ((MethodSignature) pjp.getSignature()).getParameterTypes()
         ).getAnnotation(UserRoleControl.class);
-        if(userRoleControl!=null) {
-            for(long l:userRoleControl.value()){
+        if (userRoleControl != null) {
+            for (long l : userRoleControl.value()) {
                 allowedUser.add(l);
             }
         }
-        //如果方法和类上都没有注解
-        if(allowedUser.size()==0){
-            return pjp.proceed();
-        }
-
-        if (allowedUser.contains(cqMsg.getUserId())) {
-            return pjp.proceed();
-        }else {
+        //如果拿到了用户权限的注解，并且这个注解的值没有消息发送者的qq
+        if (allowedUser.size() > 0 && !allowedUser.contains(cqMsg.getUserId())) {
             cqMsg.setMessage("[CQ:face,id=14]？");
             cqManager.sendMsg(cqMsg);
             return null;
+        } else {
+            //如果通过了用户权限判别
+            //对群权限控制注解进行判别
+            if(!"group".equals(cqMsg.getMessageType())){
+                //如果不是群消息，不吃群权限控制
+                return pjp.proceed();
+            }
+            GroupRoleControl groupRoleControl = pjp.getTarget().getClass().getMethod(
+                    pjp.getSignature().getName(),
+                    ((MethodSignature) pjp.getSignature()).getParameterTypes()
+            ).getAnnotation(GroupRoleControl.class);
+            if (groupRoleControl != null) {
+                for (long l : groupRoleControl.value()) {
+                    if (cqMsg.getGroupId().equals(l)) {
+                        cqMsg.setMessage("该群已停用本命令。");
+                        cqManager.sendMsg(cqMsg);
+                        return null;
+                    }
+                }
+                return pjp.proceed();
+            } else {
+                return pjp.proceed();
+            }
         }
+
 
     }
 }

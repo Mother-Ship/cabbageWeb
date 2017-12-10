@@ -34,8 +34,9 @@ public class CqController {
 
     /**
      * Spring构造方法自动注入
-     * @param cqService Service层
-     * @param smokeUtil 负责禁言的工具类
+     *
+     * @param cqService      Service层
+     * @param smokeUtil      负责禁言的工具类
      * @param cqAdminService
      * @param cqManager
      */
@@ -114,7 +115,7 @@ public class CqController {
                             //无视命令大小写
                             switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                                 case "add":
-                                    if ("".equals(cmdMatcher.group(2))||"".equals(cmdMatcher.group(3))) {
+                                    if ("".equals(cmdMatcher.group(2)) || "".equals(cmdMatcher.group(3))) {
                                         cqMsg.setMessage("参数错误。");
                                         cqManager.sendMsg(cqMsg);
                                         return;
@@ -149,7 +150,7 @@ public class CqController {
                                     cqAdminService.listPPOverflow(cqMsg);
                                     break;
                                 case "bg":
-                                    if ("".equals(cmdMatcher.group(2))||"".equals(cmdMatcher.group(3))) {
+                                    if ("".equals(cmdMatcher.group(2)) || "".equals(cmdMatcher.group(3))) {
                                         cqMsg.setMessage("参数错误。");
                                         cqManager.sendMsg(cqMsg);
                                         return;
@@ -251,7 +252,14 @@ public class CqController {
                                     }
                                 case "bpme":
                                 case "bpmes":
-                                    cqService.printBP(cqMsg);
+                                    if ("".equals(cmdMatcher.group(3))) {
+                                        cqService.printBP(cqMsg);
+                                    } else {
+                                        //如果有指定#n
+
+                                        cqService.printSpecifiedBP(cqMsg);
+                                    }
+
                                     break;
                                 case "setid":
                                     if ("".equals(cmdMatcher.group(2))) {
