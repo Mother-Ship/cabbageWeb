@@ -728,7 +728,7 @@ public class ImgUtil {
                 + "  转盘数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSpinners()), 7, 108);
 
         //四围、难度
-        g2.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        g2.setFont(new Font("Aller", Font.PLAIN, 13));
         g2.drawString("CS:" + beatmap.getDiffSize() + " AR:" + beatmap.getDiffApproach()
                 + " OD:" + beatmap.getDiffOverall() + " HP:" + beatmap.getDiffDrain()
                 + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(beatmap.getDifficultyRating())), 7, 125);
@@ -934,7 +934,7 @@ public class ImgUtil {
                 + "  转盘数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSpinners()), 7, 108);
 
         //四围、难度
-        g2.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        g2.setFont(new Font("Aller", Font.PLAIN, 13));
         g2.drawString("CS:" + beatmap.getDiffSize() + " AR:" + beatmap.getDiffApproach()
                 + " OD:" + beatmap.getDiffOverall() + " HP:" + beatmap.getDiffDrain()
                 + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(beatmap.getDifficultyRating())), 7, 125);

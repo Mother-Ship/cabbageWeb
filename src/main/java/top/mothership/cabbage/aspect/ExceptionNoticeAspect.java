@@ -61,7 +61,7 @@ private final CqManager cqManager;
      * @return aop织入方法时处理的方法返回结果
      */
     @Around(value = "aspectjMethod()")
-    public Object doAround(ProceedingJoinPoint pjp){
+    public Object exceptionNotice(ProceedingJoinPoint pjp){
         Object result=null;
 
         try {

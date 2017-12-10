@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import top.mothership.cabbage.annotation.GroupRoleControl;
 import top.mothership.cabbage.consts.Base64Consts;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.manager.ApiManager;
@@ -244,7 +245,11 @@ public class CqServiceImpl {
                         //构造User对象写入数据库
                         user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
                         userDAO.addUser(user);
-                        userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+                        if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
+                            userFromAPI.setQueryDate(LocalDate.now());
+                        } else {
+                            userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+                        }
                         //写入一行userinfo
                         userInfoDAO.addUserInfo(userFromAPI);
                         userInDB = userFromAPI;
@@ -321,20 +326,6 @@ public class CqServiceImpl {
         boolean text = true;
         Matcher cmdRegex = PatternConsts.CMD_REGEX.matcher(cqMsg.getMessage());
         cmdRegex.find();
-        if (!"".equals(cmdRegex.group(3))) {
-            try {
-                num = Integer.valueOf(cmdRegex.group(3));
-                if (num < 0 || num > 100) {
-                    cqMsg.setMessage("其他人看不到的东西，白菜也看不到啦。");
-                    cqManager.sendMsg(cqMsg);
-                    return;
-                }
-            } catch (java.lang.NumberFormatException e) {
-                cqMsg.setMessage("[CQ:record,file=base64://" + Base64Consts.AYA_YA_YA + "]");
-                cqManager.sendMsg(cqMsg);
-                return;
-            }
-        }
 
         switch (cmdRegex.group(1).toLowerCase(Locale.CHINA)) {
             case "bp":
@@ -392,10 +383,7 @@ public class CqServiceImpl {
         }
 
         List<Score> bps = apiManager.getBP(userFromAPI.getUserName(), null);
-        if (num > 0) {
-            printSpecifiedBP(userFromAPI, bps, cqMsg, text, num);
-            return;
-        }
+
         ArrayList<Score> todayBP = new ArrayList<>();
 
         for (int i = 0; i < bps.size(); i++) {
@@ -430,8 +418,87 @@ public class CqServiceImpl {
         }
     }
 
-    //提供单独方法，用于后续进行按群拦截
-    private void printSpecifiedBP(Userinfo userFromAPI, List<Score> bps, CqMsg cqMsg, boolean text, int num) {
+    //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
+    @GroupRoleControl({112177148L,677545541L,234219559L,201872650L,564679329L,532783765L})
+    public void printSpecifiedBP(CqMsg cqMsg) {
+        String username;
+        Userinfo userFromAPI = null;
+        User user;
+        int num = 0;
+        boolean text = true;
+        Matcher cmdRegex = PatternConsts.CMD_REGEX.matcher(cqMsg.getMessage());
+        cmdRegex.find();
+        try {
+            num = Integer.valueOf(cmdRegex.group(3));
+            if (num < 0 || num > 100) {
+                cqMsg.setMessage("其他人看不到的东西，白菜也看不到啦。");
+                cqManager.sendMsg(cqMsg);
+                return;
+            }
+        } catch (java.lang.NumberFormatException e) {
+            cqMsg.setMessage("[CQ:record,file=base64://" + Base64Consts.AYA_YA_YA + "]");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        switch (cmdRegex.group(1).toLowerCase(Locale.CHINA)) {
+            case "bp":
+                //bp和bps是图片/文字的区别，如果是bp会更改这个text的bool值，用于后续控制
+                text = false;
+            case "bps":
+                username = cmdRegex.group(2);
+                if ("白菜".equals(username)) {
+                    cqMsg.setMessage("大白菜（学名：Brassica rapa pekinensis，异名Brassica campestris pekinensis或Brassica pekinensis）" +
+                            "是一种原产于中国的蔬菜，又称“结球白菜”、“包心白菜”、“黄芽白”、“胶菜”等。(via 维基百科)");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                userFromAPI = apiManager.getUser(username, null);
+                if (userFromAPI == null) {
+                    cqMsg.setMessage("没有获取到" + username + "玩家的信息。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                break;
+            case "bpu":
+                text = false;
+            case "bpus":
+                username = cmdRegex.group(2).replaceAll(" ", "");
+                userFromAPI = apiManager.getUser(null, Integer.valueOf(username));
+                if (userFromAPI == null) {
+                    cqMsg.setMessage("没有获取到" + username + "玩家的信息。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                break;
+            case "bpme":
+                text = false;
+            case "bpmes":
+                user = userDAO.getUser(cqMsg.getUserId(), null);
+                if (user == null) {
+                    cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                if (user.isBanned()) {
+                    cqMsg.setMessage("……期待你回来的那一天。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                userFromAPI = apiManager.getUser(null, user.getUserId());
+                if (userFromAPI == null) {
+                    cqMsg.setMessage("没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
+
+        List<Score> bps = apiManager.getBP(userFromAPI.getUserName(), null);
+
+
+
         if (num > bps.size()) {
             cqMsg.setMessage("该玩家没有打出指定的bp……");
             cqManager.sendMsg(cqMsg);
@@ -478,8 +545,17 @@ public class CqServiceImpl {
             //只有这个id对应的QQ是null
             user = userDAO.getUser(null, userFromAPI.getUserId());
             if(user==null){
+                //如果没有使用过白菜的话
+                //如果没有使用过白菜的话
                 user = new User(userFromAPI.getUserId(), "creep", cqMsg.getUserId(), "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
                 userDAO.addUser(user);
+                if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
+                    userFromAPI.setQueryDate(LocalDate.now());
+                } else {
+                    userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+                }
+                //写入一行userinfo
+                userInfoDAO.addUserInfo(userFromAPI);
             }else {
                 if (user.getQq() == 0) {
                     //由于reg方法中已经进行过登记了,所以这用的应该是update操作
@@ -643,6 +719,7 @@ public class CqServiceImpl {
 //        logger.info(cqMsg.getUserId() + "触发了赛群/4 5群禁用!me命令。");
 //        return;
 //    }
+    @GroupRoleControl({112177148L,677545541L,234219559L,201872650L,564679329L,532783765L})
     public void myScore(CqMsg cqMsg) {
         User user;
         Userinfo userFromAPI;
@@ -706,6 +783,7 @@ public class CqServiceImpl {
 //        logger.info(cqMsg.getUserId() + "触发了赛群/4 5群禁用!search命令。");
 //        return;
 //    }
+    @GroupRoleControl({112177148L,677545541L,234219559L,201872650L,564679329L,532783765L})
     public void searchBeatmap(CqMsg cqMsg) {
         Matcher cmdRegex = PatternConsts.CMD_REGEX.matcher(cqMsg.getMessage());
         cmdRegex.find();
