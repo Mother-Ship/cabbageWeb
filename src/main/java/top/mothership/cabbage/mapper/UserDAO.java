@@ -21,6 +21,11 @@ public interface UserDAO {
             "</choose>" +
             "</script>")
         //只能传一个，不能同时处理两个
+    @Results(
+            {
+                    //手动绑定这个字段
+                    @Result(column = "is_banned", property = "banned")
+            })
     User getUser(@Param("qq") Long qq, @Param("userId") Integer userId);
 
     //加入分隔符处理，在中间的，开头的，结尾的，只有这一个用户组的

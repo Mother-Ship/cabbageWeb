@@ -74,13 +74,17 @@ private final CqManager cqManager;
                    + pjp.getSignature().getName() + "()\n方法入参：";
             Object[] args = pjp.getArgs();
             for (Object arg : args) {
+                if(arg.getClass()!=null) {
                 resp = resp.concat("\n类：" +arg.getClass()+ "，值："+arg);
+                }
             }
             StackTraceElement[] stackTrace = e.getStackTrace();
             for (StackTraceElement stackTraceElement : stackTrace) {
                 if(stackTraceElement.getClassName().contains("top.mothership")) {
                     resp = resp.concat("\n    at " + stackTraceElement);
                 }else if(stackTraceElement.getClassName().contains("java.")){
+                    resp = resp.concat("\n    at " + stackTraceElement);
+                } else if(stackTraceElement.getClassName().contains("javax.")){
                     resp = resp.concat("\n    at " + stackTraceElement);
                 }else{
                     if(!resp.endsWith("\n    ……")) {
