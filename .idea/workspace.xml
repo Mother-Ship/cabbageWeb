@@ -10,17 +10,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6d1ab8cc-7a94-4748-b25c-51fdf03c8238" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/res/font/Aller_Lt.ttf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/res/font/Aller_Rg_MODFIED.ttf" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/main/res/font/Aller_Rg.ttf" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/ExceptionNoticeAspect.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/ExceptionNoticeAspect.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/RoleControlAspect.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/RoleControlAspect.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/StatTimeConsAspect.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/StatTimeConsAspect.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/jdbc.properties" afterPath="$PROJECT_DIR$/src/main/resources/jdbc.properties" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -74,8 +65,8 @@
       <file leaf-file-name="ImgUtil.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="73" column="0" lean-forward="true" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
+            <state relative-caret-position="77">
+              <caret line="745" column="33" lean-forward="false" selection-start-line="745" selection-start-column="29" selection-end-line="745" selection-end-column="33" />
               <folding />
             </state>
           </provider>
@@ -1048,14 +1039,7 @@
       <workItem from="1512744027022" duration="5420000" />
       <workItem from="1512793647298" duration="4319000" />
       <workItem from="1512813740221" duration="891000" />
-      <workItem from="1512829230812" duration="17044000" />
-    </task>
-    <task id="LOCAL-00019" summary="修正了sudo add的图片名称无效，加入了MFA">
-      <created>1507522883624</created>
-      <option name="number" value="00019" />
-      <option name="presentableId" value="LOCAL-00019" />
-      <option name="project" value="LOCAL" />
-      <updated>1507522883624</updated>
+      <workItem from="1512829230812" duration="17256000" />
     </task>
     <task id="LOCAL-00020" summary="新增mp5s4赛群相关，新增群邀请的是否同意/清理">
       <created>1508135188580</created>
@@ -1393,7 +1377,14 @@
       <option name="project" value="LOCAL" />
       <updated>1512812339553</updated>
     </task>
-    <option name="localTasksCounter" value="68" />
+    <task id="LOCAL-00068" summary="完善群控制权限">
+      <created>1512881354682</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1512881354684</updated>
+    </task>
+    <option name="localTasksCounter" value="69" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1429,7 +1420,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="950517000" />
+    <option name="totallyTimeSpent" value="950729000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1522,7 +1513,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="优化toString" />
     <MESSAGE value="统一!sudo add时的图片名" />
     <MESSAGE value="微调!sudo PP输出格式" />
     <MESSAGE value="初步完成解析score.db" />
@@ -1547,7 +1537,8 @@
     <MESSAGE value="以前我写的什么屎……" />
     <MESSAGE value="修正一些小问题" />
     <MESSAGE value="修正权限控制失效" />
-    <option name="LAST_COMMIT_MESSAGE" value="修正权限控制失效" />
+    <MESSAGE value="完善群控制权限" />
+    <option name="LAST_COMMIT_MESSAGE" value="完善群控制权限" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1924,8 +1915,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="73" column="0" lean-forward="true" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
+        <state relative-caret-position="77">
+          <caret line="745" column="33" lean-forward="false" selection-start-line="745" selection-start-column="29" selection-end-line="745" selection-end-column="33" />
           <folding />
         </state>
       </provider>
