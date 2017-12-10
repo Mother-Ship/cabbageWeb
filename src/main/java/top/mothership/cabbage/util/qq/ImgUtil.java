@@ -756,8 +756,8 @@ public class ImgUtil {
             for (Map.Entry<String, String> entry : scoreUtil.convertMOD(score.getEnabledMods()).entrySet()) {
                 mods.add(entry.getKey());
             }
-            g2.setFont(new Font("Arial", Font.PLAIN, 17));
-            int a = g2.getFontMetrics(new Font("Arial", Font.PLAIN, 17)).stringWidth(mods.toString().replaceAll("[\\[\\]]", ""));
+            g2.setFont(new Font("Aller Light", Font.PLAIN, 17));
+            int a = g2.getFontMetrics(new Font("Aller Light", Font.PLAIN, 17)).stringWidth(mods.toString().replaceAll("[\\[\\]]", ""));
 
             //投影
             g2.setPaint(Color.decode("#000000"));
@@ -767,9 +767,9 @@ public class ImgUtil {
             g2.drawString(mods.toString().replaceAll("[\\[\\]]", ""), 533 - a, 233);
         }
         //acc
-        g2.setFont(new Font("Ubuntu", Font.PLAIN, 17));
+        g2.setFont(new Font("Aller Light", Font.PLAIN, 17));
         String accS = new DecimalFormat("###.00").format(100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50()) / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())));
-        int a = g2.getFontMetrics(new Font("Ubuntu", Font.PLAIN, 17)).stringWidth(accS);
+        int a = g2.getFontMetrics(new Font("Aller Light", Font.PLAIN, 17)).stringWidth(accS);
 
         //投影
         g2.setPaint(Color.decode("#000000"));
@@ -780,8 +780,8 @@ public class ImgUtil {
 
 
         //分差
-        g2.setFont(new Font("Ubuntu", Font.PLAIN, 17));
-        a = g2.getFontMetrics(new Font("Ubuntu", Font.PLAIN, 17)).stringWidth("+ " + String.valueOf(xE));
+        g2.setFont(new Font("Aller Light", Font.PLAIN, 17));
+        a = g2.getFontMetrics(new Font("Aller Light", Font.PLAIN, 17)).stringWidth("+ " + String.valueOf(xE));
 
         g2.setPaint(Color.decode("#000000"));
         g2.drawString("+" + new DecimalFormat("###,###").format(xE), 532 - a, 278);
