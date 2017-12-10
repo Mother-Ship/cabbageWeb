@@ -206,6 +206,7 @@ public class CqServiceImpl {
                         }
                     }
                     day = 0;
+                    role = user.getRole();
                 } else {
                     role = user.getRole();
                     if (day > 0) {
@@ -255,7 +256,6 @@ public class CqServiceImpl {
                         userInDB = userFromAPI;
                     }
                     role = "creep";
-
                 } else {
                     role = user.getRole();
                     if (day > 0) {
