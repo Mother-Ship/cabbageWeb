@@ -12,8 +12,10 @@ import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.serviceImpl.CqAdminServiceImpl;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
+import top.mothership.cabbage.util.qq.ImgUtil;
 import top.mothership.cabbage.util.qq.SmokeUtil;
 
+import javax.annotation.PostConstruct;
 import java.util.Locale;
 import java.util.regex.Matcher;
 
@@ -46,6 +48,7 @@ public class CqController {
         this.smokeUtil = smokeUtil;
         this.cqAdminService = cqAdminService;
         this.cqManager = cqManager;
+
     }
 
     /**
@@ -328,5 +331,12 @@ public class CqController {
                 logger.error("传入无法识别的Request，可能是HTTP API插件已经更新");
         }
     }
-
+    @PostConstruct
+    private void notifyInitComplete() {
+        CqMsg cqMsg = new CqMsg();
+        cqMsg.setMessageType("private");
+        cqMsg.setUserId(1335734657L);
+        cqMsg.setMessage("初始化完成，欢迎使用");
+        cqManager.sendMsg(cqMsg);
+    }
 }

@@ -29,6 +29,7 @@ import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -54,7 +55,7 @@ public class CqAdminServiceImpl {
     private final UserInfoDAO userInfoDAO;
     private final WebPageManager webPageManager;
     private final ImgUtil imgUtil;
-    private final ResDAO resDAO;
+    private static ResDAO resDAO;
     private final ScoreUtil scoreUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
 
@@ -66,10 +67,26 @@ public class CqAdminServiceImpl {
         this.userInfoDAO = userInfoDAO;
         this.webPageManager = webPageManager;
         this.imgUtil = imgUtil;
-        this.resDAO = resDAO;
+        CqAdminServiceImpl.resDAO = resDAO;
         this.scoreUtil = scoreUtil;
+        loadCache();
     }
-
+    private static void loadCache() {
+        //调用NIO遍历那些可以加载一次的文件
+        //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
+        ImgUtil.images = new HashMap<>();
+        //逻辑改为从数据库加载
+        List<Map<String, Object>> list = resDAO.getResource();
+        for (Map<String, Object> aList : list) {
+            String name = (String) aList.get("name");
+            byte[] data = (byte[]) aList.get("data");
+            try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
+                ImgUtil.images.put(name, ImageIO.read(in));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     public void addUserRole(CqMsg cqMsg) {
 
         Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
@@ -335,7 +352,7 @@ public class CqAdminServiceImpl {
         cqMsg.setMessage("修改组件" + target + ".png成功。");
         cqManager.sendMsg(cqMsg);
         //手动调用重载缓存
-        ImgUtil.loadCache();
+        loadCache();
     }
 
     public void recent(CqMsg cqMsg) {
@@ -416,13 +433,11 @@ public class CqAdminServiceImpl {
     public void smoke(CqMsg cqMsg) {
         String msg = cqMsg.getMessage();
         int index = msg.indexOf("]");
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
         int sec;
         String QQ;
 
-        if (!"".equals(m.group(3))) {
-            sec = Integer.valueOf(m.group(3));
+        if (!"".equals(msg.substring(index+2))) {
+            sec = Integer.valueOf(msg.substring(index+2));
         } else {
             sec = 600;
         }

@@ -47,30 +47,15 @@ public class ImgUtil {
     public static Map<String, BufferedImage> images;
     private WebPageManager webPageManager;
     private ScoreUtil scoreUtil;
-    private static ResDAO resDAO;
     @Autowired
     public ImgUtil(WebPageManager webPageManager, ScoreUtil scoreUtil, ResDAO resDAO) {
         this.webPageManager = webPageManager;
         this.scoreUtil = scoreUtil;
-        ImgUtil.resDAO = resDAO;
-        loadCache();
+        //我明白了 loadcache不能放在这个类的构造函数里，因为每次要绘图都会实例化一个新的ImgUtil，然后这个静态的缓存都会被重新刷新一次
+        //又因为我没考虑线程安全，所以才有几率出null
+        //而且resDAO也不能在这个类里声明……反正是初始化顺序的原因
     }
-    public static void loadCache() {
-        //调用NIO遍历那些可以加载一次的文件
-        //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
-        images = new HashMap<>();
-        //逻辑改为从数据库加载
-        List<Map<String, Object>> list = resDAO.getResource();
-        for (Map<String, Object> aList : list) {
-            String name = (String) aList.get("name");
-            byte[] data = (byte[]) aList.get("data");
-            try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
-                ImgUtil.images.put(name, ImageIO.read(in));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+
 
     /**为线程安全，将当前时间毫秒数加入文件名并返回(被废弃：已经采用base64编码)
      *

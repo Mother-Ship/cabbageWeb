@@ -967,12 +967,5 @@ public class CqServiceImpl {
 
     }
 
-    @PostConstruct
-    private void notifyInitComplete() {
-        CqMsg cqMsg = new CqMsg();
-        cqMsg.setMessage("初始化完成，欢迎使用");
-        cqMsg.setMessageType("private");
-        cqMsg.setUserId(1335734657L);
-        cqManager.sendMsg(cqMsg);
-    }
+
 }
