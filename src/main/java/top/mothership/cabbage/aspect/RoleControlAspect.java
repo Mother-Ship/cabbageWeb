@@ -72,8 +72,8 @@ public class RoleControlAspect {
                 allowedUser.add(l);
             }
         }
-        //如果拿到了用户权限的注解，并且这个注解的值没有消息发送者的qq
-        if (allowedUser.size() > 0 && !allowedUser.contains(cqMsg.getUserId())) {
+        //如果拿到了用户权限的注解，并且这个注解的值没有消息发送者的qq，并且是QQ消息（而不是事件或者邀请）
+        if (allowedUser.size() > 0 && !allowedUser.contains(cqMsg.getUserId()) &&"message".equals(cqMsg.getPostType())) {
             cqMsg.setMessage("[CQ:face,id=14]？");
             cqManager.sendMsg(cqMsg);
             return null;
