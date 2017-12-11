@@ -25,9 +25,11 @@ public class SmokeUtil {
     public static Map<Long, List<Long>> groupAdmins;
 
 
-    //而读取管理员则独立成为方法，方便刷新
-    //现在的问题是这个静态方法会在cqManager之前初始化，而且cqManager不是静态的，所以在这个方法里没法用cqManager
-    //不使用静态方法，调用这个方法放在构造函数里，而Controller里正好由Spring托管了一个
+    /*而读取管理员则独立成为方法，方便刷新
+    现在的问题是这个静态方法会在cqManager之前初始化，而且cqManager不是静态的，所以在这个方法里没法用cqManager
+    不使用静态方法，调用这个方法放在构造函数里，而Controller里正好由Spring托管了一个
+    */
+
     public void loadGroupAdmins() {
         groupAdmins = new HashMap<>(16);
         //仅仅记录复读的群不需要群管
