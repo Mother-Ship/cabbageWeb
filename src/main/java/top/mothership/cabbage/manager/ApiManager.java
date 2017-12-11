@@ -3,6 +3,10 @@ package top.mothership.cabbage.manager;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -12,6 +16,7 @@ import top.mothership.cabbage.pojo.osu.Userinfo;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -83,6 +88,7 @@ public class ApiManager {
         }
     }
 
+
     private String accessAPI(String apiType, String uid, String uidType, String bid,String hash,Integer rank) {
         String URL;
         String failLog;
@@ -90,11 +96,11 @@ public class ApiManager {
         HttpURLConnection httpConnection;
         switch (apiType) {
             case "user":
-                URL = getUserURL + "?k=" + key + "&type=" + uidType + "&u=" + uid;
+                URL = getUserURL + "?k=" + key + "&type=" + uidType + "&u=" + uid.replaceAll(" ","_");
                 failLog = "玩家" + uid + "请求API：get_user失败五次";
                 break;
             case "bp":
-                URL = getBPURL + "?k=" + key + "&type=" + uidType + "&limit=100&u=" + uid;
+                URL = getBPURL + "?k=" + key + "&type=" + uidType + "&limit=100&u=" + uid.replaceAll(" ","_");
                 failLog = "玩家" + uid + "请求API：get_user_best失败五次";
                 break;
             case "beatmap":
@@ -106,7 +112,7 @@ public class ApiManager {
                 failLog = "谱面" + bid + "请求API：get_beatmaps失败五次";
                 break;
             case "recent":
-                URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=1&u=" + uid;
+                URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=1&u=" + uid.replaceAll(" ","_");
                 failLog = "玩家" + uid + "请求API：get_recent失败五次";
                 break;
             case "first":

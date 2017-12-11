@@ -74,7 +74,7 @@ private final CqManager cqManager;
                    + pjp.getSignature().getName() + "()\n方法入参：";
             Object[] args = pjp.getArgs();
             for (Object arg : args) {
-                if(arg.getClass()!=null) {
+                if(arg!=null) {
                 resp = resp.concat("\n类：" +arg.getClass()+ "，值："+arg);
                 }
             }
