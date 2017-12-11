@@ -60,6 +60,7 @@ public interface UserDAO {
             + "<if test=\"user.currentUname != null\">current_uname=#{user.currentUname},</if>"
             + "<if test=\"user.banned != null\">is_banned=#{user.banned},</if>"
             + "<if test=\"user.repeatCount != null\">repeat_count=#{user.repeatCount},</if>"
+            + "<if test=\"user.speakingCount != null\">speaking_count=#{user.speakingCount},</if>"
             + "</set>"
             + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);
