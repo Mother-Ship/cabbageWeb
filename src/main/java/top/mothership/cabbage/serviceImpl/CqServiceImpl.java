@@ -546,7 +546,6 @@ public class CqServiceImpl {
             user = userDAO.getUser(null, userFromAPI.getUserId());
             if(user==null){
                 //如果没有使用过白菜的话
-                //如果没有使用过白菜的话
                 user = new User(userFromAPI.getUserId(), "creep", cqMsg.getUserId(), "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
                 userDAO.addUser(user);
                 if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
@@ -556,6 +555,7 @@ public class CqServiceImpl {
                 }
                 //写入一行userinfo
                 userInfoDAO.addUserInfo(userFromAPI);
+                cqMsg.setMessage("将" + userFromAPI.getUserName() + "绑定到" + cqMsg.getUserId() + "成功。");
             }else {
                 if (user.getQq() == 0) {
                     //由于reg方法中已经进行过登记了,所以这用的应该是update操作

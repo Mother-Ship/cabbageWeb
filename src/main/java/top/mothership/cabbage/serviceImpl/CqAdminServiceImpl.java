@@ -659,7 +659,9 @@ public class CqAdminServiceImpl {
     }
 
     public void scanCard(CqMsg cqMsg) {
-        CqResponse<List<QQInfo>> cqResponse1 = cqManager.getGroupMembers(cqMsg.getGroupId());
+        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        m.find();
+        CqResponse<List<QQInfo>> cqResponse1 = cqManager.getGroupMembers(Long.valueOf(m.group(2)));
         String resp;
         User user;
         Userinfo userFromAPI;
@@ -692,7 +694,7 @@ public class CqAdminServiceImpl {
         if ("".equals(m.group(2))) {
             cqResponse = cqManager.getGroupMembers(cqMsg.getGroupId());
         } else {
-            cqResponse = cqManager.getGroupMembers(Long.valueOf(m.group(2).substring(1)));
+            cqResponse = cqManager.getGroupMembers(Long.valueOf(m.group(2)));
         }
         for (QQInfo qqInfo : cqResponse.getData()) {
             //根据QQ获取user
@@ -741,13 +743,13 @@ public class CqAdminServiceImpl {
                 "!sudo listMsg @xxx 打印被艾特的人最近的10条消息。在对方撤回消息时起作用。\n" +
                 "!sudo PP xxx 查询xxx组中所有成员PP（一般用于比赛计算Cost）。\n" +
                 "!sudo findPlayer xxx 查询曾用/现用xxx用户名的玩家。\n" +
-                "!sudo scanCard 扫描所在群的所有绑定了QQ的群成员，检测群名片是否包含完整id（无视大小写，并且会自动识别横线/空格）。\n" +
+                "!sudo scanCard:xxx扫描所在群的所有绑定了QQ的群成员，检测群名片是否包含完整id（无视大小写，并且会自动识别横线/空格）。\n" +
                 "!sudo checku xxx 根据uid查找用户。\n" +
                 "!sudo checkq xxx 根据QQ查找用户。\n" +
                 "!sudo checkGroupBind xxx 打印该群所有成员是否绑定id，以及绑定id是否在mp4/5组内。" +
                 "特别的，不带参数会将群号设置为当前消息的群号。（只支持mp4/5群）\n"+
-                "!sudo repeatStar 打印所有开启复读计数群内，复读发言/所有发言 比值最高的人。" +
-                "!sudo bind id:qq 强行修改这个id的QQ绑定" ;
+                "!sudo repeatStar 打印所有开启复读计数群内，复读发言/所有发言 比值最高的人。"
+               ;
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
