@@ -419,7 +419,7 @@ public class CqServiceImpl {
     }
 
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
-    @GroupRoleControl({112177148L,677545541L,234219559L,201872650L,564679329L,532783765L})
+    @GroupRoleControl({112177148L,677545541L,234219559L,201872650L,564679329L,532783765L,558518324L})
     public void printSpecifiedBP(CqMsg cqMsg) {
         String username;
         Userinfo userFromAPI = null;
@@ -711,15 +711,8 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    //if ("112177148".equals(String.valueOf(cqMsg.getGroupId()))
-//            || "677545541".equals(String.valueOf(cqMsg.getGroupId()))
-//            || "234219559".equals(String.valueOf(cqMsg.getGroupId()))
-//            || "201872650".equals(String.valueOf(cqMsg.getGroupId()))
-//            || "564679329".equals(String.valueOf(cqMsg.getGroupId()))) {
-//        logger.info(cqMsg.getUserId() + "触发了赛群/4 5群禁用!me命令。");
-//        return;
-//    }
-    @GroupRoleControl({112177148L,677545541L,234219559L,201872650L,564679329L,532783765L})
+
+    @GroupRoleControl({112177148L,677545541L,234219559L,201872650L,564679329L,532783765L,558518324L})
     public void myScore(CqMsg cqMsg) {
         User user;
         Userinfo userFromAPI;
@@ -775,15 +768,8 @@ public class CqServiceImpl {
         }
     }
 
-    // if ("112177148".equals(String.valueOf(cqMsg.getGroupId()))
-//            || "677545541".equals(String.valueOf(cqMsg.getGroupId()))
-//            || "234219559".equals(String.valueOf(cqMsg.getGroupId()))
-//            || "201872650".equals(String.valueOf(cqMsg.getGroupId()))
-//            || "564679329".equals(String.valueOf(cqMsg.getGroupId()))) {
-//        logger.info(cqMsg.getUserId() + "触发了赛群/4 5群禁用!search命令。");
-//        return;
-//    }
-    @GroupRoleControl({112177148L,677545541L,234219559L,201872650L,564679329L,532783765L})
+
+    @GroupRoleControl({112177148L,677545541L,234219559L,201872650L,564679329L,532783765L,558518324L})
     public void searchBeatmap(CqMsg cqMsg) {
         Matcher cmdRegex = PatternConsts.CMD_REGEX.matcher(cqMsg.getMessage());
         cmdRegex.find();
