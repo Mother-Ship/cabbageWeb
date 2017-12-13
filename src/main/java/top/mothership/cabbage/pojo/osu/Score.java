@@ -43,5 +43,8 @@ public class Score {
     @SerializedName("username")
     private String userName;
     private Integer userId;
-
+    //为兼容get_match
+    private Integer slot;
+    private Integer team;
+    private Integer pass;
 }

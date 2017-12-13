@@ -12,7 +12,7 @@ import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.serviceImpl.CqAdminServiceImpl;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
-import top.mothership.cabbage.util.qq.ImgUtil;
+import top.mothership.cabbage.serviceImpl.MpServiceImpl;
 import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.annotation.PostConstruct;
@@ -31,22 +31,24 @@ public class CqController {
     private final CqServiceImpl cqService;
     private final SmokeUtil smokeUtil;
     private final CqAdminServiceImpl cqAdminService;
+    private final MpServiceImpl mpService;
     private final CqManager cqManager;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     /**
      * Spring构造方法自动注入
-     *
-     * @param cqService      Service层
+     *  @param cqService      Service层
      * @param smokeUtil      负责禁言的工具类
      * @param cqAdminService
+     * @param mpService
      * @param cqManager
      */
     @Autowired
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, CqManager cqManager) {
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, MpServiceImpl mpService, CqManager cqManager) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
         this.cqAdminService = cqAdminService;
+        this.mpService = mpService;
         this.cqManager = cqManager;
 
     }
@@ -233,10 +235,36 @@ public class CqController {
                                     break;
                             }
                             break;
+                        case "mp":
+                            cmdMatcher = PatternConsts.MP_CMD_REGEX.matcher(msg);
+                            cmdMatcher.find();
+                            switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
+                                case "rs":
+                                    break;
+                                case "make":
+                                    break;
+                                case "invite":
+                                    break;
+                                case "list":
+                                    break;
+                                case "abort":
+                                    break;
+                                case "join":
+                                    break;
+                                case "add":
+                                    break;
+                                case "del":
+                                    break;
+                                case "listmap":
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
                         default:
                             cmdMatcher = PatternConsts.CMD_REGEX.matcher(msg);
                             cmdMatcher.find();
-                            switch (cmdMatcher.group(1)) {
+                            switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                                 case "stat":
                                 case "statu":
                                     //这两个如果没有第二个参数，则直接返回，避免后续subString的时候出现NPE
@@ -331,6 +359,7 @@ public class CqController {
                 logger.error("传入无法识别的Request，可能是HTTP API插件已经更新");
         }
     }
+
     @PostConstruct
     private void notifyInitComplete() {
         CqMsg cqMsg = new CqMsg();
