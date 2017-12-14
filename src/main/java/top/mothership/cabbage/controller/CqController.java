@@ -240,6 +240,7 @@ public class CqController {
                             cmdMatcher.find();
                             switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                                 case "rs":
+                                    mpService.reserveLobby(cqMsg);
                                     break;
                                 case "make":
                                     break;
