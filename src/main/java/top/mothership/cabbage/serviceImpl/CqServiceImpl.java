@@ -826,7 +826,7 @@ public class CqServiceImpl {
             return;
         }
         username = cmdRegex.group(2).substring(0, cmdRegex.group(2).indexOf(":"));
-        qq = Long.valueOf(cmdRegex.group(2).substring(cmdRegex.group(2).indexOf(":") + 1));
+
         userFromAPI = apiManager.getUser(username, null);
         if (userFromAPI == null) {
             cqMsg.setMessage("没有在官网找到该玩家。");
@@ -852,6 +852,7 @@ public class CqServiceImpl {
         String resp = "登记成功，用户组已修改为" + role;
         switch (cmdRegex.group(1).toLowerCase(Locale.CHINA)) {
             case "add":
+                qq = Long.valueOf(cmdRegex.group(2).substring(cmdRegex.group(2).indexOf(":") + 1));
                 if (user == null) {
                     //进行登记，构建user存入，将userinfo加上时间存入
                     user = new User(userFromAPI.getUserId(), "creep", qq, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);

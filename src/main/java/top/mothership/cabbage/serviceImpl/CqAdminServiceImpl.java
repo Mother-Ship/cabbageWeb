@@ -194,7 +194,7 @@ public class CqAdminServiceImpl {
             //如果没有指定用户组
             usernames = m.group(2).split(",");
             logger.info("分隔字符串完成，用户：" + Arrays.toString(usernames) + "，用户组：All");
-            role = "All";
+            role = "all";
         } else {
             usernames = m.group(2).split(",");
             role = m.group(3);
@@ -256,7 +256,7 @@ public class CqAdminServiceImpl {
         if (usernames.length == 0) {
             resp = "没有做出改动。";
         }
-        if (doneList.size() == 1 && "all".equals(role)) {
+        if (doneList.size() == 1) {
             resp = resp.concat("\n该用户之前的用户组是：" + lastUserOldRole);
         }
         cqMsg.setMessage(resp);
@@ -348,7 +348,7 @@ public class CqAdminServiceImpl {
         }
         resp = "查询PP溢出玩家完成。";
         if (overflowList.size() > 0) {
-            resp = resp.concat("\n查询到" + role + "用户组中，以下玩家：" + overflowList.toString() + "PP超出了设定的限制。");
+            resp = resp.concat("\n查询到" + role + "用户组中，以下玩家：" + overflowList.toString().replace(", ",",") + "PP超出了设定的限制。");
         } else {
             resp = resp.concat("\n没有检测" + role + "用户组中PP溢出的玩家。");
         }
@@ -771,17 +771,17 @@ public class CqAdminServiceImpl {
                 "!sudo bg xxx:http://123 将给定连接中的图以xxx.png的文件名写入数据库。\n" +
                 "!sudo recent xxx 查询他人的recent。\n" +
                 "!sudo afk n:xxx 查询xxx用户组中，n天以上没有登录的玩家(以官网为准，如果不提供用户组，默认为mp5)。\n" +
-                "!sudo smoke @xxx:n 在白菜是管理的群，把被艾特的人禁言n秒。\n" +
+                "!sudo smoke @xxx n 在白菜是管理的群，把被艾特的人禁言n秒。\n" +
                 "（艾特全体成员则遍历群成员并禁言，慎用）\n" +
                 "!sudo listInvite 列举当前的加群邀请（无论在哪里使用都会私聊返回结果）。\n" +
                 "!sudo handleInvite n 通过Flag为n的邀请。\n" +
                 "!sudo clearInvite 清空邀请列表。\n" +
-                "!sudo unbind qq 解绑某个QQ对应的id（找到该QQ对应的uid，并将QQ改为0）。\n" +
-                "!sudo fp bid 打印给定bid的#1。\n" +
+                "!sudo unbind xxx 解绑某个QQ对应的id（找到该QQ对应的uid，并将QQ改为0）。\n" +
+                "!sudo fp xxx 打印给定bid的#1。\n" +
                 "!sudo listMsg @xxx 打印被艾特的人最近的10条消息。在对方撤回消息时起作用。\n" +
                 "!sudo PP xxx 查询xxx组中所有成员PP（一般用于比赛计算Cost）。\n" +
                 "!sudo findPlayer xxx 查询曾用/现用xxx用户名的玩家。\n" +
-                "!sudo scanCard:xxx扫描所在群的所有绑定了QQ的群成员，检测群名片是否包含完整id（无视大小写，并且会自动识别横线/空格）。\n" +
+                "!sudo scanCard xxx扫描所在群的所有绑定了QQ的群成员，检测群名片是否包含完整id（无视大小写，并且会自动识别横线/空格）。\n" +
                 "!sudo checku xxx 根据uid查找用户。\n" +
                 "!sudo checkq xxx 根据QQ查找用户。\n" +
                 "!sudo checkGroupBind xxx 打印该群所有成员是否绑定id，以及绑定id是否在mp4/5组内。" +
