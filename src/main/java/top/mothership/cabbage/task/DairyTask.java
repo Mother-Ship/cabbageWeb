@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -87,7 +88,8 @@ public class DairyTask {
                     logger.info("检测到玩家" + userinfo.getUserName() + "改名，已登记");
                 }
                 //如果用户在mp4组
-                if (Arrays.asList(user.getRole().split(",")).contains("mp4")) {
+                List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
+                if (roles.contains("mp4")) {
                     //并且刷超了
                     if (userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49) {
                         CqMsg cqMsg = new CqMsg();
@@ -112,6 +114,17 @@ public class DairyTask {
                                         cqMsg.setMessageType("private");
                                         cqMsg.setMessage("由于PP超限，已将你移出MP4群。");
                                         cqManager.sendMsg(cqMsg);
+                                        //清除用户组，并且踢人
+                                        String newRole;
+                                        roles.remove("mp4");
+                                        if (roles.size() == 0) {
+                                            newRole = "creep";
+                                        } else {
+                                            newRole = roles.toString().replace(" ", "").
+                                                    substring(1, roles.toString().replace(" ", "").indexOf("]"));
+                                        }
+                                        user.setRole(newRole);
+                                        userDAO.updateUser(user);
                                     }
                                 } else {
                                     //大前天没超
@@ -141,7 +154,7 @@ public class DairyTask {
 
                 }
 
-                if (Arrays.asList(user.getRole().split(",")).contains("mp5")) {
+                if (roles.contains("mp5")) {
                     //并且刷超了
                     if (userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49) {
                         CqMsg cqMsg = new CqMsg();
@@ -166,6 +179,17 @@ public class DairyTask {
                                         cqMsg.setMessageType("private");
                                         cqMsg.setMessage("由于PP超限，已将你移出MP5群。");
                                         cqManager.sendMsg(cqMsg);
+                                        String newRole;
+
+                                        roles.remove("mp5");
+                                        if (roles.size() == 0) {
+                                            newRole = "creep";
+                                        } else {
+                                            newRole = roles.toString().replace(" ", "").
+                                                    substring(1, roles.toString().replace(" ", "").indexOf("]"));
+                                        }
+                                        user.setRole(newRole);
+                                        userDAO.updateUser(user);
                                     }
                                 } else {
                                     //大前天没超

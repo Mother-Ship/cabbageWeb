@@ -10,9 +10,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pojo.osu.Beatmap;
-import top.mothership.cabbage.pojo.osu.Score;
-import top.mothership.cabbage.pojo.osu.Userinfo;
+import top.mothership.cabbage.pojo.osu.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,6 +26,7 @@ public class ApiManager {
     private final String getMapURL = "https://osu.ppy.sh/api/get_beatmaps";
     private final String getRecentURL = "https://osu.ppy.sh/api/get_user_recent";
     private final String getScoreURL = "https://osu.ppy.sh/api/get_scores";
+    private final String getMatchURL = "https://osu.ppy.sh/api/get_match";
 
     private final String key = "25559acca3eea3e2c730cd65ee8a6b2da55b52c0";
     private Logger logger = LogManager.getLogger(this.getClass());
@@ -38,11 +37,11 @@ public class ApiManager {
     }
 
     public Beatmap getBeatmap(Integer bid) {
-        String result = accessAPI("beatmap", null, null, String.valueOf(bid),null,null);
+        String result = accessAPI("beatmap", null, null, String.valueOf(bid),null,null,null);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Beatmap.class);
     }
     public Beatmap getBeatmap(String hash) {
-        String result = accessAPI("beatmapHash", null, null, null,String.valueOf(hash),null);
+        String result = accessAPI("beatmapHash", null, null, null,String.valueOf(hash),null,null);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Beatmap.class);
     }
     public List<Score> getBP(String username, Integer userId) {
@@ -61,26 +60,36 @@ public class ApiManager {
     }
 
     public List<Score> getFirstScore(Integer bid,Integer rank){
-        String result = accessAPI("first", null, null, String.valueOf(bid),null,rank);
+        String result = accessAPI("first", null, null, String.valueOf(bid),null,rank,null);
         result = "["+result+"]";
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
                 .fromJson(result, new TypeToken<List<Score>>(){}.getType());
 
     }
     public List<Score> getScore(Integer bid,Integer uid){
-        String result = accessAPI("score", String.valueOf(uid), "id", String.valueOf(bid),null,null);
+        String result = accessAPI("score", String.valueOf(uid), "id", String.valueOf(bid),null,null,null);
         result = "["+result+"]";
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
                 .fromJson(result, new TypeToken<List<Score>>(){}.getType());
 
     }
+    public Lobby getMatch(Integer mid){
+        String result = accessAPI("match", null, null, null,null,null,String.valueOf(mid));
+        result = "{"+result+"}";
+        logger.info(result);
+        //他妈的ppysb，上面那些获取单个对象的时候给加个中括号，害的我得在下面删掉再在上面看情况加上
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                //这个的API，date可能是null，而Gson2.8.1会有问题
+                .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Lobby.class);
+    }
+
     private String filterUid(String apiType, String username, Integer userId) {
         String result;
         if (username != null && userId == null) {
-            result = accessAPI(apiType, username, "string", null,null,null);
+            result = accessAPI(apiType, username, "string", null,null,null,null);
             return result;
         } else if (username == null && userId != null) {
-            result = accessAPI(apiType, String.valueOf(userId), "id", null,null,null);
+            result = accessAPI(apiType, String.valueOf(userId), "id", null,null,null,null);
             return result;
         } else {
             logger.error("不可同时指定用户名和用户id。");
@@ -89,7 +98,7 @@ public class ApiManager {
     }
 
 
-    private String accessAPI(String apiType, String uid, String uidType, String bid,String hash,Integer rank) {
+    private String accessAPI(String apiType, String uid, String uidType, String bid,String hash,Integer rank,String mid) {
         String URL;
         String failLog;
         String output = null;
@@ -121,6 +130,10 @@ public class ApiManager {
                 break;
             case "score":
                 URL = getScoreURL + "?k=" + key + "&type=" + uidType + "&u=" + uid+"&b=" + bid;
+                failLog = "谱面" + bid + "请求API：get_scores失败五次";
+                break;
+            case "match":
+                URL = getMatchURL + "?k=" + key + "&mp=" + mid;
                 failLog = "谱面" + bid + "请求API：get_scores失败五次";
                 break;
             default:
