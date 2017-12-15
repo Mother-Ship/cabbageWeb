@@ -240,23 +240,29 @@ public class CqController {
                             cmdMatcher.find();
                             switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                                 case "rs":
+                                case "make":
                                     mpService.reserveLobby(cqMsg);
                                     break;
-                                case "make":
-                                    break;
                                 case "invite":
+                                    mpService.invitePlayer(cqMsg);
                                     break;
                                 case "list":
+                                    mpService.listLobby(cqMsg);
                                     break;
                                 case "abort":
+                                    mpService.abortReserve(cqMsg);
                                     break;
                                 case "join":
+                                    mpService.joinLobby(cqMsg);
                                     break;
                                 case "add":
+                                    mpService.addMap(cqMsg);
                                     break;
                                 case "del":
+                                    mpService.delMap(cqMsg);
                                     break;
                                 case "listmap":
+                                    mpService.listMap(cqMsg);
                                     break;
                                 default:
                                     break;
