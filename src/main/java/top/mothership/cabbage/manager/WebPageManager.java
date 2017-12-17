@@ -250,7 +250,7 @@ public class WebPageManager {
      * @param beatmap the beatmap
      * @return the bg
      */
-    public BufferedImage getBG(Beatmap beatmap) {
+    public BufferedImage getBG(Beatmap beatmap) throws NullPointerException {
         logger.info("开始获取谱面" + beatmap.getBeatmapId() + "的背景");
         HttpURLConnection httpConnection;
         int retry = 0;
@@ -296,7 +296,7 @@ public class WebPageManager {
                         resDAO.addBG(Integer.valueOf(beatmap.getBeatmapSetId()), m.group(0), img);
                     } catch (IOException e) {
                         e.getMessage();
-                        return null;
+                        throw new NullPointerException();
                     }
                 }
                 //手动关闭流
@@ -310,6 +310,7 @@ public class WebPageManager {
         }
         if (retry == 5) {
             logger.error("获取" + beatmap.getBeatmapId() + "的背景图，失败五次");
+            throw new NullPointerException();
         }
         return resizedBG;
 

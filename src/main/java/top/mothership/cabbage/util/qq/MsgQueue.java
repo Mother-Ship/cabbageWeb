@@ -137,6 +137,11 @@ public class MsgQueue {
      * @return 该消息是否算作复读
      */
     private boolean isThisRepeat(int i) {
+        Matcher cmdMatcher = PatternConsts.CMD_REGEX.matcher(msg.getMessage());
+        if (cmdMatcher.find()) {
+            //如果是命令，直接false
+            return false;
+        }
         Matcher singleImgMatcher = PatternConsts.SINGLE_IMG_REGEX.matcher(msg.getMessage());
         if (singleImgMatcher.find()) {
             //如果是纯图片，直接false

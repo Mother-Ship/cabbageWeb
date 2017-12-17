@@ -10,17 +10,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6d1ab8cc-7a94-4748-b25c-51fdf03c8238" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/.idea/workspace.xml" afterPath="$PROJECT_DIR$/../cabbageWeb/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/controller/CqController.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/controller/CqController.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/LobbyDAO.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/LobbyDAO.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Lobby.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Lobby.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/MpServiceImpl.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/MpServiceImpl.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java" afterPath="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cabbageWeb.iml" afterPath="$PROJECT_DIR$/cabbageWeb.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/MpServiceImpl.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/MpServiceImpl.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/MsgQueue.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/MsgQueue.java" />
     </list>
-    <ignored path="$PROJECT_DIR$/../cabbageWeb/out/" />
-    <ignored path="$PROJECT_DIR$/../cabbageWeb/target/" />
+    <ignored path="$PROJECT_DIR$/out/" />
+    <ignored path="$PROJECT_DIR$/target/" />
     <ignored path=".idea/" />
     <ignored path="E:\cabbageWeb\.idea\shelf/" />
+    <ignored path="E:\Project\cabbageWeb\.idea\shelf/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -54,109 +56,103 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="IrcClient.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java">
+      <file leaf-file-name="ImgUtil.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="264">
-              <caret line="32" column="66" lean-forward="true" selection-start-line="32" selection-start-column="4" selection-end-line="32" selection-end-column="66" />
+            <state relative-caret-position="382">
+              <caret line="424" column="31" lean-forward="true" selection-start-line="424" selection-start-column="31" selection-end-line="424" selection-end-column="31" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="WebPageManager.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="353">
+              <caret line="312" column="45" lean-forward="false" selection-start-line="312" selection-start-column="45" selection-end-line="312" selection-end-column="45" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="StatTimeConsAspect.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/StatTimeConsAspect.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="305">
+              <caret line="28" column="0" lean-forward="false" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ApiManager.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/ApiManager.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="54">
+              <caret line="2" column="22" lean-forward="false" selection-start-line="2" selection-start-column="22" selection-end-line="2" selection-end-column="22" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pom.xml" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pom.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="594">
+              <caret line="34" column="21" lean-forward="false" selection-start-line="34" selection-start-column="21" selection-end-line="34" selection-end-column="21" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="RoleControlAspect.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/RoleControlAspect.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1701">
+              <caret line="63" column="9" lean-forward="false" selection-start-line="63" selection-start-column="9" selection-end-line="63" selection-end-column="9" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#1179#1180#0" expanded="true" />
-                <element signature="e#1221#1222#0" expanded="true" />
-                <element signature="e#2058#2059#0" expanded="true" />
-                <element signature="e#2125#2126#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SmokeUtil.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/SmokeUtil.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="143">
+              <caret line="72" column="94" lean-forward="false" selection-start-line="72" selection-start-column="94" selection-end-line="72" selection-end-column="94" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="MsgQueue.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/MsgQueue.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="361">
+              <caret line="143" column="9" lean-forward="false" selection-start-line="143" selection-start-column="9" selection-end-line="143" selection-end-column="9" />
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="MpServiceImpl.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/MpServiceImpl.java">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/MpServiceImpl.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="503">
-              <caret line="58" column="22" lean-forward="false" selection-start-line="58" selection-start-column="22" selection-end-line="58" selection-end-column="22" />
+            <state relative-caret-position="389">
+              <caret line="135" column="0" lean-forward="false" selection-start-line="135" selection-start-column="0" selection-end-line="135" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Lobby.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Lobby.java">
+      <file leaf-file-name="IrcClient.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="264">
-              <caret line="11" column="0" lean-forward="true" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CqServiceImpl.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1523">
-              <caret line="480" column="17" lean-forward="true" selection-start-line="476" selection-start-column="16" selection-end-line="480" selection-end-column="17" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="UserDAO.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/UserDAO.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="286">
-              <caret line="28" column="9" lean-forward="false" selection-start-line="28" selection-start-column="9" selection-end-line="28" selection-end-column="9" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Match.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Match.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="396">
-              <caret line="12" column="1" lean-forward="true" selection-start-line="12" selection-start-column="1" selection-end-line="12" selection-end-column="1" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Analyze.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/task/Analyze.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="305">
-              <caret line="43" column="6" lean-forward="false" selection-start-line="43" selection-start-column="6" selection-end-line="43" selection-end-column="39" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="LobbyDAO.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/LobbyDAO.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="99">
-              <caret line="7" column="0" lean-forward="true" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="PatternConsts.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/consts/PatternConsts.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="286">
-              <caret line="32" column="89" lean-forward="false" selection-start-line="32" selection-start-column="89" selection-end-line="32" selection-end-column="89" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CqController.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/controller/CqController.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="292">
-              <caret line="238" column="28" lean-forward="false" selection-start-line="238" selection-start-column="28" selection-end-line="239" selection-end-column="46" />
+            <state relative-caret-position="162">
+              <caret line="36" column="11" lean-forward="false" selection-start-line="36" selection-start-column="11" selection-end-line="36" selection-end-column="11" />
               <folding />
             </state>
           </provider>
@@ -169,15 +165,14 @@
       <list>
         <option value="Jsp File" />
         <option value="HTML File" />
-        <option value="AnnotationType" />
         <option value="Interface" />
+        <option value="AnnotationType" />
         <option value="Class" />
       </list>
     </option>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>msg.indexOf(&quot;]&quot;)</find>
       <find>userDAO</find>
       <find>歌手</find>
       <find>list</find>
@@ -199,14 +194,15 @@
       <find>UserRole</find>
       <find>unbind</find>
       <find>@Gr</find>
-      <find>help</find>
       <find>526942417</find>
-      <find>DefaultHttpClient</find>
-      <find>m_</find>
-      <find>smoke</find>
-      <find>shouldStop</find>
-      <find>SEND</find>
-      <find>subString(</find>
+      <find>微软</find>
+      <find>listUserPP</find>
+      <find>help</find>
+      <find>statme</find>
+      <find>Aller</find>
+      <find>Aller Light</find>
+      <find>new User</find>
+      <find>qq</find>
     </findStrings>
     <replaceStrings>
       <replace>Constant.CABBAGE_</replace>
@@ -222,7 +218,7 @@
   </component>
   <component name="Git.Settings">
     <option name="UPDATE_CHANGES_POLICY" value="SHELVE" />
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../cabbageWeb" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GradleLocalSettings">
     <option name="externalProjectsViewState">
@@ -230,62 +226,62 @@
     </option>
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" root0="SKIP_INSPECTION" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/interceptors/CodeInterceptor.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/qq/MsgUtil.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/annotation/AllowedUser.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/annotation/RoleControl.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/qq/CmdUtil.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/web/CaptchaUtil.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/consts/OverallConsts.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/task/Analyze.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/osu/DbFileUtil.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/controller/UserController.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/ScoreDAO.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/osu/ScoreUtil.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/aspect/StatTimeConsAspect.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/manager/CqManager.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/User.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/resources/cabbage.properties" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/ResDAO.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/manager/WebPageManager.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/annotation/GroupRoleControl.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/aspect/SingleRoleControlAspect.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/aspect/RoleControlAspect.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/annotation/UserRoleControl.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/UserDAO.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/qq/SmokeUtil.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/aspect/ExceptionNoticeAspect.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/irc/IRCBot.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/irc/ReconnectTimer.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/irc/RateLimitedChannel.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/irc/IRCClient.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/irc/RateLimitedFlusher.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/RateLimitedChannel.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/RateLimitedFlusher.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/ReconnectTimer.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/IRCClient.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/IrcUtil.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/consts/PatternConsts.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Score.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Game.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Match.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/task/DairyTask.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqAdminServiceImpl.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/test/test.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/pom.xml" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/manager/ApiManager.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/controller/CqController.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/MpServiceImpl.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/LobbyDAO.java" />
-        <option value="$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Lobby.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/Overall.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/PatternConsts.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/mapper/ScoresDAO.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/Base64Consts.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/osu/WebPageManager.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/Manager/CqManager.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/ApiManager.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/mapper/UserInfoDAO.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Userinfo.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Score.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/annotation/NeedLogin.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/annotation/AllowUser.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/CqServiceAspect.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/interceptors/CodeInterceptor.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/MsgUtil.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/annotation/AllowedUser.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/annotation/RoleControl.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/CmdUtil.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/web/CaptchaUtil.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/OverallConsts.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/osu/DbFileUtil.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/UserController.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/mapper/ScoreDAO.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/osu/ScoreUtil.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/CqManager.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/User.java" />
+        <option value="$PROJECT_DIR$/src/main/resources/cabbage.properties" />
+        <option value="$PROJECT_DIR$/src/test/test.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/mapper/ResDAO.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/PatternConsts.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/annotation/GroupRoleControl.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/SingleRoleControlAspect.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/task/DairyTask.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/CoolQ/RespData.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/SmokeUtil.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/task/Analyze.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/annotation/UserRoleControl.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/StatTimeConsAspect.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/mapper/UserDAO.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/ExceptionNoticeAspect.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" />
+        <option value="$PROJECT_DIR$/src/main/resources/jdbc.properties" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqAdminServiceImpl.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/RoleControlAspect.java" />
+        <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/MsgQueue.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/MpServiceImpl.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java" />
       </list>
     </option>
   </component>
@@ -351,8 +347,8 @@
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="-8" />
     <option name="y" value="-8" />
-    <option name="width" value="1936" />
-    <option name="height" value="1056" />
+    <option name="width" value="1786" />
+    <option name="height" value="1047" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -416,6 +412,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="AndroidView" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -593,10 +590,15 @@
               <item name="cabbageWeb" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="cabbage" type="462c0819:PsiDirectoryNode" />
-              <item name="util" type="462c0819:PsiDirectoryNode" />
-              <item name="web" type="462c0819:PsiDirectoryNode" />
+              <item name="res" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
+              <item name="cabbageWeb" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="res" type="462c0819:PsiDirectoryNode" />
+              <item name="font" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
@@ -607,89 +609,19 @@
             </path>
             <path>
               <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
-              <item name="cabbageWeb" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="resources" type="462c0819:PsiDirectoryNode" />
-              <item name="spring" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
-              <item name="cabbageWeb" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="webapp" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
-              <item name="cabbageWeb" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="webapp" type="462c0819:PsiDirectoryNode" />
-              <item name="WEB-INF" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
-              <item name="cabbageWeb" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
-              <item name="cabbageWeb" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-            </path>
-            <path>
-              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="Maven: org.apache.httpcomponents:httpclient:4.5.3" type="70bed36:NamedLibraryElementNode" />
-            </path>
-            <path>
-              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="Maven: org.apache.httpcomponents:httpclient:4.5.3" type="70bed36:NamedLibraryElementNode" />
-              <item name="httpclient-4.5.3.jar" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="Maven: org.apache.httpcomponents:httpclient:4.5.3" type="70bed36:NamedLibraryElementNode" />
-              <item name="httpclient-4.5.3.jar" type="462c0819:PsiDirectoryNode" />
-              <item name="http" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="Maven: org.apache.httpcomponents:httpclient:4.5.3" type="70bed36:NamedLibraryElementNode" />
-              <item name="httpclient-4.5.3.jar" type="462c0819:PsiDirectoryNode" />
-              <item name="http" type="462c0819:PsiDirectoryNode" />
-              <item name="impl" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="Maven: org.apache.httpcomponents:httpclient:4.5.3" type="70bed36:NamedLibraryElementNode" />
-              <item name="httpclient-4.5.3.jar" type="462c0819:PsiDirectoryNode" />
-              <item name="http" type="462c0819:PsiDirectoryNode" />
-              <item name="impl" type="462c0819:PsiDirectoryNode" />
-              <item name="client" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
       <pane id="Scope" />
-      <pane id="AndroidView" />
       <pane id="PackagesPane" />
       <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Console Font" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
     <property name="nodejs_interpreter_path" value="C:/Program Files/nodejs/node" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
@@ -697,27 +629,26 @@
     <property name="project.structure.proportion" value="0.0" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="SearchEverywhereHistoryKey" value="uml&#9;ACTION&#9;ShowUmlDiagram&#10;UML&#9;ACTION&#9;ShowUmlDiagram&#10;imgutil&#9;FILE&#9;file://E:/cabbageWeb/src/main/java/top/mothership/cabbage/util/ImgUtil.java" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../cabbageWeb/.idea" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/.idea" />
     <property name="DefaultHtmlFileTemplate" value="HTML File" />
     <property name="com.intellij.database.dataSource.DataSourceTemplate" value="MySQL" />
     <property name="ignore_missing_gitignore" value="true" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$2/SQL Dialects" value="MySQL" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Project\cabbageWeb\src\main\res\font" />
+      <recent name="E:\Project\cabbageWeb\src\main\res" />
+      <recent name="E:\Project\cabbageWeb\src\main\resources" />
+      <recent name="E:\cabbageWeb\src\main\webapp\WEB-INF" />
+      <recent name="E:\cabbageWeb\src\main\webapp" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="E:\cabbageWeb\src\main\java\top\mothership\cabbage\irc" />
-      <recent name="E:\cabbageWeb\src\main\java\top\mothership\cabbage" />
+      <recent name="E:\Project\cabbageWeb\src\main\res\font" />
+      <recent name="E:\Project\cabbageWeb\src\main\resources\font" />
       <recent name="E:\cabbageWeb\src\main\webapp\WEB-INF" />
       <recent name="E:\cabbageWeb\src\main\webapp\css" />
       <recent name="E:\cabbageWeb\src\main\webapp\js" />
-    </key>
-    <key name="CopyClassDialog.RECENTS_KEY">
-      <recent name="top.mothership.cabbage.irc" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="E:\cabbageWeb\src\main\webapp\WEB-INF" />
-      <recent name="E:\cabbageWeb\src\main\webapp" />
-      <recent name="E:\cabbageWeb\src\main\webapp\WEB-INF\jsp" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -732,7 +663,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.test.Test">
+  <component name="RunManager" selected="Tomcat Server.Unnamed">
     <configuration name="1.html (1)" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" temporary="true" APPLICATION_SERVER_NAME="Tomcat 7.0.75" ALTERNATIVE_JRE_ENABLED="false">
       <option name="OPEN_IN_BROWSER_URL" value="http://localhost:8080/WEB-INF/1.html" />
       <deployment>
@@ -913,7 +844,7 @@
       <option name="MAIN_CLASS_NAME" />
       <option name="VM_PARAMETERS" />
       <option name="PROGRAM_PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../cabbageWeb" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
       <option name="ENABLE_SWING_INSPECTOR" value="false" />
@@ -1032,8 +963,8 @@
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="JUnit.test.Test" />
-        <item index="1" class="java.lang.String" itemvalue="JUnit.test" />
+        <item index="0" class="java.lang.String" itemvalue="JUnit.test" />
+        <item index="1" class="java.lang.String" itemvalue="JUnit.test.Test" />
         <item index="2" class="java.lang.String" itemvalue="Tomcat Server.1.html (1)" />
         <item index="3" class="java.lang.String" itemvalue="Tomcat Server.1.html" />
         <item index="4" class="java.lang.String" itemvalue="JUnit.DbUtilTest.Test" />
@@ -1121,10 +1052,28 @@
       <workItem from="1512350543525" duration="42961000" />
       <workItem from="1512455854473" duration="54590000" />
       <workItem from="1512631945272" duration="8966000" />
-      <workItem from="1512695394869" duration="25937000" />
-      <workItem from="1512954124083" duration="15247000" />
-      <workItem from="1513043918992" duration="44700000" />
-      <workItem from="1513214227731" duration="28096000" />
+      <workItem from="1512695394869" duration="25756000" />
+      <workItem from="1512737051857" duration="5482000" />
+      <workItem from="1512744027022" duration="5420000" />
+      <workItem from="1512793647298" duration="4319000" />
+      <workItem from="1512813740221" duration="891000" />
+      <workItem from="1512829230812" duration="20106000" />
+      <workItem from="1512885559676" duration="6461000" />
+      <workItem from="1513498184431" duration="1882000" />
+    </task>
+    <task id="LOCAL-00023" summary="将防撤回应用到所有加入的群">
+      <created>1508312957833</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1508312957833</updated>
+    </task>
+    <task id="LOCAL-00024" summary="增加单独获取群主，修正了纯标点转化为空串导致禁言，常量单独管理">
+      <created>1508322353988</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1508322353988</updated>
     </task>
     <task id="LOCAL-00025" summary="两个赛群增加roll点；将sleep改为出现所有异常均为6小时">
       <created>1508463801108</created>
@@ -1413,99 +1362,85 @@
       <option name="project" value="LOCAL" />
       <updated>1512381663493</updated>
     </task>
-    <task id="LOCAL-00066" summary="基本完成重构，完善了细粒度权限控制">
-      <created>1512727198163</created>
+    <task id="LOCAL-00066" summary="修正一些小问题">
+      <created>1512749271249</created>
       <option name="number" value="00066" />
       <option name="presentableId" value="LOCAL-00066" />
       <option name="project" value="LOCAL" />
-      <updated>1512727198163</updated>
+      <updated>1512749271250</updated>
     </task>
-    <task id="LOCAL-00067" summary="修正消息计数">
-      <created>1512957969452</created>
+    <task id="LOCAL-00067" summary="修正权限控制失效">
+      <created>1512812339552</created>
       <option name="number" value="00067" />
       <option name="presentableId" value="LOCAL-00067" />
       <option name="project" value="LOCAL" />
-      <updated>1512957969452</updated>
+      <updated>1512812339553</updated>
     </task>
-    <task id="LOCAL-00068" summary="通过替换空格修正了那个400的问题……懒得改成httpParam的方式了（">
-      <created>1512986490248</created>
+    <task id="LOCAL-00068" summary="完善群控制权限">
+      <created>1512881354682</created>
       <option name="number" value="00068" />
       <option name="presentableId" value="LOCAL-00068" />
       <option name="project" value="LOCAL" />
-      <updated>1512986490248</updated>
+      <updated>1512881354684</updated>
     </task>
-    <task id="LOCAL-00069" summary="修正checkGroupBind;初步整合IRC（可以自动登录收发消息了，待编写逻辑）">
-      <created>1513066941488</created>
+    <task id="LOCAL-00069" summary="微调绘图逻辑">
+      <created>1512881560161</created>
       <option name="number" value="00069" />
       <option name="presentableId" value="LOCAL-00069" />
       <option name="project" value="LOCAL" />
-      <updated>1513066941489</updated>
+      <updated>1512881560161</updated>
     </task>
-    <task id="LOCAL-00070" summary="加入mp的实体类……修正了scancard没考虑被ban玩家的问题">
-      <created>1513159601149</created>
+    <task id="LOCAL-00070" summary="补上参数绑定，微调逻辑">
+      <created>1512883374553</created>
       <option name="number" value="00070" />
       <option name="presentableId" value="LOCAL-00070" />
       <option name="project" value="LOCAL" />
-      <updated>1513159601149</updated>
+      <updated>1512883374553</updated>
     </task>
-    <task id="LOCAL-00071" summary="单独提交更新IRC客户端">
-      <created>1513159654455</created>
+    <task id="LOCAL-00071" summary="修正偶尔绘图失败的问题（">
+      <created>1512920947075</created>
       <option name="number" value="00071" />
       <option name="presentableId" value="LOCAL-00071" />
       <option name="project" value="LOCAL" />
-      <updated>1513159654456</updated>
+      <updated>1512920947075</updated>
     </task>
-    <task id="LOCAL-00072" summary="更换gson版本以反序列化null的Date；修改了褪裙的输出格式">
-      <created>1513221833134</created>
-      <option name="number" value="00072" />
-      <option name="presentableId" value="LOCAL-00072" />
-      <option name="project" value="LOCAL" />
-      <updated>1513221833138</updated>
-    </task>
-    <task id="LOCAL-00073" summary="……">
-      <created>1513245669978</created>
-      <option name="number" value="00073" />
-      <option name="presentableId" value="LOCAL-00073" />
-      <option name="project" value="LOCAL" />
-      <updated>1513245669978</updated>
-    </task>
-    <option name="localTasksCounter" value="74" />
+    <option name="localTasksCounter" value="72" />
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="test_Test - 2017.12.14 at 10h 12m 56s.xml">
+    <history-entry file="test - 2017.12.08 at 11h 20m 46s.xml">
+      <configuration name="test" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="test - 2017.12.08 at 11h 21m 53s.xml">
+      <configuration name="test" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="test - 2017.12.08 at 11h 23m 45s.xml">
+      <configuration name="test" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="test_Test - 2017.11.28 at 11h 11m 43s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.12.14 at 10h 16m 49s.xml">
+    <history-entry file="test_Test - 2017.11.28 at 11h 12m 05s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.12.14 at 10h 17m 13s.xml">
+    <history-entry file="test_Test - 2017.11.28 at 11h 12m 27s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.12.14 at 10h 18m 48s.xml">
+    <history-entry file="test_Test - 2017.11.30 at 11h 54m 48s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.12.14 at 10h 33m 24s.xml">
+    <history-entry file="test_Test - 2017.11.30 at 11h 55m 39s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.12.14 at 10h 43m 14s.xml">
+    <history-entry file="test_Test - 2017.11.30 at 11h 55m 55s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.12.14 at 10h 46m 01s.xml">
-      <configuration name="test.Test" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="test_Test - 2017.12.14 at 10h 47m 36s.xml">
-      <configuration name="test.Test" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="test_Test - 2017.12.14 at 10h 53m 55s.xml">
-      <configuration name="test.Test" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="test_Test - 2017.12.14 at 11h 04m 35s.xml">
+    <history-entry file="test_Test - 2017.12.01 at 13h 35m 59s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="1005585000" />
+    <option name="totallyTimeSpent" value="962176000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1521,28 +1456,27 @@
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.38068813" sideWeight="0.44877267" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31637168" sideWeight="0.22654584" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.49786553" order="13" side_tool="false" content_ui="tabs" />
-      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14140876" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13006397" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Statistic" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.40843508" sideWeight="0.5" order="14" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32977587" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2497332" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3163152" sideWeight="0.61099255" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31637168" sideWeight="0.7734541" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.49786553" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.281909" sideWeight="0.3329776" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28318584" sideWeight="0.3315565" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Java Enterprise" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Java Enterprise" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.38068813" sideWeight="0.55122733" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37942478" sideWeight="0.7942431" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31964484" sideWeight="0.49359658" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Spring" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20651014" sideWeight="0.675969" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21481876" sideWeight="0.675969" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20010673" sideWeight="0.32405892" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20010673" sideWeight="0.324031" order="5" side_tool="true" content_ui="tabs" />
@@ -1550,6 +1484,7 @@
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2497332" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Statistic" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.40843508" sideWeight="0.5" order="14" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection Results" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.5" order="14" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.49786553" order="1" side_tool="false" content_ui="tabs" />
@@ -1598,6 +1533,9 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
+    <MESSAGE value="实体类分包，去掉debug，改为异常通知机制" />
+    <MESSAGE value="咕咕咕" />
+    <MESSAGE value="微调，尝试修复一个bug" />
     <MESSAGE value="重构代码，引入lombok，使用Java版的oppai，使用base64发送图片，补齐!sudo rs，准备将所有资源文件全部base64编码写入数据库" />
     <MESSAGE value="彻底去掉平台依赖，所有文件从读写文件改为读写数据库" />
     <MESSAGE value="完善了对手成绩统计功能，准备研究写scores.db" />
@@ -1614,55 +1552,64 @@
     <MESSAGE value="初步实现对接osu search和pp+" />
     <MESSAGE value="完成一半凌晨自动踢人，准备重构代码" />
     <MESSAGE value="以前我写的什么屎……" />
-    <MESSAGE value="基本完成重构，完善了细粒度权限控制" />
-    <MESSAGE value="修正消息计数" />
-    <MESSAGE value="通过替换空格修正了那个400的问题……懒得改成httpParam的方式了（" />
-    <MESSAGE value="修正checkGroupBind;初步整合IRC（可以自动登录收发消息了，待编写逻辑）" />
-    <MESSAGE value="加入mp的实体类……" />
-    <MESSAGE value="加入mp的实体类……修正了scancard没考虑被ban玩家的问题" />
-    <MESSAGE value="单独提交更新IRC客户端" />
-    <MESSAGE value="更换gson版本以反序列化null的Date；修改了褪裙的输出格式" />
-    <MESSAGE value="……" />
-    <option name="LAST_COMMIT_MESSAGE" value="……" />
+    <MESSAGE value="修正一些小问题" />
+    <MESSAGE value="修正权限控制失效" />
+    <MESSAGE value="完善群控制权限" />
+    <MESSAGE value="微调绘图逻辑" />
+    <MESSAGE value="补上参数绑定，微调逻辑" />
+    <MESSAGE value="修正偶尔绘图失败的问题（" />
+    <option name="LAST_COMMIT_MESSAGE" value="修正偶尔绘图失败的问题（" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/qq/SmokeUtil.java</url>
-          <line>83</line>
+          <url>file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java</url>
+          <line>173</line>
           <properties />
           <option name="timeStamp" value="358" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/qq/SmokeUtil.java</url>
-          <line>92</line>
-          <properties />
-          <option name="timeStamp" value="361" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/qq/SmokeUtil.java</url>
-          <line>91</line>
+          <url>file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/RoleControlAspect.java</url>
+          <line>100</line>
           <properties />
           <option name="timeStamp" value="362" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java</url>
-          <line>149</line>
+          <url>file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java</url>
+          <line>501</line>
           <properties />
-          <option name="timeStamp" value="368" />
+          <option name="timeStamp" value="364" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqAdminServiceImpl.java</url>
-          <line>735</line>
+          <url>file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java</url>
+          <line>264</line>
           <properties />
-          <option name="timeStamp" value="370" />
+          <option name="timeStamp" value="369" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java</url>
+          <line>254</line>
+          <properties />
+          <option name="timeStamp" value="371" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java</url>
+          <line>753</line>
+          <properties />
+          <option name="timeStamp" value="373" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java</url>
+          <line>212</line>
+          <properties />
+          <option name="timeStamp" value="375" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="371" />
+      <option name="time" value="381" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1671,378 +1618,325 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_131/src.zip!/java/lang/Object.java">
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_131/src.zip!/java/lang/annotation/Repeatable.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/OsuFile.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-753">
-          <caret line="62" column="33" lean-forward="false" selection-start-line="62" selection-start-column="33" selection-end-line="62" selection-end-column="33" />
+        <state relative-caret-position="-73">
+          <caret line="6" column="13" lean-forward="false" selection-start-line="6" selection-start-column="13" selection-end-line="6" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Score.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="140">
+          <caret line="29" column="28" lean-forward="true" selection-start-line="29" selection-start-column="28" selection-end-line="29" selection-end-column="28" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/osu/ScoreUtil.java">
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_131/src.zip!/java/time/ZoneRegion.java" />
+    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-context/4.3.8.RELEASE/spring-context-4.3.8.RELEASE-sources.jar!/org/springframework/stereotype/Service.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/CqManager.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="109">
-          <caret line="112" column="45" lean-forward="false" selection-start-line="112" selection-start-column="45" selection-end-line="112" selection-end-column="45" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/aspect/SingleRoleControlAspect.java" />
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/CoolQ/CqMsg.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="7" column="0" lean-forward="false" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/aspectj/MethodInvocationProceedingJoinPoint.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="189">
-          <caret line="84" column="0" lean-forward="false" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/aspect/StatTimeConsAspect.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="532">
-          <caret line="29" column="0" lean-forward="false" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/aspectj/AbstractAspectJAdvice.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15372">
-          <caret line="617" column="0" lean-forward="false" selection-start-line="617" selection-start-column="0" selection-end-line="617" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/aspectj/AspectJAroundAdvice.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1148">
-          <caret line="69" column="0" lean-forward="false" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/interceptor/ExposeInvocationInterceptor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1876">
-          <caret line="91" column="0" lean-forward="false" selection-start-line="91" selection-start-column="0" selection-end-line="91" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/framework/ReflectiveMethodInvocation.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3948">
-          <caret line="178" column="0" lean-forward="false" selection-start-line="178" selection-start-column="0" selection-end-line="178" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/framework/CglibAopProxy.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16772">
-          <caret line="675" column="0" lean-forward="false" selection-start-line="675" selection-start-column="0" selection-end-line="675" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/annotation/UserRoleControl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="15" column="62" lean-forward="false" selection-start-line="15" selection-start-column="62" selection-end-line="15" selection-end-column="62" />
-          <folding>
-            <element signature="imports" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/resources/cabbage.properties">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="15" column="16" lean-forward="false" selection-start-line="15" selection-start-column="16" selection-end-line="15" selection-end-column="16" />
+        <state relative-caret-position="112">
+          <caret line="143" column="0" lean-forward="true" selection-start-line="143" selection-start-column="0" selection-end-line="143" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-core/4.3.8.RELEASE/spring-core-4.3.8.RELEASE.jar!/org/springframework/cglib/proxy/MethodProxy.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="161">
-          <caret line="104" column="0" lean-forward="false" selection-start-line="104" selection-start-column="0" selection-end-line="104" selection-end-column="0" />
+        <state relative-caret-position="217">
+          <caret line="106" column="0" lean-forward="false" selection-start-line="106" selection-start-column="0" selection-end-line="106" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/manager/WebPageManager.java">
+    <entry file="file://$PROJECT_DIR$/src/test/test.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4092">
-          <caret line="165" column="12" lean-forward="false" selection-start-line="165" selection-start-column="12" selection-end-line="166" selection-end-column="27" />
-          <folding>
-            <element signature="imports" expanded="false" />
-          </folding>
+        <state relative-caret-position="163">
+          <caret line="374" column="0" lean-forward="false" selection-start-line="374" selection-start-column="0" selection-end-line="374" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_131/src.zip!/javax/annotation/PostConstruct.java">
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_131/src.zip!/java/lang/Object.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/mapper/ResDAO.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="594">
-          <caret line="79" column="18" lean-forward="false" selection-start-line="79" selection-start-column="18" selection-end-line="79" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/irc/IRCBot.java" />
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/aspect/ExceptionNoticeAspect.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="396">
-          <caret line="76" column="22" lean-forward="false" selection-start-line="76" selection-start-column="22" selection-end-line="76" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/qq/SmokeUtil.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="206">
-          <caret line="85" column="26" lean-forward="false" selection-start-line="85" selection-start-column="26" selection-end-line="85" selection-end-column="26" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/RateLimitedChannel.java" />
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/RateLimitedFlusher.java" />
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/ReconnectTimer.java" />
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/UserServiceImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-71">
-          <caret line="8" column="13" lean-forward="false" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/RedisDAO.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="171">
-          <caret line="14" column="13" lean-forward="false" selection-start-line="14" selection-start-column="13" selection-end-line="14" selection-end-column="13" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/ResDAO.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="396">
+        <state relative-caret-position="168">
           <caret line="19" column="59" lean-forward="false" selection-start-line="19" selection-start-column="59" selection-end-line="19" selection-end-column="59" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/osu/ScoreUtil.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="109">
+          <caret line="112" column="45" lean-forward="false" selection-start-line="112" selection-start-column="45" selection-end-line="112" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/SingleRoleControlAspect.java" />
+    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/aspectj/MethodInvocationProceedingJoinPoint.java" />
+    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/aspectj/AbstractAspectJAdvice.java" />
+    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/aspectj/AspectJAroundAdvice.java" />
+    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/interceptor/ExposeInvocationInterceptor.java" />
+    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/framework/ReflectiveMethodInvocation.java" />
+    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-aop/4.3.8.RELEASE/spring-aop-4.3.8.RELEASE-sources.jar!/org/springframework/aop/framework/CglibAopProxy.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/CoolQ/CqMsg.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="189">
+          <caret line="8" column="13" lean-forward="false" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/CoolQ/RespData.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2">
+          <caret line="6" column="23" lean-forward="false" selection-start-line="6" selection-start-column="23" selection-end-line="6" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/OverallConsts.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="162">
+          <caret line="6" column="2" lean-forward="false" selection-start-line="6" selection-start-column="2" selection-end-line="6" selection-end-column="2" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/Base64Consts.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="528">
-          <caret line="46" column="27" lean-forward="false" selection-start-line="46" selection-start-column="27" selection-end-line="46" selection-end-column="27" />
+        <state relative-caret-position="81">
+          <caret line="3" column="16" lean-forward="false" selection-start-line="3" selection-start-column="16" selection-end-line="3" selection-end-column="16" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/IrcUtil.java" />
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/osu/DbFileUtil.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/PatternConsts.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-10136">
-          <caret line="22" column="13" lean-forward="false" selection-start-line="22" selection-start-column="13" selection-end-line="22" selection-end-column="13" />
+        <state relative-caret-position="1593">
+          <caret line="59" column="104" lean-forward="false" selection-start-line="59" selection-start-column="104" selection-end-line="59" selection-end-column="104" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/manager/CqManager.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/interceptors/BaseInterceptor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="171">
-          <caret line="96" column="0" lean-forward="false" selection-start-line="96" selection-start-column="0" selection-end-line="96" selection-end-column="0" />
-          <folding />
+        <state relative-caret-position="108">
+          <caret line="12" column="13" lean-forward="false" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/test/test.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/interceptors/UserInterceptor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="193">
-          <caret line="377" column="29" lean-forward="false" selection-start-line="377" selection-start-column="29" selection-end-line="377" selection-end-column="29" />
-          <folding />
+        <state relative-caret-position="432">
+          <caret line="23" column="0" lean-forward="false" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Userinfo.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/WebResponse.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-363">
+        <state relative-caret-position="162">
           <caret line="7" column="13" lean-forward="false" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Score.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/UserServiceImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-236">
-          <caret line="34" column="30" lean-forward="false" selection-start-line="34" selection-start-column="30" selection-end-line="34" selection-end-column="30" />
+        <state relative-caret-position="135">
+          <caret line="8" column="13" lean-forward="false" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/task/Analyze.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2295">
+          <caret line="99" column="1" lean-forward="false" selection-start-line="99" selection-start-column="1" selection-end-line="99" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Beatmap.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="27">
+          <caret line="6" column="13" lean-forward="false" selection-start-line="6" selection-start-column="13" selection-end-line="6" selection-end-column="13" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Game.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/annotation/GroupRoleControl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="127">
-          <caret line="15" column="30" lean-forward="false" selection-start-line="15" selection-start-column="30" selection-end-line="15" selection-end-column="30" />
+        <state relative-caret-position="270">
+          <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_101/src.zip!/java/util/regex/Matcher.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="191">
+          <caret line="533" column="18" lean-forward="false" selection-start-line="533" selection-start-column="18" selection-end-line="533" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/User.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="108">
+          <caret line="6" column="0" lean-forward="false" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/task/DairyTask.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4671">
+          <caret line="196" column="0" lean-forward="false" selection-start-line="196" selection-start-column="0" selection-end-line="196" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/cabbage.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="567">
+          <caret line="21" column="0" lean-forward="false" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/mapper/UserDAO.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="567">
+          <caret line="25" column="30" lean-forward="false" selection-start-line="25" selection-start-column="30" selection-end-line="25" selection-end-column="30" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/ExceptionNoticeAspect.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1917">
+          <caret line="86" column="74" lean-forward="false" selection-start-line="86" selection-start-column="74" selection-end-line="86" selection-end-column="74" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/jdbc.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="54">
+          <caret line="2" column="30" lean-forward="false" selection-start-line="2" selection-start-column="30" selection-end-line="2" selection-end-column="30" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="6453">
+          <caret line="268" column="22" lean-forward="false" selection-start-line="268" selection-start-column="22" selection-end-line="268" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqAdminServiceImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="20331">
+          <caret line="794" column="16" lean-forward="false" selection-start-line="794" selection-start-column="16" selection-end-line="794" selection-end-column="16" />
           <folding>
-            <element signature="imports" expanded="false" />
+            <marker date="1513409865454" expanded="true" signature="33654:33753" ph="{...}" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/pom.xml">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/annotation/UserRoleControl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="297">
-          <caret line="33" column="26" lean-forward="false" selection-start-line="33" selection-start-column="26" selection-end-line="33" selection-end-column="26" />
+        <state relative-caret-position="135">
+          <caret line="7" column="15" lean-forward="false" selection-start-line="7" selection-start-column="15" selection-end-line="7" selection-end-column="15" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/manager/ApiManager.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="424">
-          <caret line="84" column="0" lean-forward="false" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
+        <state relative-caret-position="1296">
+          <caret line="65" column="25" lean-forward="false" selection-start-line="65" selection-start-column="25" selection-end-line="65" selection-end-column="25" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/task/DairyTask.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/RoleControlAspect.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2503">
-          <caret line="131" column="28" lean-forward="false" selection-start-line="131" selection-start-column="28" selection-end-line="131" selection-end-column="28" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/aspect/RoleControlAspect.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-231">
-          <caret line="89" column="52" lean-forward="true" selection-start-line="89" selection-start-column="52" selection-end-line="89" selection-end-column="52" />
+        <state relative-caret-position="1701">
+          <caret line="63" column="9" lean-forward="false" selection-start-line="63" selection-start-column="9" selection-end-line="63" selection-end-column="9" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqAdminServiceImpl.java">
+    <entry file="file://$PROJECT_DIR$/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="218">
-          <caret line="784" column="15" lean-forward="false" selection-start-line="784" selection-start-column="15" selection-end-line="784" selection-end-column="15" />
-          <folding>
-            <marker date="1513217187333" expanded="true" signature="33697:33753" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/ScoreDAO.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="627">
-          <caret line="26" column="13" lean-forward="false" selection-start-line="26" selection-start-column="13" selection-end-line="26" selection-end-column="13" />
+        <state relative-caret-position="594">
+          <caret line="34" column="21" lean-forward="false" selection-start-line="34" selection-start-column="21" selection-end-line="34" selection-end-column="21" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/webapp/WEB-INF/web.xml">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/ApiManager.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="132">
-          <caret line="4" column="22" lean-forward="false" selection-start-line="4" selection-start-column="22" selection-end-line="4" selection-end-column="22" />
+        <state relative-caret-position="54">
+          <caret line="2" column="22" lean-forward="false" selection-start-line="2" selection-start-column="22" selection-end-line="2" selection-end-column="22" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/annotation/GroupRoleControl.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/SmokeUtil.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="132">
-          <caret line="9" column="27" lean-forward="false" selection-start-line="9" selection-start-column="9" selection-end-line="9" selection-end-column="27" />
+        <state relative-caret-position="143">
+          <caret line="72" column="94" lean-forward="false" selection-start-line="72" selection-start-column="94" selection-end-line="72" selection-end-column="94" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/task/Analyze.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/MsgQueue.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="361">
+          <caret line="143" column="9" lean-forward="false" selection-start-line="143" selection-start-column="9" selection-end-line="143" selection-end-column="9" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="353">
+          <caret line="312" column="45" lean-forward="false" selection-start-line="312" selection-start-column="45" selection-end-line="312" selection-end-column="45" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/StatTimeConsAspect.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="305">
-          <caret line="43" column="6" lean-forward="false" selection-start-line="43" selection-start-column="6" selection-end-line="43" selection-end-column="39" />
+          <caret line="28" column="0" lean-forward="false" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/MpServiceImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="264">
-          <caret line="32" column="66" lean-forward="true" selection-start-line="32" selection-start-column="4" selection-end-line="32" selection-end-column="66" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#1179#1180#0" expanded="true" />
-            <element signature="e#1221#1222#0" expanded="true" />
-            <element signature="e#2058#2059#0" expanded="true" />
-            <element signature="e#2125#2126#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/UserDAO.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
-          <caret line="28" column="9" lean-forward="false" selection-start-line="28" selection-start-column="9" selection-end-line="28" selection-end-column="9" />
+        <state relative-caret-position="389">
+          <caret line="135" column="0" lean-forward="false" selection-start-line="135" selection-start-column="0" selection-end-line="135" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/irc/IrcClient.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1523">
-          <caret line="480" column="17" lean-forward="true" selection-start-line="476" selection-start-column="16" selection-end-line="480" selection-end-column="17" />
+        <state relative-caret-position="162">
+          <caret line="36" column="11" lean-forward="false" selection-start-line="36" selection-start-column="11" selection-end-line="36" selection-end-column="11" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/consts/PatternConsts.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
-          <caret line="32" column="89" lean-forward="false" selection-start-line="32" selection-start-column="89" selection-end-line="32" selection-end-column="89" />
+        <state relative-caret-position="382">
+          <caret line="424" column="31" lean-forward="true" selection-start-line="424" selection-start-column="31" selection-end-line="424" selection-end-column="31" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/serviceImpl/MpServiceImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="503">
-          <caret line="58" column="22" lean-forward="false" selection-start-line="58" selection-start-column="22" selection-end-line="58" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/mapper/LobbyDAO.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="99">
-          <caret line="7" column="0" lean-forward="true" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/controller/CqController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="292">
-          <caret line="238" column="28" lean-forward="false" selection-start-line="238" selection-start-column="28" selection-end-line="239" selection-end-column="46" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Lobby.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="264">
-          <caret line="11" column="0" lean-forward="true" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../cabbageWeb/src/main/java/top/mothership/cabbage/pojo/osu/Match.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="396">
-          <caret line="12" column="1" lean-forward="true" selection-start-line="12" selection-start-column="1" selection-end-line="12" selection-end-column="1" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>

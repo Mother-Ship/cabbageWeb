@@ -408,7 +408,10 @@ public class ImgUtil {
         boolean defaultBG = false;
         try {
             bg = webPageManager.getBG(beatmap);
-        } catch (NullPointerException e) {
+        }catch (NullPointerException e){
+            bg = webPageManager.getBGBackup(beatmap);
+        }
+        if(bg==null){
             bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
                 //随机抽取一个bg
