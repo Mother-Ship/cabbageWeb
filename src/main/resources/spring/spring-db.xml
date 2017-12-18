@@ -76,6 +76,8 @@
         <property name="typeAliasesPackage" value="top.mothership.cabbage.pojo"/>
         <!--还是需要一个配置的-->
         <property name="configLocation" value="classpath:mybatis-config.xml"/>
+        <!--指定TypeHandler包-->
+        <property name="typeHandlersPackage" value="com.github.javaplugs.mybatis" />
     </bean>
 
     <!-- 4.配置扫描Dao接口包，动态实现Dao接口，注入到spring容器中 -->

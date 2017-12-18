@@ -142,4 +142,7 @@ public class ScoreUtil {
 
 
     }
+    public Integer convertScoreV1ToV2(Score score,Beatmap beatmap){
+        return 0;
+    }
 }
