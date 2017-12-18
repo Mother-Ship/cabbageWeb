@@ -60,4 +60,8 @@ public class Beatmap {
     private String maxCombo;
     @SerializedName(value = "difficultyrating", alternate = {"difficulty"})
     private String difficultyRating;
+    /**
+     * 存储mp选图功能的水平组
+     */
+    private String group;
 }

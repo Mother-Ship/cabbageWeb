@@ -23,12 +23,13 @@ public class PatternConsts {
     /**
      * 匹配出sudo命令
      * 当处理!sudo listInvite类命令时：group(1)为listInvite
-     * 当处理!sudo add xxx类命令是：group(2)为xxx
+     * 当处理!sudo recent xxx类命令时：group(2)为xxx
+     * 当处理!sudo add xxx:yyy类命令是：group(2)为xxx,group(3)为yyy
      */
     public final static Pattern ADMIN_CMD_REGEX =  Pattern.compile("[!！]sudo ([^ ]*)[ ]?([^:]*)[:]?(.*)");
 
     /**
-     * MP系列命令
+     * MP系列命令,和sudo一样
      */
     public final static Pattern MP_CMD_REGEX =  Pattern.compile("[!！]mp ([^ ]*)[ ]?([^:]*)[:]?(.*)");
     /**
