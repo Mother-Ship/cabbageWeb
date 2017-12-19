@@ -49,7 +49,7 @@ public class SmokeUtil {
         for (RespData respData : groups) {
             if(!repeatRecordGroups.contains(String.valueOf(respData.getGroupId()))
                     &&!repeatSmokeGroups.contains(String.valueOf(respData.getGroupId()))) {
-                msgQueues.put(respData.getGroupId(), new MsgQueue(10));
+                msgQueues.put(respData.getGroupId(), new MsgQueue(50));
             }else{
                 msgQueues.put(respData.getGroupId(), new MsgQueue());
             }
