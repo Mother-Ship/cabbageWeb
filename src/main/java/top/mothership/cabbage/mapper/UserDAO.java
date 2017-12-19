@@ -6,9 +6,19 @@ import top.mothership.cabbage.pojo.User;
 
 import java.util.List;
 
+/**
+ * The interface User dao.
+ */
 @Mapper
 @Repository
 public interface UserDAO {
+    /**
+     * Gets user.
+     *
+     * @param qq     the qq
+     * @param userId the user id
+     * @return the user
+     */
     @Select("<script>" +
             "SELECT * FROM `userrole` " +
             "<choose>" +
@@ -20,7 +30,7 @@ public interface UserDAO {
             "</when>" +
             "</choose>" +
             "</script>")
-        //只能传一个，不能同时处理两个
+    //只能传一个，不能同时处理两个
     @Results(
             {
                     //手动绑定这个字段
@@ -28,7 +38,13 @@ public interface UserDAO {
             })
     User getUser(@Param("qq") Long qq, @Param("userId") Integer userId);
 
-    //加入分隔符处理，在中间的，开头的，结尾的，只有这一个用户组的
+    /**
+     * List user id by role list.
+     *
+     * @param role the role
+     * @return the list
+     */
+//加入分隔符处理，在中间的，开头的，结尾的，只有这一个用户组的
     @Select("<script>"
             + "SELECT `user_id` FROM `userrole` "
             + "<if test=\"role != null\">"
@@ -39,19 +55,47 @@ public interface UserDAO {
             + "</script>")
     List<Integer> listUserIdByRole(@Param("role") String role);
 
-    //改为Gson序列化，只需考虑在中间的问题，同时加入分隔符
+    /**
+     * List user id by uname list.
+     *
+     * @param username the username
+     * @return the list
+     */
+//改为Gson序列化，只需考虑在中间的问题，同时加入分隔符
     @Select("<script>"
             + "SELECT * FROM `userrole` "
             + "<if test=\"username != null\">"
             + "WHERE `legacy_uname` LIKE CONCAT('%\"',#{username},'\"%') "
             + "OR `current_uname` = #{username} "
-           + " </if>"
+            + " </if>"
             + "</script>")
+    @Results(
+            {
+                    //手动绑定这个字段
+                    @Result(column = "is_banned", property = "banned")
+            })
     List<User> listUserIdByUname(@Param("username") String username);
 
-    @Select("SELECT * FROM `userrole` order by `repeat_count`/`speaking_count` desc  limit 1")
+    /**
+     * Gets repeat star.
+     * 去掉100%复读的
+     *
+     * @return the repeat star
+     */
+    @Results(
+            {
+                    //手动绑定这个字段
+                    @Result(column = "is_banned", property = "banned")
+            })
+    @Select("SELECT * FROM `userrole` WHERE `repeat_count`/`speaking_count` !=1 order by `repeat_count`/`speaking_count` desc limit 1")
     User getRepeatStar();
 
+    /**
+     * Update user integer.
+     *
+     * @param user the user
+     * @return the integer
+     */
     @Update("<script>" + "update `userrole`"
             + "<set>"
             + "<if test=\"user.role != null\">role=#{user.role},</if>"
@@ -65,10 +109,15 @@ public interface UserDAO {
             + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);
 
+    /**
+     * Add user integer.
+     *
+     * @param user the user
+     * @return the integer
+     */
     @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.qq}" +
             ",#{user.legacyUname},#{user.currentUname},#{user.banned},#{user.repeatCount},#{user.speakingCount})")
     Integer addUser(@Param("user") User user);
-
 
 
 }

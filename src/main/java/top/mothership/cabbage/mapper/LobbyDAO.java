@@ -2,11 +2,8 @@ package top.mothership.cabbage.mapper;
 
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import top.mothership.cabbage.annotation.UserRoleControl;
-import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Lobby;
+import top.mothership.cabbage.pojo.osu.MpBeatmap;
 
 import java.util.List;
 
@@ -22,7 +19,7 @@ public interface LobbyDAO {
      * @param lobby the lobby
      */
     @Insert("INSERT INTO `mp_lobby` VALUES(null," +
-            "#{lobby.creator},#{lobby.group},null,null,null,null)")
+            "#{lobby.creator},#{lobby.group},null,null,#{lobby.reservedStartTime},null)")
     void addReserveLobby(@Param("lobby") Lobby lobby);
 
     /**
@@ -59,16 +56,20 @@ public interface LobbyDAO {
     List<Lobby> getLobbyNotEnded();
 
 
-    /**
-     * 对谱面简单的增删查
-     *
-     * @param beatmap the beatmap
-     */
-    @Insert("INSERT INTO `mp_beatmap` VALUES (#{beatmap.beatmapId},#{recommender},#{beatmap.group})")
-    void addLobbyBeatmap(@Param("beatmap")Beatmap beatmap,@Param("recommender")Integer recommender);
+    @Select("SELECT * FROM `mp_lobby` WHERE `creator` = #{creator}")
+    Lobby getLobbyByCreator(@Param("creator") Integer creator);
 
-    @Update("UPDATE SET `group` = #{beatmap.group} WHERE `beatmap_id` = #{beatmap.beatmapId}")
-    void updateBeatmapGroup(@Param("beatmap") Beatmap beatmap);
+    /**
+     * 对谱面简单的增删查，INSERT暂时不在数据库层面采用措施，insert之前先get一下
+     *
+     * @param mpBeatmap the beatmap
+     */
+    @Insert("INSERT INTO `mp_beatmap` VALUES (null,#{mpBeatmap.beatmapId},#{mpBeatmap.recommender},#{mpBeatmap.group},#{mpBeatmap.mods})")
+    void addLobbyBeatmap(@Param("mpBeatmap") MpBeatmap mpBeatmap);
+
+    @Update("UPDATE `mp_beatmap` SET `group` = #{mpBeatmap.group} WHERE `beatmap_id` = #{mpBeatmap.beatmapId}")
+    void updateBeatmapGroup(@Param("mpBeatmap") MpBeatmap mpBeatmap);
+
     /**
      * Gets lobby beatmap by group.
      *
@@ -76,14 +77,17 @@ public interface LobbyDAO {
      * @return the lobby beatmap by group
      */
     @Select("SELECT * FROM `mp_beatmap` WHERE `group` = #{group}")
-    List<Beatmap> getLobbyBeatmapByGroup(@Param("group") String group);
+    List<MpBeatmap> getLobbyBeatmapByGroup(@Param("group") String group);
+
+    @Select("SELECT * FROM `mp_beatmap` WHERE `group` = #{group} AND `beatmap_id` = #{beatmap_id}")
+    MpBeatmap getLobbyBeatmapByGroupAndBid(@Param("group") String group, @Param("beatmap_id") Integer beatmap_id);
 
     /**
      * Del lobby beatmap.
      *
-     * @param beatmap the beatmap
+     * @param mpBeatmap the beatmap
      */
-    @Delete("DELETE FROM `mp_beatmap` WHERE `beatmap_id` = #{beatmap.beatmapId}")
-    void delLobbyBeatmap(@Param("Beatmap") Beatmap beatmap);
+    @Delete("DELETE FROM `mp_beatmap` WHERE `beatmap_id` = #{mpBeatmap.beatmapId}")
+    void delLobbyBeatmap(@Param("mpBeatmap") MpBeatmap mpBeatmap);
 
 }

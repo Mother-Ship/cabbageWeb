@@ -17,4 +17,5 @@ public class Lobby {
     private LocalDateTime reservedStartTime;
     private Match match;
     private List<Game> games;
+    private String group;
 }

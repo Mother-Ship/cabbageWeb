@@ -23,7 +23,6 @@ import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
-import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -795,7 +794,7 @@ public class CqServiceImpl {
             } else {
                 String filename = imgUtil.drawBeatmap(beatmap);
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
-                        + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
+                        + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]" + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId());
             }
             cqManager.sendMsg(cqMsg);
         }

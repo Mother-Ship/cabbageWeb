@@ -91,9 +91,15 @@ public class ScoreUtil {
         }
         return mods;
     }
+
+    public Integer reverseConvertMod(String mods) {
+        return 0;
+    }
+
     public String genScoreString(Score score,Beatmap beatmap,String username){
         OppaiResult oppaiResult = calcPP(score, beatmap);
        String resp =  "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
+               + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId() + "\n"
                 + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n"
                 + score.getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，" + score.getCountMiss() + "*miss , "
                 + convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")

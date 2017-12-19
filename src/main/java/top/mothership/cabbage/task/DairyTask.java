@@ -14,6 +14,8 @@ import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
+import top.mothership.cabbage.pojo.CoolQ.CqResponse;
+import top.mothership.cabbage.pojo.CoolQ.QQInfo;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 
@@ -21,10 +23,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 
 /**
  * The type Dairy task.
@@ -90,11 +89,22 @@ public class DairyTask {
                 //如果用户在mp4组
                 List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
                 if (roles.contains("mp4")) {
+                    CqMsg cqMsg = new CqMsg();
+                    cqMsg.setMessageType("group");
+                    cqMsg.setGroupId(564679329L);
                     //并且刷超了
+                    CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
+                    if (cqResponse != null) {
+                        if (cqResponse.getData() != null) {
+                            if (!cqResponse.getData().getCard().toLowerCase(Locale.CHINA).replace("_", " ")
+                                    .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
+                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的群名片没有包含完整id。请修改名片。");
+                                cqManager.sendMsg(cqMsg);
+                            }
+                        }
+                    }
                     if (userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49) {
-                        CqMsg cqMsg = new CqMsg();
-                        cqMsg.setMessageType("group");
-                        cqMsg.setGroupId(564679329L);
+
                         //回溯昨天这时候检查到的pp
                         Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(2));
                         //如果昨天这时候的PP存在，并且也超了
@@ -112,7 +122,7 @@ public class DairyTask {
                                         cqMsg.setMessageType("kick");
                                         cqManager.sendMsg(cqMsg);
                                         cqMsg.setMessageType("private");
-                                        cqMsg.setMessage("由于PP超限，已将你移出MP4群。");
+                                        cqMsg.setMessage("由于PP超限，已将你移出MP4群。请考虑加入mp3群：234219559。");
                                         cqManager.sendMsg(cqMsg);
                                         //清除用户组，并且踢人
                                         String newRole;
@@ -129,14 +139,14 @@ public class DairyTask {
                                 } else {
                                     //大前天没超
                                     if (!user.getQq().equals(0L)) {
-                                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。");
+                                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp3群：234219559。");
                                         cqManager.sendMsg(cqMsg);
                                     }
                                 }
                             } else {
                                 //前天没超
                                 if (!user.getQq().equals(0L)) {
-                                    cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。");
+                                    cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp3群：234219559。");
                                     cqManager.sendMsg(cqMsg);
                                 }
                                 continue;
@@ -144,7 +154,7 @@ public class DairyTask {
                         } else {
                             //昨天没超
                             if (!user.getQq().equals(0L)) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。");
+                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp3群：234219559。");
                                 cqManager.sendMsg(cqMsg);
                             }
 
@@ -155,11 +165,22 @@ public class DairyTask {
                 }
 
                 if (roles.contains("mp5")) {
+                    CqMsg cqMsg = new CqMsg();
+                    cqMsg.setMessageType("group");
+                    cqMsg.setGroupId(201872650L);
+                    CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
+                    if (cqResponse != null) {
+                        if (cqResponse.getData() != null) {
+                            if (!cqResponse.getData().getCard().toLowerCase(Locale.CHINA).replace("_", " ")
+                                    .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
+                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的群名片没有包含完整id。请修改名片。");
+                                cqManager.sendMsg(cqMsg);
+                            }
+                        }
+                    }
                     //并且刷超了
                     if (userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49) {
-                        CqMsg cqMsg = new CqMsg();
-                        cqMsg.setMessageType("group");
-                        cqMsg.setGroupId(201872650L);
+
                         //回溯昨天这时候检查到的pp
                         Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(2));
                         //如果昨天这时候的PP存在，并且也超了
@@ -177,7 +198,7 @@ public class DairyTask {
                                         cqMsg.setMessageType("kick");
                                         cqManager.sendMsg(cqMsg);
                                         cqMsg.setMessageType("private");
-                                        cqMsg.setMessage("由于PP超限，已将你移出MP5群。");
+                                        cqMsg.setMessage("由于PP超限，已将你移出MP5群。请考虑加入mp4群：564679329。");
                                         cqManager.sendMsg(cqMsg);
                                         String newRole;
 
@@ -194,14 +215,14 @@ public class DairyTask {
                                 } else {
                                     //大前天没超
                                     if (!user.getQq().equals(0L)) {
-                                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。");
+                                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp4群：564679329。");
                                         cqManager.sendMsg(cqMsg);
                                     }
                                 }
                             } else {
                                 //前天没超
                                 if (!user.getQq().equals(0L)) {
-                                    cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。");
+                                    cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp4群：564679329。");
                                     cqManager.sendMsg(cqMsg);
                                 }
                                 continue;
@@ -209,7 +230,7 @@ public class DairyTask {
                         } else {
                             //昨天没超
                             if (!user.getQq().equals(0L)) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。");
+                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp4群：564679329。");
                                 cqManager.sendMsg(cqMsg);
                             }
 

@@ -264,6 +264,8 @@ public class CqController {
                                 case "listmap":
                                     mpService.listMap(cqMsg);
                                     break;
+                                case "help":
+                                    mpService.help(cqMsg);
                                 default:
                                     break;
                             }

@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import top.mothership.cabbage.annotation.GroupRoleControl;
 import top.mothership.cabbage.annotation.UserRoleControl;
 import top.mothership.cabbage.consts.Base64Consts;
 import top.mothership.cabbage.consts.OverallConsts;
@@ -32,9 +31,7 @@ import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
@@ -348,7 +345,7 @@ public class CqAdminServiceImpl {
         }
         resp = "查询PP溢出玩家完成。";
         if (overflowList.size() > 0) {
-            resp = resp.concat("\n查询到" + role + "用户组中，以下玩家：" + overflowList.toString().replace(", ",",") + "PP超出了设定的限制。");
+            resp = resp.concat("\n查询到" + role + "用户组中，以下玩家：" + overflowList.toString().replace(", ", ",") + "PP超出了设定的限制。");
         } else {
             resp = resp.concat("\n没有检测" + role + "用户组中PP溢出的玩家。");
         }
@@ -362,20 +359,37 @@ public class CqAdminServiceImpl {
         m.find();
         String url = m.group(3);
         String target = m.group(2);
-        BufferedImage tmp = ImageIO.read(new URL(url));
-        //这个方法从QQ直接发送图片+程序下载，改为采用URL写入到硬盘，到现在改为存入数据库+打破目录限制，只不过命令依然叫!sudo bg……
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            ImageIO.write(tmp, "png", out);
-            tmp.flush();
-            byte[] imgBytes = out.toByteArray();
-            resDAO.addResource(target + ".png", imgBytes);
-        } catch (IOException ignore) {
+        //实验性功能
+        if (target.contains(".")) {
+            File file = new File(url);
+            try (FileInputStream fis = new FileInputStream(file);
+                 ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                byte[] b = new byte[1024];
+                int n;
+                while ((n = fis.read(b)) != -1) {
+                    bos.write(b, 0, n);
+                }
+                byte[] bytes = bos.toByteArray();
+                resDAO.addResource(target, bytes);
+            } catch (IOException ignore) {
 
+            }
+        } else {
+            BufferedImage tmp = ImageIO.read(new URL(url));
+            //这个方法从QQ直接发送图片+程序下载，改为采用URL写入到硬盘，到现在改为存入数据库+打破目录限制，只不过命令依然叫!sudo bg……
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                ImageIO.write(tmp, "png", out);
+                tmp.flush();
+                byte[] imgBytes = out.toByteArray();
+                resDAO.addResource(target + ".png", imgBytes);
+            } catch (IOException ignore) {
+
+            }
+            cqMsg.setMessage("修改组件" + target + ".png成功。");
+            cqManager.sendMsg(cqMsg);
+            //手动调用重载缓存
+            loadCache();
         }
-        cqMsg.setMessage("修改组件" + target + ".png成功。");
-        cqManager.sendMsg(cqMsg);
-        //手动调用重载缓存
-        loadCache();
     }
 
     public void recent(CqMsg cqMsg) {
@@ -611,18 +625,31 @@ public class CqAdminServiceImpl {
             resp = "啥玩意啊 咋回事啊";
         } else {
             ArrayList<CqMsg> msgs = SmokeUtil.msgQueues.get(cqMsg.getGroupId()).getMsgsByQQ(Long.valueOf(QQ));
-            String card = cqManager.getGroupMember(cqMsg.getGroupId(), Long.valueOf(QQ)).getData().getCard();
+            QQInfo data = cqManager.getGroupMember(cqMsg.getGroupId(), Long.valueOf(QQ)).getData();
             if (msgs.size() == 0) {
                 resp = "没有" + QQ + "的最近消息。";
             } else if (msgs.size() <= 10) {
                 for (int i = 0; i < msgs.size(); i++) {
-                    resp += card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
+                    if ("".equals(data.getCard())) {
+                        resp += data.getNickname();
+                    } else {
+                        resp += data.getCard();
+                    }
+
+                    resp += "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
                             format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n";
                 }
             } else {
                 for (int i = msgs.size() - 10; i < msgs.size(); i++) {
-                    resp += card + "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
+                    if ("".equals(data.getCard())) {
+                        resp += data.getNickname();
+                    } else {
+                        resp += data.getCard();
+                    }
+
+                    resp += "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
                             format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n";
+
                 }
             }
         }
@@ -695,9 +722,9 @@ public class CqAdminServiceImpl {
         for (QQInfo qqInfo : cqResponse1.getData()) {
             //根据QQ获取user
             user = userDAO.getUser(qqInfo.getUserId(), null);
-            if (user != null&&!user.isBanned()) {
+            if (user != null && !user.isBanned()) {
                 userFromAPI = apiManager.getUser(null, user.getUserId());
-                if(userFromAPI==null){
+                if (userFromAPI == null) {
                     user.setBanned(true);
                     userDAO.updateUser(user);
                     String card = cqManager.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
@@ -705,7 +732,7 @@ public class CqAdminServiceImpl {
                             .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
                         resp += "osu! id：" + user.getCurrentUname() + "，QQ：" + qqInfo.getUserId() + "，群名片：" + card + "(该玩家于今日被ban，已记录)\n";
                     }
-                }else {
+                } else {
                     String card = cqManager.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
                     if (!card.toLowerCase(Locale.CHINA).replace("_", " ")
                             .contains(userFromAPI.getUserName().toLowerCase(Locale.CHINA).replace("_", " "))) {
