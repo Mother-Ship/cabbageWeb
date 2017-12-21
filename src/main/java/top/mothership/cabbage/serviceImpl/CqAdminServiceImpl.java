@@ -472,7 +472,7 @@ public class CqAdminServiceImpl {
         int index = msg.indexOf("]");
         int sec;
         String QQ;
-
+//为了使用方便（QQ的@后面自动添加空格，如果用正则得手动删掉空格加冒号，所以这个命令不用正则表达式去处理）
         if (!"".equals(msg.substring(index + 2))) {
             sec = Integer.valueOf(msg.substring(index + 2));
         } else {
@@ -617,10 +617,15 @@ public class CqAdminServiceImpl {
     public void listMsg(CqMsg cqMsg) {
         Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
-        String msg = cqMsg.getMessage();
-        int index = msg.indexOf("]");
+//        String msg = cqMsg.getMessage();
+//        int index = msg.indexOf("]");
         String resp = "";
-        String QQ = msg.substring(24, index);
+//        String QQ = msg.substring(24, index);
+        String QQ = m.group(2);
+        Matcher atMatcher = PatternConsts.AT_REGEX.matcher(QQ);
+        if (atMatcher.find()) {
+            QQ = atMatcher.group(0);
+        }
         if ("all".equals(QQ)) {
             resp = "啥玩意啊 咋回事啊";
         } else {

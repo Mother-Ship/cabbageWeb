@@ -743,14 +743,21 @@ public class CqServiceImpl {
                     "所有参数都可以省略(但横线、方括号和圆括号不能省略)");
             cqManager.sendMsg(cqMsg);
         } else {
+            //没啥办法……手动处理吧，这个正则管不了了
             String artist;
             if(m2.group(1).endsWith(" ")){
                 artist = m2.group(1).substring(0,m2.group(1).length()-1);
             }else{
                 artist = m2.group(1);
             }
+            String title;
+            if (m2.group(2).endsWith(" ")) {
+                title = m2.group(2).substring(0, m2.group(2).length() - 1);
+            } else {
+                title = m2.group(2);
+            }
             logger.info("开始处理" + userFromAPI.getUserName() + "进行的谱面搜索，关键词为：" + keyword);
-            Beatmap beatmap = webPageManager.searchBeatmap(artist, m2.group(2), m2.group(3), m2.group(4));
+            Beatmap beatmap = webPageManager.searchBeatmap(artist, title, m2.group(3), m2.group(4));
             if (beatmap == null) {
                 cqMsg.setMessage("根据提供的关键词：" + keyword + "没有找到任何谱面。");
                 cqManager.sendMsg(cqMsg);
@@ -803,7 +810,6 @@ public class CqServiceImpl {
     public void chartMemberCmd(CqMsg cqMsg) {
         String role;
         Userinfo userFromAPI;
-        String username;
         Long qq;
         User user;
         String filename;
@@ -824,13 +830,8 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-        //截取最后一个字符（空格）
-        if(cmdRegex.group(2).endsWith(" ")) {
-            username = cmdRegex.group(2).substring(0, cmdRegex.group(2).length() - 1);
-        }else{
-            username = cmdRegex.group(2);
-        }
-        userFromAPI = apiManager.getUser(username, null);
+
+        userFromAPI = apiManager.getUser(cmdRegex.group(2), null);
         if (userFromAPI == null) {
             cqMsg.setMessage("没有在官网找到该玩家。");
             cqManager.sendMsg(cqMsg);
@@ -956,6 +957,5 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
 
     }
-
 
 }

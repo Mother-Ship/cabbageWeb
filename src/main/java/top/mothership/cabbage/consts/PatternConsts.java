@@ -17,6 +17,10 @@ public class PatternConsts {
      */
     public final static Pattern IMG_REGEX =  Pattern.compile("\\[CQ:image,file=.+]");
     /**
+     * 匹配出艾特消息中的QQ号
+     */
+    public final static Pattern AT_REGEX = Pattern.compile("\\[CQ:at,qq=(.*)]");
+    /**
      * 匹配出纯图片的消息
      */
     public final static Pattern SINGLE_IMG_REGEX =  Pattern.compile("^\\[CQ:image,file=.+]$");
@@ -39,7 +43,7 @@ public class PatternConsts {
      * !bp xx #n类命令时：group(1)为setid，group(2)为xxx ，3为n，注意group(2)有一个空格
      * !bpme #n类命令时：group(1)为setid，group(2)为""，3为n
      */
-    public final static Pattern CMD_REGEX =  Pattern.compile("[!！]([^ ]+)[ ]?([^#]*)[ ]?[#]*(.*)");
+    public final static Pattern CMD_REGEX = Pattern.compile("[!！]([^ ]+)[ ]?([^#]*)[ #]?(.*)");
     /**
      * 匹配出带中文/特殊符号的命令
      */
@@ -78,7 +82,7 @@ public class PatternConsts {
     /**
      * The constant ROOM_NOT_EXIST.
      */
-    public final static Pattern ROOM_NOT_EXIST = Pattern.compile(":cho.ppy.sh 401 (.+) #mp_(.+) :No such nick");
+    public final static Pattern ROOM_NOT_EXIST = Pattern.compile(":cho.ppy.sh 401 .+ #mp_(.+) :No such nick");
 
     /**
      * The constant ROOM_LIMITED.

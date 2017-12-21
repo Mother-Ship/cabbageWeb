@@ -240,10 +240,17 @@ public class CqController {
                             cmdMatcher.find();
                             switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                                 case "rs":
+                                    //rs命令必须指定开始时间
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        return;
+                                    }
                                 case "make":
                                     mpService.reserveLobby(cqMsg);
                                     break;
                                 case "invite":
+                                    if ("".equals(cmdMatcher.group(2))) {
+                                        return;
+                                    }
                                     mpService.invitePlayer(cqMsg);
                                     break;
                                 case "list":
