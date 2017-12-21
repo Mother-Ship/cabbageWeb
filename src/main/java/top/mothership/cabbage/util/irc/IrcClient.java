@@ -2,13 +2,11 @@ package top.mothership.cabbage.util.irc;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.aspectj.lang.annotation.Around;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.serviceImpl.MpServiceImpl;
 
-import javax.annotation.PostConstruct;
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
@@ -20,7 +18,7 @@ import java.util.regex.Matcher;
  * @author HyPeX
  */
 @Component
-public class IrcClient extends Thread {
+public class IrcClient {
     private static final int DEFAULT_DELAY = 200;
     private ReconnectTimer reconnectTimer;
     private Socket socket;
@@ -32,6 +30,14 @@ public class IrcClient extends Thread {
     private boolean disconnected = true;
     private Logger logger = LogManager.getLogger(this.getClass());
     private final MpServiceImpl mpService;
+
+    {
+        try {
+            connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Autowired
     public IrcClient(MpServiceImpl mpService) {
@@ -77,33 +83,21 @@ public class IrcClient extends Thread {
         return channels;
     }
 
-    /**
-     * Do start.
-     */
-    @PostConstruct
-    public void doStart() {
-        this.start();
-    }
-
-    @Override
-    public void run() {
-        connect();
-    }
 
     /**
      * Connect.
      */
-    public void connect() {
-        if (!disconnected) {
-            logger.info("已经登录，请先退出登录");
-            return;
-        }
+    public void connect() throws IOException {
+
         if (reconnectTimer == null) {
             reconnectTimer = new ReconnectTimer(this);
         }
         while (true) {
             reconnectTimer.messageReceived();
             try {
+                if (!disconnected) {
+                    disconnect();
+                }
                 //新建socket，获取输出流，新建一个Flusher
                 String address = "irc.ppy.sh";
                 int port = 6667;
@@ -221,7 +215,8 @@ public class IrcClient extends Thread {
             channels.get(channel).addMessage(message);
         }
     }
-    public void handleMsg(String msg){
+
+    public void handleMsg(String msg) {
 
         //对消息内容进行判断，001是登录，ping和pong应该是心跳包，其他的就是正常消息
         if (!msg.contains("cho@ppy.sh QUIT")) {
@@ -238,10 +233,13 @@ public class IrcClient extends Thread {
                             break;
                         case "376":
                             logger.info("登录成功！");
+                            mpService.reconnectAllLobby();
                             break;
                         case "401":
                             // :cho.ppy.sh 401 AutoHost #mp_32349656 :No such nick
                             logger.info("指定的房间已关闭：" + msg);
+                            Matcher shutdownLobby = PatternConsts.ROOM_NOT_EXIST.matcher(msg);
+                            mpService.shutdownLobby(Integer.valueOf(shutdownLobby.group(1)));
                             break;
                         default:
                             break;
@@ -254,7 +252,7 @@ public class IrcClient extends Thread {
                     // tournament matches you have open.
 
                     // :HyPeX!cho@ppy.sh JOIN :#mp_29904363、
-                    //看起来是提示有人加入，实际上的业务逻辑是刷新……？还是说这是新建房间之后的必要步骤
+                    //加入房间频道之后，刷新房间状态
 
 //                    if (matcher.matches()) {
 //                        if (matcher.group(1).equalsIgnoreCase(m_client.getUser())) {

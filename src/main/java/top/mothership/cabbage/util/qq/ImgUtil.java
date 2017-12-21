@@ -627,10 +627,13 @@ public class ImgUtil {
             bg = webPageManager.getBG(beatmap);
         } catch (NullPointerException e) {
             bg = webPageManager.getBGBackup(beatmap);
+        }
+        if (bg == null) {
+            bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
                 //随机抽取一个bg
-                String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
-                bg = getCopyImage(images.get(RandomBG));
+                String randomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
+                bg = getCopyImage(images.get(randomBG));
             }
         }
         //缩略图
@@ -838,10 +841,13 @@ public class ImgUtil {
             bg = webPageManager.getBG(beatmap);
         } catch (NullPointerException e) {
             bg = webPageManager.getBGBackup(beatmap);
+        }
+        if (bg == null) {
+            bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
                 //随机抽取一个bg
-                String RandomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
-                bg = getCopyImage(images.get(RandomBG));
+                String randomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
+                bg = getCopyImage(images.get(randomBG));
             }
         }
         //缩略图
