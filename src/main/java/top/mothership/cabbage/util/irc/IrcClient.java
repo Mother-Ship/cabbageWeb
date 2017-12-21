@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.serviceImpl.MpServiceImpl;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
@@ -18,7 +19,7 @@ import java.util.regex.Matcher;
  * @author HyPeX
  */
 @Component
-public class IrcClient {
+public class IrcClient extends Thread{
     private static final int DEFAULT_DELAY = 200;
     private ReconnectTimer reconnectTimer;
     private Socket socket;
@@ -29,20 +30,13 @@ public class IrcClient {
     private int delay = DEFAULT_DELAY;
     private boolean disconnected = true;
     private Logger logger = LogManager.getLogger(this.getClass());
-    private final MpServiceImpl mpService;
+//    private final MpServiceImpl mpService;
 
-    {
-        try {
-            connect();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
-    @Autowired
-    public IrcClient(MpServiceImpl mpService) {
-        this.mpService = mpService;
-    }
+//    @Autowired
+//    public IrcClient(MpServiceImpl mpService) {
+//        this.mpService = mpService;
+//    }
 
 
     /**
@@ -83,6 +77,19 @@ public class IrcClient {
         return channels;
     }
 
+    @PostConstruct
+    public void doStart(){
+        this.start();
+    }
+
+    @Override
+    public void run() {
+        try {
+            connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * Connect.
@@ -233,13 +240,13 @@ public class IrcClient {
                             break;
                         case "376":
                             logger.info("登录成功！");
-                            mpService.reconnectAllLobby();
+//                            mpService.reconnectAllLobby();
                             break;
                         case "401":
                             // :cho.ppy.sh 401 AutoHost #mp_32349656 :No such nick
                             logger.info("指定的房间已关闭：" + msg);
                             Matcher shutdownLobby = PatternConsts.ROOM_NOT_EXIST.matcher(msg);
-                            mpService.shutdownLobby(Integer.valueOf(shutdownLobby.group(1)));
+//                            mpService.shutdownLobby(Integer.valueOf(shutdownLobby.group(1)));
                             break;
                         default:
                             break;

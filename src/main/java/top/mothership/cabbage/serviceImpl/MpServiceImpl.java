@@ -245,7 +245,7 @@ public class MpServiceImpl {
      * 扫描所有的需要开启的房间 并且开启
      */
     @Scheduled(cron = "0 * * * * ? ")
-    private void scanLobby() {
+    public void scanLobby() {
 
     }
 
