@@ -137,7 +137,7 @@ public class MsgQueue {
      * @return 该消息是否算作复读
      */
     private boolean isThisRepeat(int i) {
-        Matcher cmdMatcher = PatternConsts.CMD_REGEX.matcher(msg.getMessage());
+        Matcher cmdMatcher = PatternConsts.REG_CMD_REGEX.matcher(msg.getMessage());
         if (cmdMatcher.find()) {
             //如果是命令，直接false
             return false;

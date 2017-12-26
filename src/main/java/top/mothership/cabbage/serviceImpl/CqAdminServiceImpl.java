@@ -31,7 +31,11 @@ import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
@@ -77,7 +81,7 @@ public class CqAdminServiceImpl {
         //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
         ImgUtil.images = new HashMap<>();
         //逻辑改为从数据库加载
-        List<Map<String, Object>> list = resDAO.getResource();
+        List<Map<String, Object>> list = resDAO.getImages();
         for (Map<String, Object> aList : list) {
             String name = (String) aList.get("name");
             byte[] data = (byte[]) aList.get("data");
@@ -325,7 +329,7 @@ public class CqAdminServiceImpl {
         m.find();
         String role = m.group(2);
         String resp;
-        List<Integer> list = userDAO.listUserIdByRole(role);
+        List<Integer> list = userDAO.listUserIdByRole(role, true);
         List<String> overflowList = new ArrayList<>();
         for (Integer aList : list) {
             //这里没有做多用户组。2017-10-25 17:39:10修正
@@ -361,18 +365,22 @@ public class CqAdminServiceImpl {
         String target = m.group(2);
         //实验性功能
         if (target.contains(".")) {
-            File file = new File(url);
-            try (FileInputStream fis = new FileInputStream(file);
-                 ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            HttpURLConnection httpConnection;
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                httpConnection =
+                        (HttpURLConnection) new URL(url).openConnection();
+                httpConnection.setRequestMethod("GET");
+                httpConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.40 Safari/537.36");
+                InputStream is = httpConnection.getInputStream();
                 byte[] b = new byte[1024];
                 int n;
-                while ((n = fis.read(b)) != -1) {
+                while ((n = is.read(b)) != -1) {
                     bos.write(b, 0, n);
                 }
                 byte[] bytes = bos.toByteArray();
                 resDAO.addResource(target, bytes);
+                is.close();
             } catch (IOException ignore) {
-
             }
         } else {
             BufferedImage tmp = ImageIO.read(new URL(url));
@@ -381,7 +389,7 @@ public class CqAdminServiceImpl {
                 ImageIO.write(tmp, "png", out);
                 tmp.flush();
                 byte[] imgBytes = out.toByteArray();
-                resDAO.addResource(target + ".png", imgBytes);
+                resDAO.addImage(target + ".png", imgBytes);
             } catch (IOException ignore) {
 
             }
@@ -448,11 +456,9 @@ public class CqAdminServiceImpl {
         cl.add(Calendar.DATE, -day);
         java.sql.Date date = new Date(cl.getTimeInMillis());
 
-        List<Integer> list = userDAO.listUserIdByRole(role);
+        List<Integer> list = userDAO.listUserIdByRole(role, true);
         List<String> afkList = new ArrayList<>();
         for (Integer aList : list) {
-//            if (Arrays.asList(aList.getRole().split(",")).contains(role)
-//                    && webPageUtil.getLastActive(aList.getUserId()).before(date)) {
             if (webPageManager.getLastActive(aList).before(date)) {
                 afkList.add(apiManager.getUser(null, aList).getUserName());
             }
@@ -615,16 +621,13 @@ public class CqAdminServiceImpl {
     }
 
     public void listMsg(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = PatternConsts.AT_REGEX.matcher(cqMsg.getMessage());
         m.find();
-//        String msg = cqMsg.getMessage();
-//        int index = msg.indexOf("]");
         String resp = "";
-//        String QQ = msg.substring(24, index);
         String QQ = m.group(2);
-        Matcher atMatcher = PatternConsts.AT_REGEX.matcher(QQ);
+        Matcher atMatcher = PatternConsts.AT_REGEX.matcher(cqMsg.getMessage());
         if (atMatcher.find()) {
-            QQ = atMatcher.group(0);
+            QQ = atMatcher.group(1);
         }
         if ("all".equals(QQ)) {
             resp = "啥玩意啊 咋回事啊";
@@ -671,14 +674,11 @@ public class CqAdminServiceImpl {
         } else {
             role = m.group(2);
         }
-
-
         logger.info("开始检查" + role + "用户组中所有人的PP");
-        List<Integer> list = userDAO.listUserIdByRole(role);
+        List<Integer> list = userDAO.listUserIdByRole(role, true);
         String resp;
         if (list.size() > 0) {
             resp = role + "用户组中所有人的PP：";
-
             for (Integer aList : list) {
                 Userinfo userinfo = apiManager.getUser(null, aList);
                 if (userinfo != null) {
@@ -770,7 +770,7 @@ public class CqAdminServiceImpl {
             user = userDAO.getUser(qqInfo.getUserId(), null);
             String card = cqManager.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
             if (user != null) {
-                Userinfo userFromAPI = apiManager.getUser(null, user.getUserId());
+                //在这个功能里不做是否被ban的查询，被ban的玩家也有待在用户组里的权利……
                 List<String> roles = Arrays.asList(user.getRole().split(","));
                 switch (String.valueOf(cqResponse.getData().get(0).getGroupId())) {
                     case "201872650":
@@ -795,6 +795,33 @@ public class CqAdminServiceImpl {
 
     }
 
+    public void checkRoleBan(CqMsg cqMsg) {
+        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        m.find();
+        String role = m.group(2);
+        if ("".equals(role)) {
+            role = "mp5";
+        }
+        String resp;
+        List<Integer> list = userDAO.listUserIdByRole(role, false);
+        User user;
+        if (list.size() == 0) {
+            resp = "该用户组没有成员。";
+            cqMsg.setMessage(resp);
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        resp = "检测到" + role + "用户组中有以下玩家被ban：";
+        for (Integer i : list) {
+            user = userDAO.getUser(null, i);
+            if (user.isBanned()) {
+                resp += "uid：" + user.getUserId() + "，现用名：" + user.getCurrentUname() + "，曾用名：" + user.getLegacyUname() + "，绑定的QQ：" + user.getQq();
+            }
+        }
+        cqMsg.setMessage(resp);
+        cqManager.sendMsg(cqMsg);
+    }
+
     public void help(CqMsg cqMsg) {
         String resp = "!sudo add xxx,xxx:yyy 将xxx,xxx添加到yyy用户组。\n" +
                 "!sudo del xxx:yyy 将xxx的用户组中yyy删除，如果不带:yyy则重置为默认（creep）。\n" +
@@ -817,8 +844,9 @@ public class CqAdminServiceImpl {
                 "!sudo checku xxx 根据uid查找用户。\n" +
                 "!sudo checkq xxx 根据QQ查找用户。\n" +
                 "!sudo checkGroupBind xxx 打印该群所有成员是否绑定id，以及绑定id是否在mp4/5组内。" +
-                "特别的，不带参数会将群号设置为当前消息的群号。（只支持mp4/5群）\n" +
-                "!sudo repeatStar 打印所有开启复读计数群内，复读发言/所有发言 比值最高的人。";
+                "特别的，不带参数会将群号设置为当前消息的群号。（在mp4/5群外使用，不会检测用户组，只检测是否绑定。）\n" +
+                "!sudo repeatStar 打印所有开启复读计数群内，复读发言/所有发言 比值最高的人。" +
+                "!sudo checkRoleBan xxx 查询某用户组的被ban情况";
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
