@@ -422,7 +422,7 @@ public class CqServiceImpl {
     }
 
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
-    @GroupRoleControl({112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupRoleControl(banned = {112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void printSpecifiedBP(CqMsg cqMsg) {
         String username;
         Userinfo userFromAPI = null;
@@ -718,7 +718,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupRoleControl({112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupRoleControl(banned = {112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void myScore(CqMsg cqMsg) {
         User user;
         Userinfo userFromAPI;
@@ -782,7 +782,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupRoleControl({112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupRoleControl(banned = {112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void searchBeatmap(CqMsg cqMsg) {
         Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
@@ -964,5 +964,44 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
 
     }
+
+    @GroupRoleControl(allBanned = true)
+    public void myCost(CqMsg cqMsg) {
+        User user;
+        Userinfo userFromAPI;
+        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        m.find();
+        String keyword = m.group(2);
+        user = userDAO.getUser(cqMsg.getUserId(), null);
+        if (user == null) {
+            cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        Map<String, Integer> map = webPageManager.getPPPlus(user.getUserId());
+        if (map != null) {
+            double cost = Math.pow((map.get("Jump") / 3000F), 0.8F)
+                    * Math.pow((map.get("Flow") / 1500F), 0.6F)
+                    + Math.pow((map.get("Speed") / 2000F), 0.8F)
+                    * Math.pow((map.get("Stamina") / 2000F), 0.5F)
+                    + (map.get("Accuracy") / 2250F);
+//        cost=(jump/3000)^0.8*(flow/1500)^0.6+(speed/2000)^0.8*(stamina/2000)^0.5+accuracy/2250
+            cqMsg.setMessage("你的Jump：" + map.get("Jump")
+                    + "\nFlow：" + map.get("Flow")
+                    + "\nPrecision：" + map.get("Precision")
+                    + "\nSpeed：" + map.get("Speed")
+                    + "\nStamina：" + map.get("Stamina")
+                    + "\nAccuracy：" + map.get("Accuracy")
+                    + "\n你在本次娱乐赛的Cost是：" + cost + "。" +
+                    "\n后期公式可能会变动，该Cost只对本次比赛有效。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        cqMsg.setMessage("获取你的Cost失败……");
+        cqManager.sendMsg(cqMsg);
+        return;
+
+    }
+
 
 }

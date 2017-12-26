@@ -320,6 +320,9 @@ public class CqController {
                                 case "search":
                                     cqService.searchBeatmap(cqMsg);
                                     break;
+                                case "costme":
+                                case "mycost":
+                                    cqService.myCost(cqMsg);
                                 default:
                                     break;
 
