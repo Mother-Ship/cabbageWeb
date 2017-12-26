@@ -76,6 +76,7 @@ public class CqAdminServiceImpl {
         loadCache();
     }
 
+    //其实好像没必要做成静态的了……？但是静态的似乎也没啥影响，先留着吧
     private static void loadCache() {
         //调用NIO遍历那些可以加载一次的文件
         //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件

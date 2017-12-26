@@ -14,15 +14,10 @@ import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Lobby;
 import top.mothership.cabbage.pojo.osu.Userinfo;
-import top.mothership.cabbage.util.irc.IRCClient;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 
@@ -37,7 +32,7 @@ public class MpServiceImpl {
     private final UserDAO userDAO;
     private final CqManager cqManager;
     private final UserInfoDAO userInfoDAO;
-    private static final IRCClient IRC_CLIENT = new IRCClient();
+
     /**
      * Instantiates a new Mp service.
      * @param lobbyDAO   the lobby dao
@@ -52,69 +47,7 @@ public class MpServiceImpl {
         this.userDAO = userDAO;
         this.cqManager = cqManager;
         this.userInfoDAO = userInfoDAO;
-        connect();
-    }
 
-    private void connect() {
-        if (m_reconnectTimer == null) {
-            m_reconnectTimer = new ReconnectTimer(this);
-        }
-        while (true) {
-            m_reconnectTimer.messageReceived();
-            try {
-                System.out.println("Attempting to connect.");
-                if (!m_client.isDisconnected()) {
-                    System.out.println("Disconnecting first though.");
-                    m_client.disconnect();
-                }
-                m_client.connect();
-                System.out.println("Listening...");
-                listen();
-                System.out.println("Done listening...");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            synchronized (m_client) {
-                m_shouldStop = false;
-            }
-            ThreadUtils.sleepQuietly(SECOND);
-        }
-    }
-
-    private void listen() {
-        //获取socket的输入流
-        BufferedReader reader = new BufferedReader(new InputStreamReader(m_client.getInputStream()));
-
-        String msg = "";
-        boolean safeShouldStop;
-        synchronized (m_client) {
-            safeShouldStop = m_shouldStop;
-        }
-        while ((msg = reader.readLine()) != null && !safeShouldStop) {
-            long now = System.currentTimeMillis();
-            m_reconnectTimer.messageReceived();
-
-            if (!msg.contains("cho@ppy.sh QUIT")) {
-                if (msg.contains("001")) {
-                    System.out.println("Logged in");
-                    System.out.println("Line: " + msg);
-                } else if (msg.startsWith("PING")) {
-                    String pingResponse = msg.replace("PING", "PONG");
-                    m_client.write(pingResponse);
-                } else if (msg.startsWith("PONG")) {
-                    System.out.println("Got pong at " + now + ": " + msg);
-                } else {
-                    System.out.println("RECV(" + new Date(now) + "): " + msg);
-                    try {
-                        log(msg);
-                    } catch (Exception e) {
-                        System.err.println("Unhandled exception thrown!");
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-        reader.close();
     }
 
     /**
@@ -243,7 +176,7 @@ public class MpServiceImpl {
                 }
             }
         }
-        ircClient.sendMessage("#mp_" + lobby.getMatch().getMatchId(), "!mp invite " + userFromAPI.getUserName());
+//        ircClient.sendMessage("#mp_" + lobby.getMatch().getMatchId(), "!mp invite " + userFromAPI.getUserName());
     }
 
     /**
