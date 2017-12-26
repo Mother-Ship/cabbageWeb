@@ -78,7 +78,7 @@ public class WebPageManager {
     public BufferedImage getAvatar(int uid) {
         URL avaurl;
         BufferedImage ava;
-        BufferedImage resizedAva = null;
+        BufferedImage resizedAva;
         logger.info("开始获取玩家" + uid + "的头像");
         try {
             avaurl = new URL(getAvaURL + uid + "?.png");
@@ -86,7 +86,6 @@ public class WebPageManager {
 
             if (ava != null) {
                 //进行缩放
-
                 if (ava.getHeight() > 128 || ava.getWidth() > 128) {
                     //获取原图比例，将较大的值除以128，然后把较小的值去除以这个f
                     int resizedHeight;
