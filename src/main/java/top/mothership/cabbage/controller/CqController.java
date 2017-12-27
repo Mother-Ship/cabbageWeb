@@ -78,16 +78,11 @@ public class CqController {
                 } else {
                     msgWithoutImage = msg;
                 }
-                //识别消息类型，根据是否私聊使用不同的表达式
-                Matcher cmdMatcher = PatternConsts.MAIN_FILTER_REGEX.matcher(msgWithoutImage);
+                //识别消息类型，根据是否是群聊，加入禁言消息队列
+                Matcher cmdMatcher = PatternConsts.REG_CMD_REGEX.matcher(msgWithoutImage);
                 switch (cqMsg.getMessageType()) {
                     case "group":
                         smokeUtil.parseSmoke(cqMsg);
-                        break;
-                    case "private":
-                        //如果是私聊消息，覆盖掉正则表达式（识别汉字）
-                        //不必考虑线程安全问题，每次进入这个方法，cmdRegex都会被重置为没有汉字的版本
-                        cmdMatcher = PatternConsts.MAIN_FILTER_REGEX_CHINESE.matcher(msgWithoutImage);
                         break;
                     default:
                         break;
@@ -110,8 +105,6 @@ public class CqController {
                             break;
                     }
                     logger.info(log);
-
-
                     switch (cmdMatcher.group(1)) {
                         //处理命令
                         case "sudo":
@@ -278,15 +271,10 @@ public class CqController {
                             }
                             break;
                         default:
-                            cmdMatcher = PatternConsts.CMD_REGEX.matcher(msg);
-                            cmdMatcher.find();
+                            Matcher cmdMatcherWithNum = PatternConsts.REG_CMD_REGEX_NUM_PARAM.matcher(msg);
                             switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                                 case "stat":
                                 case "statu":
-                                    //这两个如果没有第二个参数，则直接返回，避免后续subString的时候出现NPE
-                                    if ("".equals(cmdMatcher.group(2))) {
-                                        return;
-                                    }
                                 case "statme":
                                     cqService.statUserInfo(cqMsg);
                                     break;
@@ -294,27 +282,22 @@ public class CqController {
                                 case "bpu":
                                 case "bps":
                                 case "bpus":
-                                    if ("".equals(cmdMatcher.group(2))) {
-                                        return;
-                                    }
                                 case "bpme":
+                                case "mybp":
+                                case "mybps":
                                 case "bpmes":
-                                    if ("".equals(cmdMatcher.group(3))) {
-                                        cqService.printBP(cqMsg);
-                                    } else {
+                                    if (cmdMatcherWithNum.find()) {
                                         //如果有指定#n
-
                                         cqService.printSpecifiedBP(cqMsg);
+                                    } else {
+                                        cqService.printBP(cqMsg);
                                     }
-
                                     break;
                                 case "setid":
-                                    if ("".equals(cmdMatcher.group(2))) {
-                                        return;
-                                    }
                                     cqService.setId(cqMsg);
                                     break;
                                 case "recent":
+                                case "recemt":
                                 case "rs":
                                     cqService.recent(cqMsg);
                                     break;
@@ -329,23 +312,17 @@ public class CqController {
                                     break;
                                 case "add":
                                 case "del":
-                                    if ("".equals(cmdMatcher.group(2))) {
-                                        return;
-                                    }
                                     cqService.chartMemberCmd(cqMsg);
                                     break;
                                 case "me":
-                                    if ("".equals(cmdMatcher.group(2))) {
-                                        return;
-                                    }
                                     cqService.myScore(cqMsg);
                                     break;
                                 case "search":
-                                    if ("".equals(cmdMatcher.group(2))) {
-                                        return;
-                                    }
                                     cqService.searchBeatmap(cqMsg);
                                     break;
+                                case "costme":
+                                case "mycost":
+                                    cqService.myCost(cqMsg);
                                 default:
                                     break;
 
