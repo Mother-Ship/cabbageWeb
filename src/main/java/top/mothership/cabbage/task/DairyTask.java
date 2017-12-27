@@ -66,7 +66,7 @@ public class DairyTask {
         //清掉前一天全部信息
         userInfoDAO.clearTodayInfo(LocalDate.now().minusDays(1));
         logger.info("开始进行每日登记");
-        List<Integer> list = userDAO.listUserIdByRole(null);
+        List<Integer> list = userDAO.listUserIdByRole(null, false);
         for (Integer aList : list) {
             User user = userDAO.getUser(null, aList);
             Userinfo userinfo = apiManager.getUser(null, aList);

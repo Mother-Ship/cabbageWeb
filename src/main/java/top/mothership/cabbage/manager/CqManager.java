@@ -21,7 +21,7 @@ import java.util.List;
 //将CQ的HTTP API封装为接口，并托管到Spring
 @Component
 public class CqManager {
-    private final String baseURL = "http://k3.mothership.top:5700";
+    private final String baseURL = "http://localhost:5701";
 
     public CqResponse sendMsg(CqMsg cqMsg) {
         String URL;

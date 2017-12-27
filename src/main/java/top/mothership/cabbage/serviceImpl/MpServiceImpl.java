@@ -14,7 +14,6 @@ import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Lobby;
 import top.mothership.cabbage.pojo.osu.Userinfo;
-import top.mothership.cabbage.util.irc.IrcClient;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,7 +32,7 @@ public class MpServiceImpl {
     private final UserDAO userDAO;
     private final CqManager cqManager;
     private final UserInfoDAO userInfoDAO;
-    private final IrcClient ircClient;
+
     /**
      * Instantiates a new Mp service.
      * @param lobbyDAO   the lobby dao
@@ -41,15 +40,14 @@ public class MpServiceImpl {
      * @param userDAO    the user dao
      * @param cqManager  the cq manager
      * @param userInfoDAO
-     * @param ircClient
      */
-    public MpServiceImpl(LobbyDAO lobbyDAO, ApiManager apiManager, UserDAO userDAO, CqManager cqManager, UserInfoDAO userInfoDAO, IrcClient ircClient) {
+    public MpServiceImpl(LobbyDAO lobbyDAO, ApiManager apiManager, UserDAO userDAO, CqManager cqManager, UserInfoDAO userInfoDAO) {
         this.lobbyDAO = lobbyDAO;
         this.apiManager = apiManager;
         this.userDAO = userDAO;
         this.cqManager = cqManager;
         this.userInfoDAO = userInfoDAO;
-        this.ircClient = ircClient;
+
     }
 
     /**
@@ -178,7 +176,7 @@ public class MpServiceImpl {
                 }
             }
         }
-        ircClient.sendMessage("#mp_" + lobby.getMatch().getMatchId(), "!mp invite " + userFromAPI.getUserName());
+//        ircClient.sendMessage("#mp_" + lobby.getMatch().getMatchId(), "!mp invite " + userFromAPI.getUserName());
     }
 
     /**
@@ -248,6 +246,7 @@ public class MpServiceImpl {
     public void scanLobby() {
 
     }
+
 
     public void reconnectAllLobby() {
         //把所有已经开启的房间重连一次

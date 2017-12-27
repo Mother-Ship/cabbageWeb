@@ -47,13 +47,17 @@ public interface UserDAO {
 //加入分隔符处理，在中间的，开头的，结尾的，只有这一个用户组的
     @Select("<script>"
             + "SELECT `user_id` FROM `userrole` "
+            + "<where>"
             + "<if test=\"role != null\">"
-            + "WHERE `role` LIKE CONCAT('%,',#{role},',%') "
+            + "(`role` LIKE CONCAT('%,',#{role},',%') "
             + "OR `role` LIKE CONCAT(#{role},',%') "
             + "OR `role` = #{role} "
-            + "OR `role` LIKE CONCAT('%,',#{role}) </if>"
+            + "OR `role` LIKE CONCAT('%,',#{role})) </if>"
+            + "<if test=\"unbanned = true\">"
+            + "AND `is_banned` = '0' </if> " +
+            "</where>"
             + "</script>")
-    List<Integer> listUserIdByRole(@Param("role") String role);
+    List<Integer> listUserIdByRole(@Param("role") String role, @Param("unbanned") Boolean unbanned);
 
     /**
      * List user id by uname list.
@@ -87,7 +91,7 @@ public interface UserDAO {
                     //手动绑定这个字段
                     @Result(column = "is_banned", property = "banned")
             })
-    @Select("SELECT * FROM `userrole` WHERE `repeat_count`/`speaking_count` !=1 order by `repeat_count`/`speaking_count` desc limit 1")
+    @Select("SELECT * FROM `userrole` WHERE `speaking_count` >10 order by `repeat_count`/`speaking_count` desc limit 1")
     User getRepeatStar();
 
     /**

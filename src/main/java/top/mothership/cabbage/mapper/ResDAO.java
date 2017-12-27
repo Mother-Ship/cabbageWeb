@@ -32,11 +32,17 @@ public interface ResDAO {
 
 
     @Select("SELECT `name`,`data` FROM `resource`")
-    List<Map<String,Object>> getResource();
+    List<Map<String, Object>> getImages();
 
     //使用MYSQL特有语法ON DUPLICATE KEY 节省代码量，name必须为unique索引
     //干掉报错，换成replace，同样name必须有unique索引
     @Insert("REPLACE INTO `resource` VALUES (null,#{name},#{data})")
-    Integer addResource(@Param("name")String name ,@Param("data") byte[] data);
+    Integer addImage(@Param("name") String name, @Param("data") byte[] data);
+
+    @Select("SELECT `data` FROM `res_other` WHERE `name` = #{name} ")
+    Object getResource(@Param("name") String name);
+
+    @Insert("REPLACE INTO `res_other` VALUES (null,#{name},#{data})")
+    Integer addResource(@Param("name") String name, @Param("data") byte[] data);
 
 }

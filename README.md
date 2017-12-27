@@ -1,110 +1,43 @@
-# cabbageWeb
-白菜的web版，从WebSocketAPI迁移到HTTP-API，用上了Spring+SpringMVC+MyBatis。
+## 白菜。
+基于Java Web的，osu!游戏数据查询机器人。
+
+## 运行环境
+OS: Ubuntu 17.04（理论上支持Docker的即可，甚至在Windows SubSystem Linux上测试通过）
+
+Windows Server 2008/Win Server 2012（由于酷Q原因不支持Win Server 2003）
+
+MySQL 5.7（没有研究过MySQL的版本差异）
+
+JDK1.8（必须，使用了Lambda表达式/Try With Resource）
+
+Tomcat 7.0.75（理论上支持JDK8以上的Web容器都可以）
+
+RAM：推荐为3G及以上（会缓存加入群的最近50条消息，用于防撤回功能；对于开启复读禁言的群会缓存100条，会占用1+GB 的Heap Space；会缓存数据库内所有图片素材，约200+MB 的Heap Space。）
 
 
-### 命令：
-----
-!help
-发送帮助图片
+## 开发环境
+IDEA 2017.2.5
 
-!stat xxx
-查询某人信息，如果没有使用过会自动录入数据库
+JDK1.8
 
-!stat xxx #0
-查询某人信息，不和数据库做对比（如果没有使用过，不录入数据库，用于处理新加群玩家）
+MySQL 5.7
 
-!stat xxx #n
-和n天前的数据对比（如果那天没有数据，自动取离n天前最近的那天的数据）
+Tomcat 7.0.75
 
-!bp xxx
-查询某人今天更新的BP
+Maven （IDEA内置）
 
-!bp xxx #n
-查询某人第n个BP（1<=n<=100）
+## 特性
+从osu!API和官网获取数据，并绘制图片以QQ消息的形式发送。
 
-!bps xxx #n
-以文字方式查询某人第n个BP
+对接了osu/酷Q提供的HTTP API，用到了正则表达式，以及Spring的AOP实现权限控制、性能统计、异常通知，mybatis则用到了结果集映射、动态SQL等基本技能。
 
-!sleep n
-睡吧。（禁言自己n小时）
+## 感谢
+感谢[Imouto koko](https://osu.ppy.sh/u/7679162)提供的消息队列实现思路、以及名片/BP/#1等大量图片元素的设计。
 
-!setid xxx
-将某个id与自己QQ绑定，绑定后可使用：
+感谢[Pata-Mon](https://osu.ppy.sh/u/6149313)的赞助（
 
-+ !recent
-查询自己在24小时内，最近的Ranked/Qualified图成绩
+感谢[osu!mp乐园5号群](https://jq.qq.com/?_wv=1027&k=594UuXH)帮我找出bug/提出req的各位。
 
-+ !rs
-以文字方式查询!recent
-
-+ !fp bid
-打印自己在指定bid的图的#1，如果#1不是你则报错
-
-+ !bpme
-
-+ !bpme #n
-
-+ !bpmes #n
-
-+ !statme 
-
-+ !statme #n
-
-（以上介绍略）
-
-----
-
-管理命令:
-
-!sudo add xxx,xxx:yyy
-将xxx,xxx添加到yyy用户组
-
-!sudo del xxx
-将xxx的用户组重置为默认（creep）
-
-!sudo check xxx
-查询xxx的用户组
-
-!sudo 褪裙 xxx
-查询xxx用户组中多少人超过PP上线
-
-!sudo bg xxx:http://123
-将给定连接中的图另存为酷Q图片目录/resource/stat/xxx.png，
-
-因此只能用于修改右下角标志(role-xxx)、用户特定bg(uid)、用户组特定bg(xxx)、scorerank背景(scorerank)。
-
-!sudo recent xxx
-查询他人的recent。
-
-!sudo afk n:xxx
-查询xxx用户组中，n天以上没有登录的玩家(以官网为准)
-
-!sudo smoke @xxx  n
-在白菜是管理的群，把被艾特的人禁言n秒
-
-（艾特全体成员则遍历群成员并禁言）
-
-!sudo smokeAll/unsmokeAll
-开关全员禁言
-
-!sudo listInvite
-列举当前的加群邀请
-
-!sudo handleInvite n
-通过Flag为n的邀请
-
-!sudo clearInvite
-清空邀请列表
-
-!sudo unbind qq
-解绑某个QQ对应的id（找到该QQ对应的uid，并将QQ改为0）
-
-!sudo fp bid
-打印给定bid的#1
-
-!sudo listMsg @xxx
-打印被艾特的人最近的10条消息。在对方撤回消息时起作用。
-
-
+感谢[Koohii](https://github.com/Francesco149/koohii) 项目，作者的Java实现为我省去了很多麻烦。
 
 
