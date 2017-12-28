@@ -67,32 +67,34 @@ public class SmokeUtil {
         //获取绑定的那个MsgQueue
         MsgQueue msgQueue = msgQueues.get(cqMsg.getGroupId());
         //进行添加
-        msgQueue.addMsg(cqMsg);
-        //如果是开启禁言的群,并且该条触发了禁言
+        //判断非空……提高健壮性
+        if (msgQueue != null) {
+            msgQueue.addMsg(cqMsg);
+            //如果是开启禁言的群,并且该条触发了禁言
 
-        if (repeatSmokeGroups.contains(String.valueOf(cqMsg.getGroupId())) && msgQueue.countRepeat() >= 6) {
-            if (groupAdmins.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())) {
-                logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
-                cqMsg.setMessage("[CQ:at,qq=" + cqManager.getOwner(cqMsg.getGroupId()) + "] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
-            } else {
-                logger.info("正在尝试禁言" + cqMsg.getUserId());
-                cqMsg.setDuration(600);
-                cqMsg.setMessageType("smoke");
-            }
-            cqManager.sendMsg(cqMsg);
-        }
-        if (repeatRecordGroups.contains(String.valueOf(cqMsg.getGroupId()))) {
-            User user = userDAO.getUser(cqMsg.getUserId(), null);
-            if(user!=null){
-                if(msgQueue.countRepeat() >= 2) {
-                    Long count = user.getRepeatCount();
-                    user.setRepeatCount(++count);
+            if (repeatSmokeGroups.contains(String.valueOf(cqMsg.getGroupId())) && msgQueue.countRepeat() >= 6) {
+                if (groupAdmins.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())) {
+                    logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
+                    cqMsg.setMessage("[CQ:at,qq=" + cqManager.getOwner(cqMsg.getGroupId()) + "] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
+                } else {
+                    logger.info("正在尝试禁言" + cqMsg.getUserId());
+                    cqMsg.setDuration(600);
+                    cqMsg.setMessageType("smoke");
                 }
-                Long count = user.getSpeakingCount();
-                user.setSpeakingCount(++count);
-                userDAO.updateUser(user);
+                cqManager.sendMsg(cqMsg);
+            }
+            if (repeatRecordGroups.contains(String.valueOf(cqMsg.getGroupId()))) {
+                User user = userDAO.getUser(cqMsg.getUserId(), null);
+                if (user != null) {
+                    if (msgQueue.countRepeat() >= 2) {
+                        Long count = user.getRepeatCount();
+                        user.setRepeatCount(++count);
+                    }
+                    Long count = user.getSpeakingCount();
+                    user.setSpeakingCount(++count);
+                    userDAO.updateUser(user);
+                }
             }
         }
-
     }
 }

@@ -206,7 +206,6 @@ public class CqController {
                                     cqAdminService.listMsg(cqMsg);
                                     break;
                                 case "pp":
-
                                     cqAdminService.listUserPP(cqMsg);
                                     break;
                                 case "findplayer":
@@ -224,6 +223,8 @@ public class CqController {
                                 case "repeatstar":
                                     cqAdminService.getRepeatStar(cqMsg);
                                     break;
+                                case "checkroleban":
+                                    cqAdminService.checkRoleBan(cqMsg);
                                 default:
                                     break;
                             }
@@ -323,6 +324,11 @@ public class CqController {
                                 case "costme":
                                 case "mycost":
                                     cqService.myCost(cqMsg);
+                                    break;
+                                case "pr":
+                                case "prs":
+                                    cqService.recentPassed(cqMsg);
+                                    break;
                                 default:
                                     break;
 
