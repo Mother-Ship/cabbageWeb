@@ -16,6 +16,7 @@ import java.text.DecimalFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * @author QHS
@@ -75,8 +76,8 @@ public class ScoreUtil {
                         case 14:
                             mods.put("PF", "perfect");
                             break;
-                            default:
-                                break;
+                        default:
+                            break;
                     }
                 }
             }
@@ -92,14 +93,55 @@ public class ScoreUtil {
         return mods;
     }
 
-    public Integer reverseConvertMod(String mods) {
-        return 0;
+    public Integer reverseConvertMod(List<String> mods) {
+        Integer m = 0;
+        for (String s : mods) {
+            switch (s) {
+                case "NF":
+                    m += 1;
+                    break;
+                case "EZ":
+                    m += 2;
+                    break;
+                case "HD":
+                    m += 8;
+                    break;
+                case "HR":
+                    m += 16;
+                    break;
+                case "SD":
+                    m += 32;
+                    break;
+                case "DT":
+                    m += 64;
+                    break;
+                case "HT":
+                    m += 256;
+                    break;
+                case "NC":
+                    //NCDT
+                    m += 576;
+                    break;
+                case "FL":
+                    m += 1024;
+                    break;
+                case "SO":
+                    m += 4096;
+                    break;
+                case "PF":
+                    m += 16384;
+                    break;
+                default:
+                    break;
+            }
+        }
+        return m;
     }
 
-    public String genScoreString(Score score,Beatmap beatmap,String username){
+    public String genScoreString(Score score, Beatmap beatmap, String username) {
         OppaiResult oppaiResult = calcPP(score, beatmap);
-       String resp =  "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
-               + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId() + "\n"
+        String resp = "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
+                + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId() + "\n"
                 + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n"
                 + score.getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，" + score.getCountMiss() + "*miss , "
                 + convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
@@ -107,9 +149,9 @@ public class ScoreUtil {
                 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)";
         if (oppaiResult != null) {
-            resp += "，"+String.valueOf(Math.round(oppaiResult.getPp())) + "PP\n";
+            resp += "，" + String.valueOf(Math.round(oppaiResult.getPp())) + "PP\n";
         }
-        resp+= "Played by " + username + ", " + DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(score.getDate().toInstant()) + ", ";
+        resp += "Played by " + username + ", " + DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(score.getDate().toInstant()) + ", ";
         return resp;
     }
 
@@ -121,7 +163,7 @@ public class ScoreUtil {
             //日后再说，暂时不去按自己的想法改造它……万一作者日后放出更新呢..
             //把这种充满静态内部类，PPv2Params没有有参构造、成员变量给包访问权限、没有get/set的危险东西局限在这个方法里，不要在外面用就是了……%
             Koohii.Map map = new Koohii.Parser().map(in);
-            Koohii.DiffCalc stars = new Koohii.DiffCalc().calc(map,score.getEnabledMods());
+            Koohii.DiffCalc stars = new Koohii.DiffCalc().calc(map, score.getEnabledMods());
             Koohii.PPv2Parameters p = new Koohii.PPv2Parameters();
             p.beatmap = map;
             p.aim_stars = stars.aim;
@@ -148,7 +190,8 @@ public class ScoreUtil {
 
 
     }
-    public Integer convertScoreV1ToV2(Score score,Beatmap beatmap){
+
+    public Integer convertScoreV1ToV2(Score score, Beatmap beatmap) {
         return 0;
     }
 }

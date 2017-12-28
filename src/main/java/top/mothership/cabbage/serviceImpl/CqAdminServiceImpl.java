@@ -846,8 +846,8 @@ public class CqAdminServiceImpl {
                 "!sudo checkq xxx 根据QQ查找用户。\n" +
                 "!sudo checkGroupBind xxx 打印该群所有成员是否绑定id，以及绑定id是否在mp4/5组内。" +
                 "特别的，不带参数会将群号设置为当前消息的群号。（在mp4/5群外使用，不会检测用户组，只检测是否绑定。）\n" +
-                "!sudo repeatStar 打印所有开启复读计数群内，复读发言/所有发言 比值最高的人。" +
-                "!sudo checkRoleBan xxx 查询某用户组的被ban情况";
+                "!sudo repeatStar 打印所有开启复读计数群内，复读发言/所有发言 比值最高的人。\n" +
+                "!sudo checkRoleBan xxx 查询某用户组的被ban情况。";
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
