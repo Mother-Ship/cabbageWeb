@@ -323,7 +323,8 @@ public class CqController {
                                     break;
                                 case "costme":
                                 case "mycost":
-                                    cqService.myCost(cqMsg);
+                                case "cost":
+                                    cqService.cost(cqMsg);
                                     break;
                                 case "pr":
                                 case "prs":

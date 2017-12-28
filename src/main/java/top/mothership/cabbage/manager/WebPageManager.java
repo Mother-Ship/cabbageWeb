@@ -31,6 +31,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -535,10 +536,11 @@ public class WebPageManager {
      * @param mapper   the mapper
      * @return the beatmap
      */
-    public Beatmap searchBeatmap(String artist, String title, String diffName, String mapper) {
+    public Beatmap searchBeatmap(String artist, String title, String diffName, String mapper, Double ar, Double od, Double cs, Double hp) {
         int retry = 0;
         String output = null;
         Beatmap beatmap = null;
+        DecimalFormat FOUR_DEMENSIONS = new DecimalFormat("#0.00");
         while (retry < 5) {
             HttpURLConnection httpConnection;
             try {
@@ -555,6 +557,22 @@ public class WebPageManager {
                 }
                 if (!"".equals(diffName)) {
                     params.add(new BasicNameValuePair("diff_name", diffName));
+                }
+                if (ar != null) {
+                    params.add(new BasicNameValuePair("ar",
+                            "(" + FOUR_DEMENSIONS.format(ar) + "," + FOUR_DEMENSIONS.format(ar) + ")"));
+                }
+                if (od != null) {
+                    params.add(new BasicNameValuePair("od",
+                            "(" + FOUR_DEMENSIONS.format(od) + "," + FOUR_DEMENSIONS.format(od) + ")"));
+                }
+                if (cs != null) {
+                    params.add(new BasicNameValuePair("cs",
+                            "(" + FOUR_DEMENSIONS.format(cs) + "," + FOUR_DEMENSIONS.format(cs) + ")"));
+                }
+                if (hp != null) {
+                    params.add(new BasicNameValuePair("hp",
+                            "(" + FOUR_DEMENSIONS.format(hp) + "," + FOUR_DEMENSIONS.format(hp) + ")"));
                 }
                 params.add(new BasicNameValuePair("modes", "Standard"));
                 params.add(new BasicNameValuePair("query_order", "play_count"));
