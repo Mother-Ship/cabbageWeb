@@ -94,7 +94,7 @@ public class CqServiceImpl {
         int scoreRank;
         List<String> roles;
         //首先尝试解析数字，对各种数字异常情况进行处理并返回
-        if (!"".equals(m.group(3))) {
+        if (m.groupCount() == 3) {
             try {
                 day = Integer.valueOf(m.group(3));
                 if (day < 0) {
@@ -1003,5 +1003,70 @@ public class CqServiceImpl {
 
     }
 
+    public void recentPassed(CqMsg cqMsg) {
+        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        m.find();
+        Userinfo userFromAPI = null;
+        User user;
+        user = userDAO.getUser(cqMsg.getUserId(), null);
+        if (user == null) {
+            cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        if (user.isBanned()) {
+            cqMsg.setMessage("……期待你回来的那一天。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        userFromAPI = apiManager.getUser(null, user.getUserId());
+        if (userFromAPI == null) {
+            cqMsg.setMessage("没有获取到QQ" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "玩家的信息。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+
+        logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
+        List<Score> scores = apiManager.getRecents(null, userFromAPI.getUserId());
+        if (scores.size() == 0) {
+            cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有游戏记录。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        Score score = null;
+        for (Score s : scores) {
+            if (!"F".equals(s.getRank())) {
+                score = s;
+                //找到第一个pass的分数
+                break;
+            }
+        }
+        if (score == null) {
+            cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有Pass的游戏记录。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
+        if (beatmap == null) {
+            cqMsg.setMessage("网络错误：没有获取到Bid为" + score.getBeatmapId() + "的谱面信息。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+            case "prs":
+                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName());
+                cqMsg.setMessage(resp);
+                cqManager.sendMsg(cqMsg);
+                break;
+            case "pr":
+                String filename = imgUtil.drawResult(userFromAPI, score, beatmap);
+                cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+                cqManager.sendMsg(cqMsg);
+                break;
+            default:
+                break;
+        }
+
+    }
 
 }
