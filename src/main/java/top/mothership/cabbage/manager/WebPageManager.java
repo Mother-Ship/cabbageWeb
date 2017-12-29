@@ -468,9 +468,10 @@ public class WebPageManager {
      */
     public String getOsuFile(Beatmap beatmap) {
         HttpURLConnection httpConnection;
-        String osuFile = resDAO.getOsuFileBybid(Integer.valueOf(beatmap.getBeatmapId()));
-        if (osuFile != null)
+        String osuFile = resDAO.getOsuFileBybid(beatmap.getBeatmapId());
+        if (osuFile != null) {
             return osuFile;
+        }
         int retry = 0;
         //获取.osu的逻辑和获取BG不一样，Qua的图BG不缓存，而.osu必须缓存
         //即使是qua的图，也必须有sid的文件夹
@@ -490,7 +491,9 @@ public class WebPageManager {
                 }
                 //将返回结果读取为Byte数组
                 osuFile = new String(readInputStream(httpConnection.getInputStream()), "UTF-8");
-                resDAO.addOsuFile(beatmap.getBeatmapId(), osuFile);
+                if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
+                    resDAO.addOsuFile(beatmap.getBeatmapId(), osuFile);
+                }
                 //手动关闭连接
                 httpConnection.disconnect();
                 return osuFile;
