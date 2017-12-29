@@ -928,18 +928,18 @@ public class ImgUtil {
                 + "  转盘数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSpinners()), 7, 108);
 
         //四围、难度
-        if(Double.valueOf(beatmap.getDiffApproach())>oppaiResult.getAr()){
+        if (Double.valueOf(beatmap.getDiffApproach()) > (double) Math.round(oppaiResult.getAr() * 100) / 100) {
             //如果官网的AR比实际的高（EZ）
             g2.setPaint(Color.decode("#add8e6"));
-        }else if(Double.valueOf(beatmap.getDiffApproach())<oppaiResult.getAr()){
+        } else if (Double.valueOf(beatmap.getDiffApproach()) < (double) Math.round(oppaiResult.getAr() * 100) / 100) {
             //如果官网的AR比实际的低（DTHR）
             g2.setPaint(Color.decode("#f69aa1"));
         }else{
             g2.setPaint(Color.decode("#FFFFFF"));
         }
         g2.setFont(new Font("Aller", Font.PLAIN, 13));
-        g2.drawString("CS:" + oppaiResult.getCs() + " AR:" + oppaiResult.getAr()
-                + " OD:" + oppaiResult.getOd() + " HP:" + oppaiResult.getHp()
+        g2.drawString("CS:" + (double) Math.round(oppaiResult.getCs() * 100) / 100 + " AR:" + (double) Math.round(oppaiResult.getAr() * 100) / 100
+                + " OD:" + (double) Math.round(oppaiResult.getOd() * 100) / 100 + " HP:" + (double) Math.round(oppaiResult.getHp() * 100) / 100
                 + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(oppaiResult.getStars())), 7, 125);
 
 

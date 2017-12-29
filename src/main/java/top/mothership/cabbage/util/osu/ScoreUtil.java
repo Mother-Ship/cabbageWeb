@@ -16,6 +16,7 @@ import java.text.DecimalFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 
 /**
  * The type Score util.
@@ -131,7 +132,7 @@ public class ScoreUtil {
             }
         }
         for (String s : modList) {
-            switch (s) {
+            switch (s.toUpperCase(Locale.CHINA)) {
                 case "NF":
                     m += 1;
                     break;
