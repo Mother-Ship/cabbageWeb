@@ -16,9 +16,10 @@ import java.text.DecimalFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
-import java.util.List;
 
 /**
+ * The type Score util.
+ *
  * @author QHS
  */
 @Component
@@ -26,12 +27,23 @@ public class ScoreUtil {
     private Logger logger = LogManager.getLogger(this.getClass());
     private WebPageManager webPageManager;
 
+    /**
+     * Instantiates a new Score util.
+     *
+     * @param webPageManager the web page manager
+     */
     @Autowired
     public ScoreUtil(WebPageManager webPageManager) {
         this.webPageManager = webPageManager;
     }
 
 
+    /**
+     * Convert mod linked hash map.
+     *
+     * @param bp the bp
+     * @return the linked hash map
+     */
     public LinkedHashMap<String, String> convertMOD(Integer bp) {
         String modBin = Integer.toBinaryString(bp);
         //反转mod
@@ -93,9 +105,32 @@ public class ScoreUtil {
         return mods;
     }
 
-    public Integer reverseConvertMod(List<String> mods) {
+    /**
+     * 先有蔓蔓后有天，反向转换日神仙
+     *
+     * @param mods the mods
+     * @return the integer
+     */
+    public Integer reverseConvertMod(String mods) {
         Integer m = 0;
-        for (String s : mods) {
+        if(mods.length()%2!=0){
+            //双字母MOD字符串长度必然是偶数
+            return null;
+        }
+        int j=0;
+        String[] modList = new String[mods.length()/2];
+        //例如 HDHR
+        for(int i=0;i<mods.length();i++){
+            if(i%2==0){
+                //先取H
+                modList[j]=""+mods.charAt(i);
+            }else{
+                //取出D，取出H，拼一起放回去
+                modList[j]=modList[j]+mods.charAt(i);
+                j++;
+            }
+        }
+        for (String s : modList) {
             switch (s) {
                 case "NF":
                     m += 1;
@@ -138,6 +173,14 @@ public class ScoreUtil {
         return m;
     }
 
+    /**
+     * Gen score string string.
+     *
+     * @param score    the score
+     * @param beatmap  the beatmap
+     * @param username the username
+     * @return the string
+     */
     public String genScoreString(Score score, Beatmap beatmap, String username) {
         OppaiResult oppaiResult = calcPP(score, beatmap);
         String resp = "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
@@ -156,6 +199,13 @@ public class ScoreUtil {
     }
 
 
+    /**
+     * Calc pp oppai result.
+     *
+     * @param score   the score
+     * @param beatmap the beatmap
+     * @return the oppai result
+     */
     public OppaiResult calcPP(Score score, Beatmap beatmap) {
         logger.info("开始计算PP");
         String osuFile = webPageManager.getOsuFile(beatmap);
@@ -191,6 +241,13 @@ public class ScoreUtil {
 
     }
 
+    /**
+     * Convert score v 1 to v 2 integer.
+     *
+     * @param score   the score
+     * @param beatmap the beatmap
+     * @return the integer
+     */
     public Integer convertScoreV1ToV2(Score score, Beatmap beatmap) {
         return 0;
     }

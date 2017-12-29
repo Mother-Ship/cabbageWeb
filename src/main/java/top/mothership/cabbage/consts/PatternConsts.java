@@ -73,7 +73,7 @@ public class PatternConsts {
 
 
     /**
-     * 为osu search定制的表达式，能取出mod
+     * osu!search功能用的带mod表达式
      */
     public final static Pattern OSU_SEARCH_MOD_REGEX = Pattern.compile("[!！]([^ ]*)[ ]?(.*)(?: \\+)(.*)");
 

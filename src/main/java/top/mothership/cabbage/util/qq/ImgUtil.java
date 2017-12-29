@@ -824,17 +824,18 @@ public class ImgUtil {
 
     }
 
-    public String drawBeatmap(Beatmap beatmap) {
+    public String drawBeatmap(Beatmap beatmap,Integer mods) {
         boolean unicode = false;
         BufferedImage bg;
         Image bg2;
         Score score = new Score();
-        score.setEnabledMods(0);
+        score.setEnabledMods(mods);
         score.setCount50(0);
         score.setCount100(0);
         score.setCount300(-1);
         score.setCountMiss(0);
         score.setMaxCombo(-1);
+        //这里默认构造FC成绩，所以不需要处理NPE……吧？
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
 
         try {
@@ -927,10 +928,19 @@ public class ImgUtil {
                 + "  转盘数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSpinners()), 7, 108);
 
         //四围、难度
+        if(Double.valueOf(beatmap.getDiffApproach())>oppaiResult.getAr()){
+            //如果官网的AR比实际的高（EZ）
+            g2.setPaint(Color.decode("#add8e6"));
+        }else if(Double.valueOf(beatmap.getDiffApproach())<oppaiResult.getAr()){
+            //如果官网的AR比实际的低（DTHR）
+            g2.setPaint(Color.decode("#f69aa1"));
+        }else{
+            g2.setPaint(Color.decode("#FFFFFF"));
+        }
         g2.setFont(new Font("Aller", Font.PLAIN, 13));
-        g2.drawString("CS:" + beatmap.getDiffSize() + " AR:" + beatmap.getDiffApproach()
-                + " OD:" + beatmap.getDiffOverall() + " HP:" + beatmap.getDiffDrain()
-                + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(beatmap.getDifficultyRating())), 7, 125);
+        g2.drawString("CS:" + oppaiResult.getCs() + " AR:" + oppaiResult.getAr()
+                + " OD:" + oppaiResult.getOd() + " HP:" + oppaiResult.getHp()
+                + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(oppaiResult.getStars())), 7, 125);
 
 
         //谱面的Rank状态
@@ -940,7 +950,6 @@ public class ImgUtil {
         g2.setPaint(Color.decode("#000000"));
         if (unicode) {
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 31));
-
             g2.drawString(oppaiResult.getTitleUnicode(), 982, 196);
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
             g2.drawString(oppaiResult.getArtistUnicode() + " // " + oppaiResult.getCreator(), 982, 223);
@@ -957,7 +966,7 @@ public class ImgUtil {
         g2.setFont(new Font("Aller", Font.BOLD, 22));
         g2.drawString(oppaiResult.getVersion(), 982, 245);
         //小星星
-        String[] b = String.valueOf(beatmap.getDifficultyRating()).split("\\.");
+        String[] b = String.valueOf(oppaiResult.getStars()).split("\\.");
         //取出难度的整数部分，画上对应的star
         for (int i = 0; i < Integer.valueOf(b[0]); i++) {
             g2.drawImage(images.get("fpStar.png"), 984 + 44 * i, 250, null);

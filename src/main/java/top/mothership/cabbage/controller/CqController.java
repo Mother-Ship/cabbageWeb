@@ -319,7 +319,7 @@ public class CqController {
                                     cqService.myScore(cqMsg);
                                     break;
                                 case "search":
-                                    cqService.searchBeatmap(cqMsg);
+                                    cqService.search(cqMsg);
                                     break;
                                 case "costme":
                                 case "mycost":
