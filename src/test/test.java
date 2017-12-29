@@ -6,15 +6,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.mapper.UserDAO;
-import top.mothership.cabbage.pojo.osu.Lobby;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.regex.Matcher;
 
 //
@@ -375,9 +368,13 @@ public class test {
 //           System.out.println("false");
 //       }
 //        userDAO.getUser(1335734657L,null);
-Lobby lobby = apiManager.getMatch(38182172);
-System.out.println(lobby);
-
+//Lobby lobby = apiManager.getMatch(38182172);
+//System.out.println(lobby);
+        String s = "AR9HP3CS4OD6";
+        Matcher m = PatternConsts.OSU_SEARCH_FOUR_DEMENSIONS_REGEX.matcher(s);
+        m.find();
+        for (int i = 0; i <= m.groupCount(); i++)
+               System.out.println(m.group(i));
     }
 
 
