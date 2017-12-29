@@ -24,6 +24,7 @@ import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OsuFile;
 import top.mothership.cabbage.pojo.osu.OsuSearchResp;
+import top.mothership.cabbage.pojo.osu.SearchParam;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -249,6 +250,7 @@ public class WebPageManager {
      *
      * @param beatmap the beatmap
      * @return the bg
+     * @throws NullPointerException the null pointer exception
      */
     public BufferedImage getBG(Beatmap beatmap) throws NullPointerException {
         logger.info("开始获取谱面" + beatmap.getBeatmapId() + "的背景");
@@ -530,15 +532,10 @@ public class WebPageManager {
     /**
      * Search beatmap beatmap.
      *
-     * @param artist   the artist
-     * @param title    the title
-     * @param diffName the diff name
-     * @param mapper   the mapper
-     * @return the beatmap
+     * @return 谱面
      */
-    public Beatmap searchBeatmap(String artist, String title, String diffName, String mapper, Double ar, Double od, Double cs, Double hp) {
+    public Beatmap searchBeatmap(SearchParam searchParam) {
         int retry = 0;
-        String output = null;
         Beatmap beatmap = null;
         DecimalFormat FOUR_DEMENSIONS = new DecimalFormat("#0.00");
         while (retry < 5) {
@@ -546,33 +543,33 @@ public class WebPageManager {
             try {
                 String url = osuSearchURL;
                 List<NameValuePair> params = new LinkedList<>();
-                if (!"".equals(title)) {
-                    params.add(new BasicNameValuePair("title", title));
+                if (!"".equals(searchParam.getTitle())) {
+                    params.add(new BasicNameValuePair("title", searchParam.getTitle()));
                 }
-                if (!"".equals(artist)) {
-                    params.add(new BasicNameValuePair("artist", artist));
+                if (!"".equals(searchParam.getArtist())) {
+                    params.add(new BasicNameValuePair("artist", searchParam.getArtist()));
                 }
-                if (!"".equals(mapper)) {
-                    params.add(new BasicNameValuePair("mapper", mapper));
+                if (!"".equals(searchParam.getMapper())) {
+                    params.add(new BasicNameValuePair("mapper", searchParam.getMapper()));
                 }
-                if (!"".equals(diffName)) {
-                    params.add(new BasicNameValuePair("diff_name", diffName));
+                if (!"".equals(searchParam.getDiffName())) {
+                    params.add(new BasicNameValuePair("diff_name", searchParam.getDiffName()));
                 }
-                if (ar != null) {
+                if (searchParam.getAr() != null) {
                     params.add(new BasicNameValuePair("ar",
-                            "(" + FOUR_DEMENSIONS.format(ar) + "," + FOUR_DEMENSIONS.format(ar) + ")"));
+                            "(" + FOUR_DEMENSIONS.format(searchParam.getAr()) + "," + FOUR_DEMENSIONS.format(searchParam.getAr()) + ")"));
                 }
-                if (od != null) {
+                if (searchParam.getOd() != null) {
                     params.add(new BasicNameValuePair("od",
-                            "(" + FOUR_DEMENSIONS.format(od) + "," + FOUR_DEMENSIONS.format(od) + ")"));
+                            "(" + FOUR_DEMENSIONS.format(searchParam.getOd()) + "," + FOUR_DEMENSIONS.format(searchParam.getOd()) + ")"));
                 }
-                if (cs != null) {
+                if (searchParam.getCs() != null) {
                     params.add(new BasicNameValuePair("cs",
-                            "(" + FOUR_DEMENSIONS.format(cs) + "," + FOUR_DEMENSIONS.format(cs) + ")"));
+                            "(" + FOUR_DEMENSIONS.format(searchParam.getCs()) + "," + FOUR_DEMENSIONS.format(searchParam.getCs()) + ")"));
                 }
-                if (hp != null) {
+                if (searchParam.getHp() != null) {
                     params.add(new BasicNameValuePair("hp",
-                            "(" + FOUR_DEMENSIONS.format(hp) + "," + FOUR_DEMENSIONS.format(hp) + ")"));
+                            "(" + FOUR_DEMENSIONS.format(searchParam.getHp()) + "," + FOUR_DEMENSIONS.format(searchParam.getHp()) + ")"));
                 }
                 params.add(new BasicNameValuePair("modes", "Standard"));
                 params.add(new BasicNameValuePair("query_order", "play_count"));
