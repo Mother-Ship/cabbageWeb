@@ -69,8 +69,19 @@ public class PatternConsts {
      * osu search命令的表达式
      * 2017-12-4 10:45:55 现在支持分隔符后带空格了，横杠前的空格还是手动处理
      */
-    public final static Pattern OSU_SEARCH_KETWORD = Pattern.compile("^([^-]*)-[ ]?(.*)[ ]?\\[(.*)][ ]?\\((.*)\\)");
+    public final static Pattern OSU_SEARCH_KETWORD = Pattern.compile("^([^-]*)-[ ]?(.*)[ ]?\\[(.*)][ ]?\\((.*)\\)\\{(.*)}");
 
+
+    /**
+     * osu!search功能用的带mod表达式
+     */
+    public final static Pattern OSU_SEARCH_MOD_REGEX = Pattern.compile("[!！]([^ ]*)[ ]?(.*)(?: \\+)(.*)");
+
+    /**
+     * 取出四维
+     */
+    public final static Pattern OSU_SEARCH_FOUR_DEMENSIONS_REGEX = Pattern
+            .compile("(?:AR(\\d{1,2}(?:\\.|。)?(?:\\d{1,2})?))?(?:OD(\\d{1,2}(?:\\.|。)?(?:\\d{1,2})?))?(?:CS(\\d{1,2}(?:\\.|。)?(?:\\d{1,2})?))?(?:HP(\\d{1,2}(?:\\.|。)?(?:\\d{1,2})?))?", Pattern.CASE_INSENSITIVE);
     /**
      * UNICODE转String的表达式。
      */

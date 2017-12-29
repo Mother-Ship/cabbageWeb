@@ -2,7 +2,6 @@ package top.mothership.cabbage.serviceImpl;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.manager.ApiManager;
@@ -242,7 +241,7 @@ public class MpServiceImpl {
     /**
      * 扫描所有的需要开启的房间 并且开启
      */
-    @Scheduled(cron = "0 * * * * ? ")
+//    @Scheduled(cron = "0 * * * * ? ")
     public void scanLobby() {
 
     }

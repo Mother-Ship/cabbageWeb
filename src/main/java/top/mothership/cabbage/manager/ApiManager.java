@@ -3,18 +3,16 @@ package top.mothership.cabbage.manager;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pojo.osu.*;
+import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.Lobby;
+import top.mothership.cabbage.pojo.osu.Score;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -83,6 +81,15 @@ public class ApiManager {
                 .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Lobby.class);
     }
 
+    //用于获取所有的recent
+    public List<Score> getRecents(String username, Integer userId) {
+        String result = filterUid("recents", username, userId);
+        result = "[" + result + "]";
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, new TypeToken<List<Score>>() {
+                }.getType());
+    }
+
     private String filterUid(String apiType, String username, Integer userId) {
         String result;
         if (username != null && userId == null) {
@@ -122,6 +129,10 @@ public class ApiManager {
                 break;
             case "recent":
                 URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=1&u=" + uid.replaceAll(" ","_");
+                failLog = "玩家" + uid + "请求API：get_recent失败五次";
+                break;
+            case "recents":
+                URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=100&u=" + uid.replaceAll(" ", "_");
                 failLog = "玩家" + uid + "请求API：get_recent失败五次";
                 break;
             case "first":

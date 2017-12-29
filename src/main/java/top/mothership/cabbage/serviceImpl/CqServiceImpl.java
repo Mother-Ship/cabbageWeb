@@ -19,10 +19,12 @@ import top.mothership.cabbage.pojo.CoolQ.QQInfo;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
+import top.mothership.cabbage.pojo.osu.SearchParam;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
+import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -94,7 +96,7 @@ public class CqServiceImpl {
         int scoreRank;
         List<String> roles;
         //首先尝试解析数字，对各种数字异常情况进行处理并返回
-        if (!"".equals(m.group(3))) {
+        if (m.groupCount() == 3) {
             try {
                 day = Integer.valueOf(m.group(3));
                 if (day < 0) {
@@ -720,11 +722,12 @@ public class CqServiceImpl {
 
     @GroupRoleControl(banned = {112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void myScore(CqMsg cqMsg) {
+        SearchParam searchParam = parseSearchKeyword(cqMsg);
+        if (searchParam == null) {
+            return;
+        }
         User user;
         Userinfo userFromAPI;
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
-        String keyword = m.group(2);
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
             cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
@@ -737,81 +740,52 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-
-
-        //比较菜，手动补齐参数
-        if (!(keyword.endsWith("]") || keyword.endsWith(")")))
-            keyword += "[]()";
-        if (keyword.endsWith("]"))
-            keyword += "()";
-        Matcher m2 = PatternConsts.OSU_SEARCH_KETWORD.matcher(keyword);
-        if (!m2.find()) {
-            cqMsg.setMessage("请使用艺术家-歌曲标题[难度名](麻婆名)格式。\n" +
-                    "所有参数都可以省略(但横线、方括号和圆括号不能省略)");
+        Beatmap beatmap = webPageManager.searchBeatmap(searchParam);
+        logger.info("开始处理" + userFromAPI.getUserName() + "进行的谱面搜索，关键词为：" + searchParam);
+        if (beatmap == null) {
+            cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。");
             cqManager.sendMsg(cqMsg);
-        } else {
-            //没啥办法……手动处理吧，这个正则管不了了
-            String artist;
-            if (m2.group(1).endsWith(" ")) {
-                artist = m2.group(1).substring(0, m2.group(1).length() - 1);
-            } else {
-                artist = m2.group(1);
-            }
-            String title;
-            if (m2.group(2).endsWith(" ")) {
-                title = m2.group(2).substring(0, m2.group(2).length() - 1);
-            } else {
-                title = m2.group(2);
-            }
-            logger.info("开始处理" + userFromAPI.getUserName() + "进行的谱面搜索，关键词为：" + keyword);
-            Beatmap beatmap = webPageManager.searchBeatmap(artist, title, m2.group(3), m2.group(4));
-            if (beatmap == null) {
-                cqMsg.setMessage("根据提供的关键词：" + keyword + "没有找到任何谱面。");
-                cqManager.sendMsg(cqMsg);
-                return;
-            }
-            List<Score> scores = apiManager.getScore(beatmap.getBeatmapId(), user.getUserId());
-            if (scores.size() > 0) {
-                String filename = imgUtil.drawResult(userFromAPI, scores.get(0), beatmap);
-                cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-            } else {
-                cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")，你在该谱面没有成绩。");
-            }
-            cqManager.sendMsg(cqMsg);
+            return;
         }
+        List<Score> scores = apiManager.getScore(beatmap.getBeatmapId(), user.getUserId());
+        if (scores.size() > 0) {
+            for (Score s : scores) {
+                if (s.getEnabledMods().equals(searchParam.getMods())) {
+                    String filename = imgUtil.drawResult(userFromAPI, s, beatmap);
+                    cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+            }
+            cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "](" + beatmap.getCreator() +
+                    ")。\n你在该谱面没有指定Mod：" + searchParam.getModsString() + "的成绩。");
+        } else {
+            cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")，你在该谱面没有成绩。");
+        }
+        cqManager.sendMsg(cqMsg);
     }
 
 
     @GroupRoleControl(banned = {112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
-    public void searchBeatmap(CqMsg cqMsg) {
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
-        String keyword = m.group(2);
-
-        logger.info("开始处理" + cqMsg.getUserId() + "进行的谱面搜索，关键词为：" + keyword);
-        //比较菜，手动补齐参数
-        if (!(keyword.endsWith("]") || keyword.endsWith(")")))
-            keyword += "[]()";
-        if (keyword.endsWith("]"))
-            keyword += "()";
-        Matcher m2 = PatternConsts.OSU_SEARCH_KETWORD.matcher(keyword);
-        if (!m2.find()) {
-            cqMsg.setMessage("请使用艺术家-歌曲标题[难度名](麻婆名)格式。\n" +
-                    "所有参数都可以省略(但横线、方括号和圆括号不能省略)");
-            cqManager.sendMsg(cqMsg);
-        } else {
-            Beatmap beatmap = webPageManager.searchBeatmap(m2.group(1), m2.group(2), m2.group(3), m2.group(4));
-            if (beatmap == null) {
-                cqMsg.setMessage("根据提供的关键词：" + keyword + "没有找到任何谱面。");
-                cqManager.sendMsg(cqMsg);
-                return;
-            } else {
-                String filename = imgUtil.drawBeatmap(beatmap);
-                cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
-                        + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]" + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId());
-            }
-            cqManager.sendMsg(cqMsg);
+    public void search(CqMsg cqMsg) {
+        SearchParam searchParam = parseSearchKeyword(cqMsg);
+        if (searchParam == null) {
+            return;
         }
+        Beatmap beatmap = webPageManager.searchBeatmap(searchParam);
+        logger.info("开始处理" + cqMsg.getUserId() + "进行的谱面搜索，关键词为：" + searchParam);
+
+        if (beatmap == null) {
+            cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        } else {
+            String filename = imgUtil.drawBeatmap(beatmap, searchParam.getMods());
+            cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
+                    + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]" + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId());
+        }
+        cqManager.sendMsg(cqMsg);
+
     }
 
     public void chartMemberCmd(CqMsg cqMsg) {
@@ -946,7 +920,7 @@ public class CqServiceImpl {
                 break;
             case "537646635":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp乐园主群。请修改一下你的群名片(包含完整osu! id)，以下为mp乐园系列分群介绍：\n" +
-                        "osu!mp乐园高rank部 592339532\n" +
+                        "osu! MP乐园高rank部 592339532\n" +
                         "OSU! MP乐园2号群 (MP2) *(5500-7000pp):234219559\n" +
                         "OSU! MP乐园3号群 (MP3) *(4700-5800pp):210342787\n" +
                         "OSU! MP乐园4号群 (MP4) *(3600-5100pp):564679329\n" +
@@ -966,17 +940,67 @@ public class CqServiceImpl {
     }
 
     @GroupRoleControl(allBanned = true)
-    public void myCost(CqMsg cqMsg) {
-        User user;
+    public void cost(CqMsg cqMsg) {
+        User user = null;
         Userinfo userFromAPI;
         Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
-        String keyword = m.group(2);
-        user = userDAO.getUser(cqMsg.getUserId(), null);
-        if (user == null) {
-            cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
-            cqManager.sendMsg(cqMsg);
-            return;
+        String username;
+        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+            case "costme":
+            case "mycost":
+                user = userDAO.getUser(cqMsg.getUserId(), null);
+                if (user == null) {
+                    cqMsg.setMessage("你没有绑定osu!id。请使用!setid 你的osuid 命令。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                if (user.isBanned()) {
+                    cqMsg.setMessage("玩家" + user.getCurrentUname() + "。。\n这么悲伤的事情，不忍心说啊。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                break;
+            case "cost":
+                username = m.group(2);
+                //处理彩蛋
+                if ("白菜".equals(username)) {
+                    cqMsg.setMessage("[Crz]Makii  11:00:45\n" +
+                            "...\n" +
+                            "[Crz]Makii  11:01:01\n" +
+                            "思考");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                userFromAPI = apiManager.getUser(username, null);
+                if (userFromAPI == null) {
+                    cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                if (userFromAPI.getUserId() == 3) {
+                    cqMsg.setMessage("EASTER_EGG_OF_COST_BANCHO_BOT");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                user = userDAO.getUser(null, userFromAPI.getUserId());
+                if (user == null) {
+                    logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
+                    //构造User对象写入数据库
+                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
+                    userDAO.addUser(user);
+                    if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
+                        userFromAPI.setQueryDate(LocalDate.now());
+                    } else {
+                        userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+                    }
+                    //写入一行userinfo
+                    userInfoDAO.addUserInfo(userFromAPI);
+                }
+                break;
+            default:
+                break;
+
         }
         Map<String, Integer> map = webPageManager.getPPPlus(user.getUserId());
         if (map != null) {
@@ -986,22 +1010,180 @@ public class CqServiceImpl {
                     * Math.pow((map.get("Stamina") / 2000F), 0.5F)
                     + (map.get("Accuracy") / 2250F);
 //        cost=(jump/3000)^0.8*(flow/1500)^0.6+(speed/2000)^0.8*(stamina/2000)^0.5+accuracy/2250
-            cqMsg.setMessage("你的Jump：" + map.get("Jump")
+            cqMsg.setMessage(user.getCurrentUname() + "的Jump：" + map.get("Jump")
                     + "\nFlow：" + map.get("Flow")
                     + "\nPrecision：" + map.get("Precision")
                     + "\nSpeed：" + map.get("Speed")
                     + "\nStamina：" + map.get("Stamina")
                     + "\nAccuracy：" + map.get("Accuracy")
-                    + "\n你在本次娱乐赛的Cost是：" + cost + "。" +
+                    + "\n本次光法举办的娱乐赛中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(cost) + "。" +
                     "\n后期公式可能会变动，该Cost只对本次比赛有效。");
             cqManager.sendMsg(cqMsg);
             return;
         }
-        cqMsg.setMessage("获取你的Cost失败……");
+        cqMsg.setMessage("由于网络原因（PP+的网站过于弱智），获取你的Cost失败……");
         cqManager.sendMsg(cqMsg);
         return;
+    }
+
+    public void recentPassed(CqMsg cqMsg) {
+        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        m.find();
+        Userinfo userFromAPI = null;
+        User user;
+        user = userDAO.getUser(cqMsg.getUserId(), null);
+        if (user == null) {
+            cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        if (user.isBanned()) {
+            cqMsg.setMessage("……期待你回来的那一天。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        userFromAPI = apiManager.getUser(null, user.getUserId());
+        if (userFromAPI == null) {
+            cqMsg.setMessage("没有获取到QQ" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "玩家的信息。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+
+        logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
+        List<Score> scores = apiManager.getRecents(null, userFromAPI.getUserId());
+        if (scores.size() == 0) {
+            cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有游戏记录。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        Score score = null;
+        for (Score s : scores) {
+            if (!"F".equals(s.getRank())) {
+                score = s;
+                //找到第一个pass的分数
+                break;
+            }
+        }
+        if (score == null) {
+            cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有Pass的游戏记录。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
+        if (beatmap == null) {
+            cqMsg.setMessage("网络错误：没有获取到Bid为" + score.getBeatmapId() + "的谱面信息。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+            case "prs":
+                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName());
+                cqMsg.setMessage(resp);
+                cqManager.sendMsg(cqMsg);
+                break;
+            case "pr":
+                String filename = imgUtil.drawResult(userFromAPI, score, beatmap);
+                cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+                cqManager.sendMsg(cqMsg);
+                break;
+            default:
+                break;
+        }
 
     }
 
+    private SearchParam parseSearchKeyword(CqMsg cqMsg) {
+        SearchParam searchParam = new SearchParam();
+        Matcher getKeyWordAndMod = PatternConsts.OSU_SEARCH_MOD_REGEX.matcher(cqMsg.getMessage());
+        Integer modsNum = null;
+        String mods = "None";
+        String keyword;
+        if (getKeyWordAndMod.find()) {
+            mods = getKeyWordAndMod.group(3);
+            modsNum = scoreUtil.reverseConvertMod(mods);
+            //如果字符串解析出错，会返回null，因此这里用null值来判断输入格式
+            if (modsNum == null) {
+                cqMsg.setMessage("请使用MOD的双字母缩写，不需要任何分隔符。" +
+                        "\n接受的Mod有：NF EZ HD HR SD DT HT NC FL SO PF。");
+                cqManager.sendMsg(cqMsg);
+                return null;
+            }
+            keyword = getKeyWordAndMod.group(2);
+        } else {
+            modsNum = 0;
+            getKeyWordAndMod = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+            getKeyWordAndMod.find();
+            keyword = getKeyWordAndMod.group(2);
+        }
+        searchParam.setMods(modsNum);
+        searchParam.setModsString(mods);
 
+        Double ar = null;
+        Double od = null;
+        Double cs = null;
+        Double hp = null;
+        //比较菜，手动补齐参数
+        if (!(keyword.endsWith("]") || keyword.endsWith(")") || keyword.endsWith("}"))) {
+            //如果圆括号 方括号 花括号都没有
+            keyword += "[](){}";
+        }
+        if (keyword.endsWith("]"))
+            //如果有方括号
+            keyword += "(){}";
+        if (keyword.endsWith(")"))
+            //如果有圆括号
+            keyword += "{}";
+        Matcher getArtistTitleEtc = PatternConsts.OSU_SEARCH_KETWORD.matcher(keyword);
+        if (!getArtistTitleEtc.find()) {
+            cqMsg.setMessage("请使用艺术家-歌曲标题[难度名](麻婆名){AR9.0OD9.0CS9.0HP9.0} +MOD双字母简称 的格式。\n" +
+                    "所有参数都可以省略(但横线、方括号和圆括号不能省略)，四维顺序必须按AR OD CS HP排列。");
+            cqManager.sendMsg(cqMsg);
+            return null;
+        } else {
+            //没啥办法……手动处理吧，这个正则管不了了，去掉可能存在的空格
+            String artist;
+            //横杠之前的artist（手动去空格）
+            if (getArtistTitleEtc.group(1).endsWith(" ")) {
+                artist = getArtistTitleEtc.group(1).substring(0, getArtistTitleEtc.group(1).length() - 1);
+            } else {
+                artist = getArtistTitleEtc.group(1);
+            }
+            String title;
+            if (getArtistTitleEtc.group(2).startsWith(" ")) {
+                title = getArtistTitleEtc.group(2).substring(1);
+            } else {
+                title = getArtistTitleEtc.group(2);
+            }
+            searchParam.setArtist(artist);
+            searchParam.setTitle(title);
+            searchParam.setDiffName(getArtistTitleEtc.group(3));
+            searchParam.setMapper(getArtistTitleEtc.group(4));
+            //处理四维字符串
+            String fourDemensions = getArtistTitleEtc.group(5);
+            if (!"".equals(fourDemensions)) {
+                Matcher getFourDemens = PatternConsts.OSU_SEARCH_FOUR_DEMENSIONS_REGEX.matcher(fourDemensions);
+                getFourDemens.find();
+                if (getFourDemens.group(1) != null) {
+                    ar = Double.valueOf(getFourDemens.group(1));
+                }
+                if (getFourDemens.group(2) != null) {
+                    od = Double.valueOf(getFourDemens.group(2));
+                }
+                if (getFourDemens.group(3) != null) {
+                    cs = Double.valueOf(getFourDemens.group(3));
+                }
+                if (getFourDemens.group(4) != null) {
+                    hp = Double.valueOf(getFourDemens.group(4));
+                }
+
+            }
+            searchParam.setAr(ar);
+            searchParam.setOd(od);
+            searchParam.setCs(cs);
+            searchParam.setHp(hp);
+
+            return searchParam;
+        }
+
+    }
 }

@@ -206,7 +206,6 @@ public class CqController {
                                     cqAdminService.listMsg(cqMsg);
                                     break;
                                 case "pp":
-
                                     cqAdminService.listUserPP(cqMsg);
                                     break;
                                 case "findplayer":
@@ -224,6 +223,8 @@ public class CqController {
                                 case "repeatstar":
                                     cqAdminService.getRepeatStar(cqMsg);
                                     break;
+                                case "checkroleban":
+                                    cqAdminService.checkRoleBan(cqMsg);
                                 default:
                                     break;
                             }
@@ -318,11 +319,17 @@ public class CqController {
                                     cqService.myScore(cqMsg);
                                     break;
                                 case "search":
-                                    cqService.searchBeatmap(cqMsg);
+                                    cqService.search(cqMsg);
                                     break;
                                 case "costme":
                                 case "mycost":
-                                    cqService.myCost(cqMsg);
+                                case "cost":
+                                    cqService.cost(cqMsg);
+                                    break;
+                                case "pr":
+                                case "prs":
+                                    cqService.recentPassed(cqMsg);
+                                    break;
                                 default:
                                     break;
 
