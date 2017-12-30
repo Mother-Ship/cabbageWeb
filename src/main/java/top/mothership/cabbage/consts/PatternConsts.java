@@ -106,4 +106,6 @@ public class PatternConsts {
      * The constant IRC_MSG.
      */
     public final static Pattern IRC_PRIVATE_MSG = Pattern.compile(":(.+)!cho@ppy.sh PRIVMSG (.+) :(.+)");
+
+    public final static Pattern QIANESE_RECENT = Pattern.compile("((?:4|5|t|f|d|e|r)(?:1|q|w|3|e|r|4)(?:x|d|f|v|c)(?:1|q|w|3|e|r|4)(?:b|h|j|m|n)(?:r|5|6|y|g|f|t))");
 }

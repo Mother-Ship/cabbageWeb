@@ -9,9 +9,13 @@
     </artifacts-to-build>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d1ab8cc-7a94-4748-b25c-51fdf03c8238" name="Default" comment="">
+    <list default="true" id="6d1ab8cc-7a94-4748-b25c-51fdf03c8238" name="Default" comment="弱智钱语……recent全面支持钱语（qtmd）">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/PatternConsts.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/PatternConsts.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" afterPath="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/test.java" afterPath="$PROJECT_DIR$/src/test/test.java" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -51,12 +55,34 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="CqServiceImpl.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="CqServiceImpl.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="337">
-              <caret line="1116" column="34" lean-forward="true" selection-start-line="1116" selection-start-column="34" selection-end-line="1116" selection-end-column="34" />
+            <state relative-caret-position="162">
+              <caret line="625" column="22" lean-forward="false" selection-start-line="625" selection-start-column="22" selection-end-line="625" selection-end-column="22" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="CqController.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="486">
+              <caret line="302" column="42" lean-forward="false" selection-start-line="302" selection-start-column="42" selection-end-line="302" selection-end-column="42" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="PatternConsts.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/PatternConsts.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="499">
+              <caret line="105" column="28" lean-forward="true" selection-start-line="105" selection-start-column="28" selection-end-line="105" selection-end-column="28" />
+              <folding>
+                <marker date="1514632414450" expanded="true" signature="146:157" ph="/**...*/" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -64,7 +90,7 @@
       <file leaf-file-name="ImgUtil.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="27">
+            <state relative-caret-position="21924">
               <caret line="841" column="0" lean-forward="false" selection-start-line="841" selection-start-column="0" selection-end-line="841" selection-end-column="0" />
               <folding>
                 <marker date="1514619725169" expanded="true" signature="47631:47663" ph="//..." />
@@ -77,8 +103,8 @@
       <file leaf-file-name="ApiManager.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/ApiManager.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="729">
-              <caret line="43" column="0" lean-forward="false" selection-start-line="43" selection-start-column="0" selection-end-line="44" selection-end-column="63" />
+            <state relative-caret-position="405">
+              <caret line="31" column="59" lean-forward="false" selection-start-line="31" selection-start-column="28" selection-end-line="31" selection-end-column="59" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -89,22 +115,9 @@
       <file leaf-file-name="Beatmap.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Beatmap.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="729">
-              <caret line="30" column="38" lean-forward="false" selection-start-line="30" selection-start-column="38" selection-end-line="30" selection-end-column="38" />
+            <state relative-caret-position="594">
+              <caret line="25" column="27" lean-forward="false" selection-start-line="25" selection-start-column="27" selection-end-line="25" selection-end-column="27" />
               <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Koohii.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/osu/Koohii.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5076">
-              <caret line="288" column="0" lean-forward="false" selection-start-line="288" selection-start-column="0" selection-end-line="288" selection-end-column="0" />
-              <folding>
-                <element signature="docComment;class#Koohii#0" expanded="false" />
-                <element signature="method#mods_str#0;class#Koohii#0" expanded="false" />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -119,31 +132,31 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="OppaiResult.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/OppaiResult.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1026">
-              <caret line="39" column="27" lean-forward="false" selection-start-line="39" selection-start-column="27" selection-end-line="39" selection-end-column="27" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="WebPageManager.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15120">
-              <caret line="603" column="51" lean-forward="false" selection-start-line="603" selection-start-column="51" selection-end-line="603" selection-end-column="51" />
+            <state relative-caret-position="414">
+              <caret line="519" column="51" lean-forward="false" selection-start-line="519" selection-start-column="51" selection-end-line="519" selection-end-column="51" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="cabbage.properties" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/resources/cabbage.properties">
+      <file leaf-file-name="test.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/test.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="756">
-              <caret line="28" column="21" lean-forward="false" selection-start-line="28" selection-start-column="21" selection-end-line="28" selection-end-column="21" />
+            <state relative-caret-position="406">
+              <caret line="379" column="10" lean-forward="false" selection-start-line="379" selection-start-column="10" selection-end-line="381" selection-end-column="42" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Userinfo.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Userinfo.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="189">
+              <caret line="10" column="28" lean-forward="false" selection-start-line="10" selection-start-column="28" selection-end-line="10" selection-end-column="28" />
               <folding />
             </state>
           </provider>
@@ -243,9 +256,7 @@
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/UserController.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/mapper/ScoreDAO.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/User.java" />
-        <option value="$PROJECT_DIR$/src/test/test.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/mapper/ResDAO.java" />
-        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/PatternConsts.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/annotation/GroupRoleControl.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/SingleRoleControlAspect.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/task/DairyTask.java" />
@@ -255,7 +266,6 @@
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/StatTimeConsAspect.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/mapper/UserDAO.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/ExceptionNoticeAspect.java" />
-        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java" />
         <option value="$PROJECT_DIR$/src/main/resources/jdbc.properties" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqAdminServiceImpl.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/aspect/RoleControlAspect.java" />
@@ -267,12 +277,15 @@
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/CqManager.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/osu/Koohii.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/OppaiResult.java" />
-        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java" />
         <option value="$PROJECT_DIR$/src/main/resources/cabbage.properties" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Beatmap.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/osu/ScoreUtil.java" />
+        <option value="$PROJECT_DIR$/src/test/test.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java" />
         <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java" />
+        <option value="$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/PatternConsts.java" />
       </list>
     </option>
   </component>
@@ -403,9 +416,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
       <pane id="Scratches" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -593,6 +604,12 @@
             <path>
               <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
               <item name="cabbageWeb" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="cabbageWeb" type="b2602c69:ProjectViewProjectNode" />
+              <item name="cabbageWeb" type="462c0819:PsiDirectoryNode" />
               <item name="target" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -603,6 +620,8 @@
           <select />
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
+      <pane id="Scope" />
       <pane id="AndroidView" />
     </panes>
   </component>
@@ -949,8 +968,8 @@
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="JUnit.test" />
-        <item index="1" class="java.lang.String" itemvalue="JUnit.test.Test" />
+        <item index="0" class="java.lang.String" itemvalue="JUnit.test.Test" />
+        <item index="1" class="java.lang.String" itemvalue="JUnit.test" />
         <item index="2" class="java.lang.String" itemvalue="Tomcat Server.1.html (1)" />
         <item index="3" class="java.lang.String" itemvalue="Tomcat Server.1.html" />
         <item index="4" class="java.lang.String" itemvalue="JUnit.DbUtilTest.Test" />
@@ -1056,14 +1075,9 @@
       <workItem from="1514361712737" duration="786000" />
       <workItem from="1514556316641" duration="2917000" />
       <workItem from="1514614784702" duration="5884000" />
-      <workItem from="1514620755720" duration="207000" />
-    </task>
-    <task id="LOCAL-00028" summary="不再处理osz下载，更改BG存储结构，同set共用BG不再反复储存">
-      <created>1508738949853</created>
-      <option name="number" value="00028" />
-      <option name="presentableId" value="LOCAL-00028" />
-      <option name="project" value="LOCAL" />
-      <updated>1508738949853</updated>
+      <workItem from="1514620755720" duration="1019000" />
+      <workItem from="1514622924187" duration="2934000" />
+      <workItem from="1514631074478" duration="1676000" />
     </task>
     <task id="LOCAL-00029" summary="禁用赛群使用!bpme,修正app图无法recent的问题">
       <created>1508740602467</created>
@@ -1401,43 +1415,50 @@
       <option name="project" value="LOCAL" />
       <updated>1514620802819</updated>
     </task>
-    <option name="localTasksCounter" value="77" />
+    <task id="LOCAL-00077" summary="微调，修正提示信息">
+      <created>1514620970414</created>
+      <option name="number" value="00077" />
+      <option name="presentableId" value="LOCAL-00077" />
+      <option name="project" value="LOCAL" />
+      <updated>1514620970414</updated>
+    </task>
+    <option name="localTasksCounter" value="78" />
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="test - 2017.12.08 at 11h 20m 46s.xml">
-      <configuration name="test" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="test - 2017.12.08 at 11h 21m 53s.xml">
-      <configuration name="test" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="test - 2017.12.08 at 11h 23m 45s.xml">
-      <configuration name="test" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="test_Test - 2017.11.28 at 11h 11m 43s.xml">
+    <history-entry file="test_Test - 2017.12.30 at 16h 53m 58s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.11.28 at 11h 12m 05s.xml">
+    <history-entry file="test_Test - 2017.12.30 at 16h 55m 52s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.11.28 at 11h 12m 27s.xml">
+    <history-entry file="test_Test - 2017.12.30 at 16h 56m 23s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.11.30 at 11h 54m 48s.xml">
+    <history-entry file="test_Test - 2017.12.30 at 16h 57m 26s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.11.30 at 11h 55m 39s.xml">
+    <history-entry file="test_Test - 2017.12.30 at 16h 58m 32s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.11.30 at 11h 55m 55s.xml">
+    <history-entry file="test_Test - 2017.12.30 at 16h 59m 29s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="test_Test - 2017.12.01 at 13h 35m 59s.xml">
+    <history-entry file="test_Test - 2017.12.30 at 17h 01m 14s.xml">
+      <configuration name="test.Test" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="test_Test - 2017.12.30 at 17h 02m 05s.xml">
+      <configuration name="test.Test" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="test_Test - 2017.12.30 at 17h 04m 53s.xml">
+      <configuration name="test.Test" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="test_Test - 2017.12.30 at 17h 24m 34s.xml">
       <configuration name="test.Test" configurationId="JUnit" />
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="975735000" />
+    <option name="totallyTimeSpent" value="981157000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1453,28 +1474,29 @@
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.49786553" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Java Enterprise" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28318584" sideWeight="0.67004263" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.49786553" order="13" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.119936034" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.38274336" sideWeight="0.7910448" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31858408" sideWeight="0.4914712" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Spring" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2217484" sideWeight="0.675969" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20010673" sideWeight="0.32405892" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32977587" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2497332" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31637168" sideWeight="0.7734541" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.49786553" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.28318584" sideWeight="0.32995737" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Java Enterprise" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.38274336" sideWeight="0.7910448" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31858408" sideWeight="0.4914712" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Spring" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297062" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2260128" sideWeight="0.675969" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20010673" sideWeight="0.32405892" order="4" side_tool="true" content_ui="tabs" />
+      <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20010673" sideWeight="0.324031" order="5" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1482,7 +1504,6 @@
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2497332" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Statistic" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.40843508" sideWeight="0.5" order="14" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection Results" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.5" order="14" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28318584" sideWeight="0.32995737" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.49786553" order="1" side_tool="false" content_ui="tabs" />
     </layout>
@@ -1530,8 +1551,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="完善了对手成绩统计功能，准备研究写scores.db" />
-    <MESSAGE value="增加了base64编码的语音，加了验证码工具类" />
     <MESSAGE value="硬编码日期格式，修正!stat #0的逻辑错误" />
     <MESSAGE value="修正help/smokeall设计理念冲突导致的问题" />
     <MESSAGE value="修正文件扩展名识别错误问题、fp歌名由null和&quot;&quot;引发的问题" />
@@ -1555,7 +1574,9 @@
     <MESSAGE value="更改酷Q消息地址为自家闲置电脑……" />
     <MESSAGE value="红蓝字体、mod四维、TDmod支持、mod图标绘制" />
     <MESSAGE value="微调，去掉输出格式中的空格" />
-    <option name="LAST_COMMIT_MESSAGE" value="微调，去掉输出格式中的空格" />
+    <MESSAGE value="微调，修正提示信息" />
+    <MESSAGE value="弱智钱语……recent全面支持钱语（qtmd）" />
+    <option name="LAST_COMMIT_MESSAGE" value="弱智钱语……recent全面支持钱语（qtmd）" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1586,7 +1607,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java</url>
-          <line>771</line>
+          <line>770</line>
           <properties />
           <option name="timeStamp" value="373" />
         </line-breakpoint>
@@ -1596,11 +1617,17 @@
           <properties />
           <option name="timeStamp" value="375" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/test/test.java</url>
+          <line>381</line>
+          <properties />
+          <option name="timeStamp" value="390" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="390" />
+      <option name="time" value="392" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1609,18 +1636,10 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-context/4.3.8.RELEASE/spring-context-4.3.8.RELEASE-sources.jar!/org/springframework/stereotype/Service.java" />
     <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-core/4.3.8.RELEASE/spring-core-4.3.8.RELEASE.jar!/org/springframework/cglib/proxy/MethodProxy.class">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="217">
           <caret line="106" column="0" lean-forward="false" selection-start-line="106" selection-start-column="0" selection-end-line="106" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/test.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="163">
-          <caret line="374" column="0" lean-forward="false" selection-start-line="374" selection-start-column="0" selection-end-line="374" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -1811,16 +1830,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/PatternConsts.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1350">
-          <caret line="50" column="88" lean-forward="false" selection-start-line="50" selection-start-column="88" selection-end-line="50" selection-end-column="88" />
-          <folding>
-            <marker date="1514556355797" expanded="true" signature="146:157" ph="/**...*/" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/CqManager.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="189">
@@ -1833,14 +1842,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2457">
           <caret line="96" column="0" lean-forward="false" selection-start-line="96" selection-start-column="0" selection-end-line="103" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1431">
-          <caret line="70" column="34" lean-forward="false" selection-start-line="70" selection-start-column="34" selection-end-line="70" selection-end-column="34" />
           <folding />
         </state>
       </provider>
@@ -1860,17 +1861,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="756">
           <caret line="28" column="21" lean-forward="false" selection-start-line="28" selection-start-column="21" selection-end-line="28" selection-end-column="21" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/ApiManager.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="729">
-          <caret line="43" column="0" lean-forward="false" selection-start-line="43" selection-start-column="0" selection-end-line="44" selection-end-column="63" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1882,26 +1872,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15120">
-          <caret line="603" column="51" lean-forward="false" selection-start-line="603" selection-start-column="51" selection-end-line="603" selection-end-column="51" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Score.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
           <caret line="36" column="32" lean-forward="true" selection-start-line="36" selection-start-column="32" selection-end-line="36" selection-end-column="32" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Beatmap.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="729">
-          <caret line="30" column="38" lean-forward="false" selection-start-line="30" selection-start-column="38" selection-end-line="30" selection-end-column="38" />
           <folding />
         </state>
       </provider>
@@ -1927,7 +1901,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/util/qq/ImgUtil.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="27">
+        <state relative-caret-position="21924">
           <caret line="841" column="0" lean-forward="false" selection-start-line="841" selection-start-column="0" selection-end-line="841" selection-end-column="0" />
           <folding>
             <marker date="1514619725169" expanded="true" signature="47631:47663" ph="//..." />
@@ -1936,11 +1910,71 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/ApiManager.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="405">
+          <caret line="31" column="59" lean-forward="false" selection-start-line="31" selection-start-column="28" selection-end-line="31" selection-end-column="59" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Userinfo.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="189">
+          <caret line="10" column="28" lean-forward="false" selection-start-line="10" selection-start-column="28" selection-end-line="10" selection-end-column="28" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/test.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="406">
+          <caret line="379" column="10" lean-forward="false" selection-start-line="379" selection-start-column="10" selection-end-line="381" selection-end-column="42" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/pojo/osu/Beatmap.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="594">
+          <caret line="25" column="27" lean-forward="false" selection-start-line="25" selection-start-column="27" selection-end-line="25" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/manager/WebPageManager.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="414">
+          <caret line="519" column="51" lean-forward="false" selection-start-line="519" selection-start-column="51" selection-end-line="519" selection-end-column="51" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="337">
-          <caret line="1116" column="34" lean-forward="true" selection-start-line="1116" selection-start-column="34" selection-end-line="1116" selection-end-column="34" />
+        <state relative-caret-position="162">
+          <caret line="625" column="22" lean-forward="false" selection-start-line="625" selection-start-column="22" selection-end-line="625" selection-end-column="22" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/controller/CqController.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="486">
+          <caret line="302" column="42" lean-forward="false" selection-start-line="302" selection-start-column="42" selection-end-line="302" selection-end-column="42" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/consts/PatternConsts.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="499">
+          <caret line="105" column="28" lean-forward="true" selection-start-line="105" selection-start-column="28" selection-end-line="105" selection-end-column="28" />
+          <folding>
+            <marker date="1514632414450" expanded="true" signature="146:157" ph="/**...*/" />
+          </folding>
         </state>
       </provider>
     </entry>

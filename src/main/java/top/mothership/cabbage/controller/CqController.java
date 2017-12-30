@@ -272,7 +272,10 @@ public class CqController {
                             }
                             break;
                         default:
-                            Matcher cmdMatcherWithNum = PatternConsts.REG_CMD_REGEX_NUM_PARAM.matcher(msg);
+                            Matcher recentQianeseMatcher = PatternConsts.QIANESE_RECENT.matcher(cmdMatcher.group(1).toLowerCase(Locale.CHINA));
+                            if(recentQianeseMatcher.find()){
+                                cqService.recent(cqMsg);
+                            }
                             switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                                 case "stat":
                                 case "statu":
@@ -287,6 +290,7 @@ public class CqController {
                                 case "mybp":
                                 case "mybps":
                                 case "bpmes":
+                                    Matcher cmdMatcherWithNum = PatternConsts.REG_CMD_REGEX_NUM_PARAM.matcher(msg);
                                     if (cmdMatcherWithNum.find()) {
                                         //如果有指定#n
                                         cqService.printSpecifiedBP(cqMsg);
@@ -297,8 +301,6 @@ public class CqController {
                                 case "setid":
                                     cqService.setId(cqMsg);
                                     break;
-                                case "recent":
-                                case "recemt":
                                 case "rs":
                                     cqService.recent(cqMsg);
                                     break;

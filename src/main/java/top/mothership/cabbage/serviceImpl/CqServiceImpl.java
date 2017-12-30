@@ -624,16 +624,15 @@ public class CqServiceImpl {
                 cqMsg.setMessage(resp);
                 cqManager.sendMsg(cqMsg);
                 break;
-            case "recent":
-            case "recemt":
-                String filename = imgUtil.drawResult(userFromAPI, score, beatmap);
-                cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-                cqManager.sendMsg(cqMsg);
-                break;
             default:
                 break;
         }
-
+        Matcher recentQianeseMatcher = PatternConsts.QIANESE_RECENT.matcher(m.group(1).toLowerCase(Locale.CHINA));
+        if(recentQianeseMatcher.find()){
+            String filename = imgUtil.drawResult(userFromAPI, score, beatmap);
+            cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+            cqManager.sendMsg(cqMsg);
+        }
     }
 
     public void help(CqMsg cqMsg) {
