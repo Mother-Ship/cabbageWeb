@@ -1116,7 +1116,7 @@ public class CqServiceImpl {
             //如果字符串解析出错，会返回null，因此这里用null值来判断输入格式
             if (modsNum == null) {
                 cqMsg.setMessage("请使用MOD的双字母缩写，不需要任何分隔符。" +
-                        "\n接受的Mod有：NF EZ HD HR SD DT HT NC FL SO PF。");
+                        "\n接受的Mod有：NF EZ TD HD HR SD DT HT NC FL SO PF。");
                 cqManager.sendMsg(cqMsg);
                 return null;
             }

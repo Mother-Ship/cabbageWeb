@@ -54,8 +54,8 @@
       <file leaf-file-name="CqServiceImpl.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="351">
-              <caret line="768" column="44" lean-forward="true" selection-start-line="768" selection-start-column="44" selection-end-line="768" selection-end-column="44" />
+            <state relative-caret-position="337">
+              <caret line="1116" column="34" lean-forward="true" selection-start-line="1116" selection-start-column="34" selection-end-line="1116" selection-end-column="34" />
               <folding />
             </state>
           </provider>
@@ -1056,14 +1056,7 @@
       <workItem from="1514361712737" duration="786000" />
       <workItem from="1514556316641" duration="2917000" />
       <workItem from="1514614784702" duration="5884000" />
-      <workItem from="1514620755720" duration="35000" />
-    </task>
-    <task id="LOCAL-00027" summary="初步实现osz下载，下周实现根据sid识别">
-      <created>1508492005027</created>
-      <option name="number" value="00027" />
-      <option name="presentableId" value="LOCAL-00027" />
-      <option name="project" value="LOCAL" />
-      <updated>1508492005027</updated>
+      <workItem from="1514620755720" duration="207000" />
     </task>
     <task id="LOCAL-00028" summary="不再处理osz下载，更改BG存储结构，同set共用BG不再反复储存">
       <created>1508738949853</created>
@@ -1401,7 +1394,14 @@
       <option name="project" value="LOCAL" />
       <updated>1514620670007</updated>
     </task>
-    <option name="localTasksCounter" value="76" />
+    <task id="LOCAL-00076" summary="微调，去掉输出格式中的空格">
+      <created>1514620802818</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1514620802819</updated>
+    </task>
+    <option name="localTasksCounter" value="77" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1437,7 +1437,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="975563000" />
+    <option name="totallyTimeSpent" value="975735000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1530,7 +1530,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="彻底去掉平台依赖，所有文件从读写文件改为读写数据库" />
     <MESSAGE value="完善了对手成绩统计功能，准备研究写scores.db" />
     <MESSAGE value="增加了base64编码的语音，加了验证码工具类" />
     <MESSAGE value="硬编码日期格式，修正!stat #0的逻辑错误" />
@@ -1555,7 +1554,8 @@
     <MESSAGE value="更改add和del格式" />
     <MESSAGE value="更改酷Q消息地址为自家闲置电脑……" />
     <MESSAGE value="红蓝字体、mod四维、TDmod支持、mod图标绘制" />
-    <option name="LAST_COMMIT_MESSAGE" value="红蓝字体、mod四维、TDmod支持、mod图标绘制" />
+    <MESSAGE value="微调，去掉输出格式中的空格" />
+    <option name="LAST_COMMIT_MESSAGE" value="微调，去掉输出格式中的空格" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1938,8 +1938,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/top/mothership/cabbage/serviceImpl/CqServiceImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="351">
-          <caret line="768" column="44" lean-forward="true" selection-start-line="768" selection-start-column="44" selection-end-line="768" selection-end-column="44" />
+        <state relative-caret-position="337">
+          <caret line="1116" column="34" lean-forward="true" selection-start-line="1116" selection-start-column="34" selection-end-line="1116" selection-end-column="34" />
           <folding />
         </state>
       </provider>
