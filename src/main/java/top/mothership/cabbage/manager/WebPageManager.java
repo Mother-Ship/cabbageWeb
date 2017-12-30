@@ -601,7 +601,7 @@ public class WebPageManager {
                     tmp2.append(tmp);
                 }
                 OsuSearchResp osuSearchResp = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                        .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(tmp2.toString(), OsuSearchResp.class);
+                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create().fromJson(tmp2.toString(), OsuSearchResp.class);
                 if (osuSearchResp.getResultCount() > 0) {
                     beatmap = osuSearchResp.getBeatmaps().get(0);
                 }

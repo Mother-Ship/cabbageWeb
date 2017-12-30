@@ -62,6 +62,7 @@ public class ScoreUtil {
                         case 1:
                             mods.put("EZ", "easy");
                             break;
+                        //虽然TD已经实装，但是MOD图标还是 不做 不画
                         case 3:
                             mods.put("HD", "hidden");
                             break;
@@ -114,20 +115,20 @@ public class ScoreUtil {
      */
     public Integer reverseConvertMod(String mods) {
         Integer m = 0;
-        if(mods.length()%2!=0){
+        if (mods.length() % 2 != 0) {
             //双字母MOD字符串长度必然是偶数
             return null;
         }
-        int j=0;
-        String[] modList = new String[mods.length()/2];
+        int j = 0;
+        String[] modList = new String[mods.length() / 2];
         //例如 HDHR
-        for(int i=0;i<mods.length();i++){
-            if(i%2==0){
+        for (int i = 0; i < mods.length(); i++) {
+            if (i % 2 == 0) {
                 //先取H
-                modList[j]=""+mods.charAt(i);
-            }else{
+                modList[j] = "" + mods.charAt(i);
+            } else {
                 //取出D，取出H，拼一起放回去
-                modList[j]=modList[j]+mods.charAt(i);
+                modList[j] = modList[j] + mods.charAt(i);
                 j++;
             }
         }
@@ -138,6 +139,10 @@ public class ScoreUtil {
                     break;
                 case "EZ":
                     m += 2;
+                    break;
+                case "TD":
+                    //但是在字符串的输入处还是更新一下 支持一下吧
+                    m += 4;
                     break;
                 case "HD":
                     m += 8;
@@ -225,14 +230,22 @@ public class ScoreUtil {
             p.n50 = score.getCount50();
             p.nmiss = score.getCountMiss();
             p.combo = score.getMaxCombo();
+            Koohii.MapStats mapstats = new Koohii.MapStats();
+            mapstats.ar = beatmap.getDiffApproach();
+            mapstats.cs = beatmap.getDiffSize();
+            mapstats.od = beatmap.getDiffOverall();
+            mapstats.hp = beatmap.getDiffDrain();
+            //APPLY_AR OD CS HP是1 2 4 8，把flag改成15好像就会 四维都进行计算？
+            mapstats = Koohii.mods_apply(score.getEnabledMods(), mapstats, 15);
             Koohii.PPv2 pp = new Koohii.PPv2(p);
+
             return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
                     //Java实现如果出错会抛出异常，象征性给个0和null
                     0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
                     //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
-                    map.od, map.ar, map.cs, map.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
+                    mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
                     //scoreVersion只能是V1了，
-                    1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, pp.aim, pp.speed, pp.acc, pp.total);
+                    1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, pp.aim, pp.speed, pp.acc, pp.total, mapstats.speed);
         } catch (Exception e) {
             logger.error("离线计算PP出错");
             logger.error(e.getMessage());
