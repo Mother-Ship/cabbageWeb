@@ -706,9 +706,9 @@ public class ImgUtil {
         g2.setFont(new Font("微软雅黑", Font.BOLD, 23));
         String length = "";
         //加入自动补0
-        g2.drawString("长度：" + String.format("%02d", Integer.valueOf(beatmap.getTotalLength()) / 60) + ":"
-                + String.format("%02d", Integer.valueOf(beatmap.getTotalLength()) % 60)
-                + "  BPM：" + Math.round(Float.valueOf(beatmap.getBpm()))
+        g2.drawString("长度：" + String.format("%02d", beatmap.getTotalLength() / 60) + ":"
+                + String.format("%02d", beatmap.getTotalLength() % 60)
+                + "  BPM：" + Math.round(beatmap.getBpm())
                 + "  物件数：" + new DecimalFormat("###,###").format((oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners())), 7, 80);
 
         //圈数、滑条数、转盘数
@@ -837,7 +837,11 @@ public class ImgUtil {
         score.setMaxCombo(-1);
         //这里默认构造FC成绩，所以不需要处理NPE……吧？
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
-
+        beatmap.setTotalLength((int)(beatmap.getTotalLength() /oppaiResult.getSpeedMultiplier()));
+        beatmap.setBpm(beatmap.getBpm()*oppaiResult.getSpeedMultiplier());
+        Map<String, String> modsMap = scoreUtil.convertMOD(mods);
+        //这个none是为了BP节省代码，在这里移除掉
+        modsMap.remove("None");
         try {
             bg = webPageManager.getBG(beatmap);
         } catch (NullPointerException e) {
@@ -871,6 +875,15 @@ public class ImgUtil {
         g2.drawImage(images.get("infoLayout.png"), 0, 0, null);
         //Ranked状态
         g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
+
+        if (!modsMap.isEmpty()) {
+            int i = 0;
+            for (Map.Entry<String, String> entry : modsMap.entrySet()) {
+                g2.drawImage(images.get("selection-mod-" + entry.getValue() + ".png"), 224 + (50 * i), 133, null);
+                i++;
+            }
+        }
+
         //歌曲信息（这里不能是null）
         String title = "";
         //source artist
@@ -912,14 +925,6 @@ public class ImgUtil {
         //作者信息
         g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
         g2.drawString("作者：" + oppaiResult.getCreator(), 54, 54);
-        //长度、bpm、物件数
-        g2.setFont(new Font("微软雅黑", Font.BOLD, 23));
-        String length = "";
-        //加入自动补0
-        g2.drawString("长度：" + String.format("%02d", Integer.valueOf(beatmap.getTotalLength()) / 60) + ":"
-                + String.format("%02d", Integer.valueOf(beatmap.getTotalLength()) % 60)
-                + "  BPM：" + Math.round(Float.valueOf(beatmap.getBpm()))
-                + "  物件数：" + new DecimalFormat("###,###").format((oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners())), 7, 80);
 
         //圈数、滑条数、转盘数
         g2.setFont(new Font("微软雅黑", Font.PLAIN, 23));
@@ -928,15 +933,23 @@ public class ImgUtil {
                 + "  转盘数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSpinners()), 7, 108);
 
         //四围、难度
-        if (Double.valueOf(beatmap.getDiffApproach()) > (double) Math.round(oppaiResult.getAr() * 100) / 100) {
+        if (modsMap.containsKey("EZ")||modsMap.containsKey("HT")) {
             //如果官网的AR比实际的高（EZ）
             g2.setPaint(Color.decode("#add8e6"));
-        } else if (Double.valueOf(beatmap.getDiffApproach()) < (double) Math.round(oppaiResult.getAr() * 100) / 100) {
+        } else if (modsMap.containsKey("DT")||modsMap.containsKey("NC")||modsMap.containsKey("HR")) {
             //如果官网的AR比实际的低（DTHR）
             g2.setPaint(Color.decode("#f69aa1"));
         }else{
             g2.setPaint(Color.decode("#FFFFFF"));
         }
+        //长度、bpm、物件数
+        g2.setFont(new Font("微软雅黑", Font.BOLD, 23));
+        String length = "";
+        //加入自动补0
+        g2.drawString("长度：" + String.format("%02d", beatmap.getTotalLength() / 60) + ":"
+                + String.format("%02d", beatmap.getTotalLength() % 60)
+                + "  BPM：" + Math.round(beatmap.getBpm())
+                + "  物件数：" + new DecimalFormat("###,###").format((oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners())), 7, 80);
         g2.setFont(new Font("Aller", Font.PLAIN, 13));
         g2.drawString("CS:" + (double) Math.round(oppaiResult.getCs() * 100) / 100 + " AR:" + (double) Math.round(oppaiResult.getAr() * 100) / 100
                 + " OD:" + (double) Math.round(oppaiResult.getOd() * 100) / 100 + " HP:" + (double) Math.round(oppaiResult.getHp() * 100) / 100
@@ -977,11 +990,11 @@ public class ImgUtil {
         //小于0.04的宽高会是0，
         if (c > 0.04) {
             g2.drawImage(images.get("fpStar.png").getScaledInstance((int) (25 * c), (int) (25 * c), Image.SCALE_SMOOTH),
-                    (int) (984 + (Integer.valueOf(b[0])) * 44), (int) (250 + (1 - c) * 12.5), null);
+                    984 + (Integer.valueOf(b[0])) * 44, (int) (250 + (1 - c) * 12.5), null);
         }
         //缩略图
         g2.drawImage(bg2, 762, 162, null);
-
+        //PP面板
         g2.setPaint(Color.decode("#ff66a9"));
         g2.setFont(new Font("Gayatri", 0, 60));
         if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
