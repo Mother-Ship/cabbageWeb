@@ -759,7 +759,7 @@ public class CqServiceImpl {
                     }
                 }
                 cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId()
-                        + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")。" +
+                        + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")。" +
                         "\n你在该谱面没有指定Mod：" + searchParam.getModsString() + "的成绩。");
             }else{
                 String filename = imgUtil.drawResult(userFromAPI, scores.get(0), beatmap);
@@ -767,7 +767,7 @@ public class CqServiceImpl {
             }
         } else {
             cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId()
-                    + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")" +
+                    + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")" +
                     "，你在该谱面没有成绩。");
         }
         cqManager.sendMsg(cqMsg);
@@ -794,7 +794,7 @@ public class CqServiceImpl {
             }
             String filename = imgUtil.drawBeatmap(beatmap, searchParam.getMods());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
-                    + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")"+ "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId());
+                    + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")"+ "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId());
         }
         cqManager.sendMsg(cqMsg);
 
