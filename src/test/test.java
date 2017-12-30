@@ -1,3 +1,5 @@
+import org.jsoup.Jsoup;
+import org.jsoup.select.Elements;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -370,11 +372,14 @@ public class test {
 //        userDAO.getUser(1335734657L,null);
 //Lobby lobby = apiManager.getMatch(38182172);
 //System.out.println(lobby);
-        String s = "AR9HP3CS4OD6";
-        Matcher m = PatternConsts.OSU_SEARCH_FOUR_DEMENSIONS_REGEX.matcher(s);
-        m.find();
-        for (int i = 0; i <= m.groupCount(); i++)
-               System.out.println(m.group(i));
+//        String s = "AR9HP3CS4OD6";
+//        Matcher m = PatternConsts.OSU_SEARCH_FOUR_DEMENSIONS_REGEX.matcher(s);
+//        m.find();
+//        for (int i = 0; i <= m.groupCount(); i++)
+//               System.out.println(m.group(i));
+//        org.jsoup.nodes.Document doc = Jsoup.connect("https://osu.ppy.sh/users/7679162").timeout(10000).get();
+//        Elements link = doc.select("div[class*=profile-stats]");
+//        System.out.println(link.get(0));
     }
 
 

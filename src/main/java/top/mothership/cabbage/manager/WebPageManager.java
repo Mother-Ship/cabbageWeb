@@ -21,10 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.mapper.ResDAO;
-import top.mothership.cabbage.pojo.osu.Beatmap;
-import top.mothership.cabbage.pojo.osu.OsuFile;
-import top.mothership.cabbage.pojo.osu.OsuSearchResp;
-import top.mothership.cabbage.pojo.osu.SearchParam;
+import top.mothership.cabbage.pojo.osu.*;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -57,6 +54,7 @@ public class WebPageManager {
     private final String getOsuURL = "https://osu.ppy.sh/osu/";
     private final String osuSearchURL = "http://osusearch.com/query/";
     private final String ppPlusURL = "https://syrin.me/pp+/u/";
+    private final String osuNewOfficalWebsiteURL = "https://osu.ppy.sh/users/";
     private final ResDAO resDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
     private HashMap<Integer, Document> map = new HashMap<>();
@@ -519,7 +517,8 @@ public class WebPageManager {
     //方法名大包大揽，其实我只能处理出BG名字（
     public OsuFile parseOsuFile(Beatmap beatmap) {
         //先获取
-        String osuFile = resDAO.getOsuFileBybid(beatmap.getBeatmapId());
+        //2017-12-30 18:53:37改为从网页获取（不是所有的osu文件都缓存了
+        String osuFile = getOsuFile(beatmap);
         String bgName;
         Matcher m = PatternConsts.BGNAME_REGEX.matcher(osuFile);
         if (m.find()) {
@@ -699,6 +698,27 @@ public class WebPageManager {
         bg.flush();
         resizedBGTmp.flush();
         return resizedBG;
+    }
+    public Userinfo getXHAndSHRankFromNewWebsite(Integer uid){
+        Userinfo userinfo = new Userinfo();
+        int retry = 0;
+        Document doc = null;
+        while (retry < 5) {
+            try {
+                logger.info("正在获取" + uid + "的新官网S、SS数据");
+                doc = Jsoup.connect(osuNewOfficalWebsiteURL + uid).timeout((int) Math.pow(2, retry + 1) * 1000).get();
+                break;
+            } catch (IOException e) {
+                logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
+                retry++;
+            }
+        }
+        if (retry == 5) {
+            logger.error("玩家" + uid + "访问PP+失败五次");
+            return null;
+        }
+        Elements link = doc.select("tr[class*=perform]");
+        return userinfo;
     }
 
     private byte[] readInputStream(InputStream inputStream) throws IOException {
