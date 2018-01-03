@@ -123,8 +123,8 @@ public class UserController {
         try (InputStream in = new ByteArrayInputStream(bytes);
              OutputStream out = response.getOutputStream()) {
             BufferedImage img = ImageIO.read(in);
-            BufferedImage img2 = new BufferedImage(676, 327, BufferedImage.TYPE_INT_RGB);
-            img2.getGraphics().drawImage(img.getScaledInstance(676, 327, Image.SCALE_SMOOTH), 0, 0, null);
+            BufferedImage img2 = new BufferedImage(625, 300, BufferedImage.TYPE_INT_RGB);
+            img2.getGraphics().drawImage(img.getScaledInstance(625, 300, Image.SCALE_SMOOTH), 0, 0, null);
             ImageIO.write(img2, "png", out);
             out.write(bytes);
         } catch (IOException ignore) {
