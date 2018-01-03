@@ -104,6 +104,9 @@ public class UserController {
         }
 
         Userinfo userFromAPI = apiManager.getUser(null, uid);
+        if (userFromAPI == null) {
+            return;
+        }
         //获取score rank
         //gust？
         if (userFromAPI.getUserId() == 1244312
