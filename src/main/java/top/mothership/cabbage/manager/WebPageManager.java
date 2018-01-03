@@ -21,7 +21,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.mapper.ResDAO;
-import top.mothership.cabbage.pojo.osu.*;
+import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.OsuFile;
+import top.mothership.cabbage.pojo.osu.OsuSearchResp;
+import top.mothership.cabbage.pojo.osu.SearchParam;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -655,7 +658,6 @@ public class WebPageManager {
         return map;
     }
 
-
     /**
      * Resize img buffered image.
      *
@@ -699,8 +701,9 @@ public class WebPageManager {
         resizedBGTmp.flush();
         return resizedBG;
     }
-    public Userinfo getXHAndSHRankFromNewWebsite(Integer uid){
-        Userinfo userinfo = new Userinfo();
+
+    public List<Integer> getXHAndSHRank(Integer uid) {
+        List<Integer> list = new ArrayList<>();
         int retry = 0;
         Document doc = null;
         while (retry < 5) {
@@ -714,11 +717,22 @@ public class WebPageManager {
             }
         }
         if (retry == 5) {
-            logger.error("玩家" + uid + "访问PP+失败五次");
+            logger.error("玩家" + uid + "访问新官网失败五次");
             return null;
         }
-        Elements link = doc.select("tr[class*=perform]");
-        return userinfo;
+        Matcher m = PatternConsts.NEW_WEBSITE_XH_SH.matcher(doc.outerHtml());
+        m.find();
+        if (!"".equals(m.group(1))) {
+            list.add(Integer.valueOf(m.group(1)));
+        }
+        if (!"".equals(m.group(2))) {
+            list.add(Integer.valueOf(m.group(2)));
+        }
+        if (list.size() == 2) {
+            return list;
+        } else {
+            return null;
+        }
     }
 
     private byte[] readInputStream(InputStream inputStream) throws IOException {

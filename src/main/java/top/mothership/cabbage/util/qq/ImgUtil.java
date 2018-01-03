@@ -25,10 +25,8 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 
 
@@ -565,7 +563,7 @@ public class ImgUtil {
         g2.setFont(new Font("Aller light", 0, 29));
         //指定坐标
         g2.drawString(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]", 7, 26);
-        g2.setFont(new Font("Aller light", 0, 21));
+        g2.setFont(new Font("Aller", 0, 21));
         g2.drawString("Beatmap by " + beatmap.getCreator(), 7, 52);
         g2.drawString("Played by " + userFromAPI.getUserName() + " on " + new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(score.getDate()) + ".", 7, 74);
 
@@ -932,24 +930,36 @@ public class ImgUtil {
                 + "  滑条数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSliders())
                 + "  转盘数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSpinners()), 7, 108);
 
-        //四围、难度
-        if (modsMap.containsKey("EZ")||modsMap.containsKey("HT")) {
-            //如果官网的AR比实际的高（EZ）
+        //长度、bpm、物件数
+        if (modsMap.containsKey("HT")) {
+            //如果官网的bpm比实际的高（EZ）
             g2.setPaint(Color.decode("#add8e6"));
-        } else if (modsMap.containsKey("DT")||modsMap.containsKey("NC")||modsMap.containsKey("HR")) {
-            //如果官网的AR比实际的低（DTHR）
+        } else if (modsMap.containsKey("DT") || modsMap.containsKey("NC")) {
+            //如果官网的bpm比实际的低（DT）
             g2.setPaint(Color.decode("#f69aa1"));
         }else{
             g2.setPaint(Color.decode("#FFFFFF"));
         }
-        //长度、bpm、物件数
         g2.setFont(new Font("微软雅黑", Font.BOLD, 23));
-        String length = "";
         //加入自动补0
         g2.drawString("长度：" + String.format("%02d", beatmap.getTotalLength() / 60) + ":"
                 + String.format("%02d", beatmap.getTotalLength() % 60)
                 + "  BPM：" + Math.round(beatmap.getBpm())
                 + "  物件数：" + new DecimalFormat("###,###").format((oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners())), 7, 80);
+
+
+        //四围、难度
+        if (modsMap.containsKey("EZ") || modsMap.containsKey("HT")) {
+            //如果官网的AR比实际的高（EZ）
+            g2.setPaint(Color.decode("#add8e6"));
+        } else if (modsMap.containsKey("DT") || modsMap.containsKey("NC") || modsMap.containsKey("HR")) {
+            //如果官网的AR比实际的低（DTHR）
+            g2.setPaint(Color.decode("#f69aa1"));
+        } else {
+            g2.setPaint(Color.decode("#FFFFFF"));
+        }
+
+
         g2.setFont(new Font("Aller", Font.PLAIN, 13));
         g2.drawString("CS:" + (double) Math.round(oppaiResult.getCs() * 100) / 100 + " AR:" + (double) Math.round(oppaiResult.getAr() * 100) / 100
                 + " OD:" + (double) Math.round(oppaiResult.getOd() * 100) / 100 + " HP:" + (double) Math.round(oppaiResult.getHp() * 100) / 100
@@ -1038,12 +1048,11 @@ public class ImgUtil {
     }
 
     public String drawImage(BufferedImage img) {
-        org.apache.commons.codec.binary.Base64 base64 = new org.apache.commons.codec.binary.Base64();
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             ImageIO.write(img, "png", out);
             img.flush();
             byte[] imgBytes = out.toByteArray();
-            return base64.encodeToString(imgBytes);
+            return Base64.getEncoder().encodeToString(imgBytes);
         } catch (IOException e) {
             e.getMessage();
             return null;

@@ -21,6 +21,7 @@ import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.SearchParam;
 import top.mothership.cabbage.pojo.osu.Userinfo;
+import top.mothership.cabbage.util.osu.RoleUtil;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
@@ -46,21 +47,22 @@ public class CqServiceImpl {
     private final UserDAO userDAO;
     private final ImgUtil imgUtil;
     private final ScoreUtil scoreUtil;
+    private final RoleUtil roleUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     /**
      * Instantiates a new Cq service.
-     *
-     * @param apiManager     the api manager
+     *  @param apiManager     the api manager
      * @param cqManager      the cq manager
      * @param webPageManager 网页相关抓取工具
      * @param userDAO        the user dao
      * @param userInfoDAO    the user info dao
      * @param imgUtil        the img util
      * @param scoreUtil      the score util
+     * @param roleUtil
      */
     @Autowired
-    public CqServiceImpl(ApiManager apiManager, CqManager cqManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil) {
+    public CqServiceImpl(ApiManager apiManager, CqManager cqManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, RoleUtil roleUtil) {
         this.apiManager = apiManager;
         this.cqManager = cqManager;
         this.webPageManager = webPageManager;
@@ -68,6 +70,7 @@ public class CqServiceImpl {
         this.userInfoDAO = userInfoDAO;
         this.imgUtil = imgUtil;
         this.scoreUtil = scoreUtil;
+        this.roleUtil = roleUtil;
     }
 
 
@@ -277,33 +280,7 @@ public class CqServiceImpl {
         }
 
 
-        roles = Arrays.asList(role.split(","));
-        //此处自定义实现排序方法
-        //dev>分群>主群>比赛
-        roles.sort((o1, o2) -> {
-//            mp5s优先级得低于mp5
-            if (o1.contains("mp5s") && (o2.equals("mp5") || o2.equals("mp5mc") || o2.equals("mp5chart"))) {
-                return -1;
-            }
-//            //比赛期间mp5s优先级比mp5高，只比mc和chart低
-//            if (o1.contains("mp5s") && (o2.equals("mp5mc") || o2.equals("mp5chart"))) {
-//                return -1;
-//            }
-            //mp4s<mp4
-            if (o1.contains("mp4s") && o2.equals("mp4")) {
-                return -1;
-            }
-            //dev大于一切
-            if (o1.equals("dev")) {
-                return 1;
-            }
-            if (o2.equals("dev")) {
-                return -1;
-            }
-            return o1.compareTo(o2);
-        });
-        Collections.reverse(roles);
-
+        roles = roleUtil.sortRoles(role);
         //获取score rank
         //gust？
         if (userFromAPI.getUserId() == 1244312
@@ -739,7 +716,14 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-        Beatmap beatmap = webPageManager.searchBeatmap(searchParam);
+        Beatmap beatmap;
+
+        if (searchParam.getBeatmapId() == null) {
+            beatmap = webPageManager.searchBeatmap(searchParam);
+        } else {
+            //如果是纯数字的搜索词，则改为用API直接获取
+            beatmap = apiManager.getBeatmap(searchParam.getBeatmapId());
+        }
         logger.info("开始处理" + userFromAPI.getUserName() + "进行的谱面搜索，关键词为：" + searchParam);
         if (beatmap == null) {
             cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。");
@@ -779,7 +763,12 @@ public class CqServiceImpl {
         if (searchParam == null) {
             return;
         }
-        Beatmap beatmap = webPageManager.searchBeatmap(searchParam);
+        Beatmap beatmap;
+        if (searchParam.getBeatmapId() == null) {
+            beatmap = webPageManager.searchBeatmap(searchParam);
+        } else {
+            beatmap = apiManager.getBeatmap(searchParam.getBeatmapId());
+        }
         logger.info("开始处理" + cqMsg.getUserId() + "进行的谱面搜索，关键词为：" + searchParam);
 
         if (beatmap == null) {
@@ -1109,6 +1098,10 @@ public class CqServiceImpl {
         Integer modsNum = null;
         String mods = "None";
         String keyword;
+        Double ar = null;
+        Double od = null;
+        Double cs = null;
+        Double hp = null;
         if (getKeyWordAndMod.find()) {
             mods = getKeyWordAndMod.group(3);
             modsNum = scoreUtil.reverseConvertMod(mods);
@@ -1129,12 +1122,13 @@ public class CqServiceImpl {
             keyword = getKeyWordAndMod.group(2);
         }
 
+        Matcher allNumberKeyword = PatternConsts.ALL_NUMBER_SEARCH_KEYWORD.matcher(keyword);
+        if (allNumberKeyword.find()) {
+            searchParam.setBeatmapId(Integer.valueOf(allNumberKeyword.group(1)));
+            return searchParam;
+        }
 
 
-        Double ar = null;
-        Double od = null;
-        Double cs = null;
-        Double hp = null;
         //比较菜，手动补齐参数
         if (!(keyword.endsWith("]") || keyword.endsWith(")") || keyword.endsWith("}"))) {
             //如果圆括号 方括号 花括号都没有
@@ -1199,4 +1193,5 @@ public class CqServiceImpl {
         }
 
     }
+
 }

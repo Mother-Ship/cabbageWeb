@@ -105,7 +105,7 @@ public class CqController {
                             break;
                     }
                     logger.info(log);
-                    switch (cmdMatcher.group(1)) {
+                    switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                         //处理命令
                         case "sudo":
                             cmdMatcher = PatternConsts.ADMIN_CMD_REGEX.matcher(msg);

@@ -14,4 +14,5 @@ public class SearchParam {
     private Double hp;
     private Integer mods;
     private String modsString;
+    private Integer beatmapId;
 }

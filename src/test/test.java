@@ -1,16 +1,13 @@
 import org.jsoup.Jsoup;
-import org.jsoup.select.Elements;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.mapper.UserDAO;
 
 import java.io.IOException;
-import java.util.regex.Matcher;
 
 //
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -377,9 +374,9 @@ public class test {
 //        m.find();
 //        for (int i = 0; i <= m.groupCount(); i++)
 //               System.out.println(m.group(i));
-//        org.jsoup.nodes.Document doc = Jsoup.connect("https://osu.ppy.sh/users/7679162").timeout(10000).get();
+        org.jsoup.nodes.Document doc = Jsoup.connect("https://osu.ppy.sh/users/7679162").timeout(10000).get();
 //        Elements link = doc.select("div[class*=profile-stats]");
-//        System.out.println(link.get(0));
+        System.out.println(doc.outerHtml());
     }
 
 

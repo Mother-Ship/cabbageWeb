@@ -265,6 +265,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
+    @UserRoleControl({1427922341})
     public void getUserRole(CqMsg cqMsg) {
         Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
