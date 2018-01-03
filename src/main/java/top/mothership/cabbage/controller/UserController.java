@@ -18,8 +18,13 @@ import top.mothership.cabbage.serviceImpl.UserServiceImpl;
 import top.mothership.cabbage.util.osu.RoleUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletResponse;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -112,8 +117,15 @@ public class UserController {
         }
         String result = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank);
         byte[] bytes = Base64.getDecoder().decode(result);
+
+
         response.setContentType("image/png");
-        try (OutputStream out = response.getOutputStream()) {
+        try (InputStream in = new ByteArrayInputStream(bytes);
+             OutputStream out = response.getOutputStream()) {
+            BufferedImage img = ImageIO.read(in);
+            BufferedImage img2 = new BufferedImage(676, 327, BufferedImage.TYPE_INT_RGB);
+            img2.getGraphics().drawImage(img.getScaledInstance(676, 327, Image.SCALE_SMOOTH), 0, 0, null);
+            ImageIO.write(img2, "png", out);
             out.write(bytes);
         } catch (IOException ignore) {
 

@@ -41,11 +41,13 @@ public class ApiManager {
     public Userinfo getUser(String username, Integer userId) {
         String result = filterUid("user", username, userId);
         Userinfo userFromAPI = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Userinfo.class);
-        List<Integer> list = webPageManager.getXHAndSHRank(userFromAPI.getUserId());
-        if (list != null) {
-            logger.info("开始补正玩家" + userFromAPI.getUserName() + "的SH XH数据");
-            userFromAPI.setCountRankSs(userFromAPI.getCountRankSs() + list.get(0));
-            userFromAPI.setCountRankS(userFromAPI.getCountRankS() + list.get(1));
+        if (userFromAPI != null) {
+            List<Integer> list = webPageManager.getXHAndSHRank(userFromAPI.getUserId());
+            if (list != null) {
+                logger.info("开始补正玩家" + userFromAPI.getUserName() + "的SH XH数据");
+                userFromAPI.setCountRankSs(userFromAPI.getCountRankSs() + list.get(0));
+                userFromAPI.setCountRankS(userFromAPI.getCountRankS() + list.get(1));
+            }
         }
         return userFromAPI;
     }
