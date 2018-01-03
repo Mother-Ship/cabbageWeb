@@ -82,6 +82,11 @@ public class PatternConsts {
      */
     public final static Pattern OSU_SEARCH_FOUR_DEMENSIONS_REGEX = Pattern
             .compile("(?:AR(\\d{1,2}(?:\\.|。)?(?:\\d{1,2})?))?(?:OD(\\d{1,2}(?:\\.|。)?(?:\\d{1,2})?))?(?:CS(\\d{1,2}(?:\\.|。)?(?:\\d{1,2})?))?(?:HP(\\d{1,2}(?:\\.|。)?(?:\\d{1,2})?))?", Pattern.CASE_INSENSITIVE);
+
+    /**
+     * 用来处理纯数字搜索词（bid）的表达式
+     */
+    public final static Pattern ALL_NUMBER_SEARCH_KEYWORD = Pattern.compile("^(\\d{1,7})$");
     /**
      * UNICODE转String的表达式。
      */
@@ -107,5 +112,13 @@ public class PatternConsts {
      */
     public final static Pattern IRC_PRIVATE_MSG = Pattern.compile(":(.+)!cho@ppy.sh PRIVMSG (.+) :(.+)");
 
+    /**
+     * The constant QIANESE_RECENT.
+     */
     public final static Pattern QIANESE_RECENT = Pattern.compile("((?:4|5|t|f|d|e|r)(?:1|q|w|3|e|r|4)(?:x|d|f|v|c)(?:1|q|w|3|e|r|4)(?:b|h|j|m|n)(?:r|5|6|y|g|f|t))");
+
+    /**
+     * 从新官网的页面中取出SH和XH的数字
+     */
+    public final static Pattern NEW_WEBSITE_XH_SH = Pattern.compile("\"scoreRanks\":\\{\"XH\":(\\d*),\"SH\":(\\d*),\"X\":(\\d*),\"S\":(\\d*),\"A\":(\\d*)}}");
 }
