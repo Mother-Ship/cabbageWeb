@@ -127,11 +127,6 @@ public class CqAdminServiceImpl {
                     }
                     userInfoDAO.addUserInfo(userFromAPI);
 
-                    if (usernames.length == 1) {
-                        logger.info("新增单个用户，绘制名片");
-                        int scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
-                        filename = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank);
-                    }
                     addList.add(userFromAPI.getUserName());
                 } else {
                     //进行Role更新
@@ -176,12 +171,6 @@ public class CqAdminServiceImpl {
         }
         if (usernames.length == 0) {
             resp = "没有做出改动。";
-        }
-        //最后的条件可以不用写，不过为了干掉这个报错还是谢了
-        if (addList.size() == 1 && usernames.length == 1 && userFromAPI != null) {
-            //这时候是只有单个用户，并且没有在nulllist里
-            logger.info("开始调用函数发送" + filename);
-            resp = resp.concat("\n[CQ:image,file=base64://" + filename + "]");
         }
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);

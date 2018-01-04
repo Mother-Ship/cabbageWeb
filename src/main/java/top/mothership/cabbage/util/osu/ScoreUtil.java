@@ -221,6 +221,7 @@ public class ScoreUtil {
             Koohii.Map map = new Koohii.Parser().map(in);
             Koohii.DiffCalc stars = new Koohii.DiffCalc().calc(map, score.getEnabledMods());
             Koohii.PPv2Parameters p = new Koohii.PPv2Parameters();
+
             p.beatmap = map;
             p.aim_stars = stars.aim;
             p.speed_stars = stars.speed;
@@ -238,7 +239,6 @@ public class ScoreUtil {
             //APPLY_AR OD CS HP是1 2 4 8，把flag改成15好像就会 四维都进行计算？
             mapstats = Koohii.mods_apply(score.getEnabledMods(), mapstats, 15);
             Koohii.PPv2 pp = new Koohii.PPv2(p);
-
             return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
                     //Java实现如果出错会抛出异常，象征性给个0和null
                     0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
@@ -263,6 +263,10 @@ public class ScoreUtil {
      * @return the integer
      */
     public Integer convertScoreV1ToV2(Score score, Beatmap beatmap) {
+        return 0;
+    }
+
+    public Integer calcNoneXScore(Beatmap beatmap) {
         return 0;
     }
 }

@@ -11,39 +11,40 @@ import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 //比赛打完了 这个类也用不着了
-//@Component
+@Component
 public class Analyze {
     private final ApiManager apiManager;
     private final CqManager cqManager;
     private final ScoreUtil scoreUtil;
     private final ScoreDAO scoreDAO;
-    List<Integer> targetUser = Arrays.asList(7839397, 6678196, 6253301, 7183040,9314367, 7534323);
-    List<Integer> targetMapR3 = Arrays.asList(199535, 556638, 183460, 758189, 1236367,
-            977450, 119853,
-            834589, 982793,
-            335299, 127313, 274365,
-            853094, 582773, 1043393, 202217,
-            368845);
+    List<Integer> targetUser = Arrays.asList(954557, 434479, 1243669, 2043341, 1634748, 5791401, 245276, 418699);
+    List<Integer> targetMapR3 = Arrays.asList(1220408, 1311241, 1281079, 804828, 1294885, 1301043, 951818,
+            1329559, 942050, 854741, 1177700,
+            392220, 1398810, 1203968, 1160295,
+            1295867, 1095875, 89229,
+            801841, 1410075, 427962, 1003915, 328523,
+            1386449,
+            1372384, 1291532, 289318, 178721, 1065689);
     private CqMsg cqMsg = new CqMsg();
 
-//    @Autowired
+    @Autowired
     public Analyze(ApiManager apiManager, CqManager cqManager, ScoreUtil scoreUtil, ScoreDAO scoreDAO) {
         this.apiManager = apiManager;
         this.cqManager = cqManager;
         this.scoreUtil = scoreUtil;
         this.scoreDAO = scoreDAO;
 
-        cqMsg.setMessageType("private");
+        cqMsg.setMessageType("group");
+//        cqMsg.setMessageType("private");
     }
 
-//    @Scheduled(cron = "0 * * * * ? ")
+    @Scheduled(cron = "0 * * * * ? ")
     public void analyze() {
-        cqMsg.setUserId(1335734657L);
+//        cqMsg.setUserId(1335734657L);
+        cqMsg.setGroupId(692339245L);
         for (Integer aList : targetUser) {
             for (Integer bList : targetMapR3) {
                 //对每个bid
