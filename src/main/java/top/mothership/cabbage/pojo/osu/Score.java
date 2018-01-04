@@ -4,6 +4,10 @@ import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
 import java.util.Date;
+
+/**
+ * The type Score.
+ */
 @Data
 public class Score {
     //仅用于get_user_best,其他API没有
@@ -23,16 +27,16 @@ public class Score {
     private Integer bpId;
     private Long score;
 @SerializedName("maxcombo")
-    private Integer maxCombo;
+private Integer maxCombo;
     private Integer count50;
     private Integer count100;
     private Integer count300;
 @SerializedName("countmiss")
-    private Integer countMiss;
+private Integer countMiss;
 @SerializedName("countkatu")
-    private Integer countKatu;
+private Integer countKatu;
 @SerializedName("countgeki")
-    private Integer countGeki;
+private Integer countGeki;
     private Integer perfect;
     private Integer enabledMods;
     private Date date;
