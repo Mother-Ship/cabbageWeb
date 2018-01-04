@@ -41,7 +41,7 @@ public class Analyze {
 //        cqMsg.setMessageType("private");
     }
 
-    @Scheduled(cron = "0 * * * * ? ")
+    @Scheduled(cron = "0 0/5 * * * ? ")
     public void analyze() {
 //        cqMsg.setUserId(1335734657L);
         cqMsg.setGroupId(692339245L);
