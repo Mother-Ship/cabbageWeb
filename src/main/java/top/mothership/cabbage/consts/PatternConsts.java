@@ -37,7 +37,7 @@ public class PatternConsts {
     /**
      * !add/!del专用……
      */
-    public final static Pattern CHART_ADMIN_CMD_REGEX = Pattern.compile("[!！]([^ ]*)[ ]?(.*)#(.*)");
+    public final static Pattern CHART_ADMIN_CMD_REGEX = Pattern.compile("[!！]([^ ]*)[ ]?([^#]*)#?(.*)");
     /**
      * MP系列命令,和sudo一样
      */

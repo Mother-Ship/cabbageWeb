@@ -22,7 +22,9 @@ public class Userinfo {
     private float level;
     private int ppRank;
     private int countRankSs;
+    private int countRankSsh;
     private int countRankS;
+    private int countRankSh;
     private int countRankA;
     private LocalDate queryDate;
 
