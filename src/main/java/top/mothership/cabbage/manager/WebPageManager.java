@@ -708,7 +708,6 @@ public class WebPageManager {
         Document doc = null;
         while (retry < 5) {
             try {
-                logger.info("正在获取" + uid + "的新官网S、SS数据");
                 doc = Jsoup.connect(osuNewOfficalWebsiteURL + uid).timeout((int) Math.pow(2, retry + 1) * 1000).get();
                 break;
             } catch (IOException e) {

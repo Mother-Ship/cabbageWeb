@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.ScoreDAO;
+import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
@@ -20,6 +21,7 @@ public class Analyze {
     private final CqManager cqManager;
     private final ScoreUtil scoreUtil;
     private final ScoreDAO scoreDAO;
+    private final UserDAO userDAO;
     List<Integer> targetUser = Arrays.asList(954557, 434479, 1243669, 2043341, 1634748, 5791401, 245276, 418699);
     List<Integer> targetMapR3 = Arrays.asList(1220408, 1311241, 1281079, 804828, 1294885, 1301043, 951818,
             1329559, 942050, 854741, 1177700,
@@ -31,11 +33,12 @@ public class Analyze {
     private CqMsg cqMsg = new CqMsg();
 
     @Autowired
-    public Analyze(ApiManager apiManager, CqManager cqManager, ScoreUtil scoreUtil, ScoreDAO scoreDAO) {
+    public Analyze(ApiManager apiManager, CqManager cqManager, ScoreUtil scoreUtil, ScoreDAO scoreDAO, UserDAO userDAO) {
         this.apiManager = apiManager;
         this.cqManager = cqManager;
         this.scoreUtil = scoreUtil;
         this.scoreDAO = scoreDAO;
+        this.userDAO = userDAO;
 
         cqMsg.setMessageType("group");
 //        cqMsg.setMessageType("private");
@@ -55,7 +58,7 @@ public class Analyze {
                     continue;
                 }
                 Beatmap beatmap = apiManager.getBeatmap(bList);
-                String username = apiManager.getUser(null, aList).getUserName();
+                String username = userDAO.getUser(null, aList).getCurrentUname();
                 if (tmp.size() != lastTmp.size()) {
                     for (int i = 0; i < tmp.size(); i++) {
                         //在原有成绩的范畴内
