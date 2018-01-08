@@ -189,8 +189,9 @@ public class ScoreUtil {
      */
     public String genScoreString(Score score, Beatmap beatmap, String username) {
         OppaiResult oppaiResult = calcPP(score, beatmap);
-        String resp = "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
-                + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId() + "\n"
+        String resp = "官网链接：https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
+                + "血猫链接：（不保证有效）http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId() + "\n"
+                + "inso链接：http://inso.link/yukiho/?m=" + beatmap.getBeatmapSetId() + "\n"
                 + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n"
                 + score.getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，" + score.getCountMiss() + "*miss , "
                 + convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
@@ -200,7 +201,7 @@ public class ScoreUtil {
         if (oppaiResult != null) {
             resp += "，" + String.valueOf(Math.round(oppaiResult.getPp())) + "PP\n";
         }
-        resp += "Played by " + username + ", " + DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(score.getDate().toInstant()) + ", ";
+        resp += "Played by " + username + ", " + DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(score.getDate().toInstant());
         return resp;
     }
 

@@ -36,7 +36,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1", produces = {"application/json;charset=UTF-8"})
-public class UserController {
+public class ApiController {
     private final UserServiceImpl userService;
     private Logger logger = LogManager.getLogger(this.getClass());
     private final UserInfoDAO userInfoDAO;
@@ -47,7 +47,7 @@ public class UserController {
     private final WebPageManager webPageManager;
 
     @Autowired
-    public UserController(UserServiceImpl userService, UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, CqServiceImpl cqService, RoleUtil roleUtil, WebPageManager webPageManager) {
+    public ApiController(UserServiceImpl userService, UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, CqServiceImpl cqService, RoleUtil roleUtil, WebPageManager webPageManager) {
         this.userService = userService;
         this.userInfoDAO = userInfoDAO;
         this.apiManager = apiManager;
