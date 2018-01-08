@@ -788,7 +788,9 @@ public class CqServiceImpl {
             }
             String filename = imgUtil.drawBeatmap(beatmap, searchParam.getMods());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
-                    + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")" + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId());
+                    + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")"
+                    + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId()
+                    + "\n" + "http://inso.link/yukiho/?m=" + beatmap.getBeatmapSetId());
         }
         cqManager.sendMsg(cqMsg);
 
