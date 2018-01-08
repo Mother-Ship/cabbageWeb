@@ -121,4 +121,6 @@ public class PatternConsts {
      * 从新官网的页面中取出SH和XH的数字
      */
     public final static Pattern NEW_WEBSITE_XH_SH = Pattern.compile("\"scoreRanks\":\\{\"XH\":(\\d*),\"SH\":(\\d*),\"X\":(\\d*),\"S\":(\\d*),\"A\":(\\d*)}}");
+
+    public final static Pattern ANALYZE_BID_PARAM = Pattern.compile("[!！]([^ ]*)[ ]?(\\d*)");
 }

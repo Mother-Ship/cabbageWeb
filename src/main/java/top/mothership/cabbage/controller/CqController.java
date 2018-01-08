@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
+import top.mothership.cabbage.serviceImpl.AnalyzeServiceImpl;
 import top.mothership.cabbage.serviceImpl.CqAdminServiceImpl;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
 import top.mothership.cabbage.serviceImpl.MpServiceImpl;
@@ -33,24 +34,26 @@ public class CqController {
     private final CqAdminServiceImpl cqAdminService;
     private final MpServiceImpl mpService;
     private final CqManager cqManager;
+    private final AnalyzeServiceImpl analyzeService;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     /**
      * Spring构造方法自动注入
-     *  @param cqService      Service层
+     * @param cqService      Service层
      * @param smokeUtil      负责禁言的工具类
      * @param cqAdminService
      * @param mpService
      * @param cqManager
+     * @param analyzeService
      */
     @Autowired
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, MpServiceImpl mpService, CqManager cqManager) {
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, MpServiceImpl mpService, CqManager cqManager, AnalyzeServiceImpl analyzeService) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
         this.cqAdminService = cqAdminService;
         this.mpService = mpService;
         this.cqManager = cqManager;
-
+        this.analyzeService = analyzeService;
     }
 
     /**
@@ -332,6 +335,29 @@ public class CqController {
                                 case "prs":
                                     cqService.recentPassed(cqMsg);
                                     break;
+                                case "addmap":
+                                    analyzeService.addTargetMap(cqMsg);
+                                    break;
+                                case "delmap":
+                                    analyzeService.delTargetMap(cqMsg);
+                                    break;
+                                case "delallmap":
+                                    analyzeService.delAllTargetMap(cqMsg);
+                                    break;
+                                case "listmap":
+                                    analyzeService.listTargetMap(cqMsg);
+                                    break;
+                                case "adduser":
+                                    analyzeService.addTargetUser(cqMsg);
+                                    break;
+                                case "deluser":
+                                    analyzeService.delTargetUser(cqMsg);
+                                    break;
+                                case "delalluser":
+                                    analyzeService.delAllTargetUser(cqMsg);
+                                    break;
+                                case "listuser":
+                                    analyzeService.listTargetUser(cqMsg);
                                 default:
                                     break;
 
