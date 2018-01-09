@@ -407,7 +407,7 @@ public class CqServiceImpl {
     }
 
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
-    @GroupRoleControl(banned = {112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void printSpecifiedBP(CqMsg cqMsg) {
         String username;
         Userinfo userFromAPI = null;
@@ -702,7 +702,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupRoleControl(banned = {112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void myScore(CqMsg cqMsg) {
         SearchParam searchParam = parseSearchKeyword(cqMsg);
         if (searchParam == null) {
@@ -763,7 +763,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupRoleControl(banned = {112177148L, 677545541L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void search(CqMsg cqMsg) {
         SearchParam searchParam = parseSearchKeyword(cqMsg);
         if (searchParam == null) {
@@ -1376,6 +1376,7 @@ public class CqServiceImpl {
         return new double[]{avgY - (Oxy / Ox2) * avgX, Oxy / Ox2};
     }
 
+    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void changeLog(CqMsg cqMsg) {
         String resp = "2018-1-9" +
                 "\n*新增 现在支持BonusPP计算；命令为!bns xxx 以及!mybns。\n感谢https://github.com/RoanH/osu-BonusPP项目。" +
