@@ -1211,6 +1211,179 @@ public class CqServiceImpl {
         }
 
     }
+
+    public void getBonusPP(CqMsg cqMsg) {
+        String username;
+        Userinfo userFromAPI = null;
+        User user;
+        int num = 0;
+        boolean text = true;
+        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        m.find();
+        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+            case "bns":
+                username = m.group(2);
+                //处理彩蛋
+                if ("白菜".equals(username)) {
+                    cqMsg.setMessage("你以为会有彩蛋吗x");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                userFromAPI = apiManager.getUser(username, null);
+                if (userFromAPI == null) {
+                    cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                if (userFromAPI.getUserId() == 3) {
+                    cqMsg.setMessage("我懒得想彩蛋x");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                user = userDAO.getUser(null, userFromAPI.getUserId());
+                if (user == null) {
+                    logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
+                    //构造User对象写入数据库
+                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
+                    userDAO.addUser(user);
+                    if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
+                        userFromAPI.setQueryDate(LocalDate.now());
+                    } else {
+                        userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+                    }
+                    //写入一行userinfo
+                    userInfoDAO.addUserInfo(userFromAPI);
+                }
+                if (user.isBanned()) {
+                    cqMsg.setMessage("……期待你回来的那一天。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+
+                break;
+            case "mybns":
+                user = userDAO.getUser(cqMsg.getUserId(), null);
+                if (user == null) {
+                    cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                if (user.isBanned()) {
+                    cqMsg.setMessage("……期待你回来的那一天。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                userFromAPI = apiManager.getUser(null, user.getUserId());
+                if (userFromAPI == null) {
+                    cqMsg.setMessage("没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
+        //获取页面：getuser
+        List<Score> bps = apiManager.getBP(userFromAPI.getUserName(), null);
+
+        double scorepp = calculateScorePP(bps);
+        Float totalpp = userFromAPI.getPpRaw();
+        double bonuspp = totalpp - scorepp;
+
+        int scoreCount = ((int) (Math.log10(-(bonuspp / 416.6667D) + 1.0D) / Math.log10(0.9994D)));
+        String scoreCountS = (scoreCount == 0 && bonuspp > 0.0D) ? "25397+" : String.valueOf(scoreCount);
+        String resp = "玩家" + userFromAPI.getUserName() + "的BonusPP为：" + new DecimalFormat("#0.00").format(bonuspp)
+                + "\n计算出的ScorePP（所有成绩提供的PP）为：" + new DecimalFormat("#0.00").format(scorepp)
+                + "\n总PP为：" + new DecimalFormat("#0.00").format(userFromAPI.getPpRaw())
+                + "\n计算出的总成绩数为：" + scoreCountS
+                + "\n改造自https://github.com/RoanH/osu-BonusPP项目。";
+
+        cqMsg.setMessage(resp);
+        cqManager.sendMsg(cqMsg);
+        return;
+    }
+
+    /**
+     * 尝试计算非Bonus PP
+     *
+     * @param s The list of the player's top 100 scores
+     * @return The amount of non-bonus PP this player has
+     */
+    private double calculateScorePP(List<Score> s) {
+        double scorepp = 0.0D;
+        for (int i = 0; i < s.size(); i++) {
+            scorepp += s.get(i).getPp() * Math.pow(0.95D, i);
+        }
+        return scorepp + extraPolatePPRemainder(s);
+    }
+
+    /**
+     * 计算BP外的PP，Top玩家可能这个值非常大，如果BP数目不到100返回0
+     *
+     * @param s The list of the player's top scores
+     * @return The amount of PP the player has from non-top-100 scores
+     */
+    private double extraPolatePPRemainder(List<Score> s) {
+        if (s.size() < 100) {
+            return 0D;
+        }
+        double[] b = calculateLinearRegression(s);
+        double n = s.size() + 1;
+        double pp = 0D;
+        while (true) {
+            double val = (b[0] + b[1] * n) * Math.pow(0.95D, n);
+            if (val < 0D) {
+                break;
+            }
+            pp += val;
+            n++;
+        }
+        return pp;
+    }
+
+    /**
+     * 用线性回归等式推断BP外的成绩
+     * <pre>
+     * The following formulas are used:
+     * B1 = Ox,y / Ox^2
+     * B0 = Uy - B1 * Ux
+     * Ox,y = (1/N) * 'sigma(N,i=1)'((Xi - Ux)(Yi - Uy))
+     * Ox^2 = (1/N) * 'sigma(N,i=1)'((Xi - U)^2)
+     * </pre>
+     *
+     * @param s 前100BP
+     * @return 线性回归方程的两个参数： y = b0 + b1 * x
+     */
+    private double[] calculateLinearRegression(List<Score> s) {
+        double sumOxy = 0.0D;
+        double sumOx2 = 0.0D;
+        double avgX = 0.0D;
+        double avgY = 0.0D;
+        for (Score score : s) {
+            avgX++;
+            avgY += score.getPp();
+        }
+        avgX = avgX / s.size();
+        avgY = avgY / s.size();
+        double n = 0;
+        for (Score sc : s) {
+            sumOxy += (n - avgX) * (sc.getPp() - avgY);
+            sumOx2 += Math.pow(n - avgX, 2.0D);
+            n++;
+        }
+        double Oxy = sumOxy / s.size();
+        double Ox2 = sumOx2 / s.size();
+        return new double[]{avgY - (Oxy / Ox2) * avgX, Oxy / Ox2};
+    }
+
+    public void changeLog(CqMsg cqMsg) {
+        String resp = "2018-1-9" +
+                "\n*新增 现在支持BonusPP计算；命令为!bns xxx 以及!mybns。\n感谢https://github.com/RoanH/osu-BonusPP项目。" +
+                "\n*新增 现在起以使用!changelog命令查看最近一次更新日志。";
+        cqMsg.setMessage(resp);
+        cqManager.sendMsg(cqMsg);
+    }
+
     @Scheduled(cron = "0 0 4 * * ?")
     public void importUserInfo() {
         //似乎每分钟并发也就600+，不需要加延迟……

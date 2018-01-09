@@ -358,6 +358,14 @@ public class CqController {
                                     break;
                                 case "listuser":
                                     analyzeService.listTargetUser(cqMsg);
+                                    break;
+                                case "bns":
+                                case "mybns":
+                                    cqService.getBonusPP(cqMsg);
+                                    break;
+                                case "changelog":
+                                    cqService.changeLog(cqMsg);
+                                    break;
                                 default:
                                     break;
 
