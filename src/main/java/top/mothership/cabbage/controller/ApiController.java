@@ -21,6 +21,7 @@ import top.mothership.cabbage.util.qq.ImgUtil;
 import top.mothership.cabbage.util.qq.RoleUtil;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -104,6 +105,7 @@ public class ApiController {
             return new Gson().toJson(new WebResponse<>(0, "success", user));
         }
     }
+
     @RequestMapping(value = "/stat/{uid}", method = RequestMethod.GET)
     @CrossOrigin(origins = "http://localhost")
     public void getStat(HttpServletResponse response, @PathVariable Integer uid) {
@@ -163,7 +165,11 @@ public class ApiController {
         //获取score rank
         //gust？
         if (userFromAPI.getUserId() == 1244312
+                //怕他
                 || userFromAPI.getUserId() == 6149313
+                //小飞菜
+                || userFromAPI.getUserId() == 3995056
+                //苏娜小苏娜
                 || userFromAPI.getUserId() == 3213720
                 //MFA
                 || userFromAPI.getUserId() == 6854920) {
@@ -179,7 +185,7 @@ public class ApiController {
             BufferedImage img = ImageIO.read(in);
             BufferedImage img2 = new BufferedImage(600, 288, BufferedImage.TYPE_INT_RGB);
             img2.getGraphics().drawImage(img.getScaledInstance(600, 288, Image.SCALE_SMOOTH), 0, 0, null);
-            ImageIO.write(img2, "png", out);
+            ImageIO.write(img2, "png", new MemoryCacheImageOutputStream(out));
             out.write(bytes);
         } catch (IOException ignore) {
 

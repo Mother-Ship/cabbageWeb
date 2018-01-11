@@ -290,7 +290,11 @@ public class CqServiceImpl {
         //获取score rank
         //gust？
         if (userFromAPI.getUserId() == 1244312
+                //怕他
                 || userFromAPI.getUserId() == 6149313
+                //小飞菜
+                || userFromAPI.getUserId() == 3995056
+                //苏娜小苏娜
                 || userFromAPI.getUserId() == 3213720
                 //MFA
                 || userFromAPI.getUserId() == 6854920) {
@@ -925,14 +929,67 @@ public class CqServiceImpl {
 
     public void welcomeNewsPaper(CqMsg cqMsg) {
         logger.info("开始处理" + cqMsg.getUserId() + "在" + cqMsg.getGroupId() + "群的加群请求");
-        String resp;
+        String resp = null;
         switch (String.valueOf(cqMsg.getGroupId())) {
             case "201872650":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp5。请修改一下你的群名片(包含完整osu! id)，并读一下置顶的群规。另外欢迎参加mp群系列活动Chart(详见公告)，成绩高者可以赢取奖励。";
-                break;
             case "564679329":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp4。请修改一下你的群名片(包含完整osu! id)，并读一下置顶的群规。另外欢迎参加mp群系列活动Chart(详见公告)，成绩高者可以赢取奖励。";
-                break;
+                String role = null;
+                Long chartGroupId = null;
+                switch (String.valueOf(cqMsg.getGroupId())) {
+                    case "201872650":
+                        role = "mp5";
+                        chartGroupId = 635731109L;
+                        resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp5。请修改一下你的群名片(包含完整osu! id)，并读一下置顶的群规。另外欢迎参加mp群系列活动Chart(详见公告)，成绩高者可以赢取奖励。";
+                        break;
+                    case "564679329":
+                        role = "mp4";
+                        chartGroupId = 517183331L;
+                        resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp4。请修改一下你的群名片(包含完整osu! id)，并读一下置顶的群规。另外欢迎参加mp群系列活动Chart(详见公告)，成绩高者可以赢取奖励。";
+                        break;
+                }
+                User user = userDAO.getUser(cqMsg.getUserId(), null);
+                if (user == null) {
+                    resp += "\n该玩家没有使用过白菜，请使用add命令手动添加。";
+                } else {
+                    String newRole;
+                    //拿到原先的user，把role拼上去，塞回去
+                    //如果当前的用户组是creep，就直接改成现有的组
+                    resp += "\n该玩家之前已使用过白菜。原有用户组为：" + user.getRole();
+                    if ("creep".equals(user.getRole())) {
+                        newRole = role;
+                    } else {
+                        //当用户不在想要添加的用户组的时候才添加 2017-11-27 20:45:20
+                        if (!Arrays.asList(user.getRole().split(",")).contains(role)) {
+                            newRole = user.getRole() + "," + role;
+                        } else {
+                            newRole = user.getRole();
+                        }
+
+                    }
+                    resp += "，修改后的用户组为：" + newRole;
+                    user.setRole(newRole);
+
+                    Userinfo userFromAPI = apiManager.getUser(null, user.getUserId());
+                    if (userFromAPI == null) {
+                        resp += "\n警告：从API获取绑定的玩家信息失败，已将被ban状态设为True；如果出现错误，请手动修改！";
+                        user.setBanned(true);
+                    } else if (user.isBanned()) {
+                        resp += "\n警告：凌晨录入数据时，该玩家为被ban状态。";
+                    } else {
+                        boolean near = false;
+                        Userinfo userInDB = userInfoDAO.getUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(1));
+                        if (userInDB == null) {
+                            userInDB = userInfoDAO.getNearestUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(1));
+                            near = true;
+                        }
+                        int scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
+                        String filename = imgUtil.drawUserInfo(userFromAPI, userInDB, role, 1, near, scoreRank);
+                        resp = resp.concat("\n[CQ:image,file=base64://" + filename + "]");
+                    }
+                    userDAO.updateUser(user);
+                }
+
+
             case "210342787":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp3。请修改一下你的群名片(包含完整osu! id)，并读一下置顶的群规。另外欢迎参加mp群系列活动Chart(详见公告)，成绩高者可以赢取奖励。";
                 break;
@@ -951,10 +1008,64 @@ public class CqServiceImpl {
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎加入本群。";
                 break;
         }
+
         cqMsg.setMessageType("group");
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
 
+    }
+
+    public void seeYouNextTime(CqMsg cqMsg) {
+        logger.info("开始处理" + cqMsg.getUserId() + "在" + cqMsg.getGroupId() + "群的褪裙信息");
+        String resp = null;
+        String role = null;
+        String newRole;
+        Long chartGroupId = null;
+        User user = userDAO.getUser(cqMsg.getUserId(), null);
+        //先判断群号
+        switch (String.valueOf(cqMsg.getGroupId())) {
+            case "201872650":
+                role = "mp5";
+                chartGroupId = 635731109L;
+                break;
+            case "564679329":
+                role = "mp4";
+                chartGroupId = 517183331L;
+                break;
+            default:
+                //只处理mp4 5的褪裙
+                return;
+        }
+        if (user == null) {
+            //褪裙的人没有用过白菜
+            resp = "检测到QQ为" + cqMsg.getUserId() + "的玩家退出" + role + "群；" +
+                    "该玩家没有使用过白菜。";
+        } else {
+            Userinfo userFromAPI = apiManager.getUser(null, user.getUserId());
+            List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
+            //2017-11-27 21:04:36 增强健壮性，只有在含有这个role的时候才进行移除
+            if (roles.contains(role)) {
+                roles.remove(role);
+            }
+            if (roles.size() == 0) {
+                newRole = "creep";
+            } else {
+                //转换为字符串，此处得去除空格（懒得遍历+拼接了）
+                //2017-12-6 14:24:25当时我为啥不用json……看起来好不优雅啊这样
+                newRole = roles.toString().replace(" ", "").
+                        substring(1, roles.toString().replace(" ", "").indexOf("]"));
+
+            }
+            user.setRole(newRole);
+            userDAO.updateUser(user);
+            resp = "检测到QQ为" + cqMsg.getUserId() + "的玩家退出" + role + "群；" +
+                    "已自动将玩家" + userFromAPI.getUserName() + "从" + role + "用户组中移除。";
+            resp += "\n修改后的用户组为：" + newRole;
+        }
+        cqMsg.setGroupId(chartGroupId);
+        cqMsg.setMessageType("group");
+        cqMsg.setMessage(resp);
+        cqManager.sendMsg(cqMsg);
     }
 
     @GroupRoleControl(allBanned = true)
@@ -1145,7 +1256,7 @@ public class CqServiceImpl {
             searchParam.setBeatmapId(Integer.valueOf(allNumberKeyword.group(1)));
             return searchParam;
         }
-
+        //新格式
 
         //比较菜，手动补齐参数
         if (!(keyword.endsWith("]") || keyword.endsWith(")") || keyword.endsWith("}"))) {
@@ -1166,18 +1277,16 @@ public class CqServiceImpl {
             return null;
         } else {
             //没啥办法……手动处理吧，这个正则管不了了，去掉可能存在的空格
-            String artist;
-            //横杠之前的artist（手动去空格）
+            String artist = getArtistTitleEtc.group(1);
             if (getArtistTitleEtc.group(1).endsWith(" ")) {
                 artist = getArtistTitleEtc.group(1).substring(0, getArtistTitleEtc.group(1).length() - 1);
-            } else {
-                artist = getArtistTitleEtc.group(1);
             }
-            String title;
+            String title = getArtistTitleEtc.group(2);
             if (getArtistTitleEtc.group(2).startsWith(" ")) {
                 title = getArtistTitleEtc.group(2).substring(1);
-            } else {
-                title = getArtistTitleEtc.group(2);
+            }
+            if (getArtistTitleEtc.group(2).endsWith(" ")) {
+                title = getArtistTitleEtc.group(2).substring(0, getArtistTitleEtc.group(2).length() - 1);
             }
             searchParam.setArtist(artist);
             searchParam.setTitle(title);
@@ -1378,9 +1487,10 @@ public class CqServiceImpl {
 
     @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void changeLog(CqMsg cqMsg) {
-        String resp = "2018-1-9" +
-                "\n*新增 现在支持BonusPP计算；命令为!bns xxx 以及!mybns。\n感谢https://github.com/RoanH/osu-BonusPP项目。" +
-                "\n*新增 现在起以使用!changelog命令查看最近一次更新日志。";
+        String resp = "2018-1-11" +
+                "\n*新增 Score Rank显示为1w名内的玩家，名额增加一名：Nyanodesu。" +
+                "\n*新增 现在起，新加入mp4/5的玩家如果使用过白菜，会自动添加对应用户组。" +
+                "\n*新增 现在起，当有人退出mp4/5群时，对应用户组将自动被清除。";
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
