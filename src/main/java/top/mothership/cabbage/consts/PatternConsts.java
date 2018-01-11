@@ -71,7 +71,7 @@ public class PatternConsts {
      */
     public final static Pattern OSU_SEARCH_KETWORD = Pattern.compile("^([^-]*)-[ ]?(.*)[ ]?\\[(.*)][ ]?\\((.*)\\)\\{(.*)}");
 
-
+    public final static Pattern OSU_SEARCH_KETWORD_SHELL = Pattern.compile("((?:-(a|t|d|m|ar|od|cs|hp)) ([^-]*)){1,8}");
     /**
      * osu!search功能用的带mod表达式
      */

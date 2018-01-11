@@ -380,6 +380,10 @@ public class CqController {
                     //新增人口
                     cqService.welcomeNewsPaper(cqMsg);
                 }
+                if ("group_decrease".equals(cqMsg.getEvent())) {
+                    //有人退群
+                    cqService.seeYouNextTime(cqMsg);
+                }
                 if ("group_admin".equals(cqMsg.getEvent())) {
                     //群管变动
                     smokeUtil.loadGroupAdmins();

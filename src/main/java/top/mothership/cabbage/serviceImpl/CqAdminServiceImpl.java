@@ -612,7 +612,7 @@ public class CqAdminServiceImpl {
     }
 
     public void listMsg(CqMsg cqMsg) {
-        Matcher m = PatternConsts.AT_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String resp = "";
         String QQ = m.group(2);
