@@ -201,7 +201,7 @@ public class ScoreUtil {
         if (oppaiResult != null) {
             resp += "，" + String.valueOf(Math.round(oppaiResult.getPp())) + "PP\n";
         }
-        resp += "Played by " + username + ", " + DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(score.getDate().toInstant());
+        resp += "Played by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(score.getDate().toInstant());
         return resp;
     }
 
