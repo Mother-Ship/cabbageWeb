@@ -1,5 +1,6 @@
 package top.mothership.cabbage.util.qq;
 
+import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +74,7 @@ public class SmokeUtil {
             //如果是开启禁言的群,并且该条触发了禁言
 
             if (repeatSmokeGroups.contains(String.valueOf(cqMsg.getGroupId())) && msgQueue.countRepeat() >= 6) {
+                logger.info("触发复读禁言，正在记录案发现场：" + new Gson().toJson(msgQueue.getRepeatList()));
                 if (groupAdmins.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())) {
                     logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
                     cqMsg.setMessage("[CQ:at,qq=" + cqManager.getOwner(cqMsg.getGroupId()) + "] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");

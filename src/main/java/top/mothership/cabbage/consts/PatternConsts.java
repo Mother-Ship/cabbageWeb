@@ -75,7 +75,7 @@ public class PatternConsts {
     /**
      * osu!search功能用的带mod表达式
      */
-    public final static Pattern OSU_SEARCH_MOD_REGEX = Pattern.compile("[!！]([^ ]*)[ ]?(.*)(?: \\+)(.*)");
+    public final static Pattern OSU_SEARCH_MOD_REGEX = Pattern.compile("[!！]([^ ]*)[ ]?(.*)(?:\\+| \\+)(.*)");
 
     /**
      * 取出四维

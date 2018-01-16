@@ -204,7 +204,7 @@ public class CqServiceImpl {
                     }
                     role = "creep";
                 } else if (user.isBanned()) {
-                    //当数据库查到该玩家，并且被ban时，从数据库里取出最新的一份userinfo伪造
+                    //当数据库查到该玩家，并且被ban时，从数据库里取出最新的一份userinfo，作为要展现的数据传给绘图类
                     userFromAPI = userInfoDAO.getNearestUserInfo(user.getUserId(), LocalDate.now());
                     //尝试补上当前用户名
                     if (user.getCurrentUname() != null) {
@@ -736,7 +736,8 @@ public class CqServiceImpl {
         }
         logger.info("开始处理" + userFromAPI.getUserName() + "进行的谱面搜索，关键词为：" + searchParam);
         if (beatmap == null) {
-            cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。");
+            cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。" +
+                    "\n请尝试根据解析出的结果，去掉关键词中的特殊符号……");
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -782,7 +783,8 @@ public class CqServiceImpl {
         logger.info("开始处理" + cqMsg.getUserId() + "进行的谱面搜索，关键词为：" + searchParam);
 
         if (beatmap == null) {
-            cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。");
+            cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。" +
+                    "\n请尝试根据解析出的结果，去掉关键词中的特殊符号……");
             cqManager.sendMsg(cqMsg);
             return;
         } else {
@@ -868,25 +870,14 @@ public class CqServiceImpl {
                     //拿到原先的user，把role拼上去，塞回去
                     //如果当前的用户组是creep，就直接改成现有的组
                     resp = "\n该用户之前已使用过白菜。原有用户组为：" + user.getRole();
-                    if ("creep".equals(user.getRole())) {
-                        newRole = role;
-                    } else {
-                        //当用户不在想要添加的用户组的时候才添加 2017-11-27 20:45:20
-                        if (!Arrays.asList(user.getRole().split(",")).contains(role)) {
-                            newRole = user.getRole() + "," + role;
-                        } else {
-                            newRole = user.getRole();
-                        }
-
-                    }
-                    resp += "，修改后的用户组为：" + newRole;
+                    user = roleUtil.addRole(role, user);
+                    resp += "，修改后的用户组为：" + user.getRole();
                     if (user.getQq().equals(0L)) {
                         user.setQq(qq);
                         resp += "\n绑定的QQ已登记为" + qq;
                     } else {
                         resp += "\n该玩家已经绑定了QQ：" + user.getQq() + "，没有做出修改。";
                     }
-                    user.setRole(newRole);
                     userDAO.updateUser(user);
                     int scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
                     filename = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank);
@@ -902,22 +893,8 @@ public class CqServiceImpl {
                     return;
                 } else {
                     resp = "已将玩家" + userFromAPI.getUserName() + "从" + role + "用户组中移除。";
-                    List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
-                    //2017-11-27 21:04:36 增强健壮性，只有在含有这个role的时候才进行移除
-                    if (roles.contains(role)) {
-                        roles.remove(role);
-                    }
-                    if (roles.size() == 0) {
-                        newRole = "creep";
-                    } else {
-                        //转换为字符串，此处得去除空格（懒得遍历+拼接了）
-                        //2017-12-6 14:24:25当时我为啥不用json……看起来好不优雅啊这样
-                        newRole = roles.toString().replace(" ", "").
-                                substring(1, roles.toString().replace(" ", "").indexOf("]"));
-
-                    }
-                    resp += "\n修改后的用户组为：" + newRole;
-                    user.setRole(newRole);
+                    user = roleUtil.delRole(role, user);
+                    resp += "\n修改后的用户组为：" + user.getRole();
                     userDAO.updateUser(user);
                     cqMsg.setMessage(resp);
                     cqManager.sendMsg(cqMsg);
@@ -971,10 +948,8 @@ public class CqServiceImpl {
 
                     Userinfo userFromAPI = apiManager.getUser(null, user.getUserId());
                     if (userFromAPI == null) {
-                        resp += "\n警告：从API获取绑定的玩家信息失败，已将被ban状态设为True；如果出现错误，请手动修改！";
+                        resp += "\n警告：从API获取绑定的玩家信息失败，已将被ban状态设为True；如果出现错误，请提醒我手动修改！";
                         user.setBanned(true);
-                    } else if (user.isBanned()) {
-                        resp += "\n警告：凌晨录入数据时，该玩家为被ban状态。";
                     } else {
                         boolean near = false;
                         Userinfo userInDB = userInfoDAO.getUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(1));
@@ -989,7 +964,7 @@ public class CqServiceImpl {
                     userDAO.updateUser(user);
                 }
 
-
+                break;
             case "210342787":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp3。请修改一下你的群名片(包含完整osu! id)，并读一下置顶的群规。另外欢迎参加mp群系列活动Chart(详见公告)，成绩高者可以赢取奖励。";
                 break;
@@ -1250,7 +1225,9 @@ public class CqServiceImpl {
             getKeyWordAndMod.find();
             keyword = getKeyWordAndMod.group(2);
         }
-
+        if (keyword.endsWith(" ")) {
+            keyword = keyword.substring(0, keyword.length() - 1);
+        }
         Matcher allNumberKeyword = PatternConsts.ALL_NUMBER_SEARCH_KEYWORD.matcher(keyword);
         if (allNumberKeyword.find()) {
             searchParam.setBeatmapId(Integer.valueOf(allNumberKeyword.group(1)));
@@ -1259,6 +1236,7 @@ public class CqServiceImpl {
         //新格式
 
         //比较菜，手动补齐参数
+
         if (!(keyword.endsWith("]") || keyword.endsWith(")") || keyword.endsWith("}"))) {
             //如果圆括号 方括号 花括号都没有
             keyword += "[](){}";
@@ -1278,15 +1256,15 @@ public class CqServiceImpl {
         } else {
             //没啥办法……手动处理吧，这个正则管不了了，去掉可能存在的空格
             String artist = getArtistTitleEtc.group(1);
-            if (getArtistTitleEtc.group(1).endsWith(" ")) {
-                artist = getArtistTitleEtc.group(1).substring(0, getArtistTitleEtc.group(1).length() - 1);
+            if (artist.endsWith(" ")) {
+                artist = artist.substring(0, artist.length() - 1);
             }
             String title = getArtistTitleEtc.group(2);
-            if (getArtistTitleEtc.group(2).startsWith(" ")) {
-                title = getArtistTitleEtc.group(2).substring(1);
+            if (title.startsWith(" ")) {
+                title = title.substring(1);
             }
-            if (getArtistTitleEtc.group(2).endsWith(" ")) {
-                title = getArtistTitleEtc.group(2).substring(0, getArtistTitleEtc.group(2).length() - 1);
+            if (title.endsWith(" ")) {
+                title = title.substring(0, title.length() - 1);
             }
             searchParam.setArtist(artist);
             searchParam.setTitle(title);
@@ -1406,7 +1384,6 @@ public class CqServiceImpl {
                 + "\n总PP为：" + new DecimalFormat("#0.00").format(userFromAPI.getPpRaw())
                 + "\n计算出的总成绩数为：" + scoreCountS
                 + "\n改造自https://github.com/RoanH/osu-BonusPP项目。";
-
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
         return;
@@ -1487,10 +1464,13 @@ public class CqServiceImpl {
 
     @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void changeLog(CqMsg cqMsg) {
-        String resp = "2018-1-11" +
-                "\n*新增 Score Rank显示为1w名内的玩家，名额增加一名：Nyanodesu。" +
-                "\n*新增 现在起，新加入mp4/5的玩家如果使用过白菜，会自动添加对应用户组。" +
-                "\n*新增 现在起，当有人退出mp4/5群时，对应用户组将自动被清除。";
+        String resp = "2018-1-16" +
+                "\n*修正 现在!sudo listMsg命令会根据不同的情况返回错误信息（而不是抛异常给我）。" +
+                "\n*修正 现在存储谱面BG图片的表加入了唯一索引。" +
+                "\n*修正 将添加/删除用户组的代码块抽出工具类，提高复用性。" +
+                "\n*修正 现在根据玩家名查询API时使用URL Encode（而不是之前的将空格替换为下划线），不会有名字奇怪的玩家用不了的情况了。" +
+                "\n*修正 现在!me/search bid +mod可以正常使用了……（我忘记去空格了x）" +
+                "\n*修正 现在禁言的案发现场日志已加入更多详情；如果出现误禁言的情况请联系我查看日志。\n";
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }

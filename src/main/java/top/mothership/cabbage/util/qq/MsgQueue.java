@@ -4,7 +4,6 @@ import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 
 /**
@@ -85,16 +84,31 @@ public class MsgQueue {
     }
     /**
      * 把消息列表转为ArrayList……当时为啥要写这个方法来着？
+     * 改成获取重复消息列表吧。
      * @return 消息列表
      */
-    public ArrayList<CqMsg> toArrayList() {
+    public ArrayList<CqMsg> getRepeatList() {
         ArrayList<CqMsg> result = new ArrayList<>();
+        //根据循环队列情况不同进行遍历
         if (start < end) {
-            result.addAll(Arrays.asList(msgs).subList(0, end));
+            for (int i = 0; i < end; i++) {
+                if (isThisRepeat(i)) {
+                    result.add(msgs[i]);
+                }
+            }
         } else {
-            result.addAll(Arrays.asList(msgs).subList(end, msgs.length));
-            result.addAll(Arrays.asList(msgs).subList(0, start - 1));
+            for (int i = end; i < msgs.length; i++) {
+                if (isThisRepeat(i)) {
+                    result.add(msgs[i]);
+                }
+            }
+            for (int i = 0; i < start - 1; i++) {
+                if (isThisRepeat(i)) {
+                    result.add(msgs[i]);
+                }
+            }
         }
+
         return result;
     }
 

@@ -27,6 +27,7 @@ import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 import top.mothership.cabbage.util.qq.MsgQueue;
+import top.mothership.cabbage.util.qq.RoleUtil;
 import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.imageio.ImageIO;
@@ -61,10 +62,11 @@ public class CqAdminServiceImpl {
     private final ImgUtil imgUtil;
     private static ResDAO resDAO;
     private final ScoreUtil scoreUtil;
+    private final RoleUtil roleUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
-    public CqAdminServiceImpl(CqManager cqManager, ApiManager apiManager, UserDAO userDAO, UserInfoDAO userInfoDAO, WebPageManager webPageManager, ImgUtil imgUtil, ResDAO resDAO, ScoreUtil scoreUtil) {
+    public CqAdminServiceImpl(CqManager cqManager, ApiManager apiManager, UserDAO userDAO, UserInfoDAO userInfoDAO, WebPageManager webPageManager, ImgUtil imgUtil, ResDAO resDAO, ScoreUtil scoreUtil, RoleUtil roleUtil) {
         this.cqManager = cqManager;
         this.apiManager = apiManager;
         this.userDAO = userDAO;
@@ -73,10 +75,14 @@ public class CqAdminServiceImpl {
         this.imgUtil = imgUtil;
         CqAdminServiceImpl.resDAO = resDAO;
         this.scoreUtil = scoreUtil;
+        this.roleUtil = roleUtil;
         loadCache();
     }
 
-    //其实好像没必要做成静态的了……？但是静态的似乎也没啥影响，先留着吧
+    /**
+     * 从数据库一口气读取所有图片素材文件的方法。
+     * 其实好像没必要做成静态的了……？但是静态的似乎也没啥影响，先留着吧
+     */
     private static void loadCache() {
         //调用NIO遍历那些可以加载一次的文件
         //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
@@ -104,8 +110,7 @@ public class CqAdminServiceImpl {
         List<String> nullList = new ArrayList<>();
         List<String> doneList = new ArrayList<>();
         List<String> addList = new ArrayList<>();
-        Userinfo userFromAPI = null;
-        String filename = null;
+        Userinfo userFromAPI;
         for (String username : usernames) {
             logger.info("开始从API获取" + username + "的信息");
             userFromAPI = apiManager.getUser(username, null);
@@ -132,20 +137,7 @@ public class CqAdminServiceImpl {
                     //进行Role更新
                     User user = userDAO.getUser(null, userFromAPI.getUserId());
                     //拿到原先的user，把role拼上去，塞回去
-                    String newRole;
-                    //如果当前的用户组是creep，就直接改成现有的组
-                    if ("creep".equals(user.getRole())) {
-                        newRole = role;
-                    } else {
-                        //当用户不在想要添加的用户组的时候才添加 2017-11-27 20:45:20
-                        if (!Arrays.asList(user.getRole().split(",")).contains(role)) {
-                            newRole = user.getRole() + "," + role;
-                        } else {
-                            newRole = user.getRole();
-                        }
-
-                    }
-                    user.setRole(newRole);
+                    user = roleUtil.addRole(role, user);
                     userDAO.updateUser(user);
                     doneList.add(userFromAPI.getUserName());
                 }
@@ -208,24 +200,8 @@ public class CqAdminServiceImpl {
                     //直接忽略掉下面的，进行下一次循环
                     continue;
                 }
-                //拿到原先的user，把role去掉
-                String newRole;
-                //这里如果不把Arrays.asList传入构造函数，而是直接使用会有个Unsupported异常
-                //因为Arrays.asList做出的List是不可变的
-                List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
-                //2017-11-27 21:04:36 增强健壮性，只有在含有这个role的时候才进行移除
-                if (roles.contains(role)) {
-                    roles.remove(role);
-                }
-                if ("all".equals(role) || roles.size() == 0) {
-                    newRole = "creep";
-                } else {
-                    //转换为字符串，此处得去除空格（懒得遍历+拼接了）
-                    newRole = roles.toString().replace(" ", "").
-                            substring(1, roles.toString().replace(" ", "").indexOf("]"));
-                }
                 lastUserOldRole = user.getRole();
-                user.setRole(newRole);
+                user = roleUtil.delRole(role, user);
                 userDAO.updateUser(user);
                 doneList.add(userFromAPI.getUserName());
             } else {
@@ -614,45 +590,59 @@ public class CqAdminServiceImpl {
     public void listMsg(CqMsg cqMsg) {
         Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
-        String resp = "";
+        StringBuilder resp = new StringBuilder();
         String QQ = m.group(2);
         Matcher atMatcher = PatternConsts.AT_REGEX.matcher(cqMsg.getMessage());
         if (atMatcher.find()) {
             QQ = atMatcher.group(1);
         }
         if ("all".equals(QQ)) {
-            resp = "啥玩意啊 咋回事啊";
+            resp = new StringBuilder("啥玩意啊 咋回事啊");
         } else {
-            ArrayList<CqMsg> msgs = SmokeUtil.msgQueues.get(cqMsg.getGroupId()).getMsgsByQQ(Long.valueOf(QQ));
-            QQInfo data = cqManager.getGroupMember(cqMsg.getGroupId(), Long.valueOf(QQ)).getData();
+            MsgQueue msgQueue = SmokeUtil.msgQueues.get(cqMsg.getGroupId());
+            if (msgQueue == null) {
+                resp = new StringBuilder("获取群" + cqMsg.getGroupId() + "的消息列表失败；请重启Tomcat");
+                cqMsg.setMessage(resp.toString());
+                cqManager.sendMsg(cqMsg);
+                return;
+            }
+            ArrayList<CqMsg> msgs = msgQueue.getMsgsByQQ(Long.valueOf(QQ));
+            CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(cqMsg.getGroupId(), Long.valueOf(QQ));
+            if (cqResponse.getData() == null) {
+                resp = new StringBuilder("获取" + QQ + "的详细信息失败。请尝试再次使用命令。");
+                cqMsg.setMessage(resp.toString());
+                cqManager.sendMsg(cqMsg);
+                return;
+            }
+            QQInfo data = cqResponse.getData();
             if (msgs.size() == 0) {
-                resp = "没有" + QQ + "的最近消息。";
+                resp = new StringBuilder("没有" + QQ + "的最近消息。");
             } else if (msgs.size() <= 10) {
                 for (int i = 0; i < msgs.size(); i++) {
                     if ("".equals(data.getCard())) {
-                        resp += data.getNickname();
+                        resp.append(data.getNickname());
                     } else {
-                        resp += data.getCard();
+                        resp.append(data.getCard());
                     }
 
-                    resp += "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
-                            format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n";
+                    resp.append("(").append(QQ).append(") ").append(new SimpleDateFormat("HH:mm:ss").
+                            format(new Date(msgs.get(i).getTime() * 1000L))).append("\n  ").append(msgs.get(i).getMessage()).append("\n");
                 }
             } else {
                 for (int i = msgs.size() - 10; i < msgs.size(); i++) {
                     if ("".equals(data.getCard())) {
-                        resp += data.getNickname();
+                        resp.append(data.getNickname());
                     } else {
-                        resp += data.getCard();
+                        resp.append(data.getCard());
                     }
 
-                    resp += "<" + QQ + "> " + new SimpleDateFormat("HH:mm:ss").
-                            format(new Date(msgs.get(i).getTime() * 1000L)) + "\n  " + msgs.get(i).getMessage() + "\n";
+                    resp.append("(").append(QQ).append(") ").append(new SimpleDateFormat("HH:mm:ss").
+                            format(new Date(msgs.get(i).getTime() * 1000L))).append("\n  ").append(msgs.get(i).getMessage()).append("\n");
 
                 }
             }
         }
-        cqMsg.setMessage(resp);
+        cqMsg.setMessage(resp.toString());
         cqManager.sendMsg(cqMsg);
     }
 

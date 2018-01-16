@@ -3,6 +3,9 @@ package top.mothership.cabbage.manager;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.List;
 
 @Component
@@ -134,13 +138,15 @@ public class ApiManager {
         String failLog;
         String output = null;
         HttpURLConnection httpConnection;
+        List<NameValuePair> params = new LinkedList<>();
+        params.add(new BasicNameValuePair("u", uid));
         switch (apiType) {
             case "user":
-                URL = getUserURL + "?k=" + key + "&type=" + uidType + "&u=" + uid.replaceAll(" ", "_");
+                URL = getUserURL + "?k=" + key + "&type=" + uidType + "&" + URLEncodedUtils.format(params, "utf-8");
                 failLog = "玩家" + uid + "请求API：get_user失败五次";
                 break;
             case "bp":
-                URL = getBPURL + "?k=" + key + "&type=" + uidType + "&limit=100&u=" + uid.replaceAll(" ", "_");
+                URL = getBPURL + "?k=" + key + "&type=" + uidType + "&limit=100&" + URLEncodedUtils.format(params, "utf-8");
                 failLog = "玩家" + uid + "请求API：get_user_best失败五次";
                 break;
             case "beatmap":
@@ -152,11 +158,11 @@ public class ApiManager {
                 failLog = "谱面" + bid + "请求API：get_beatmaps失败五次";
                 break;
             case "recent":
-                URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=1&u=" + uid.replaceAll(" ", "_");
+                URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=1&" + URLEncodedUtils.format(params, "utf-8");
                 failLog = "玩家" + uid + "请求API：get_recent失败五次";
                 break;
             case "recents":
-                URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=100&u=" + uid.replaceAll(" ", "_");
+                URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=100&" + URLEncodedUtils.format(params, "utf-8");
                 failLog = "玩家" + uid + "请求API：get_recent失败五次";
                 break;
             case "first":

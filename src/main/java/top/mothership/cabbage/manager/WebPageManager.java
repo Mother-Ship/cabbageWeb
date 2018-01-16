@@ -284,6 +284,9 @@ public class WebPageManager {
                 }
                 //读取返回结果
                 bg = ImageIO.read(httpConnection.getInputStream());
+                if (bg == null) {
+                    return null;
+                }
                 Matcher m = PatternConsts.DOWNLOAD_FILENAME_REGEX
                         .matcher(httpConnection.getHeaderFields().get("Content-Disposition").get(0));
                 m.find();
