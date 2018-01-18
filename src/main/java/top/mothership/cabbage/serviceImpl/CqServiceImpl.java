@@ -1464,13 +1464,9 @@ public class CqServiceImpl {
 
     @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void changeLog(CqMsg cqMsg) {
-        String resp = "2018-1-16" +
-                "\n*修正 现在!sudo listMsg命令会根据不同的情况返回错误信息（而不是抛异常给我）。" +
-                "\n*修正 现在存储谱面BG图片的表加入了唯一索引。" +
-                "\n*修正 将添加/删除用户组的代码块抽出工具类，提高复用性。" +
-                "\n*修正 现在根据玩家名查询API时使用URL Encode（而不是之前的将空格替换为下划线），不会有名字奇怪的玩家用不了的情况了。" +
-                "\n*修正 现在!me/search bid +mod可以正常使用了……（我忘记去空格了x）" +
-                "\n*修正 现在禁言的案发现场日志已加入更多详情；如果出现误禁言的情况请联系我查看日志。\n";
+        String resp = "2018-1-17" +
+                "\n*修正 现在/userinfo的API只支持uid（虽然其实没啥区别，即使指定为uid，ppy依然会去搜索id。）" +
+                "\n*新增 加入/userinfo/nearest/uid的API；获取数据库中距离今天最近的一条记录。";
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
