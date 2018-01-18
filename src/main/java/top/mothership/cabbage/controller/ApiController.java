@@ -64,11 +64,11 @@ public class ApiController {
         return null;
     }
 
-    @RequestMapping(value = "/userinfo/{username}", method = RequestMethod.GET)
-    public String userInfo(@PathVariable String username, @RequestParam("start") @DateTimeFormat(pattern = "yyyyMMdd") LocalDate start,
+    @RequestMapping(value = "/userinfo/{uid}", method = RequestMethod.GET)
+    public String userInfo(@PathVariable Integer uid, @RequestParam("start") @DateTimeFormat(pattern = "yyyyMMdd") LocalDate start,
                            @RequestParam("limit") int limit) {
         //去osu api验证用户名是否存在
-        Userinfo now = apiManager.getUser(username, null);
+        Userinfo now = apiManager.getUser(null, uid);
         if (now == null) {
             return new Gson().toJson(new WebResponse<>(1, "user not found", null));
         }
@@ -82,7 +82,8 @@ public class ApiController {
             return new Gson().toJson(new WebResponse<>(3, "start date is too early", earliest.getQueryDate()));
         }
         //判断最早的记录+传入的天数是否比今天晚
-        if (start.plusDays(limit - 1).isAfter(LocalDate.now())) {
+        //这里不必-1，否则传入当天日期会返回0+null
+        if (start.plusDays(limit).isAfter(LocalDate.now())) {
             return new Gson().toJson(new WebResponse<>(4, "end date is too late", null));
         }
         List<Userinfo> list = new ArrayList<>();
@@ -95,6 +96,7 @@ public class ApiController {
     }
 
     @RequestMapping(value = "/user/qq/{qq}", method = RequestMethod.GET)
+    @CrossOrigin(origins = "http://localhost")
     public String userRole(@PathVariable Long qq) {
         User user = userDAO.getUser(qq, null);
         if (user == null) {
@@ -191,6 +193,18 @@ public class ApiController {
 
         }
     }
+
+    @RequestMapping(value = "/userinfo/nearest/{uid}", method = RequestMethod.GET)
+    @CrossOrigin(origins = "http://localhost")
+    public String nearestUserInfo(@PathVariable Integer uid) {
+        Userinfo userInDB = userInfoDAO.getNearestUserInfo(uid, LocalDate.now().minusDays(1));
+        if (userInDB == null) {
+            return new Gson().toJson(new WebResponse<>(1, "user not registered", null));
+        }
+        return new Gson().toJson(new WebResponse<>(0, "ok", userInDB));
+    }
+
+
 //    @RequestMapping(value = "/upload",method = RequestMethod.POST)
 //    @CrossOrigin(origins = "http://localhost")
 //    public String upload(@RequestParam(value = "myfile") MultipartFile file) throws Exception {
