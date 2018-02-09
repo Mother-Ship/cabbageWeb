@@ -1,15 +1,69 @@
-package top.mothership.cabbage.util.qq;
+package top.mothership.cabbage.util.osu;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.manager.ApiManager;
+import top.mothership.cabbage.mapper.UserDAO;
+import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 @Component
-public class RoleUtil {
+public class UserUtil {
+    private final UserInfoDAO userInfoDAO;
+    private final UserDAO userDAO;
+    private final ApiManager apiManager;
+    private Logger logger = LogManager.getLogger(this.getClass());
+
+    @Autowired
+    public UserUtil(UserInfoDAO userInfoDAO, UserDAO userDAO, ApiManager apiManager) {
+        this.userInfoDAO = userInfoDAO;
+        this.userDAO = userDAO;
+        this.apiManager = apiManager;
+    }
+
+    public void registerUser(Integer userId, Integer mode) {
+        //构造User对象写入数据库，如果指定了mode就使用指定mode
+        Userinfo userFromAPI = null;
+        for (int i = 0; i < 4; i++) {
+            userFromAPI = apiManager.getUser(i, userId);
+            if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
+                userFromAPI.setQueryDate(LocalDate.now());
+            } else {
+                userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+            }
+            //写入一行userinfo
+            userInfoDAO.addUserInfo(userFromAPI);
+        }
+        User user = new User(userId, "creep", 0L, "[]", userFromAPI.getUserName(), false, mode, null, null, 0L, 0L);
+        userDAO.addUser(user);
+    }
+
+    public void registerUser(Integer userId, Integer mode, String role) {
+        //构造User对象写入数据库，如果指定了mode就使用指定mode
+        Userinfo userFromAPI = null;
+        for (int i = 0; i < 4; i++) {
+            userFromAPI = apiManager.getUser(i, userId);
+            if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
+                userFromAPI.setQueryDate(LocalDate.now());
+            } else {
+                userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+            }
+            //写入一行userinfo
+            userInfoDAO.addUserInfo(userFromAPI);
+        }
+        User user = new User(userId, role, 0L, "[]", userFromAPI.getUserName(), false, mode, null, null, 0L, 0L);
+        userDAO.addUser(user);
+    }
 
     public List<String> sortRoles(String role) {
         List<String> roles = Arrays.asList(role.split(","));
@@ -32,10 +86,11 @@ public class RoleUtil {
 //                return -1;
 //            }
             //mp4s<mp4
-            if (o1.contains("mp4s") && o2.equals("mp4")) {
+            //2018-1-29 15:30:59 兼容mp3
+            if (o1.contains("mp4s") && o2.equals("mp4") || o2.equals("mp3")) {
                 return -1;
             }
-            if (o2.contains("mp4s") && o1.equals("mp4")) {
+            if (o2.contains("mp4s") && o1.equals("mp4") || o1.equals("mp3")) {
                 return 1;
             }
             //dev大于一切
@@ -90,4 +145,6 @@ public class RoleUtil {
         user.setRole(newRole);
         return user;
     }
+
+
 }

@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Lobby;
 import top.mothership.cabbage.pojo.osu.Score;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,7 +34,7 @@ public class ApiManager {
     private final String getScoreURL = "https://osu.ppy.sh/api/get_scores";
     private final String getMatchURL = "https://osu.ppy.sh/api/get_match";
 
-    private final String key = "25559acca3eea3e2c730cd65ee8a6b2da55b52c0";
+    private final String key = OverallConsts.CABBAGE_CONFIG.getString("apikey");
     private Logger logger = LogManager.getLogger(this.getClass());
 
     private final WebPageManager webPageManager;
@@ -42,32 +44,38 @@ public class ApiManager {
         this.webPageManager = webPageManager;
     }
 
-    public Userinfo getUser(String username, Integer userId) {
-        String result = filterUid("user", username, userId);
+    public Userinfo getUser(Integer mode, String username) {
+        String result = accessAPI("user", username, "string", null, null, null, null, mode);
         Userinfo userFromAPI = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Userinfo.class);
         if (userFromAPI != null) {
-            List<Integer> list = webPageManager.getXHAndSHRank(userFromAPI.getUserId());
-            if (list != null) {
-                logger.info("开始补正玩家" + userFromAPI.getUserName() + "的SH XH数据");
-                userFromAPI.setCountRankSs(userFromAPI.getCountRankSs() + list.get(0));
-                userFromAPI.setCountRankS(userFromAPI.getCountRankS() + list.get(1));
-            }
+            userFromAPI.setMode(mode);
+            fixRank(userFromAPI);
+        }
+        return userFromAPI;
+    }
+
+    public Userinfo getUser(int mode, Integer userId) {
+        String result = accessAPI("user", String.valueOf(userId), "id", null, null, null, null, mode);
+        Userinfo userFromAPI = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Userinfo.class);
+        if (userFromAPI != null) {
+            userFromAPI.setMode(mode);
+            fixRank(userFromAPI);
         }
         return userFromAPI;
     }
 
     public Beatmap getBeatmap(Integer bid) {
-        String result = accessAPI("beatmap", null, null, String.valueOf(bid), null, null, null);
+        String result = accessAPI("beatmap", null, null, String.valueOf(bid), null, null, null, null);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Beatmap.class);
     }
 
     public Beatmap getBeatmap(String hash) {
-        String result = accessAPI("beatmapHash", null, null, null, String.valueOf(hash), null, null);
+        String result = accessAPI("beatmapHash", null, null, null, String.valueOf(hash), null, null, null);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Beatmap.class);
     }
 
-    public List<Score> getBP(String username, Integer userId) {
-        String result = filterUid("bp", username, userId);
+    public List<Score> getBP(Integer mode, String username) {
+        String result = result = accessAPI("bp", username, "string", null, null, null, null, mode);
         //由于这里用到List，手动补上双括号
         result = "[" + result + "]";
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
@@ -75,14 +83,76 @@ public class ApiManager {
                 }.getType());
     }
 
-    public Score getRecent(String username, Integer userId) {
-        String result = filterUid("recent", username, userId);
+    public List<Score> getBP(Integer mode, Integer userId) {
+        String result = accessAPI("bp", String.valueOf(userId), "id", null, null, null, null, mode);
+        //由于这里用到List，手动补上双括号
+        result = "[" + result + "]";
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
+                .fromJson(result, new TypeToken<List<Score>>() {
+                }.getType());
+    }
+
+    public List<Score> getBP(String username) {
+        List<Score> resultList = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            String result = result = accessAPI("bp", username, "string", null, null, null, null, i);
+            //由于这里用到List，手动补上双括号
+            result = "[" + result + "]";
+            List<Score> list = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
+                    .fromJson(result, new TypeToken<List<Score>>() {
+                    }.getType());
+            resultList.addAll(list);
+        }
+        return resultList;
+    }
+
+    public List<Score> getBP(Integer userId) {
+        List<Score> resultList = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            String result = accessAPI("bp", String.valueOf(userId), "id", null, null, null, null, i);
+            //由于这里用到List，手动补上双括号
+            result = "[" + result + "]";
+            List<Score> list = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
+                    .fromJson(result, new TypeToken<List<Score>>() {
+                    }.getType());
+            resultList.addAll(list);
+        }
+        return resultList;
+    }
+
+    public Score getRecent(Integer mode, String username) {
+        String result = accessAPI("recent", username, "string", null, null, null, null, mode);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Score.class);
     }
 
-    public List<Score> getFirstScore(Integer bid, Integer rank) {
-        String result = accessAPI("first", null, null, String.valueOf(bid), null, rank, null);
+    public Score getRecent(Integer mode, Integer userId) {
+        String result = accessAPI("recent", String.valueOf(userId), "id", null, null, null, null, mode);
+
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Score.class);
+    }
+
+    // 用于获取所有的recent
+    public List<Score> getRecents(Integer mode, String username) {
+        String result = result = accessAPI("recents", username, "string", null, null, null, null, mode);
+        result = "[" + result + "]";
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, new TypeToken<List<Score>>() {
+                }.getType());
+    }
+
+    public List<Score> getRecents(Integer mode, Integer userId) {
+        String result = accessAPI("recents", String.valueOf(userId), "id", null, null, null, null, mode);
+
+        result = "[" + result + "]";
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, new TypeToken<List<Score>>() {
+                }.getType());
+    }
+
+    public List<Score> getFirstScore(Integer mode, Integer bid, Integer rank) {
+        String result = accessAPI("first", null, null, String.valueOf(bid), null, rank, null, mode);
         result = "[" + result + "]";
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
                 .fromJson(result, new TypeToken<List<Score>>() {
@@ -90,17 +160,16 @@ public class ApiManager {
 
     }
 
-    public List<Score> getScore(Integer bid, Integer uid) {
-        String result = accessAPI("score", String.valueOf(uid), "id", String.valueOf(bid), null, null, null);
+    public List<Score> getScore(Integer mode, Integer bid, Integer uid) {
+        String result = accessAPI("score", String.valueOf(uid), "id", String.valueOf(bid), null, null, null, mode);
         result = "[" + result + "]";
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
                 .fromJson(result, new TypeToken<List<Score>>() {
                 }.getType());
-
     }
 
     public Lobby getMatch(Integer mid) {
-        String result = accessAPI("match", null, null, null, null, null, String.valueOf(mid));
+        String result = accessAPI("match", null, null, null, null, null, String.valueOf(mid), null);
         result = "{" + result + "}";
         logger.info(result);
         //他妈的ppysb，上面那些获取单个对象的时候给加个中括号，害的我得在下面删掉再在上面看情况加上
@@ -109,31 +178,16 @@ public class ApiManager {
                 .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Lobby.class);
     }
 
-    //用于获取所有的recent
-    public List<Score> getRecents(String username, Integer userId) {
-        String result = filterUid("recents", username, userId);
-        result = "[" + result + "]";
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, new TypeToken<List<Score>>() {
-                }.getType());
-    }
-
-    private String filterUid(String apiType, String username, Integer userId) {
-        String result;
-        if (username != null && userId == null) {
-            result = accessAPI(apiType, username, "string", null, null, null, null);
-            return result;
-        } else if (username == null && userId != null) {
-            result = accessAPI(apiType, String.valueOf(userId), "id", null, null, null, null);
-            return result;
-        } else {
-            logger.error("不可同时指定用户名和用户id。");
-            return null;
+    private void fixRank(Userinfo userFromAPI) {
+        logger.info("开始修正玩家" + userFromAPI.getUserName() + "的SH XH数据");
+        List<Integer> list = webPageManager.getCorrectXAndSRank(userFromAPI.getMode(), userFromAPI.getUserId());
+        if (list != null) {
+            userFromAPI.setCountRankSs(list.get(0));
+            userFromAPI.setCountRankS(list.get(1));
         }
     }
 
-
-    private String accessAPI(String apiType, String uid, String uidType, String bid, String hash, Integer rank, String mid) {
+    private String accessAPI(String apiType, String uid, String uidType, String bid, String hash, Integer rank, String mid, Integer mode) {
         String URL;
         String failLog;
         String output = null;
@@ -142,11 +196,11 @@ public class ApiManager {
         params.add(new BasicNameValuePair("u", uid));
         switch (apiType) {
             case "user":
-                URL = getUserURL + "?k=" + key + "&type=" + uidType + "&" + URLEncodedUtils.format(params, "utf-8");
+                URL = getUserURL + "?k=" + key + "&type=" + uidType + "&m=" + mode + "&" + URLEncodedUtils.format(params, "utf-8");
                 failLog = "玩家" + uid + "请求API：get_user失败五次";
                 break;
             case "bp":
-                URL = getBPURL + "?k=" + key + "&type=" + uidType + "&limit=100&" + URLEncodedUtils.format(params, "utf-8");
+                URL = getBPURL + "?k=" + key + "&m=" + mode + "&type=" + uidType + "&limit=100&" + URLEncodedUtils.format(params, "utf-8");
                 failLog = "玩家" + uid + "请求API：get_user_best失败五次";
                 break;
             case "beatmap":
@@ -158,19 +212,19 @@ public class ApiManager {
                 failLog = "谱面" + bid + "请求API：get_beatmaps失败五次";
                 break;
             case "recent":
-                URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=1&" + URLEncodedUtils.format(params, "utf-8");
+                URL = getRecentURL + "?k=" + key + "&m=" + mode + "&type=" + uidType + "&limit=1&" + URLEncodedUtils.format(params, "utf-8");
                 failLog = "玩家" + uid + "请求API：get_recent失败五次";
                 break;
             case "recents":
-                URL = getRecentURL + "?k=" + key + "&type=" + uidType + "&limit=100&" + URLEncodedUtils.format(params, "utf-8");
+                URL = getRecentURL + "?k=" + key + "&m=" + mode + "&type=" + uidType + "&limit=100&" + URLEncodedUtils.format(params, "utf-8");
                 failLog = "玩家" + uid + "请求API：get_recent失败五次";
                 break;
             case "first":
-                URL = getScoreURL + "?k=" + key + "&limit=" + rank + "&b=" + bid;
+                URL = getScoreURL + "?k=" + key + "&m=" + mode + "&limit=" + rank + "&b=" + bid;
                 failLog = "谱面" + bid + "请求API：get_scores失败五次";
                 break;
             case "score":
-                URL = getScoreURL + "?k=" + key + "&type=" + uidType + "&u=" + uid + "&b=" + bid;
+                URL = getScoreURL + "?k=" + key + "&m=" + mode + "&type=" + uidType + "&u=" + uid + "&b=" + bid;
                 failLog = "谱面" + bid + "请求API：get_scores失败五次";
                 break;
             case "match":

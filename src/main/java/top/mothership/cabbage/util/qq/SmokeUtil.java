@@ -11,19 +11,21 @@ import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.CoolQ.RespData;
 import top.mothership.cabbage.pojo.User;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class SmokeUtil {
-    //对所有群开启消息记录
-    private static ResourceBundle rb = ResourceBundle.getBundle("cabbage");
-    private static List<String> repeatSmokeGroups = Arrays.asList(rb.getString("smokeGroups").split(","));
-    private static List<String> repeatRecordGroups = Arrays.asList(rb.getString("recordGroups").split(","));
+
+    private static List<String> repeatSmokeGroups = Arrays.asList("201872650,564679329,677545541,112177148,532783765".split(","));
+    private static List<String> repeatRecordGroups = Arrays.asList("576214175,532783765".split(","));
     private Logger logger = LogManager.getLogger(this.getClass());
     private final CqManager cqManager;
     private final UserDAO userDAO;
     public static Map<Long, MsgQueue> msgQueues = new HashMap<>();
-    public static Map<Long, List<Long>> groupAdmins;
+    private static Map<Long, List<Long>> groupAdmins;
 
 
     /*而读取管理员则独立成为方法，方便刷新

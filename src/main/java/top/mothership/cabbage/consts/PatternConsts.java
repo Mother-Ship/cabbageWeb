@@ -14,6 +14,30 @@ public class PatternConsts {
      * !setid xxx类命令是：group(1)为setid，group(2)为xxx，3为""
      */
     public final static Pattern REG_CMD_REGEX = Pattern.compile("[!！]([^ ]*)[ ]?(.*)");
+    /**
+     * 匹配出用#号分隔的数字的常规命令
+     * !bp xx #n类命令时：group(1)为setid，group(2)为xxx，3为n
+     * !bpme #n类命令时：group(1)为setid，group(2)为""，3为n
+     */
+    public final static Pattern REG_CMD_REGEX_SHARP_NUM_PARAM = Pattern.compile("[!！]([^ ]*)[ ]?(.*)(?: #)(.*)");
+    /**
+     * 匹配出用：号分隔的数字的常规命令
+     * !bp xx ：n类命令时：group(1)为setid，group(2)为xxx，3为n
+     * !bpme ：n类命令时：group(1)为setid，group(2)为""，3为n
+     */
+    public final static Pattern REG_CMD_REGEX_COLON_NUM_PARAM = Pattern.compile("[!！]([^ ]*)[ ]?(.*)(?: :| ：|：|:)(.*)");
+    /**
+     * 匹配出带两个参数的常规命令，单个参数不匹配
+     * !bp xx #m：n类命令时：group(1)为setid，group(2)为xxx，3为m,4为n
+     * !bpme #m：n类命令时：group(1)为setid，group(2)为""，3为m,4为n
+     */
+    public final static Pattern REG_CMD_REGEX_TWO_PARAMS = Pattern.compile("[!！]([^ ]*)[ ]?(.*)(?: #)(.*)(?: :| ：|：|:)(.*)");
+
+    /**
+     * 也是两个参数的常规命令，只不过m和n相反
+     */
+    public final static Pattern REG_CMD_REGEX_TWO_PARAMS_REVERSE = Pattern.compile("[!！]([^ ]*)[ ]?(.*)(?: :| ：|：|:)(.*)(?: #)(.*)");
+
 
     /**
      * 匹配出带图片的消息
@@ -33,7 +57,7 @@ public class PatternConsts {
      * 当处理!sudo recent xxx类命令时：group(2)为xxx
      * 当处理!sudo add xxx:yyy类命令是：group(2)为xxx,group(3)为yyy
      */
-    public final static Pattern ADMIN_CMD_REGEX = Pattern.compile("[!！]sudo ([^ ]*)[ ]?([^:]*)[:]?(.*)");
+    public final static Pattern ADMIN_CMD_REGEX = Pattern.compile("[!！]sudo ([^ ]*)[ ]?([^:：]*)[:|：]?(.*)");
     /**
      * !add/!del专用……
      */
@@ -43,12 +67,7 @@ public class PatternConsts {
      */
     public final static Pattern MP_CMD_REGEX = Pattern.compile("[!！]mp ([^ ]*)[ ]?([^:]*)[:]?(.*)");
 
-    /**
-     * 匹配出带数字的常规命令
-     * !bp xx #n类命令时：group(1)为setid，group(2)为xxx，3为n
-     * !bpme #n类命令时：group(1)为setid，group(2)为""，3为n
-     */
-    public final static Pattern REG_CMD_REGEX_NUM_PARAM = Pattern.compile("[!！]([^ ]*)[ ]?(.*)(?: #)(.*)");
+
     /**
      * 复读禁言时抗干扰的匹配表达式
      */
@@ -57,10 +76,6 @@ public class PatternConsts {
      * 从.osu文件中匹配出BG文件名的表达式
      */
     public final static Pattern BGNAME_REGEX = Pattern.compile("(?<=[\\d*],[\\d*],\")(?:.*\\\\)*(.*\\.(?i)(jpg|png|jpeg))");
-    /**
-     * 从下载文件的HTTP头中取出文件名的表达式
-     */
-    public final static Pattern DOWNLOAD_FILENAME_REGEX = Pattern.compile("(?<=filename=\")([^\";]*)");
     /**
      * osu官网中添加好友连接的表达式
      */
@@ -71,6 +86,9 @@ public class PatternConsts {
      */
     public final static Pattern OSU_SEARCH_KETWORD = Pattern.compile("^([^-]*)-[ ]?(.*)[ ]?\\[(.*)][ ]?\\((.*)\\)\\{(.*)}");
 
+    /**
+     * The constant OSU_SEARCH_KETWORD_SHELL.
+     */
     public final static Pattern OSU_SEARCH_KETWORD_SHELL = Pattern.compile("((?:-(a|t|d|m|ar|od|cs|hp)) ([^-]*)){1,8}");
     /**
      * osu!search功能用的带mod表达式
@@ -118,9 +136,18 @@ public class PatternConsts {
     public final static Pattern QIANESE_RECENT = Pattern.compile("((?:4|5|t|f|d|e|r)(?:1|q|w|3|e|r|4)(?:x|d|f|v|c)(?:1|q|w|3|e|r|4)(?:b|h|j|m|n)(?:r|5|6|y|g|f|t))");
 
     /**
-     * 从新官网的页面中取出SH和XH的数字
+     * 从旧官网取出正确的S和SS数据
      */
-    public final static Pattern NEW_WEBSITE_XH_SH = Pattern.compile("\"scoreRanks\":\\{\"XH\":(\\d*),\"SH\":(\\d*),\"X\":(\\d*),\"S\":(\\d*),\"A\":(\\d*)}}");
+    public final static Pattern CORRECT_X_S = Pattern.compile("<td width='42'><img height='42' src='//s.ppy.sh/images/X.png'></td><td width='50'>(\\d*)</td>\n" +
+            "<td width='42'><img height='42' src='//s.ppy.sh/images/S.png'></td><td width='50'>(\\d*)</td>\n");
 
+    /**
+     * 赛事分析系统中用来处理bid
+     */
     public final static Pattern ANALYZE_BID_PARAM = Pattern.compile("[!！]([^ ]*)[ ]?(\\d*)");
+    /**
+     * 匹配osu的UID（1-8个数字）
+     */
+    public final static Pattern OSU_USER_ID = Pattern.compile("^(\\d{1,8})$");
+    public final static Pattern OSU_USER_NAME = Pattern.compile("^([\\w \\-\\[\\]]{1,15})$");
 }

@@ -85,7 +85,7 @@ public class DbFileUtil {
                 long timestamps = readLong(reader);
                 int size = readInt(reader);
                 long onlineId = readLong(reader);
-                LinkedHashMap<String, String> modsMap = scoreUtil.convertMOD(mods);
+                LinkedHashMap<String, String> modsMap = scoreUtil.convertModToHashMap(mods);
                 score.setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
                 score.setCount50(count50);
                 score.setCount100(count100);
