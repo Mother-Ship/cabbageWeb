@@ -25,9 +25,9 @@ import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
+import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 import top.mothership.cabbage.util.qq.MsgQueue;
-import top.mothership.cabbage.util.qq.RoleUtil;
 import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.imageio.ImageIO;
@@ -62,11 +62,11 @@ public class CqAdminServiceImpl {
     private final ImgUtil imgUtil;
     private static ResDAO resDAO;
     private final ScoreUtil scoreUtil;
-    private final RoleUtil roleUtil;
+    private final UserUtil userUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
-    public CqAdminServiceImpl(CqManager cqManager, ApiManager apiManager, UserDAO userDAO, UserInfoDAO userInfoDAO, WebPageManager webPageManager, ImgUtil imgUtil, ResDAO resDAO, ScoreUtil scoreUtil, RoleUtil roleUtil) {
+    public CqAdminServiceImpl(CqManager cqManager, ApiManager apiManager, UserDAO userDAO, UserInfoDAO userInfoDAO, WebPageManager webPageManager, ImgUtil imgUtil, ResDAO resDAO, ScoreUtil scoreUtil, UserUtil userUtil) {
         this.cqManager = cqManager;
         this.apiManager = apiManager;
         this.userDAO = userDAO;
@@ -75,7 +75,7 @@ public class CqAdminServiceImpl {
         this.imgUtil = imgUtil;
         CqAdminServiceImpl.resDAO = resDAO;
         this.scoreUtil = scoreUtil;
-        this.roleUtil = roleUtil;
+        this.userUtil = userUtil;
         loadCache();
     }
 
@@ -113,7 +113,8 @@ public class CqAdminServiceImpl {
         Userinfo userFromAPI;
         for (String username : usernames) {
             logger.info("开始从API获取" + username + "的信息");
-            userFromAPI = apiManager.getUser(username, null);
+            //这里只是为了获取uid，直接指定mode为0
+            userFromAPI = apiManager.getUser(0, username);
             //如果user不是空的(官网存在记录)
             if (userFromAPI != null) {
                 //查找userRole数据库
@@ -122,7 +123,7 @@ public class CqAdminServiceImpl {
                     //如果userRole库中没有这个用户
                     //构造User对象写入数据库
                     logger.info("开始将用户" + userFromAPI.getUserName() + "添加到数据库。");
-                    User user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
+                    User user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
                     userDAO.addUser(user);
 
                     if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
@@ -137,7 +138,7 @@ public class CqAdminServiceImpl {
                     //进行Role更新
                     User user = userDAO.getUser(null, userFromAPI.getUserId());
                     //拿到原先的user，把role拼上去，塞回去
-                    user = roleUtil.addRole(role, user);
+                    user = userUtil.addRole(role, user);
                     userDAO.updateUser(user);
                     doneList.add(userFromAPI.getUserName());
                 }
@@ -190,7 +191,8 @@ public class CqAdminServiceImpl {
         String lastUserOldRole = "";
         for (String username : usernames) {
             logger.info("开始从API获取" + username + "的信息");
-            userFromAPI = apiManager.getUser(username, null);
+            //同理，只是为了获取id，直接设为0
+            userFromAPI = apiManager.getUser(0, username);
             if (userFromAPI != null) {
                 //查找userRole数据库
                 //进行Role更新
@@ -201,7 +203,7 @@ public class CqAdminServiceImpl {
                     continue;
                 }
                 lastUserOldRole = user.getRole();
-                user = roleUtil.delRole(role, user);
+                user = userUtil.delRole(role, user);
                 userDAO.updateUser(user);
                 doneList.add(userFromAPI.getUserName());
             } else {
@@ -239,7 +241,7 @@ public class CqAdminServiceImpl {
         switch (m.group(1)) {
             case "check":
                 username = m.group(2);
-                Userinfo userFromAPI = apiManager.getUser(username, null);
+                Userinfo userFromAPI = apiManager.getUser(0, username);
                 if (userFromAPI == null) {
                     cqMsg.setMessage("没有获取到玩家" + username + "的信息。");
                     cqManager.sendMsg(cqMsg);
@@ -262,8 +264,9 @@ public class CqAdminServiceImpl {
         if (user == null) {
             cqMsg.setMessage("玩家" + username + "没有使用过白菜。请先用add命令添加。");
         } else {
-            Userinfo userFromAPI = apiManager.getUser(null, user.getUserId());
+            Userinfo userFromAPI = apiManager.getUser(0, user.getUserId());
             if (userFromAPI == null) {
+                //check会刷新被ban状态
                 user.setBanned(true);
             } else if (!userFromAPI.getUserName().equals(user.getCurrentUname())) {
                 //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
@@ -280,9 +283,10 @@ public class CqAdminServiceImpl {
             cqMsg.setMessage("搜索结果：\n"
                     + "该玩家的用户组是" + user.getRole()
                     + "\nosu!id：" + user.getCurrentUname()
+                    + "\nosu!uid：" + user.getUserId()
                     + "\n被Ban状态：" + user.isBanned()
                     + "\nQQ：" + user.getQq()
-                    + "\nosu!uid：" + user.getUserId()
+                    + "\n主玩模式：" + user.getMode()
                     + "\n在开启复读计数的群中："
                     + "总复读次数：" + user.getRepeatCount()
                     + "，总发言次数：" + user.getSpeakingCount());
@@ -298,15 +302,34 @@ public class CqAdminServiceImpl {
         String resp;
         List<Integer> list = userDAO.listUserIdByRole(role, true);
         List<String> overflowList = new ArrayList<>();
+        Integer riskPP;
+        Integer overflowPP;
+        switch (role) {
+            //2018-1-29 12:49:31废除配置文件
+            case "mp5":
+                riskPP = 3900;
+                overflowPP = 4000;
+                break;
+            case "mp4":
+                riskPP = 5000;
+                overflowPP = 5100;
+                break;
+            case "mp3":
+                riskPP = 5700;
+                overflowPP = 5800;
+                break;
+            default:
+                return;
+        }
         for (Integer aList : list) {
             //这里没有做多用户组。2017-10-25 17:39:10修正
             //拿到用户最接近今天的数据（因为是最接近所以也不用打补丁了）
-            Userinfo userinfo = userInfoDAO.getNearestUserInfo(aList, LocalDate.now());
+            Userinfo userinfo = userInfoDAO.getNearestUserInfo(0, aList, LocalDate.now());
             //如果PP超过了警戒线，请求API拿到最新PP
-            if (userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString(role + "RiskPP"))) {
+            if (userinfo.getPpRaw() > riskPP) {
                 logger.info("开始从API获取" + aList + "的信息");
-                userinfo = apiManager.getUser(null, aList);
-                if (userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString(role + "PP")) + 0.49) {
+                userinfo = apiManager.getUser(0, aList);
+                if (userinfo.getPpRaw() > overflowPP + 0.49) {
                     logger.info("玩家" + aList + "超限，已记录");
                     overflowList.add(userinfo.getUserName());
                 } else {
@@ -371,7 +394,13 @@ public class CqAdminServiceImpl {
         Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String username = m.group(2);
-        Userinfo userFromAPI = apiManager.getUser(username, null);
+        String mode = m.group(3);
+        if ("".equals(mode)) {
+            mode = "0";
+        }
+        Integer modeNum = Integer.valueOf(mode);
+
+        Userinfo userFromAPI = apiManager.getUser(0, username);
         if (userFromAPI == null) {
             cqMsg.setMessage("没有获取到玩家" + username + "的信息。");
             cqManager.sendMsg(cqMsg);
@@ -379,13 +408,13 @@ public class CqAdminServiceImpl {
         }
 
         logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
-        Score score = apiManager.getRecent(null, userFromAPI.getUserId());
+        Score score = apiManager.getRecent(Integer.valueOf(mode), userFromAPI.getUserId());
         if (score == null) {
             cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有游戏记录。");
             cqManager.sendMsg(cqMsg);
             return;
         }
-        Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
+        Beatmap beatmap = apiManager.getBeatmap(Integer.valueOf(mode), score.getBeatmapId());
         if (beatmap == null) {
             cqMsg.setMessage("网络错误：没有获取到Bid为" + score.getBeatmapId() + "的谱面信息。");
             cqManager.sendMsg(cqMsg);
@@ -398,7 +427,7 @@ public class CqAdminServiceImpl {
                 cqManager.sendMsg(cqMsg);
                 break;
             case "recent":
-                String filename = imgUtil.drawResult(userFromAPI, score, beatmap);
+                String filename = imgUtil.drawResult(userFromAPI, score, beatmap, modeNum);
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
                 cqManager.sendMsg(cqMsg);
                 break;
@@ -427,7 +456,7 @@ public class CqAdminServiceImpl {
         List<String> afkList = new ArrayList<>();
         for (Integer aList : list) {
             if (webPageManager.getLastActive(aList).before(date)) {
-                afkList.add(apiManager.getUser(null, aList).getUserName());
+                afkList.add(apiManager.getUser(0, aList).getUserName());
             }
         }
         resp = "查询" + role + "用户组中，最后登录时间早于" + day + "天前的AFK玩家完成。";
@@ -564,25 +593,28 @@ public class CqAdminServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-
-        Beatmap beatmap = apiManager.getBeatmap(bid);
+        String mode = m.group(3);
+        if ("".equals(mode)) {
+            mode = "0";
+        }
+        Beatmap beatmap = apiManager.getBeatmap(Integer.valueOf(mode), bid);
         if (beatmap == null) {
             cqMsg.setMessage("提供的bid没有找到谱面信息。");
             cqManager.sendMsg(cqMsg);
             return;
         }
         //一次性取2个
-        List<Score> scores = apiManager.getFirstScore(bid, 2);
+        List<Score> scores = apiManager.getFirstScore(Integer.valueOf(mode), bid, 2);
         if (scores.size() == 0) {
             cqMsg.setMessage("提供的bid没有找到#1成绩。");
             cqManager.sendMsg(cqMsg);
             return;
         }
-        Userinfo userFromAPI = apiManager.getUser(null, scores.get(0).getUserId());
+        Userinfo userFromAPI = apiManager.getUser(0, scores.get(0).getUserId());
         //为了日志+和BP的PP计算兼容，补上get_score的API缺失的部分
         scores.get(0).setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
         scores.get(0).setBeatmapId(beatmap.getBeatmapId());
-        String filename = imgUtil.drawFirstRank(beatmap, scores.get(0), userFromAPI, scores.get(0).getScore() - scores.get(1).getScore());
+        String filename = imgUtil.drawFirstRank(beatmap, scores.get(0), userFromAPI, scores.get(0).getScore() - scores.get(1).getScore(), Integer.valueOf(mode));
         cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
         cqManager.sendMsg(cqMsg);
     }
@@ -655,13 +687,17 @@ public class CqAdminServiceImpl {
         } else {
             role = m.group(2);
         }
+        String mode = m.group(3);
+        if ("".equals(mode)) {
+            mode = "0";
+        }
         logger.info("开始检查" + role + "用户组中所有人的PP");
         List<Integer> list = userDAO.listUserIdByRole(role, true);
         String resp;
         if (list.size() > 0) {
             resp = role + "用户组中所有人的PP：";
             for (Integer aList : list) {
-                Userinfo userinfo = apiManager.getUser(null, aList);
+                Userinfo userinfo = apiManager.getUser(Integer.valueOf(mode), aList);
                 if (userinfo != null) {
                     logger.info(userinfo.getUserName() + "的PP是" + userinfo.getPpRaw());
                     resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw());
@@ -675,7 +711,7 @@ public class CqAdminServiceImpl {
     }
 
 
-    public void findPlayer(CqMsg cqMsg) {
+    public void searchPlayer(CqMsg cqMsg) {
         Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String resp;
@@ -683,11 +719,17 @@ public class CqAdminServiceImpl {
         List<User> list = userDAO.listUserIdByUname(username);
         if (list.size() > 0) {
             resp = "找到以下玩家曾用/现用名是" + username + "：\n";
-            for (User u : list) {
-                resp += "现用名：" + u.getCurrentUname() + "，曾用名：" + u.getLegacyUname() + "，uid：" + u.getUserId();
-                if (!u.getQq().equals(0L)) {
-                    resp += "，QQ：" + u.getQq();
-                }
+            for (User user : list) {
+                resp += "搜索结果：\n"
+                        + "该玩家的用户组是" + user.getRole()
+                        + "\nosu!id：" + user.getCurrentUname()
+                        + "\nosu!uid：" + user.getUserId()
+                        + "\n被Ban状态：" + user.isBanned()
+                        + "\nQQ：" + user.getQq()
+                        + "\n主玩模式：" + user.getMode()
+                        + "\n在开启复读计数的群中："
+                        + "总复读次数：" + user.getRepeatCount()
+                        + "，总发言次数：" + user.getSpeakingCount();
                 resp += "\n";
             }
         } else {
@@ -709,7 +751,7 @@ public class CqAdminServiceImpl {
             //根据QQ获取user
             user = userDAO.getUser(qqInfo.getUserId(), null);
             if (user != null && !user.isBanned()) {
-                userFromAPI = apiManager.getUser(null, user.getUserId());
+                userFromAPI = apiManager.getUser(0, user.getUserId());
                 if (userFromAPI == null) {
                     user.setBanned(true);
                     userDAO.updateUser(user);
@@ -807,9 +849,9 @@ public class CqAdminServiceImpl {
         String resp = "!sudo add xxx,xxx:yyy 将xxx,xxx添加到yyy用户组。\n" +
                 "!sudo del xxx:yyy 将xxx的用户组中yyy删除，如果不带:yyy则重置为默认（creep）。\n" +
                 "!sudo check xxx 根据osu!id查找用户，包括绑定、用户组信息。\n" +
-                "!sudo 褪裙 xxx 查询xxx用户组中多少人超过PP上线。\n" +
+                "!sudo 褪裙 xxx 查询xxx用户组中，std模式多少人超过PP上线。\n" +
                 "!sudo bg xxx:http://123 将给定连接中的图以xxx.png的文件名写入数据库。\n" +
-                "!sudo recent xxx 查询他人的recent。\n" +
+                "!sudo recent xxx:y 查询他人在指定模式的recent（y默认取0， std = 0, taiko = 1, ctb = 2, o!m = 3 ）。\n" +
                 "!sudo afk n:xxx 查询xxx用户组中，n天以上没有登录的玩家(以官网为准，如果不提供用户组，默认为mp5)。\n" +
                 "!sudo smoke @xxx n 在白菜是管理的群，把被艾特的人禁言n秒。\n" +
                 "（艾特全体成员则遍历群成员并禁言，慎用）\n" +

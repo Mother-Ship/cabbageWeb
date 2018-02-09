@@ -10,8 +10,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.annotation.GroupRoleControl;
 import top.mothership.cabbage.consts.Base64Consts;
-import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.consts.PatternConsts;
+import top.mothership.cabbage.consts.TipConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.manager.WebPageManager;
@@ -19,6 +19,7 @@ import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.CoolQ.CqResponse;
+import top.mothership.cabbage.pojo.CoolQ.Params;
 import top.mothership.cabbage.pojo.CoolQ.QQInfo;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Beatmap;
@@ -26,8 +27,9 @@ import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.SearchParam;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
+import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
-import top.mothership.cabbage.util.qq.RoleUtil;
+import top.mothership.cabbage.util.qq.ParamVerifyUtil;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -54,12 +56,13 @@ public class CqServiceImpl {
     private final UserDAO userDAO;
     private final ImgUtil imgUtil;
     private final ScoreUtil scoreUtil;
-    private final RoleUtil roleUtil;
+    private static final int i = 0;
+    private static final int[] j = {i};
     private Logger logger = LogManager.getLogger(this.getClass());
-
+    private final UserUtil userUtil;
+    private final ParamVerifyUtil paramVerifyUtil;
     /**
      * Instantiates a new Cq service.
-     *
      * @param apiManager     the api manager
      * @param cqManager      the cq manager
      * @param webPageManager 网页相关抓取工具
@@ -67,10 +70,11 @@ public class CqServiceImpl {
      * @param userInfoDAO    the user info dao
      * @param imgUtil        the img util
      * @param scoreUtil      the score util
-     * @param roleUtil
+     * @param userUtil
+     * @param paramVerifyUtil
      */
     @Autowired
-    public CqServiceImpl(ApiManager apiManager, CqManager cqManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, RoleUtil roleUtil) {
+    public CqServiceImpl(ApiManager apiManager, CqManager cqManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, UserUtil userUtil, ParamVerifyUtil paramVerifyUtil) {
         this.apiManager = apiManager;
         this.cqManager = cqManager;
         this.webPageManager = webPageManager;
@@ -78,7 +82,8 @@ public class CqServiceImpl {
         this.userInfoDAO = userInfoDAO;
         this.imgUtil = imgUtil;
         this.scoreUtil = scoreUtil;
-        this.roleUtil = roleUtil;
+        this.userUtil = userUtil;
+        this.paramVerifyUtil = paramVerifyUtil;
     }
 
 
@@ -89,63 +94,47 @@ public class CqServiceImpl {
      */
     public void statUserInfo(CqMsg cqMsg) {
 
-        //明天好好用文字整理下逻辑吧……
-        String msg = cqMsg.getMessage();
-        Matcher m = PatternConsts.REG_CMD_REGEX_NUM_PARAM.matcher(msg);
-        if (!m.find()) {
-            m = PatternConsts.REG_CMD_REGEX.matcher(msg);
-            m.find();
+        //参数校验部分单独提取
+        Params params = paramVerifyUtil.statUserInfo(cqMsg);
+        if (!params.isVaild()) {
+            cqMsg.setMessage(params.getResp());
+            cqManager.sendMsg(cqMsg);
+            return;
         }
-        String username;
-        //预定义变量，day默认为1，这样才能默认和昨天的比较
-        int day = 1;
-        User user;
+        User user = null;
         Userinfo userFromAPI = null;
         boolean near = false;
         Userinfo userInDB = null;
         String role = null;
         int scoreRank;
         List<String> roles;
-        //首先尝试解析数字，对各种数字异常情况进行处理并返回
-        if (m.groupCount() == 3) {
-            try {
-                day = Integer.valueOf(m.group(3));
-                if (day < 0) {
-                    cqMsg.setMessage("白菜不会预知未来。");
-                    cqManager.sendMsg(cqMsg);
-                    return;
-                }
-                if (LocalDate.now().minusDays(day).isBefore(LocalDate.of(2007, 9, 16))) {
-                    cqMsg.setMessage("你要找史前时代的数据吗。");
-                    cqManager.sendMsg(cqMsg);
-                    return;
-                }
-            } catch (java.lang.NumberFormatException e) {
-                cqMsg.setMessage("假使这些完全……不能用的参数，你再给他传一遍，你等于……你也等于……你也有泽任吧？");
-                cqManager.sendMsg(cqMsg);
-                return;
-            }
-        }
 
-
-
-        /*
-        statme:从数据库根据QQ取出user，为null则返回需要绑定的消息，否则将role取出；
-        如果被ban则从数据库获取最近的作为最新信息，而day置为0；
-        没有被ban则去官网根据user.id取出最新信息，判断day，从数据库根据user.id和day取出对比信息
-         */
-        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+        switch (params.getSubCommandLowCase()) {
             case "statme":
+                //由于statme是对本人的查询，先尝试取出绑定的user，如果没有绑定过给出相应提示
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
-                    cqMsg.setMessage("你没有绑定osu!id。请使用!setid 你的osuid 命令。");
+                    cqMsg.setMessage(TipConsts.USER_NOT_BIND);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
+                if (params.getMode() == null) {
+                    //如果查询没有指定mode，用用户预设的mode覆盖
+                    params.setMode(user.getMode());
+                }
+                //根据绑定的信息从ppy获取一份玩家信息
+                userFromAPI = apiManager.getUser(params.getMode(), user.getUserId());
                 role = user.getRole();
+
                 if (user.isBanned()) {
                     //当数据库查到该玩家，并且被ban时，从数据库里取出最新的一份userinfo伪造
-                    userFromAPI = userInfoDAO.getNearestUserInfo(user.getUserId(), LocalDate.now());
+                    userFromAPI = userInfoDAO.getNearestUserInfo(params.getMode(), user.getUserId(), LocalDate.now());
+                    if (userFromAPI == null) {
+                        //如果数据库中该玩家该模式没有历史记录……
+                        cqMsg.setMessage(TipConsts.USER_IS_BANNED);
+                        cqManager.sendMsg(cqMsg);
+                        return;
+                    }
                     //尝试补上当前用户名
                     if (user.getCurrentUname() != null) {
                         userFromAPI.setUserName(user.getCurrentUname());
@@ -158,54 +147,60 @@ public class CqServiceImpl {
                             userFromAPI.setUserName(String.valueOf(user.getUserId()));
                         }
                     }
-                    day = 0;
+                    //玩家被ban就把日期改成0，因为没有数据进行对比
+                    params.setDay(0);
                 } else {
-                    userFromAPI = apiManager.getUser(null, user.getUserId());
-                    if (day > 0) {
-                        userInDB = userInfoDAO.getUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(day));
+                    if (userFromAPI == null) {
+                        cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, user.getQq(), user.getUserId()));
+                        cqManager.sendMsg(cqMsg);
+                        return;
+                    }
+                    if (params.getDay() > 0) {
+                        userInDB = userInfoDAO.getUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
                         if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(day));
+                            userInDB = userInfoDAO.getNearestUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
+                            if (userInDB == null) {
+                                //FIXME 新增全模式的时候产生的兼容性问题(会导致已注册的用户却在数据库没有历史数据)，下个版本可以去除
+                                params.setDay(0);
+                            }
                             near = true;
                         }
                     }
                 }
                 break;
+
             case "statu":
-//                statu：从数据库根据uid取出user（为了兼容被ban玩家），为null则判断官网能否获取到、day是否大于0，
-//                  如果能取到并大于0则添加到数据库，为0则什么也不做；取不到则返回错误信息
-//                不为null则判断是否被ban，被ban则从数据库获取最近的作为最新信息，而day置为0；
-//                没有被ban则从数据库根据user.id和day取出对比信息
-                username = m.group(2);
-                if ("3".equals(username)) {
-                    cqMsg.setMessage("你们总是想查BanchoBot。\n可是BanchoBot已经很累了，她不想被查。\n她想念自己的小ppy，而不是被逼着查PP。\n你有考虑过这些吗？没有！你只考虑过你自己。");
-                    cqManager.sendMsg(cqMsg);
-                    return;
-                }
-                user = userDAO.getUser(null, Integer.valueOf(username));
-                userFromAPI = apiManager.getUser(null, Integer.valueOf(username));
+                //先尝试根据提供的uid从数据库取出数据
+                user = userDAO.getUser(null, params.getUserId());
+                userFromAPI = apiManager.getUser(0, params.getUserId());
+
                 if (user == null) {
                     if (userFromAPI == null) {
-                        cqMsg.setMessage("没有从osu!api获取到uid为" + username + "的玩家信息，并且数据库也没有记载。");
+                        cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED_AND_NOT_USED, params.getUserId()));
                         cqManager.sendMsg(cqMsg);
                         return;
                     } else {
-                        logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-                        //构造User对象写入数据库
-                        user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
-                        userDAO.addUser(user);
-                        if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
-                            userFromAPI.setQueryDate(LocalDate.now());
-                        } else {
-                            userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+                        //构造User对象和4条Userinfo写入数据库，如果指定了mode就使用指定mode
+                        if (params.getMode() == null) {
+                            params.setMode(0);
                         }
-                        //写入一行userinfo
-                        userInfoDAO.addUserInfo(userFromAPI);
+                        userUtil.registerUser(userFromAPI.getUserId(), params.getMode());
                         userInDB = userFromAPI;
                     }
                     role = "creep";
                 } else if (user.isBanned()) {
+                    //只有在确定user不是null的时候，如果参数没有提供mode，用user预设的覆盖
+                    if (params.getMode() == null) {
+                        params.setMode(user.getMode());
+                    }
                     //当数据库查到该玩家，并且被ban时，从数据库里取出最新的一份userinfo，作为要展现的数据传给绘图类
-                    userFromAPI = userInfoDAO.getNearestUserInfo(user.getUserId(), LocalDate.now());
+                    userFromAPI = userInfoDAO.getNearestUserInfo(params.getMode(), user.getUserId(), LocalDate.now());
+                    if (userFromAPI == null) {
+                        //如果数据库中该玩家该模式没有历史记录……
+                        cqMsg.setMessage(TipConsts.USER_IS_BANNED);
+                        cqManager.sendMsg(cqMsg);
+                        return;
+                    }
                     //尝试补上当前用户名
                     if (user.getCurrentUname() != null) {
                         userFromAPI.setUserName(user.getCurrentUname());
@@ -218,63 +213,68 @@ public class CqServiceImpl {
                             userFromAPI.setUserName(String.valueOf(user.getUserId()));
                         }
                     }
-                    day = 0;
+                    params.setDay(0);
                     role = user.getRole();
                 } else {
+                    if (params.getMode() == null) {
+                        params.setMode(user.getMode());
+                    }
                     role = user.getRole();
-                    if (day > 0) {
-                        userInDB = userInfoDAO.getUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(day));
+                    if (params.getDay() > 0) {
+                        userInDB = userInfoDAO.getUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
                         if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(day));
+                            userInDB = userInfoDAO.getNearestUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
+                            if (userInDB == null) {
+                                //FIXME 新增全模式的时候产生的兼容性问题(会导致已注册的用户却在数据库没有历史数据)，下个版本可以去除
+                                params.setDay(0);
+                            }
                             near = true;
                         }
                     }
                 }
                 break;
             case "stat":
-//                stat：从官网根据用户名取出最新信息，为null则返回消息；再根据返回的uid去数据库取出user，这里不需要做被ban检查，如果user为null
-//                就判断day，大于0则添加到数据库，小于0则置用户组为creep；而如果user不为null就根据day取出数据库中的对比信息
-                username = m.group(2);
-                //处理彩蛋
-                if ("白菜".equals(username)) {
-                    cqMsg.setMessage("唉，没人疼没人爱，我是地里一颗小白菜。");
-                    cqManager.sendMsg(cqMsg);
-                    return;
-                }
-                userFromAPI = apiManager.getUser(username, null);
+                //直接从api根据参数提供的用户名获取
+                userFromAPI = apiManager.getUser(0, params.getUsername());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
+                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, params.getUserId()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
+                //这个彩蛋不想用参数预检……要考虑下划线大小写
                 if (userFromAPI.getUserId() == 3) {
-                    cqMsg.setMessage("你们总是想查BanchoBot。\n可是BanchoBot已经很累了，她不想被查。\n她想念自己的小ppy，而不是被逼着查PP。\n你有考虑过这些吗？没有！你只考虑过你自己。");
+                    cqMsg.setMessage(TipConsts.QUERY_BANCHO_BOT);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
+
                 user = userDAO.getUser(null, userFromAPI.getUserId());
                 if (user == null) {
-
-                    logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-                    //构造User对象写入数据库
-                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
-                    userDAO.addUser(user);
-                    if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
-                        userFromAPI.setQueryDate(LocalDate.now());
-                    } else {
-                        userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+                    //未指定mode的时候改为0
+                    if (params.getMode() == null) {
+                        params.setMode(0);
                     }
-                    //写入一行userinfo
-                    userInfoDAO.addUserInfo(userFromAPI);
+                    userUtil.registerUser(userFromAPI.getUserId(), params.getMode());
                     userInDB = userFromAPI;
-
                     role = "creep";
                 } else {
+                    //未指定mode的时候改为玩家预设的模式
+                    if (params.getMode() == null) {
+                        params.setMode(user.getMode());
+                    }
+                    if (!params.getMode().equals(0)) {
+                        //2018-1-22 12:59:06如果这个玩家的模式不是主模式，则取出相应模式
+                        userFromAPI = apiManager.getUser(params.getMode(), user.getUserId());
+                    }
                     role = user.getRole();
-                    if (day > 0) {
-                        userInDB = userInfoDAO.getUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(day));
+                    if (params.getDay() > 0) {
+                        userInDB = userInfoDAO.getUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
                         if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(day));
+                            userInDB = userInfoDAO.getNearestUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
+                            if (userInDB == null) {
+                                //FIXME 新增全模式的时候产生的兼容性问题(会导致已注册的用户却在数据库没有历史数据)，下个版本可以去除
+                                params.setDay(0);
+                            }
                             near = true;
                         }
                     }
@@ -284,9 +284,7 @@ public class CqServiceImpl {
                 break;
 
         }
-
-
-        roles = roleUtil.sortRoles(role);
+        roles = userUtil.sortRoles(role);
         //获取score rank
         //gust？
         if (userFromAPI.getUserId() == 1244312
@@ -303,69 +301,59 @@ public class CqServiceImpl {
             scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
         }
         //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
-        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), day, near, scoreRank);
+        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), params.getDay(), near, scoreRank, params.getMode());
         cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
         cqManager.sendMsg(cqMsg);
-
     }
 
     public void printBP(CqMsg cqMsg) {
-        String username;
+        Params params = paramVerifyUtil.printBP(cqMsg);
+        if (!params.isVaild()) {
+            cqMsg.setMessage(params.getResp());
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        List<Score> bpList;
         Userinfo userFromAPI = null;
-        User user;
-        int num = 0;
-        boolean text = true;
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
-        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+        User user = null;
+        switch (params.getSubCommandLowCase()) {
             case "bp":
-                //bp和bps是图片/文字的区别，如果是bp会更改这个text的bool值，用于后续控制
-                text = false;
             case "bps":
-                username = m.group(2);
-                if ("白菜".equals(username)) {
-                    cqMsg.setMessage("大白菜（学名：Brassica rapa pekinensis，异名Brassica campestris pekinensis或Brassica pekinensis）" +
-                            "是一种原产于中国的蔬菜，又称“结球白菜”、“包心白菜”、“黄芽白”、“胶菜”等。(via 维基百科)");
-                    cqManager.sendMsg(cqMsg);
-                    return;
-                }
-                userFromAPI = apiManager.getUser(username, null);
+                userFromAPI = apiManager.getUser(0, params.getUsername());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
+                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, params.getUsername()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
             case "bpu":
-                text = false;
             case "bpus":
-                username = m.group(2);
-                userFromAPI = apiManager.getUser(null, Integer.valueOf(username));
+                userFromAPI = apiManager.getUser(0, params.getUserId());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
+                    cqMsg.setMessage(String.format(TipConsts.USERID_GET_FAILED, params.getUserId()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
+
             case "bpme":
             case "mybp":
-                text = false;
             case "bpmes":
             case "mybps":
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
-                    cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
+                    cqMsg.setMessage(TipConsts.USER_NOT_BIND);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 if (user.isBanned()) {
-                    cqMsg.setMessage("……期待你回来的那一天。");
+                    cqMsg.setMessage(TipConsts.USER_IS_BANNED);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiManager.getUser(null, user.getUserId());
+                userFromAPI = apiManager.getUser(user.getMode(), user.getUserId());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
+                    cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, user.getQq(), user.getUserId()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
@@ -373,20 +361,25 @@ public class CqServiceImpl {
             default:
                 break;
         }
-
-        List<Score> bps = apiManager.getBP(userFromAPI.getUserName(), null);
-
+        //如果不是mybp，并且没有指定mode
+        if (params.getMode() == null && user == null) {
+            //取出四个模式所有BP
+            params.setMode(0);
+        } else if (user != null) {
+            //如果是mybp并且没有指定mode
+            params.setMode(user.getMode());
+        }
+        //如果不是mybp，并且指定了mode，就按指定的mode 获取
+        bpList = apiManager.getBP(params.getMode(), userFromAPI.getUserId());
         ArrayList<Score> todayBP = new ArrayList<>();
 
-        for (int i = 0; i < bps.size(); i++) {
-            //对BP进行遍历，如果产生时间在24小时内
-            if (bps.get(i).getDate().after(Date.from(Instant.now().minus(1, ChronoUnit.DAYS)))) {
-                bps.get(i).setBpId(i);
-                todayBP.add(bps.get(i));
+        for (int i = 0; i < bpList.size(); i++) {
+            //对BP进行遍历，如果产生时间在24小时内，就加入今日bp豪华午餐，并且加上bp所在的编号
+            if (bpList.get(i).getDate().after(Date.from(Instant.now().minus(1, ChronoUnit.DAYS)))) {
+                bpList.get(i).setBpId(i);
+                todayBP.add(bpList.get(i));
             }
         }
-
-
         if (todayBP.size() == 0) {
             cqMsg.setMessage("[CQ:record,file=base64://" + Base64Consts.WAN_BU_LIAO_LA + "]");
             cqManager.sendMsg(cqMsg);
@@ -394,8 +387,8 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-        if (text) {
-            cqMsg.setMessage("请加上#n参数。以文本形式展现今日BP可能会造成刷屏。");
+        if (params.isText()) {
+            cqMsg.setMessage("不（lan）支（de）持（zuo）以文本形式展现今日BP。");
             cqManager.sendMsg(cqMsg);
             return;
         } else {
@@ -404,7 +397,7 @@ public class CqServiceImpl {
                 Beatmap map = apiManager.getBeatmap(aList.getBeatmapId());
                 aList.setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
             }
-            String result = imgUtil.drawUserBP(userFromAPI, todayBP);
+            String result = imgUtil.drawUserBP(userFromAPI, todayBP, params.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
             cqManager.sendMsg(cqMsg);
         }
@@ -413,72 +406,51 @@ public class CqServiceImpl {
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
     @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void printSpecifiedBP(CqMsg cqMsg) {
-        String username;
-        Userinfo userFromAPI = null;
-        User user;
-        int num = 0;
-        boolean text = true;
-        Matcher m = PatternConsts.REG_CMD_REGEX_NUM_PARAM.matcher(cqMsg.getMessage());
-        m.find();
-        try {
-            num = Integer.valueOf(m.group(3));
-            if (num < 0 || num > 100) {
-                cqMsg.setMessage("其他人看不到的东西，白菜也看不到啦。");
-                cqManager.sendMsg(cqMsg);
-                return;
-            }
-        } catch (java.lang.NumberFormatException e) {
-            cqMsg.setMessage("[CQ:record,file=base64://" + Base64Consts.AYA_YA_YA + "]");
+        Params params = paramVerifyUtil.printSpecifiedBP(cqMsg);
+        if (!params.isVaild()) {
+            cqMsg.setMessage(params.getResp());
             cqManager.sendMsg(cqMsg);
             return;
         }
-        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+
+        Userinfo userFromAPI = null;
+        User user = null;
+
+        switch (params.getSubCommandLowCase()) {
             case "bp":
-                //bp和bps是图片/文字的区别，如果是bp会更改这个text的bool值，用于后续控制
-                text = false;
             case "bps":
-                username = m.group(2);
-                if ("白菜".equals(username)) {
-                    cqMsg.setMessage("大白菜（学名：Brassica rapa pekinensis，异名Brassica campestris pekinensis或Brassica pekinensis）" +
-                            "是一种原产于中国的蔬菜，又称“结球白菜”、“包心白菜”、“黄芽白”、“胶菜”等。(via 维基百科)");
-                    cqManager.sendMsg(cqMsg);
-                    return;
-                }
-                userFromAPI = apiManager.getUser(username, null);
+                userFromAPI = apiManager.getUser(0, params.getUsername());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
+                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, params.getUsername()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
             case "bpu":
-                text = false;
             case "bpus":
-                username = m.group(2);
-                userFromAPI = apiManager.getUser(null, Integer.valueOf(username));
+                userFromAPI = apiManager.getUser(0, params.getUserId());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
+                    cqMsg.setMessage(String.format(TipConsts.USERID_GET_FAILED, params.getUserId()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
             case "bpme":
             case "mybp":
-                text = false;
             case "bpmes":
             case "mybps":
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
-                    cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
+                    cqMsg.setMessage(TipConsts.USER_NOT_BIND);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 if (user.isBanned()) {
-                    cqMsg.setMessage("……期待你回来的那一天。");
+                    cqMsg.setMessage(TipConsts.USER_IS_BANNED);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiManager.getUser(null, user.getUserId());
+                userFromAPI = apiManager.getUser(0, user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage("没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
                     cqManager.sendMsg(cqMsg);
@@ -489,27 +461,35 @@ public class CqServiceImpl {
                 break;
         }
 
-        List<Score> bps = apiManager.getBP(userFromAPI.getUserName(), null);
-
-
-        if (num > bps.size()) {
+        List<Score> bpList;
+        //如果不是mybp，并且没有指定mode
+        if (params.getMode() == null && user == null) {
+            //取出四个模式所有BP
+            params.setMode(0);
+        } else if (user != null) {
+            //如果是mybp并且没有指定mode
+            params.setMode(user.getMode());
+        }
+        //如果不是mybp，并且指定了mode，就按指定的mode 获取
+        bpList = apiManager.getBP(params.getMode(), userFromAPI.getUserId());
+        if (params.getNum() > bpList.size()) {
             cqMsg.setMessage("该玩家没有打出指定的bp……");
             cqManager.sendMsg(cqMsg);
             return;
         } else {
-            if (text) {
+            if (params.isText()) {
                 //list基于0，得-1
-                Score score = bps.get(num - 1);
-                logger.info("获得了玩家" + userFromAPI.getUserName() + "的第" + num + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
+                Score score = bpList.get(params.getNum() - 1);
+                logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + params.getMode() + "的第" + params.getNum() + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
                 Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
                 cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName()));
                 cqManager.sendMsg(cqMsg);
             } else {
                 //list基于0，得-1
-                Score score = bps.get(num - 1);
-                logger.info("获得了玩家" + userFromAPI.getUserName() + "的第" + num + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
+                Score score = bpList.get(params.getNum() - 1);
+                logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + params.getMode() + "的第" + params.getNum() + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
                 Beatmap map = apiManager.getBeatmap(score.getBeatmapId());
-                String result = imgUtil.drawResult(userFromAPI, score, map);
+                String result = imgUtil.drawResult(userFromAPI, score, map, params.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
                 cqManager.sendMsg(cqMsg);
             }
@@ -525,7 +505,7 @@ public class CqServiceImpl {
         m.find();
 
         username = m.group(2);
-        userFromAPI = apiManager.getUser(username, null);
+        userFromAPI = apiManager.getUser(0, username);
         if (userFromAPI == null) {
             cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
             cqManager.sendMsg(cqMsg);
@@ -540,7 +520,7 @@ public class CqServiceImpl {
             user = userDAO.getUser(null, userFromAPI.getUserId());
             if (user == null) {
                 //如果没有使用过白菜的话
-                user = new User(userFromAPI.getUserId(), "creep", cqMsg.getUserId(), "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
+                user = new User(userFromAPI.getUserId(), "creep", cqMsg.getUserId(), "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
                 userDAO.addUser(user);
                 if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
                     userFromAPI.setQueryDate(LocalDate.now());
@@ -706,7 +686,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L})
     public void myScore(CqMsg cqMsg) {
         SearchParam searchParam = parseSearchKeyword(cqMsg);
         if (searchParam == null) {
@@ -854,7 +834,8 @@ public class CqServiceImpl {
                 qq = Long.valueOf(m.group(3));
                 if (user == null) {
                     //进行登记，构建user存入，将userinfo加上时间存入
-                    user = new User(userFromAPI.getUserId(), "creep", qq, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
+                    //2018-1-24 16:04:55修正：构建user的时候就写入role
+                    user = new User(userFromAPI.getUserId(), role, qq, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
                     userDAO.addUser(user);
                     if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
                         userFromAPI.setQueryDate(LocalDate.now());
@@ -863,7 +844,7 @@ public class CqServiceImpl {
                     }
                     userInfoDAO.addUserInfo(userFromAPI);
                     int scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
-                    filename = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank);
+                    filename = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank, user.getMode());
                     resp = "登记成功，用户组已修改为" + role;
                     resp = resp.concat("\n[CQ:image,file=base64://" + filename + "]");
                 } else {
@@ -880,7 +861,7 @@ public class CqServiceImpl {
                     }
                     userDAO.updateUser(user);
                     int scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
-                    filename = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank);
+                    filename = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank, user.getMode());
                     resp = resp.concat("\n[CQ:image,file=base64://" + filename + "]");
                 }
                 cqMsg.setMessage(resp);
@@ -958,7 +939,7 @@ public class CqServiceImpl {
                             near = true;
                         }
                         int scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
-                        String filename = imgUtil.drawUserInfo(userFromAPI, userInDB, role, 1, near, scoreRank);
+                        String filename = imgUtil.drawUserInfo(userFromAPI, userInDB, role, 1, near, scoreRank, user.getMode());
                         resp = resp.concat("\n[CQ:image,file=base64://" + filename + "]");
                     }
                     userDAO.updateUser(user);
@@ -1011,31 +992,22 @@ public class CqServiceImpl {
                 //只处理mp4 5的褪裙
                 return;
         }
+        switch (cqMsg.getSubType()) {
+            case "leave":
+                resp = "检测到QQ为" + cqMsg.getUserId() + "的玩家退出" + role + "群；";
+                break;
+            case "kick":
+                resp = "检测到QQ为" + cqMsg.getUserId() + "的玩家被" + cqMsg.getOperatorId() + "移出" + role + "群；";
+        }
         if (user == null) {
             //褪裙的人没有用过白菜
-            resp = "检测到QQ为" + cqMsg.getUserId() + "的玩家退出" + role + "群；" +
-                    "该玩家没有使用过白菜。";
+            resp += "该玩家没有使用过白菜。";
         } else {
             Userinfo userFromAPI = apiManager.getUser(null, user.getUserId());
-            List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
-            //2017-11-27 21:04:36 增强健壮性，只有在含有这个role的时候才进行移除
-            if (roles.contains(role)) {
-                roles.remove(role);
-            }
-            if (roles.size() == 0) {
-                newRole = "creep";
-            } else {
-                //转换为字符串，此处得去除空格（懒得遍历+拼接了）
-                //2017-12-6 14:24:25当时我为啥不用json……看起来好不优雅啊这样
-                newRole = roles.toString().replace(" ", "").
-                        substring(1, roles.toString().replace(" ", "").indexOf("]"));
-
-            }
-            user.setRole(newRole);
+            user = roleUtil.delRole(role, user);
             userDAO.updateUser(user);
-            resp = "检测到QQ为" + cqMsg.getUserId() + "的玩家退出" + role + "群；" +
-                    "已自动将玩家" + userFromAPI.getUserName() + "从" + role + "用户组中移除。";
-            resp += "\n修改后的用户组为：" + newRole;
+            resp += "已自动将玩家" + userFromAPI.getUserName() + "从" + role + "用户组中移除。";
+            resp += "\n修改后的用户组为：" + user.getRole();
         }
         cqMsg.setGroupId(chartGroupId);
         cqMsg.setMessageType("group");
@@ -1091,7 +1063,7 @@ public class CqServiceImpl {
                 if (user == null) {
                     logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
                     //构造User对象写入数据库
-                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
+                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
                     userDAO.addUser(user);
                     if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
                         userFromAPI.setQueryDate(LocalDate.now());
@@ -1236,7 +1208,10 @@ public class CqServiceImpl {
         //新格式
 
         //比较菜，手动补齐参数
-
+        if (!keyword.contains("-")) {
+            //如果没有横杠，手动补齐
+            keyword = "-" + keyword;
+        }
         if (!(keyword.endsWith("]") || keyword.endsWith(")") || keyword.endsWith("}"))) {
             //如果圆括号 方括号 花括号都没有
             keyword += "[](){}";
@@ -1331,7 +1306,7 @@ public class CqServiceImpl {
                 if (user == null) {
                     logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
                     //构造User对象写入数据库
-                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
+                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
                     userDAO.addUser(user);
                     if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
                         userFromAPI.setQueryDate(LocalDate.now());
@@ -1374,7 +1349,7 @@ public class CqServiceImpl {
         List<Score> bps = apiManager.getBP(userFromAPI.getUserName(), null);
 
         double scorepp = calculateScorePP(bps);
-        Float totalpp = userFromAPI.getPpRaw();
+        double totalpp = userFromAPI.getPpRaw();
         double bonuspp = totalpp - scorepp;
 
         int scoreCount = ((int) (Math.log10(-(bonuspp / 416.6667D) + 1.0D) / Math.log10(0.9994D)));
@@ -1464,9 +1439,8 @@ public class CqServiceImpl {
 
     @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void changeLog(CqMsg cqMsg) {
-        String resp = "2018-1-17" +
-                "\n*修正 现在/userinfo的API只支持uid（虽然其实没啥区别，即使指定为uid，ppy依然会去搜索id。）" +
-                "\n*新增 加入/userinfo/nearest/uid的API；获取数据库中距离今天最近的一条记录。";
+        String resp = "2018-1-29" +
+                "\n*新增 All-Mode Support。";
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
@@ -1481,186 +1455,168 @@ public class CqServiceImpl {
         List<Integer> list = userDAO.listUserIdByRole(null, false);
         for (Integer aList : list) {
             User user = userDAO.getUser(null, aList);
-            Userinfo userinfo = apiManager.getUser(null, aList);
-            if (userinfo != null) {
-                //将日期改为一天前写入
-                userinfo.setQueryDate(LocalDate.now().minusDays(1));
-                userInfoDAO.addUserInfo(userinfo);
-                logger.info("将" + userinfo.getUserName() + "的数据录入成功");
-                if (!userinfo.getUserName().equals(user.getCurrentUname())) {
-                    //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
-                    List<String> legacyUname = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
-                    }.getType());
-                    if (user.getCurrentUname() != null) {
-                        legacyUname.add(user.getCurrentUname());
+            //TODO userinfo和user表加字段存储mode
+            //这里四个模式都要更新，但是只有主模式的才判断PP超限
+            for (int i = 0; i < 4; i++) {
+                Userinfo userinfo = apiManager.getUser(i, aList);
+                if (userinfo != null) {
+                    //将日期改为一天前写入
+                    userinfo.setQueryDate(LocalDate.now().minusDays(1));
+                    userInfoDAO.addUserInfo(userinfo);
+                    logger.info("将" + userinfo.getUserName() + "的数据录入成功");
+                    if (!userinfo.getUserName().equals(user.getCurrentUname())) {
+                        //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
+                        List<String> legacyUname = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
+                        }.getType());
+                        if (user.getCurrentUname() != null) {
+                            legacyUname.add(user.getCurrentUname());
+                        }
+                        user.setLegacyUname(new Gson().toJson(legacyUname));
+                        user.setCurrentUname(userinfo.getUserName());
+                        logger.info("检测到玩家" + userinfo.getUserName() + "改名，已登记");
                     }
-                    user.setLegacyUname(new Gson().toJson(legacyUname));
-                    user.setCurrentUname(userinfo.getUserName());
-                    logger.info("检测到玩家" + userinfo.getUserName() + "改名，已登记");
+                    handlePPOverflow(user, userinfo);
+
+                    //如果能获取到userinfo，就把banned设置为0
+                    user.setBanned(false);
+                    userDAO.updateUser(user);
+                } else {
+                    //将null的用户直接设为banned
+                    user.setBanned(true);
+                    logger.info("检测到玩家" + user.getUserId() + "被Ban，已登记");
+                    userDAO.updateUser(user);
                 }
-                //如果用户在mp4组
-                List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
-                if (roles.contains("mp4")) {
-                    CqMsg cqMsg = new CqMsg();
-                    cqMsg.setMessageType("group");
-                    cqMsg.setGroupId(564679329L);
-                    //并且刷超了
-                    CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
-                    if (cqResponse != null) {
-                        if (cqResponse.getData() != null) {
-                            if (!cqResponse.getData().getCard().toLowerCase(Locale.CHINA).replace("_", " ")
-                                    .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的群名片没有包含完整id。请修改名片。");
-                                cqManager.sendMsg(cqMsg);
-                            }
-                        }
-                    }
-                    if (userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49) {
-
-                        //回溯昨天这时候检查到的pp
-                        Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(2));
-                        //如果昨天这时候的PP存在，并且也超了
-                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49) {
-                            //继续回溯前天这时候的PP
-                            lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(3));
-                            //如果前天这时候的PP存在，并且也超了
-                            if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49) {
-                                //回溯大前天的PP
-                                lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(4));
-                                //如果大前天这个时候也超了，就飞了
-                                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp4PP")) + 0.49) {
-                                    if (!user.getQq().equals(0L)) {
-                                        cqMsg.setUserId(user.getQq());
-                                        cqMsg.setMessageType("kick");
-                                        cqManager.sendMsg(cqMsg);
-                                        cqMsg.setMessageType("private");
-                                        cqMsg.setMessage("由于PP超限，已将你移出MP4群。请考虑加入mp3群：234219559。");
-                                        cqManager.sendMsg(cqMsg);
-                                        //清除用户组，并且踢人
-                                        String newRole;
-                                        roles.remove("mp4");
-                                        if (roles.size() == 0) {
-                                            newRole = "creep";
-                                        } else {
-                                            newRole = roles.toString().replace(" ", "").
-                                                    substring(1, roles.toString().replace(" ", "").indexOf("]"));
-                                        }
-                                        user.setRole(newRole);
-                                        userDAO.updateUser(user);
-                                    }
-                                } else {
-                                    //大前天没超
-                                    if (!user.getQq().equals(0L)) {
-                                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp3群：234219559。");
-                                        cqManager.sendMsg(cqMsg);
-                                    }
-                                }
-                            } else {
-                                //前天没超
-                                if (!user.getQq().equals(0L)) {
-                                    cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp3群：234219559。");
-                                    cqManager.sendMsg(cqMsg);
-                                }
-                                continue;
-                            }
-                        } else {
-                            //昨天没超
-                            if (!user.getQq().equals(0L)) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp3群：234219559。");
-                                cqManager.sendMsg(cqMsg);
-                            }
-
-                        }
-                        continue;
-                    }
-
-                }
-
-                if (roles.contains("mp5")) {
-                    CqMsg cqMsg = new CqMsg();
-                    cqMsg.setMessageType("group");
-                    cqMsg.setGroupId(201872650L);
-                    CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
-                    if (cqResponse != null) {
-                        if (cqResponse.getData() != null) {
-                            if (!cqResponse.getData().getCard().toLowerCase(Locale.CHINA).replace("_", " ")
-                                    .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的群名片没有包含完整id。请修改名片。");
-                                cqManager.sendMsg(cqMsg);
-                            }
-                        }
-                    }
-                    //并且刷超了
-                    if (userinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49) {
-
-                        //回溯昨天这时候检查到的pp
-                        Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(2));
-                        //如果昨天这时候的PP存在，并且也超了
-                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49) {
-                            //继续回溯前天这时候的PP
-                            lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(3));
-                            //如果前天这时候的PP存在，并且也超了
-                            if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49) {
-                                //回溯大前天的PP
-                                lastDayUserinfo = userInfoDAO.getUserInfo(aList, LocalDate.now().minusDays(4));
-                                //如果大前天这个时候也超了，就飞了
-                                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("mp5PP")) + 0.49) {
-                                    if (!user.getQq().equals(0L)) {
-                                        cqMsg.setUserId(user.getQq());
-                                        cqMsg.setMessageType("kick");
-                                        cqManager.sendMsg(cqMsg);
-                                        cqMsg.setMessageType("private");
-                                        cqMsg.setMessage("由于PP超限，已将你移出MP5群。请考虑加入mp4群：564679329。");
-                                        cqManager.sendMsg(cqMsg);
-                                        String newRole;
-
-                                        roles.remove("mp5");
-                                        if (roles.size() == 0) {
-                                            newRole = "creep";
-                                        } else {
-                                            newRole = roles.toString().replace(" ", "").
-                                                    substring(1, roles.toString().replace(" ", "").indexOf("]"));
-                                        }
-                                        user.setRole(newRole);
-                                        userDAO.updateUser(user);
-                                    }
-                                } else {
-                                    //大前天没超
-                                    if (!user.getQq().equals(0L)) {
-                                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp4群：564679329。");
-                                        cqManager.sendMsg(cqMsg);
-                                    }
-                                }
-                            } else {
-                                //前天没超
-                                if (!user.getQq().equals(0L)) {
-                                    cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp4群：564679329。");
-                                    cqManager.sendMsg(cqMsg);
-                                }
-                                continue;
-                            }
-                        } else {
-                            //昨天没超
-                            if (!user.getQq().equals(0L)) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp4群：564679329。");
-                                cqManager.sendMsg(cqMsg);
-                            }
-
-                        }
-                        continue;
-                    }
-
-                }
-
-                //如果能获取到userinfo，就把banned设置为0
-                user.setBanned(false);
-                userDAO.updateUser(user);
-            } else {
-                //将null的用户直接设为banned
-                user.setBanned(true);
-                logger.info("检测到玩家" + user.getUserId() + "被Ban，已登记");
-                userDAO.updateUser(user);
             }
+        }
+    }
+
+    private void handlePPOverflow(User user, Userinfo userinfo) {
+        //如果用户在mp4组
+        List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
+        if (roles.contains("mp4")) {
+            CqMsg cqMsg = new CqMsg();
+            cqMsg.setMessageType("group");
+            cqMsg.setGroupId(564679329L);
+            //并且刷超了
+            CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
+            if (cqResponse != null) {
+                if (cqResponse.getData() != null) {
+                    if (!cqResponse.getData().getCard().toLowerCase(Locale.CHINA).replace("_", " ")
+                            .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
+                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的群名片没有包含完整id。请修改名片。");
+                        cqManager.sendMsg(cqMsg);
+                    }
+                }
+            }
+            if (userinfo.getPpRaw() > 5100 + 0.49) {
+                //回溯昨天这时候检查到的pp
+                Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(2));
+                //如果昨天这时候的PP存在，并且也超了
+                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 5100 + 0.49) {
+                    //继续回溯前天这时候的PP
+                    lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(3));
+                    //如果前天这时候的PP存在，并且也超了
+                    if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 5100 + 0.49) {
+                        //回溯大前天的PP
+                        lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(4));
+                        //如果大前天这个时候也超了，就飞了
+                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 5100 + 0.49) {
+                            if (!user.getQq().equals(0L)) {
+                                cqMsg.setUserId(user.getQq());
+                                cqMsg.setMessageType("kick");
+                                cqManager.sendMsg(cqMsg);
+                                cqMsg.setMessageType("private");
+                                cqMsg.setMessage("由于PP超限，已将你移出MP4群。请考虑加入mp3群：234219559。");
+                                cqManager.sendMsg(cqMsg);
+                                //2018-1-29 12:01:06 现在飞的时候会自动清理用户组
+                            }
+                        } else {
+                            //大前天没超
+                            if (!user.getQq().equals(0L)) {
+                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp3群：234219559。");
+                                cqManager.sendMsg(cqMsg);
+                            }
+                        }
+                    } else {
+                        //前天没超
+                        if (!user.getQq().equals(0L)) {
+                            cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp3群：234219559。");
+                            cqManager.sendMsg(cqMsg);
+                        }
+                    }
+                } else {
+                    //昨天没超
+                    if (!user.getQq().equals(0L)) {
+                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp3群：234219559。");
+                        cqManager.sendMsg(cqMsg);
+                    }
+
+                }
+            }
+
+        }
+
+        if (roles.contains("mp5")) {
+            CqMsg cqMsg = new CqMsg();
+            cqMsg.setMessageType("group");
+            cqMsg.setGroupId(201872650L);
+            CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
+            if (cqResponse != null) {
+                if (cqResponse.getData() != null) {
+                    if (!cqResponse.getData().getCard().toLowerCase(Locale.CHINA).replace("_", " ")
+                            .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
+                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的群名片没有包含完整id。请修改名片。");
+                        cqManager.sendMsg(cqMsg);
+                    }
+                }
+            }
+            //并且刷超了
+            if (userinfo.getPpRaw() > 4000 + 0.49) {
+
+                //回溯昨天这时候检查到的pp
+                Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(2));
+                //如果昨天这时候的PP存在，并且也超了
+                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4000 + 0.49) {
+                    //继续回溯前天这时候的PP
+                    lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(3));
+                    //如果前天这时候的PP存在，并且也超了
+                    if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4000 + 0.49) {
+                        //回溯大前天的PP
+                        lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(4));
+                        //如果大前天这个时候也超了，就飞了
+                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4000 + 0.49) {
+                            if (!user.getQq().equals(0L)) {
+                                cqMsg.setUserId(user.getQq());
+                                cqMsg.setMessageType("kick");
+                                cqManager.sendMsg(cqMsg);
+                                cqMsg.setMessageType("private");
+                                cqMsg.setMessage("由于PP超限，已将你移出MP5群。请考虑加入mp4群：564679329。");
+                                cqManager.sendMsg(cqMsg);
+                            }
+                        } else {
+                            //大前天没超
+                            if (!user.getQq().equals(0L)) {
+                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp4群：564679329。");
+                                cqManager.sendMsg(cqMsg);
+                            }
+                        }
+                    } else {
+                        //前天没超
+                        if (!user.getQq().equals(0L)) {
+                            cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp4群：564679329。");
+                            cqManager.sendMsg(cqMsg);
+                        }
+                    }
+                } else {
+                    //昨天没超
+                    if (!user.getQq().equals(0L)) {
+                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp4群：564679329。");
+                        cqManager.sendMsg(cqMsg);
+                    }
+
+                }
+            }
+
         }
     }
 
@@ -1669,7 +1625,7 @@ public class CqServiceImpl {
      */
     @Scheduled(cron = "0 0 4 * * ?")
     public void clearTodayImages() {
-        final Path path = Paths.get(OverallConsts.CABBAGE_CONFIG.getString("path") + "/data/image");
+        final Path path = Paths.get("/root/coolq/data/image");
         SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -1678,7 +1634,7 @@ public class CqServiceImpl {
                 return super.visitFile(file, attrs);
             }
         };
-        final Path path2 = Paths.get(OverallConsts.CABBAGE_CONFIG.getString("path") + "/data/record");
+        final Path path2 = Paths.get("/root/coolq/data/record");
         SimpleFileVisitor<Path> finder2 = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -1696,5 +1652,6 @@ public class CqServiceImpl {
         }
 
     }
+
 
 }

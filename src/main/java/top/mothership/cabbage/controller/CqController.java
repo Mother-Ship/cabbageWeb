@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.manager.DayLilyManager;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.serviceImpl.AnalyzeServiceImpl;
 import top.mothership.cabbage.serviceImpl.CqAdminServiceImpl;
@@ -35,6 +36,7 @@ public class CqController {
     private final MpServiceImpl mpService;
     private final CqManager cqManager;
     private final AnalyzeServiceImpl analyzeService;
+    private final DayLilyManager dayLilyManager;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     /**
@@ -45,15 +47,17 @@ public class CqController {
      * @param mpService
      * @param cqManager
      * @param analyzeService
+     * @param dayLilyManager
      */
     @Autowired
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, MpServiceImpl mpService, CqManager cqManager, AnalyzeServiceImpl analyzeService) {
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, MpServiceImpl mpService, CqManager cqManager, AnalyzeServiceImpl analyzeService, DayLilyManager dayLilyManager) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
         this.cqAdminService = cqAdminService;
         this.mpService = mpService;
         this.cqManager = cqManager;
         this.analyzeService = analyzeService;
+        this.dayLilyManager = dayLilyManager;
     }
 
     /**
@@ -211,8 +215,8 @@ public class CqController {
                                 case "pp":
                                     cqAdminService.listUserPP(cqMsg);
                                     break;
-                                case "findplayer":
-                                    cqAdminService.findPlayer(cqMsg);
+                                case "searchplayer":
+                                    cqAdminService.searchPlayer(cqMsg);
                                     break;
                                 case "scancard":
                                     cqAdminService.scanCard(cqMsg);
@@ -275,14 +279,15 @@ public class CqController {
                             }
                             break;
                         default:
-                            Matcher recentQianeseMatcher = PatternConsts.QIANESE_RECENT.matcher(cmdMatcher.group(1).toLowerCase(Locale.CHINA));
-                            if(recentQianeseMatcher.find()){
-                                cqService.recent(cqMsg);
-                            }
+//                            Matcher recentQianeseMatcher = PatternConsts.QIANESE_RECENT.matcher(cmdMatcher.group(1).toLowerCase(Locale.CHINA));
+//                            if(recentQianeseMatcher.find()){
+//                                cqService.recent(cqMsg);
+//                            }
                             switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                                 case "stat":
                                 case "statu":
                                 case "statme":
+                                    //TODO 验证参数放在Controller里，写一个Util类专门验证参数
                                     cqService.statUserInfo(cqMsg);
                                     break;
                                 case "bp":
@@ -293,8 +298,9 @@ public class CqController {
                                 case "mybp":
                                 case "mybps":
                                 case "bpmes":
-                                    Matcher cmdMatcherWithNum = PatternConsts.REG_CMD_REGEX_NUM_PARAM.matcher(msg);
-                                    if (cmdMatcherWithNum.find()) {
+                                    Matcher cmdMatcherWithNum = PatternConsts.REG_CMD_REGEX_SHARP_NUM_PARAM.matcher(msg);
+                                    Matcher cmdMatcherWithTwoNums = PatternConsts.REG_CMD_REGEX_TWO_PARAMS.matcher(msg);
+                                    if (cmdMatcherWithNum.find() || cmdMatcherWithTwoNums.find()) {
                                         //如果有指定#n
                                         cqService.printSpecifiedBP(cqMsg);
                                     } else {
@@ -367,6 +373,8 @@ public class CqController {
                                     cqService.changeLog(cqMsg);
                                     break;
                                 default:
+                                    /// 转交给黄花菜
+//                                    dayLilyManager.sendMsg(cqMsg);
                                     break;
 
                             }

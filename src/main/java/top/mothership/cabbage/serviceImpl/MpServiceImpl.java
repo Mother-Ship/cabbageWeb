@@ -152,9 +152,9 @@ public class MpServiceImpl {
                 cqManager.sendMsg(cqMsg);
                 return;
             }
-            userFromAPI = apiManager.getUser(null, targetUser.getUserId());
+            userFromAPI = apiManager.getUser(0, targetUser.getUserId());
         } else {
-            userFromAPI = apiManager.getUser(target, null);
+            userFromAPI = apiManager.getUser(0, target);
             if (userFromAPI == null) {
                 cqMsg.setMessage("没有获取到id是" + target + "的玩家。");
                 cqManager.sendMsg(cqMsg);
@@ -163,7 +163,7 @@ public class MpServiceImpl {
                 targetUser = userDAO.getUser(null, userFromAPI.getUserId());
                 //录入
                 if (targetUser == null) {
-                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
+                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
                     userDAO.addUser(user);
                     if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
                         userFromAPI.setQueryDate(LocalDate.now());

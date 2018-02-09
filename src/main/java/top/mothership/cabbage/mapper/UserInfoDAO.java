@@ -11,7 +11,8 @@ import java.util.List;
 public interface UserInfoDAO{
 
     @Insert("INSERT INTO `userinfo` VALUES(null," +
-            "#{userinfo.userId},#{userinfo.count300},#{userinfo.count100}," +
+            "#{userinfo.userId},#{userinfo.mode}," +
+            "#{userinfo.count300},#{userinfo.count100}," +
             "#{userinfo.count50},#{userinfo.playCount}," +
             "#{userinfo.accuracy},#{userinfo.ppRaw}," +
             "#{userinfo.rankedScore},#{userinfo.totalScore}," +
@@ -25,11 +26,11 @@ public interface UserInfoDAO{
     List<Userinfo> listUserInfoByUserId(@Param("userId") Integer userId);
 
     @Select("SELECT * , abs(UNIX_TIMESTAMP(queryDate) - UNIX_TIMESTAMP(#{queryDate})) AS ds " +
-            "FROM `userinfo`  WHERE `user_id` = #{userId} ORDER BY ds ASC LIMIT 1")
-    Userinfo getNearestUserInfo(@Param("userId") Integer userId, @Param("queryDate") LocalDate queryDate);
+            "FROM `userinfo`  WHERE `user_id` = #{userId} AND `mode` = #{mode} ORDER BY ds ASC LIMIT 1")
+    Userinfo getNearestUserInfo(@Param("mode") Integer mode, @Param("userId") Integer userId, @Param("queryDate") LocalDate queryDate);
 
-    @Select("SELECT * FROM `userinfo` WHERE `user_id` = #{userId} AND `queryDate` = #{queryDate}")
-    Userinfo getUserInfo(@Param("userId") Integer userId, @Param("queryDate") LocalDate queryDate);
+    @Select("SELECT * FROM `userinfo` WHERE `user_id` = #{userId} AND `queryDate` = #{queryDate} AND `mode` = #{mode}")
+    Userinfo getUserInfo(@Param("mode") Integer mode, @Param("userId") Integer userId, @Param("queryDate") LocalDate queryDate);
 
     @Delete("DELETE FROM `userinfo` WHERE `queryDate` = #{queryDate}")
     void clearTodayInfo(@Param("queryDate") LocalDate queryDate);

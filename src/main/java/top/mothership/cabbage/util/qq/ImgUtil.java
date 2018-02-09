@@ -1,13 +1,13 @@
 package top.mothership.cabbage.util.qq;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.manager.WebPageManager;
-import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
@@ -24,28 +24,42 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
 
 
-@Component
-@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS, value = "prototype")
 /**
- * 采用原型模式注入，避免出现错群问题
- * 2017-11-6 12:50:14改为全部返回BASE64编码
+ * 绘图工具类。
+ *
+ * @author QHS
  */
+@Component
+//采用原型模式注入，避免出现错群问题
+//2017-11-6 12:50:14改为全部返回BASE64编码
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS, value = "prototype")
+
+
 public class ImgUtil {
     /**
-     * 采用原型模式注入，避免出现错群问题
      * 2017-9-8 13:55:42我他妈是个智障……没初始化的map我在下面用
      */
     public static Map<String, BufferedImage> images;
     private WebPageManager webPageManager;
     private ScoreUtil scoreUtil;
+    private static Logger logger = LogManager.getLogger(ImgUtil.class);
+
+    /**
+     * Instantiates a new Img util.
+     *
+     * @param webPageManager the web page manager
+     * @param scoreUtil      the score util
+     */
     @Autowired
-    public ImgUtil(WebPageManager webPageManager, ScoreUtil scoreUtil, ResDAO resDAO) {
+    public ImgUtil(WebPageManager webPageManager, ScoreUtil scoreUtil) {
         this.webPageManager = webPageManager;
         this.scoreUtil = scoreUtil;
         //我明白了 loadcache不能放在这个类的构造函数里，因为每次要绘图都会实例化一个新的ImgUtil，然后这个静态的缓存都会被重新刷新一次
@@ -54,21 +68,24 @@ public class ImgUtil {
     }
 
 
-    /**为线程安全，将当前时间毫秒数加入文件名并返回(被废弃：已经采用base64编码)
+    /**
+     * 绘制Stat图片（已改造完成）
+     * 为线程安全，将当前时间毫秒数加入文件名并返回(被废弃：已经采用base64编码)
      *
      * @param userFromAPI 最新用户信息
-     * @param userInDB 作为对比的信息
-     * @param role 用户组
-     * @param day 对比的天数
-     * @param near 是否是接近的数据
-     * @param scoreRank scoreRank
-     * @return
+     * @param userInDB    作为对比的信息
+     * @param role        用户组
+     * @param day         对比的天数
+     * @param near        是否是接近的数据
+     * @param scoreRank   scoreRank
+     * @param mode        模式，只支持0/1/2/3
+     * @return Base64字串 string
      */
-    public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean near, int scoreRank) {
+    public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean near, int scoreRank, Integer mode) {
         BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId());
         BufferedImage bg;
-        BufferedImage layout = getCopyImage(images.get(OverallConsts.CABBAGE_CONFIG.getString("layout")));
-        BufferedImage scoreRankBG = getCopyImage(images.get(OverallConsts.CABBAGE_CONFIG.getString("scoreRankBG")));
+        BufferedImage layout = getCopyImage(images.get("layout.png"));
+        BufferedImage scoreRankBG = getCopyImage(images.get("scorerank.png"));
         BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
 
         bg = images.get(String.valueOf(userFromAPI.getUserId()) + ".png");
@@ -85,59 +102,67 @@ public class ImgUtil {
         }
 
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
-        //绘制布局和用户组
-
+        //绘制布局
         g2.drawImage(layout, 0, 0, null);
-
+        //模式的图标
+        g2.drawImage(images.get("mode-" + mode + ".png").getScaledInstance(57, 57, Image.SCALE_SMOOTH), 351, 68, null);
+        //用户组对应的背景
         g2.drawImage(roleBg, 0, 0, null);
         try {
-            g2.drawImage(ava, Integer.decode(OverallConsts.CABBAGE_CONFIG.getString("avax")), Integer.decode(OverallConsts.CABBAGE_CONFIG.getString("avay")), null);
-        } catch (NullPointerException e) {
-            e.getMessage();
+            //绘制头像
+            g2.drawImage(ava, 160, 22, null);
+        } catch (NullPointerException ignore) {
+            //没有头像。不做处理
         }
+
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        //将scorerank比用户名先画
+        //将score rank比用户名先画
 
         if (scoreRank > 0) {
-            //把scorerank用到的bg画到bg上
+            //把score rank用到的bg画到bg上
             g2.drawImage(scoreRankBG, 653, 7, null);
+            Integer x;
             if (scoreRank < 100) {
-                draw(g2, "scoreRankColor", "scoreRankFont", "scoreRankSize", "#" + Integer.toString(scoreRank), "scoreRank2x", "scoreRank2y");
+                x = 722;
             } else {
-                draw(g2, "scoreRankColor", "scoreRankFont", "scoreRankSize", "#" + Integer.toString(scoreRank), "scoreRankx", "scoreRanky");
+                x = 697;
             }
+            drawTextToImage(g2, "#FFFFFF", "Gayatri", 50, "#" + scoreRank, x, 58);
         }
 
         //绘制用户名
-        draw(g2, "unameColor", "unameFont", "unameSize", userFromAPI.getUserName(), "namex", "namey");
+        drawTextToImage(g2, "#000000", "Aller light", 48, userFromAPI.getUserName(), 349, 60);
         //绘制Rank
-        draw(g2, "defaultColor", "numberFont", "rankSize", "#" + userFromAPI.getPpRank(), "rankx", "ranky");
+        drawTextToImage(g2, "#222222", "Futura Std Medium", 48, "#" + userFromAPI.getPpRank(), 415, 114);
         //绘制PP
-        draw(g2, "ppColor", "numberFont", "ppSize", String.valueOf(userFromAPI.getPpRaw()), "ppx", "ppy");
+        drawTextToImage(g2, "#555555", "Futura Std Medium", 36, String.valueOf(userFromAPI.getPpRaw()), 469, 157);
         //绘制RankedScore
-        draw(g2, "defaultColor", "numberFont", "numberSize",
-                new DecimalFormat("###,###").format(userFromAPI.getRankedScore()), "rScorex", "rScorey");
+        drawTextToImage(g2, "#222222", "Futura Std Medium", 30,
+                new DecimalFormat("###,###").format(userFromAPI.getRankedScore()), 370, 206);
         //绘制acc
-        draw(g2, "defaultColor", "numberFont", "numberSize",
-                new DecimalFormat("##0.00").format(userFromAPI.getAccuracy()) + "%", "accx", "accy");
+        drawTextToImage(g2, "#222222", "Futura Std Medium", 30,
+                new DecimalFormat("##0.00").format(userFromAPI.getAccuracy()) + "%", 357, 255);
         //绘制pc
-        draw(g2, "defaultColor", "numberFont", "numberSize",
-                new DecimalFormat("###,###").format(userFromAPI.getPlayCount()), "pcx", "pcy");
+        drawTextToImage(g2, "#222222", "Futura Std Medium", 30,
+                new DecimalFormat("###,###").format(userFromAPI.getPlayCount()), 344, 302);
         //绘制tth
-        draw(g2, "defaultColor", "numberFont", "numberSize",
-                new DecimalFormat("###,###").format(userFromAPI.getCount50() + userFromAPI.getCount100() + userFromAPI.getCount300()), "tthx", "tthy");
+        drawTextToImage(g2, "#222222", "Futura Std Medium", 30,
+                new DecimalFormat("###,###").format(userFromAPI.getCount50() + userFromAPI.getCount100() + userFromAPI.getCount300()),
+                333, 350);
         //绘制Level
-        draw(g2, "defaultColor", "numberFont", "numberSize",
-                Integer.toString((int) Math.floor(userFromAPI.getLevel())) + " (" + (int) ((userFromAPI.getLevel() - Math.floor(userFromAPI.getLevel())) * 100) + "%)", "levelx", "levely");
+        drawTextToImage(g2, "#222222", "Futura Std Medium", 30,
+                Integer.toString((int) Math.floor(userFromAPI.getLevel())) + " (" + (int) ((userFromAPI.getLevel() - Math.floor(userFromAPI.getLevel())) * 100) + "%)",
+                320, 398);
         //绘制SS计数
-        draw(g2, "defaultColor", "numberFont", "countSize", Integer.toString(userFromAPI.getCountRankSs()), "ssCountx", "ssCounty");
+        drawTextToImage(g2, "#222222", "Futura Std Medium", 24, Integer.toString(userFromAPI.getCountRankSs()), 343, 445);
         //绘制S计数
-        draw(g2, "defaultColor", "numberFont", "countSize", Integer.toString(userFromAPI.getCountRankS()), "sCountx", "sCounty");
+        drawTextToImage(g2, "#222222", "Futura Std Medium", 24, Integer.toString(userFromAPI.getCountRankS()), 496, 445);
         //绘制A计数
-        draw(g2, "defaultColor", "numberFont", "countSize", Integer.toString(userFromAPI.getCountRankA()), "aCountx", "aCounty");
+        drawTextToImage(g2, "#222222", "Futura Std Medium", 24, Integer.toString(userFromAPI.getCountRankA()), 666, 445);
         //绘制当时请求的时间
-        draw(g2, "timeColor", "timeFont", "timeSize",
-                new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime()), "timex", "timey");
+        drawTextToImage(g2, "#BC2C00", "Ubuntu Medium", 18, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss"))
+//        new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime())
+                , 802, 452);
         //---------------------------以上绘制在线部分完成--------------------------------
         //试图查询数据库中指定日期的user
         //这里应该是不需要防null判断的
@@ -153,15 +178,15 @@ public class ImgUtil {
                 //只有day>1才会出现文字
                 if (near) {
                     //如果取到的是模糊数据
-                    draw(g2, "tipColor", "tipFont", "tipSize", "请求的日期没有数据", "tipx", "tipy");
+                    drawTextToImage(g2, "#666666", "宋体", 15, "请求的日期没有数据", 718, 138);
                     //算出天数差别
-                    draw(g2, "tipColor", "tipFont", "tipSize", "『对比于" +
-                            ChronoUnit.DAYS.between(userInDB.getQueryDate(),LocalDate.now())
+                    drawTextToImage(g2, "#666666", "宋体", 15, "『对比于" +
+                            ChronoUnit.DAYS.between(userInDB.getQueryDate(), LocalDate.now())
 //                            Long.valueOf(((Calendar.getInstance().getTime().getTime() - .getTime()) / 1000 / 60 / 60 / 24)).toString()
-                            + "天前』", "tip2x", "tip2y");
+                            + "天前』", 725, 155);
                 } else {
                     //如果取到的是精确数据
-                    draw(g2, "tipColor", "tipFont", "tipSize", "『对比于" + day + "天前』", "tip2x", "tip2y");
+                    drawTextToImage(g2, "#666666", "宋体", 15, "『对比于" + day + "天前』", 725, 155);
                 }
 
             }
@@ -170,63 +195,63 @@ public class ImgUtil {
             //绘制Rank变化
             if (userInDB.getPpRank() > userFromAPI.getPpRank()) {
                 //如果查询的rank比凌晨中的小
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + Integer.toString(userInDB.getPpRank() - userFromAPI.getPpRank()), "rankDiffx", "rankDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + Integer.toString(userInDB.getPpRank() - userFromAPI.getPpRank()), 633, 109);
             } else if (userInDB.getPpRank() < userFromAPI.getPpRank()) {
                 //如果掉了rank
-                draw(g2, "downColor", "diffFont", "diffSize",
-                        "↓" + Integer.toString(userFromAPI.getPpRank() - userInDB.getPpRank()), "rankDiffx", "rankDiffy");
+                drawTextToImage(g2, "#4466FF", "苹方", 24,
+                        "↓" + Integer.toString(userFromAPI.getPpRank() - userInDB.getPpRank()), 633, 109);
             } else {
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + Integer.toString(0), "rankDiffx", "rankDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + Integer.toString(0), 633, 109);
             }
             //绘制PP变化
             if (userInDB.getPpRaw() > userFromAPI.getPpRaw()) {
                 //如果查询的pp比凌晨中的小
-                draw(g2, "downColor", "diffFont", "diffSize",
-                        "↓" + new DecimalFormat("##0.00").format(userInDB.getPpRaw() - userFromAPI.getPpRaw()), "ppDiffx", "ppDiffy");
+                drawTextToImage(g2, "#4466FF", "苹方", 24,
+                        "↓" + new DecimalFormat("##0.00").format(userInDB.getPpRaw() - userFromAPI.getPpRaw()), 633, 153);
             } else if (userInDB.getPpRaw() < userFromAPI.getPpRaw()) {
                 //刷了PP
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + new DecimalFormat("##0.00").format(userFromAPI.getPpRaw() - userInDB.getPpRaw()), "ppDiffx", "ppDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + new DecimalFormat("##0.00").format(userFromAPI.getPpRaw() - userInDB.getPpRaw()), 633, 153);
             } else {
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + Integer.toString(0), "ppDiffx", "ppDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + Integer.toString(0), 633, 153);
             }
 
             //绘制RankedScore变化
             if (userInDB.getRankedScore() < userFromAPI.getRankedScore()) {
                 //因为RankedScore不会变少，所以不写蓝色部分
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + new DecimalFormat("###,###").format(userFromAPI.getRankedScore() - userInDB.getRankedScore()), "rScoreDiffx", "rScoreDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + new DecimalFormat("###,###").format(userFromAPI.getRankedScore() - userInDB.getRankedScore()), 650, 203);
             } else {
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + Integer.toString(0), "rScoreDiffx", "rScoreDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + Integer.toString(0), 650, 203);
             }
             //绘制ACC变化
             //在这里把精度砍掉
             if (Float.valueOf(new DecimalFormat("##0.00").format(userInDB.getAccuracy())) > Float.valueOf(new DecimalFormat("##0.00").format(userFromAPI.getAccuracy()))) {
                 //如果acc降低了
-                draw(g2, "downColor", "diffFont", "diffSize",
-                        "↓" + new DecimalFormat("##0.00").format(userInDB.getAccuracy() - userFromAPI.getAccuracy()) + "%", "accDiffx", "accDiffy");
+                drawTextToImage(g2, "#4466FF", "苹方", 24,
+                        "↓" + new DecimalFormat("##0.00").format(userInDB.getAccuracy() - userFromAPI.getAccuracy()) + "%", 636, 251);
             } else if (Float.valueOf(new DecimalFormat("##0.00").format(userInDB.getAccuracy())) < Float.valueOf(new DecimalFormat("##0.00").format(userFromAPI.getAccuracy()))) {
                 //提高
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + new DecimalFormat("##0.00").format(userFromAPI.getAccuracy() - userInDB.getAccuracy()) + "%", "accDiffx", "accDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + new DecimalFormat("##0.00").format(userFromAPI.getAccuracy() - userInDB.getAccuracy()) + "%", 636, 251);
 
             } else {
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + new DecimalFormat("##0.00").format(0.00) + "%", "accDiffx", "accDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + new DecimalFormat("##0.00").format(0.00) + "%", 636, 251);
             }
 
             //绘制pc变化
             if (userInDB.getPlayCount() < userFromAPI.getPlayCount()) {
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + new DecimalFormat("###,###").format(userFromAPI.getPlayCount() - userInDB.getPlayCount()), "pcDiffx", "pcDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + new DecimalFormat("###,###").format(userFromAPI.getPlayCount() - userInDB.getPlayCount()), 622, 299);
 
             } else {
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + Integer.toString(0), "pcDiffx", "pcDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + Integer.toString(0), 622, 299);
 
             }
 
@@ -234,152 +259,184 @@ public class ImgUtil {
             if (userInDB.getCount50() + userInDB.getCount100() + userInDB.getCount300()
                     < userFromAPI.getCount50() + userFromAPI.getCount100() + userFromAPI.getCount300()) {
                 //同理不写蓝色部分
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + new DecimalFormat("###,###").format(userFromAPI.getCount50() + userFromAPI.getCount100() + userFromAPI.getCount300() - (userInDB.getCount50() + userInDB.getCount100() + userInDB.getCount300())), "tthDiffx", "tthDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + new DecimalFormat("###,###").format(userFromAPI.getCount50() + userFromAPI.getCount100() + userFromAPI.getCount300() - (userInDB.getCount50() + userInDB.getCount100() + userInDB.getCount300())), 609, 347);
             } else {
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + Integer.toString(0), "tthDiffx", "tthDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + Integer.toString(0), 609, 347);
             }
             //绘制level变化
             if (Float.valueOf(new DecimalFormat("##0.00").format(userInDB.getLevel())) < Float.valueOf(new DecimalFormat("##0.00").format(userFromAPI.getLevel()))) {
                 //同理不写蓝色部分
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + (int) ((userFromAPI.getLevel() - userInDB.getLevel()) * 100) + "%", "levelDiffx", "levelDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + (int) ((userFromAPI.getLevel() - userInDB.getLevel()) * 100) + "%", 597, 394);
             } else {
-                draw(g2, "upColor", "diffFont", "diffSize",
-                        "↑" + Integer.toString(0) + "%", "levelDiffx", "levelDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 24,
+                        "↑" + Integer.toString(0) + "%", 597, 394);
             }
             //绘制SS count 变化
             //这里需要改变字体大小
             if (userInDB.getCountRankSs() > userFromAPI.getCountRankSs()) {
                 //如果查询的SS比凌晨的少
-                draw(g2, "downColor", "diffFont", "countDiffSize",
-                        "↓" + Integer.toString(userInDB.getCountRankSs() - userFromAPI.getCountRankSs()), "ssCountDiffx", "ssCountDiffy");
+                drawTextToImage(g2, "#4466FF", "苹方", 18,
+                        "↓" + Integer.toString(userInDB.getCountRankSs() - userFromAPI.getCountRankSs()), 414, 444);
             } else if (userInDB.getCountRankSs() < userFromAPI.getCountRankSs()) {
                 //如果SS变多了
-                draw(g2, "upColor", "diffFont", "countDiffSize",
-                        "↑" + Integer.toString(userFromAPI.getCountRankSs() - userInDB.getCountRankSs()), "ssCountDiffx", "ssCountDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 18,
+                        "↑" + Integer.toString(userFromAPI.getCountRankSs() - userInDB.getCountRankSs()), 414, 444);
             } else {
-                draw(g2, "upColor", "diffFont", "countDiffSize",
-                        "↑" + Integer.toString(0), "ssCountDiffx", "ssCountDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 18,
+                        "↑" + Integer.toString(0), 414, 444);
             }
             //s
             if (userInDB.getCountRankS() > userFromAPI.getCountRankS()) {
                 //如果查询的S比凌晨的少
-                draw(g2, "downColor", "diffFont", "countDiffSize",
-                        "↓" + Integer.toString(userInDB.getCountRankS() - userFromAPI.getCountRankS()), "sCountDiffx", "sCountDiffy");
+                drawTextToImage(g2, "#4466FF", "苹方", 18,
+                        "↓" + Integer.toString(userInDB.getCountRankS() - userFromAPI.getCountRankS()), 568, 444);
             } else if (userInDB.getCountRankS() < userFromAPI.getCountRankS()) {
                 //如果S变多了
-                draw(g2, "upColor", "diffFont", "countDiffSize",
-                        "↑" + Integer.toString(userFromAPI.getCountRankS() - userInDB.getCountRankS()), "sCountDiffx", "sCountDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 18,
+                        "↑" + Integer.toString(userFromAPI.getCountRankS() - userInDB.getCountRankS()), 568, 444);
             } else {
-                draw(g2, "upColor", "diffFont", "countDiffSize",
-                        "↑" + Integer.toString(0), "sCountDiffx", "sCountDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 18,
+                        "↑" + Integer.toString(0), 568, 444);
             }
             //a
             if (userInDB.getCountRankA() > userFromAPI.getCountRankA()) {
                 //如果查询的S比凌晨的少
-                draw(g2, "downColor", "diffFont", "countDiffSize",
-                        "↓" + Integer.toString(userInDB.getCountRankA() - userFromAPI.getCountRankA()), "aCountDiffx", "aCountDiffy");
+                drawTextToImage(g2, "#4466FF", "苹方", 18,
+                        "↓" + Integer.toString(userInDB.getCountRankA() - userFromAPI.getCountRankA()), 738, 444);
             } else if (userInDB.getCountRankA() < userFromAPI.getCountRankA()) {
                 //如果S变多了
-                draw(g2, "upColor", "diffFont", "countDiffSize",
-                        "↑" + Integer.toString(userFromAPI.getCountRankA() - userInDB.getCountRankA()), "aCountDiffx", "aCountDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 18,
+                        "↑" + Integer.toString(userFromAPI.getCountRankA() - userInDB.getCountRankA()), 738, 444);
             } else {
-                draw(g2, "upColor", "diffFont", "countDiffSize",
-                        "↑" + Integer.toString(0), "aCountDiffx", "aCountDiffy");
+                drawTextToImage(g2, "#FF6060", "苹方", 18,
+                        "↑" + Integer.toString(0), 738, 444);
             }
         }
         g2.dispose();
         return drawImage(bg);
     }
 
-    public String drawUserBP(Userinfo userFromAPI, List<Score> list) {
+    /**
+     * 绘制BP列表（已改造完成）
+     *
+     * @param userFromAPI the user from api
+     * @param list        the list
+     * @param mode        the mode
+     * @return the string
+     */
+    public String drawUserBP(Userinfo userFromAPI, List<Score> list, int mode) {
 
         //计算最终宽高
-        int height = images.get(OverallConsts.CABBAGE_CONFIG.getString("bptop")).getHeight();
-        int HeightPoint = 0;
-        int Width = images.get(OverallConsts.CABBAGE_CONFIG.getString("bptop")).getWidth();
+        int height = images.get("bptop.png").getHeight();
+        int heightpoint = 0;
+        int width = images.get("bptop.png").getWidth();
         for (Score aList : list) {
-            if (aList.getBeatmapName().length() <= Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("bplimit"))) {
-                height = height + images.get(OverallConsts.CABBAGE_CONFIG.getString("bpmid2")).getHeight();
+            if (aList.getBeatmapName().length() <= 80) {
+                height = height + images.get("bpmid2.png").getHeight();
             } else {
-                height = height + images.get(OverallConsts.CABBAGE_CONFIG.getString("bpmid3")).getHeight();
+                height = height + images.get("bpmid3.png").getHeight();
             }
         }
-        BufferedImage result = new BufferedImage(Width, height, BufferedImage.TYPE_INT_RGB);
+        BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = result.createGraphics();
 
         //头部
-        BufferedImage bpTop = getCopyImage(images.get(OverallConsts.CABBAGE_CONFIG.getString("bptop")));
+        BufferedImage bpTop = getCopyImage(images.get("bptop.png"));
         Graphics2D g2 = (Graphics2D) bpTop.getGraphics();
+        //模式图标
+        g2.drawImage(images.get("mode-" + mode + ".png"), 650, 4, null);
+        //那行字
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        draw(g2, "bpUnameColor", "bpUnameFont", "bpUnameSize", "Best Performance of " + userFromAPI.getUserName(), "bpUnamex", "bpUnamey");
+        drawTextToImage(g2, "#de3397", "Tahoma", 20, "Best Performance of " + userFromAPI.getUserName(), 67, 25);
         Calendar c = Calendar.getInstance();
         //日期补丁
         if (c.get(Calendar.HOUR_OF_DAY) < 4) {
             c.add(Calendar.DAY_OF_MONTH, -1);
         }
-        draw(g2, "bpQueryDateColor", "bpQueryDateFont", "bpQueryDateSize", new SimpleDateFormat("yy-MM-dd").format(c.getTime()), "bpQueryDatex", "bpQueryDatey");
+        drawTextToImage(g2, "#666666", "Tahoma Bold", 16, new SimpleDateFormat("yy-MM-dd").format(c.getTime()), 707, 31);
         g2.dispose();
         //生成好的画上去
-        g.drawImage(bpTop, 0, HeightPoint, null);
+        g.drawImage(bpTop, 0, heightpoint, null);
         //移动这个类似指针的东西
-        HeightPoint = HeightPoint + bpTop.getHeight();
+        heightpoint = heightpoint + bpTop.getHeight();
 
         //开始绘制每行的bp
         for (Score aList : list) {
-            String acc = new DecimalFormat("###.00").format(
-                    100.0 * (6 * aList.getCount300() + 2 * aList.getCount100() + aList.getCount50())
-                            / (6 * (aList.getCount50() + aList.getCount100() + aList.getCount300() + aList.getCountMiss())));
-
-            String mods = scoreUtil.convertMOD(aList.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "");
+            String acc = scoreUtil.genAccString(aList);
+            String mods = scoreUtil.convertModToString(aList.getEnabledMods());
             int a;
-            if (aList.getBeatmapName().length() <= Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("bplimit"))) {
+            if (aList.getBeatmapName().length() <= 80) {
                 a = 2;
             } else {
                 a = 3;
             }
-
-            BufferedImage bpMid = getCopyImage(images.get(OverallConsts.CABBAGE_CONFIG.getString("bpmid" + a)));
-            Graphics2D g3 = bpMid.createGraphics();
-            //小图标
-            g3.drawImage(images.get(aList.getRank() + "_small.png"), Integer.decode(OverallConsts.CABBAGE_CONFIG.getString("bp" + a + "Rankx")), Integer.decode(OverallConsts.CABBAGE_CONFIG.getString("bp" + a + "Ranky")), null);
-            //绘制文字
-            g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            //绘制日期(给的就是北京时间，不转)
-            draw(g3, "bpDateColor", "bpDateFont", "bpDateSize",
-                    new SimpleDateFormat("MM-dd HH:mm").format(aList.getDate().getTime()), "bp" + a + "Datex", "bp" + a + "Datey");
-            //绘制Num和Weight
-            draw(g3, "bpNumColor", "bpNumFont", "bpNumSize",
-                    String.valueOf(aList.getBpId() + 1), "bp" + a + "Numx", "bp" + a + "Numy");
-
-            draw(g3, "bpWeightColor", "bpWeightFont", "bpWeightSize",
-                    new DecimalFormat("##0.00").format(100 * Math.pow(0.95, aList.getBpId())) + "%", "bp" + a + "Weightx", "bp" + a + "Weighty");
-
-            //绘制MOD
-            draw(g3, "bpModColor", "bpModFont", "bpModSize", mods, "bp" + a + "Modx", "bp" + a + "Mody");
-            //绘制PP
-            draw(g3, "bpPPColor", "bpPPFont", "bpPPSize", Integer.toString(Math.round(aList.getPp())) + "pp", "bp" + a + "PPx", "bp" + a + "PPy");
+            BufferedImage bpMid = null;
+            Graphics2D g3 = null;
             switch (a) {
                 case 2:
-                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize",
-                            aList.getBeatmapName() + "(" + acc + "%)", "bp2Namex", "bp2Namey");
+                    bpMid = getCopyImage(images.get("bpmid2.png"));
+                    g3 = bpMid.createGraphics();
+                    //小图标
+                    g3.drawImage(images.get(aList.getRank() + "_small.png"), 10, 2, null);
+                    //绘制文字
+                    g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    //绘制日期(给的就是北京时间，不转)
+                    drawTextToImage(g3, "#696969", "Tahoma", 14,
+                            new SimpleDateFormat("MM-dd HH:mm").format(aList.getDate().getTime()), 31, 34);
+                    //绘制Num和Weight
+                    drawTextToImage(g3, "#a12e1e", "Ubuntu Medium", 13,
+                            String.valueOf(aList.getBpId() + 1), 136, 34);
+
+                    drawTextToImage(g3, "#a12e1e", "Ubuntu Medium", 14,
+                            new DecimalFormat("##0.00").format(100 * Math.pow(0.95, aList.getBpId())) + "%", 221, 34);
+
+                    //绘制MOD
+                    drawTextToImage(g3, "#222222", "Tahoma Bold", 14, mods, 493, 34);
+                    //绘制PP
+                    drawTextToImage(g3, "#9492dc", "Arial Bold", 24, Integer.toString(Math.round(aList.getPp())) + "pp", 709, 28);
+                    //歌名
+                    drawTextToImage(g3, "#3843a6", "Arial", 16,
+                            aList.getBeatmapName() + "(" + acc + "%)", 26, 16);
                     break;
                 case 3:
-                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize", aList.getBeatmapName().substring(0, aList.getBeatmapName().substring(0, Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("bplimit")) + 1).lastIndexOf(" ") + 1),
-                            "bp3Namex", "bp3Namey");
-                    draw(g3, "bpNameColor", "bpNameFont", "bpNameSize", aList.getBeatmapName().substring(aList.getBeatmapName().substring(0, Integer.valueOf(OverallConsts.CABBAGE_CONFIG.getString("bplimit")) + 1).lastIndexOf(" ") + 1, aList.getBeatmapName().length())
+                    bpMid = getCopyImage(images.get("bpmid3.png"));
+                    g3 = bpMid.createGraphics();
+                    //小图标
+                    g3.drawImage(images.get(aList.getRank() + "_small.png"), 10, 1, null);
+                    //绘制文字
+                    g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    //绘制日期(给的就是北京时间，不转)
+                    drawTextToImage(g3, "#696969", "Tahoma", 14,
+                            new SimpleDateFormat("MM-dd HH:mm").format(aList.getDate().getTime()), 31, 48);
+                    //绘制Num和Weight
+                    drawTextToImage(g3, "#a12e1e", "Ubuntu Medium", 13,
+                            String.valueOf(aList.getBpId() + 1), 136, 48);
+
+                    drawTextToImage(g3, "#a12e1e", "Ubuntu Medium", 14,
+                            new DecimalFormat("##0.00").format(100 * Math.pow(0.95, aList.getBpId())) + "%", 221, 48);
+
+                    //绘制MOD
+                    drawTextToImage(g3, "#222222", "Tahoma Bold", 14, mods, 493, 48);
+                    //绘制PP
+                    drawTextToImage(g3, "#9492dc", "Arial Bold", 24, Integer.toString(Math.round(aList.getPp())) + "pp", 709, 35);
+
+                    //两行的歌名
+                    drawTextToImage(g3, "#3843a6", "Arial", 16, aList.getBeatmapName().substring(0, aList.getBeatmapName().substring(0, 81).lastIndexOf(" ") + 1),
+                            26, 15);
+                    drawTextToImage(g3, "#3843a6", "Arial", 16, aList.getBeatmapName().substring(aList.getBeatmapName().substring(0, 81).lastIndexOf(" ") + 1, aList.getBeatmapName().length())
                                     + "(" + acc + "%)",
-                            "bp3Name+1x", "bp3Name+1y");
+                            7, 30);
                     break;
-                    default:
-                        break;
+                default:
+                    break;
             }
             g3.dispose();
             bpMid.flush();
-            g.drawImage(bpMid, 0, HeightPoint, null);
-            HeightPoint = HeightPoint + bpMid.getHeight();
+            g.drawImage(bpMid, 0, heightpoint, null);
+            heightpoint = heightpoint + bpMid.getHeight();
         }
         g.dispose();
         //不，文件名最好还是数字
@@ -387,12 +444,21 @@ public class ImgUtil {
 
     }
 
-    public String drawResult(Userinfo userFromAPI, Score score, Beatmap beatmap) {
-        String accS = new DecimalFormat("###.00").format(100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50()) / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())));
+    /**
+     * 绘制结算界面
+     *
+     * @param userFromAPI the user from api
+     * @param score       the score
+     * @param beatmap     the beatmap
+     * @param mode        the mode
+     * @return the string
+     */
+    public String drawResult(Userinfo userFromAPI, Score score, Beatmap beatmap, int mode) {
+        String accS = scoreUtil.genAccString(score);
         float acc = Float.valueOf(accS);
         BufferedImage bg;
         BufferedImage result;
-        Map<String, String> mods = scoreUtil.convertMOD(score.getEnabledMods());
+        Map<String, String> mods = scoreUtil.convertModToHashMap(score.getEnabledMods());
         //这个none是为了BP节省代码，在这里移除掉
         mods.remove("None");
         //离线计算PP
@@ -400,15 +466,15 @@ public class ImgUtil {
         try {
             oppaiResult = scoreUtil.calcPP(score, beatmap);
         } catch (Exception ignore) {
-            //如果acc过低
+            //如果acc过低或者不是std
         }
         boolean defaultBG = false;
         try {
             bg = webPageManager.getBG(beatmap);
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             bg = webPageManager.getBGBackup(beatmap);
         }
-        if(bg==null){
+        if (bg == null) {
             bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
                 //随机抽取一个bg
@@ -468,61 +534,147 @@ public class ImgUtil {
         //画上结尾的x
         g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * Combo.length + 30 - 7, 576 - 55 + 10, null);
 
-        //300
-        char[] Count300 = String.valueOf(score.getCount300()).toCharArray();
+        /*
+        Mania：200=喝 320=激
+        300 320
+        200 100
+        50 miss
+        太鼓：没有50
+        300 激
+        100 喝
+        x
+        STD：
+        300 激
+        100 喝
+        50 x
+        CTB :
+        300 miss
+        100
+        50
+        300
+           g2.drawImage(Images.get(5), 40 - 4, 263 - 27, null);
+           激
+        g2.drawImage(Images.get(5), 360 - 4, 263 - 27, null);
+        100
+         g2.drawImage(Images.get(4), 44 - 5, 346 - 8, null);
+         喝
+        g2.drawImage(Images.get(4), 364 - 5, 346 - 8, null);
+        50
+          g2.drawImage(Images.get(6), 51 - 5, 455 - 21, null);
+          x
+           g2.drawImage(Images.get(3), 376 - 4, 437 - 5, null);
+         */
+        char[] count300 = String.valueOf(score.getCount300()).toCharArray();
+        char[] countgeki = String.valueOf(score.getCountGeki()).toCharArray();
+        char[] count100 = String.valueOf(score.getCount100()).toCharArray();
+        char[] countkatu = String.valueOf(score.getCountKatu()).toCharArray();
+        char[] count50 = String.valueOf(score.getCount50()).toCharArray();
+        char[] count0 = String.valueOf(score.getCountMiss()).toCharArray();
+        switch (mode) {
+            case 0:
+                //STD
+                //300
 
-        for (int i = 0; i < Count300.length; i++) {
-            //第二个参数是数字之间的距离+第一个数字离最左边的距离
-            g2.drawImage(images.get("score-" + String.valueOf(Count300[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
+                //TODO: 其他东西改好后，把去掉300 100 50 x图标的banner传上去，以及对应模式的300 100 50 x图标也传上去
+                for (int i = 0; i < count300.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count300[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
+
+                //激
+
+                for (int i = 0; i < countgeki.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(countgeki[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
+
+                //100
+
+                for (int i = 0; i < count100.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count100[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
+
+                //喝
+
+                for (int i = 0; i < countkatu.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(countkatu[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 455 - 8, 374 - 55, null);
+
+
+                for (int i = 0; i < count50.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count50[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count50.length + 134 - 7, 470 - 55, null);
+
+                //x
+
+                for (int i = 0; i < count0.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count0[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 470 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 455 - 8, 470 - 55, null);
+                break;
+            case 1:
+                //太鼓
+                //300
+                for (int i = 0; i < count300.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count300[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
+                //激
+                for (int i = 0; i < countgeki.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(countgeki[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
+                //100
+                for (int i = 0; i < count100.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count100[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
+                //喝
+                for (int i = 0; i < countkatu.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(countkatu[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 455 - 8, 374 - 55, null);
+
+                //x
+                for (int i = 0; i < count0.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count0[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 134 - 7, 470 - 55, null);
+
+                //Taiko
+                break;
+            case 2:
+                //CTB
+            case 3:
+                //mania
+            default:
+                break;
         }
-        //画上结尾的x
-        g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * Count300.length + 134 - 7, 238 - 7, null);
-
-        //激
-        char[] CountGeki = String.valueOf(score.getCountGeki()).toCharArray();
-        for (int i = 0; i < CountGeki.length; i++) {
-            //第二个参数是数字之间的距离+第一个数字离最左边的距离
-            g2.drawImage(images.get("score-" + String.valueOf(CountGeki[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
-        }
-        //画上结尾的x
-        g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * CountGeki.length + 455 - 8, 238 - 7, null);
-
-        //100
-        char[] Count100 = String.valueOf(score.getCount100()).toCharArray();
-        for (int i = 0; i < Count100.length; i++) {
-            //第二个参数是数字之间的距离+第一个数字离最左边的距离
-            g2.drawImage(images.get("score-" + String.valueOf(Count100[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
-        }
-        //画上结尾的x
-        g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * Count100.length + 134 - 7, 374 - 55, null);
-
-        //喝
-        char[] CountKatu = String.valueOf(score.getCountKatu()).toCharArray();
-        for (int i = 0; i < CountKatu.length; i++) {
-            //第二个参数是数字之间的距离+第一个数字离最左边的距离
-            g2.drawImage(images.get("score-" + String.valueOf(CountKatu[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
-        }
-        //画上结尾的x
-        g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * CountKatu.length + 455 - 8, 374 - 55, null);
-
-
-        char[] Count50 = String.valueOf(score.getCount50()).toCharArray();
-        for (int i = 0; i < Count50.length; i++) {
-            //第二个参数是数字之间的距离+第一个数字离最左边的距离
-            g2.drawImage(images.get("score-" + String.valueOf(Count50[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
-        }
-        //画上结尾的x
-        g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * Count50.length + 134 - 7, 470 - 55, null);
-
-        //x
-        char[] Count0 = String.valueOf(score.getCountMiss()).toCharArray();
-        for (int i = 0; i < Count0.length; i++) {
-            //第二个参数是数字之间的距离+第一个数字离最左边的距离
-            g2.drawImage(images.get("score-" + String.valueOf(Count0[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 470 - 55, null);
-        }
-        //画上结尾的x
-        g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * Count0.length + 455 - 8, 470 - 55, null);
-
         //acc
         if (acc == 100) {
             //从最左边的数字开始，先画出100
@@ -581,21 +733,20 @@ public class ImgUtil {
             }
 
             //底端PP面板，在oppai计算结果不是null的时候
-            if (oppaiResult != null) {
-                g2.drawImage(images.get("ppBanner.png"), 570, 700, null);
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setPaint(Color.decode("#ff66a9"));
-                g2.setFont(new Font("Gayatri", 0, 60));
-                if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
-                    g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 616, 753);
-                } else {
-                    g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 601, 753);
-                }
-                g2.setFont(new Font("Gayatri", 0, 48));
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 834, 758);
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())), 932, 758);
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())), 1030, 758);
+            g2.drawImage(images.get("ppBanner.png"), 570, 700, null);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setPaint(Color.decode("#ff66a9"));
+            g2.setFont(new Font("Gayatri", 0, 60));
+            if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
+                g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 616, 753);
+            } else {
+                g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 601, 753);
             }
+            g2.setFont(new Font("Gayatri", 0, 48));
+            g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 834, 758);
+            g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())), 932, 758);
+            g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())), 1030, 758);
+
         }
         g2.dispose();
         if (!defaultBG) {
@@ -613,7 +764,17 @@ public class ImgUtil {
         return drawImage(result);
     }
 
-    public String drawFirstRank(Beatmap beatmap, Score score, Userinfo userFromAPI, Long xE) {
+    /**
+     * 绘制某个谱面的#1
+     *
+     * @param beatmap     the beatmap
+     * @param score       the score
+     * @param userFromAPI the user from api
+     * @param xE          the x e
+     * @param mode        the mode
+     * @return the string
+     */
+    public String drawFirstRank(Beatmap beatmap, Score score, Userinfo userFromAPI, Long xE, int mode) {
         BufferedImage bg;
         Image bg2;
         boolean unicode = false;
@@ -621,11 +782,8 @@ public class ImgUtil {
         BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId());
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
 
-        try {
-            bg = webPageManager.getBG(beatmap);
-        } catch (NullPointerException e) {
-            bg = webPageManager.getBGBackup(beatmap);
-        }
+        bg = webPageManager.getBG(beatmap);
+
         if (bg == null) {
             bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
@@ -741,7 +899,7 @@ public class ImgUtil {
         //mod
         if (score.getEnabledMods() > 0) {
             List<String> mods = new ArrayList<>();
-            for (Map.Entry<String, String> entry : scoreUtil.convertMOD(score.getEnabledMods()).entrySet()) {
+            for (Map.Entry<String, String> entry : scoreUtil.convertModToHashMap(score.getEnabledMods()).entrySet()) {
                 mods.add(entry.getKey());
             }
             g2.setFont(new Font("Aller Light", Font.PLAIN, 17));
@@ -786,15 +944,20 @@ public class ImgUtil {
         //右侧title
 
         g2.setPaint(Color.decode("#000000"));
+        switch (mode) {
+            case 0:
+//TODO: 不同模式绘制图标，STD的话没有图标，文字左移
+        }
         if (unicode) {
-            g2.setFont(new Font("微软雅黑", Font.PLAIN, 31));
+
+            g2.setFont(new Font("微软雅黑", Font.PLAIN, 30));
             g2.drawString(oppaiResult.getTitleUnicode(), 982, 196);
-            g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
+            g2.setFont(new Font("微软雅黑", Font.PLAIN, 21));
             g2.drawString(oppaiResult.getArtistUnicode() + " // " + oppaiResult.getCreator(), 982, 223);
         } else {
-            g2.setFont(new Font("Aller light", Font.PLAIN, 31));
+            g2.setFont(new Font("Aller light", Font.PLAIN, 30));
             g2.drawString(oppaiResult.getTitle(), 982, 196);
-            g2.setFont(new Font("Aller", Font.PLAIN, 22));
+            g2.setFont(new Font("Aller", Font.PLAIN, 21));
             g2.drawString(oppaiResult.getArtist() + " // " + oppaiResult.getCreator(), 982, 223);
         }
 
@@ -822,7 +985,15 @@ public class ImgUtil {
 
     }
 
-    public String drawBeatmap(Beatmap beatmap,Integer mods) {
+    /**
+     * 绘制Search结果
+     *
+     * @param beatmap the beatmap
+     * @param mods    the mods
+     * @param mode    the mode
+     * @return the string
+     */
+    public String drawBeatmap(Beatmap beatmap, Integer mods, int mode) {
         boolean unicode = false;
         BufferedImage bg;
         Image bg2;
@@ -835,9 +1006,9 @@ public class ImgUtil {
         score.setMaxCombo(-1);
         //这里默认构造FC成绩，所以不需要处理NPE……吧？
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
-        beatmap.setTotalLength((int)(beatmap.getTotalLength() /oppaiResult.getSpeedMultiplier()));
-        beatmap.setBpm(beatmap.getBpm()*oppaiResult.getSpeedMultiplier());
-        Map<String, String> modsMap = scoreUtil.convertMOD(mods);
+        beatmap.setTotalLength((int) (beatmap.getTotalLength() / oppaiResult.getSpeedMultiplier()));
+        beatmap.setBpm(beatmap.getBpm() * oppaiResult.getSpeedMultiplier());
+        Map<String, String> modsMap = scoreUtil.convertModToHashMap(mods);
         //这个none是为了BP节省代码，在这里移除掉
         modsMap.remove("None");
         try {
@@ -937,7 +1108,7 @@ public class ImgUtil {
         } else if (modsMap.containsKey("DT") || modsMap.containsKey("NC")) {
             //如果官网的bpm比实际的低（DT）
             g2.setPaint(Color.decode("#f69aa1"));
-        }else{
+        } else {
             g2.setPaint(Color.decode("#FFFFFF"));
         }
         g2.setFont(new Font("微软雅黑", Font.BOLD, 23));
@@ -1020,7 +1191,10 @@ public class ImgUtil {
 
     }
 
-    public BufferedImage getCopyImage(BufferedImage bi) {
+    /**
+     * 简单的复制一份图片……
+     */
+    private BufferedImage getCopyImage(BufferedImage bi) {
 //        return bi.getSubimage(0, 0, bi.getWidth(), bi.getHeight());
 
         ColorModel cm = bi.getColorModel();
@@ -1036,17 +1210,27 @@ public class ImgUtil {
 //        return b;
     }
 
-
-    private void draw(Graphics2D g2, String color, String font, String size, String text, String x, String y) {
+    /**
+     * 向图片上绘制字符串的方法……当时抽出来复用，但是方法名没取好
+     * 2018-1-24 17:05:11去除配置文件的设定，反正以后要改也不可能去除旧命令。
+     */
+    private void drawTextToImage(Graphics2D g2, String color, String font,
+                                 Integer size, String text, Integer x, Integer y) {
         //指定颜色
-        g2.setPaint(Color.decode(OverallConsts.CABBAGE_CONFIG.getString(color)));
+        g2.setPaint(Color.decode(color));
         //指定字体
-        g2.setFont(new Font(OverallConsts.CABBAGE_CONFIG.getString(font), Font.PLAIN, Integer.decode(OverallConsts.CABBAGE_CONFIG.getString(size))));
+        g2.setFont(new Font(font, Font.PLAIN, size));
         //指定坐标
-        g2.drawString(text, Integer.decode(OverallConsts.CABBAGE_CONFIG.getString(x)), Integer.decode(OverallConsts.CABBAGE_CONFIG.getString(y)));
+        g2.drawString(text, x, y);
 
     }
 
+    /**
+     * 将图片转换为Base64字符串……
+     *
+     * @param img the img
+     * @return the string
+     */
     public String drawImage(BufferedImage img) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             ImageIO.write(img, "png", out);
@@ -1054,11 +1238,10 @@ public class ImgUtil {
             byte[] imgBytes = out.toByteArray();
             return Base64.getEncoder().encodeToString(imgBytes);
         } catch (IOException e) {
-            e.getMessage();
+            logger.error(e.getMessage());
             return null;
         }
     }
-
 
     private String unicodeToString(String str) {
         Matcher matcher = PatternConsts.UNICODE_TO_STRING.matcher(str);

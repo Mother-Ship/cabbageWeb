@@ -19,6 +19,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
@@ -57,7 +58,7 @@ public class WebPageManager {
     private final String getOsuURL = "https://osu.ppy.sh/osu/";
     private final String osuSearchURL = "http://osusearch.com/query/";
     private final String ppPlusURL = "https://syrin.me/pp+/u/";
-    private final String osuNewOfficalWebsiteURL = "https://osu.ppy.sh/users/";
+    private final String osuProfileDetailURL = "https://osu.ppy.sh/pages/include/profile-general.php";
     private final ResDAO resDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
     private HashMap<Integer, Document> map = new HashMap<>();
@@ -135,12 +136,12 @@ public class WebPageManager {
         DefaultHttpClient client = new DefaultHttpClient();
         HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
         //添加请求头
-        java.util.List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+        java.util.List<NameValuePair> urlParameters = new ArrayList<>();
 
         urlParameters.add(new BasicNameValuePair("autologin", "on"));
         urlParameters.add(new BasicNameValuePair("login", "login"));
-        urlParameters.add(new BasicNameValuePair("username", "Togashi Yuta"));
-        urlParameters.add(new BasicNameValuePair("password", "3133170-="));
+        urlParameters.add(new BasicNameValuePair("username", OverallConsts.CABBAGE_CONFIG.getString("accountForDL")));
+        urlParameters.add(new BasicNameValuePair("password", OverallConsts.CABBAGE_CONFIG.getString("accountForDLPwd")));
         try {
             logger.info("开始登录");
             post.setEntity(new UrlEncodedFormEntity(urlParameters));
@@ -260,6 +261,12 @@ public class WebPageManager {
         BufferedImage bg;
         BufferedImage resizedBG = null;
         OsuFile osuFile = parseOsuFile(beatmap);
+
+        if (osuFile == null) {
+            //08年老图是没有BG的……
+            logger.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+            return null;
+        }
         //这里dao层需要使用object，然后再这里转换为数组，于是判断非空就得用null而不是.length。
         byte[] img = (byte[]) resDAO.getBGBySidAndName(beatmap.getBeatmapSetId(), osuFile.getBgName());
         if (img != null) {
@@ -287,22 +294,20 @@ public class WebPageManager {
                 if (bg == null) {
                     return null;
                 }
-                Matcher m = PatternConsts.DOWNLOAD_FILENAME_REGEX
-                        .matcher(httpConnection.getHeaderFields().get("Content-Disposition").get(0));
-                m.find();
+
                 resizedBG = resizeImg(bg, 1366, 768);
                 //在谱面rank状态是Ranked或者Approved时，写入硬盘
                 if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
                     //扩展名直接从文件里取
                     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                         //修正扩展名为最后一个点后面的内容2017-11-15 13:17:56
-                        ImageIO.write(resizedBG, m.group(0).substring(m.group(0).lastIndexOf(".") + 1), out);
+                        ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
                         resizedBG.flush();
                         img = out.toByteArray();
-                        resDAO.addBG(Integer.valueOf(beatmap.getBeatmapSetId()), m.group(0), img);
+                        resDAO.addBG(Integer.valueOf(beatmap.getBeatmapSetId()), osuFile.getBgName(), img);
                     } catch (IOException e) {
-                        e.getMessage();
-                        throw new NullPointerException();
+                        logger.error("写入图片时出现IO异常：" + e.getMessage());
+                        return null;
                     }
                 }
                 //手动关闭流
@@ -515,13 +520,13 @@ public class WebPageManager {
 
     /**
      * Prase osu file osu file.
-     *
+     * 这个方法只能处理ranked/approved/qualified的.osu文件,在目前的业务逻辑里默认.osu文件是存在的。
+     * 方法名大包大揽，其实我只能处理出BG名字（
      * @param beatmap the beatmap
      * @return the osu file
      */
-//这个方法只能处理ranked/approved/qualified的.osu文件,在目前的业务逻辑里默认.osu文件是存在的。
-    //方法名大包大揽，其实我只能处理出BG名字（
-    public OsuFile parseOsuFile(Beatmap beatmap) {
+
+    private OsuFile parseOsuFile(Beatmap beatmap) {
         //先获取
         //2017-12-30 18:53:37改为从网页获取（不是所有的osu文件都缓存了
         String osuFile = getOsuFile(beatmap);
@@ -662,7 +667,7 @@ public class WebPageManager {
     }
 
     /**
-     * Resize img buffered image.
+     * 让图片肯定不会变形，但是会切掉东西的拉伸
      *
      * @param bg     the bg
      * @param weight the weight
@@ -670,7 +675,7 @@ public class WebPageManager {
      * @return the buffered image
      */
     public BufferedImage resizeImg(BufferedImage bg, Integer weight, Integer height) {
-        //让图片肯定不会变形，但是会切掉东西的拉伸
+
         BufferedImage resizedBG;
         //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
         int resizedWeight = weight;
@@ -705,13 +710,13 @@ public class WebPageManager {
         return resizedBG;
     }
 
-    public List<Integer> getXHAndSHRank(Integer uid) {
+    public List<Integer> getCorrectXAndSRank(Integer mode, Integer uid) {
         List<Integer> list = new ArrayList<>();
         int retry = 0;
         Document doc = null;
         while (retry < 5) {
             try {
-                doc = Jsoup.connect(osuNewOfficalWebsiteURL + uid).timeout((int) Math.pow(2, retry + 1) * 1000).get();
+                doc = Jsoup.connect(osuProfileDetailURL + "&?u=" + uid + "&m=" + mode).timeout((int) Math.pow(2, retry + 1) * 1000).get();
                 break;
             } catch (IOException e) {
                 logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
@@ -719,10 +724,10 @@ public class WebPageManager {
             }
         }
         if (retry == 5) {
-            logger.error("玩家" + uid + "访问新官网失败五次");
+            logger.error("玩家" + uid + "访问官网失败五次");
             return null;
         }
-        Matcher m = PatternConsts.NEW_WEBSITE_XH_SH.matcher(doc.outerHtml());
+        Matcher m = PatternConsts.CORRECT_X_S.matcher(doc.outerHtml());
         m.find();
         if (!"".equals(m.group(1))) {
             list.add(Integer.valueOf(m.group(1)));

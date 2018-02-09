@@ -40,18 +40,18 @@ public class ScoreUtil {
 
 
     /**
-     * Convert mod linked hash map.
+     * 将Mod数字转换为字符串，用于ImgUtil类绘制Mod图标，所以不会包含Unrank Mod。
      *
-     * @param bp the bp
-     * @return the linked hash map
+     * @param mod 表示mod的数字
+     * @return 带顺序的LinkedHashMap，用于存储Mod字符串（Key是简称，Value是全称(对应皮肤文件)）
      */
-    public LinkedHashMap<String, String> convertMOD(Integer bp) {
-        String modBin = Integer.toBinaryString(bp);
+    public LinkedHashMap<String, String> convertModToHashMap(Integer mod) {
+        String modBin = Integer.toBinaryString(mod);
         //反转mod
         modBin = new StringBuffer(modBin).reverse().toString();
         LinkedHashMap<String, String> mods = new LinkedHashMap<>();
         char[] c = modBin.toCharArray();
-        if (bp != 0) {
+        if (mod != 0) {
             for (int i = c.length - 1; i >= 0; i--) {
                 //字符串中第i个字符是1,意味着第i+1个mod被开启了
                 if (c[i] == '1') {
@@ -75,6 +75,7 @@ public class ScoreUtil {
                         case 6:
                             mods.put("DT", "doubletime");
                             break;
+                        //7是RX，不会上传成绩
                         case 8:
                             mods.put("HT", "halftime");
                             break;
@@ -84,12 +85,43 @@ public class ScoreUtil {
                         case 10:
                             mods.put("FL", "flashlight");
                             break;
+                        //11是Auto
                         case 12:
                             mods.put("SO", "spunout");
                             break;
+                        //13是AutoPilot
                         case 14:
                             mods.put("PF", "perfect");
                             break;
+                        case 15:
+                            mods.put("4K", "key4");
+                            break;
+                        case 16:
+                            mods.put("5K", "key5");
+                            break;
+                        case 17:
+                            mods.put("6K", "key6");
+                            break;
+                        case 18:
+                            mods.put("7K", "key7");
+                            break;
+                        case 19:
+                            mods.put("8K", "key8");
+                            break;
+                        case 20:
+                            mods.put("FI", "fadein");
+                            break;
+                        //21是RD，Mania的Note重新排布
+                        //22是Cinema，但是不知道为什么有一个叫LastMod的名字
+                        //23是Target Practice
+                        case 24:
+                            mods.put("9K", "key9");
+                            break;
+                        //25是Mania的双人合作模式，Unrank
+                        //Using 1K, 2K, or 3K mod will result in an unranked play.
+                        //The mod does not work on osu!mania-specific beatmaps.
+                        //26 1K，27 3K，28 2K
+
                         default:
                             break;
                     }
@@ -107,9 +139,21 @@ public class ScoreUtil {
         return mods;
     }
 
+    public String convertModToString(Integer mod) {
+        return convertModToHashMap(mod).keySet().toString().replaceAll("\\[\\]", "");
+    }
+
+    public String genAccString(Score score) {
+        return new DecimalFormat("###.00").format(genAccDouble(score));
+    }
+
+    public Double genAccDouble(Score score) {
+        return 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
+                / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()));
+    }
     /**
      * 先有蔓蔓后有天，反向转换日神仙
-     *
+     * 用于处理Search命令传入的Mod，所以应该不必支持STD以外的模式……
      * @param mods the mods
      * @return the integer
      */
@@ -172,6 +216,7 @@ public class ScoreUtil {
                 case "PF":
                     m += 16384;
                     break;
+
                 default:
                     break;
             }
@@ -192,9 +237,10 @@ public class ScoreUtil {
         String resp = "官网链接：https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
                 + "血猫链接：（不保证有效）http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId() + "\n"
                 + "inso链接：http://inso.link/yukiho/?m=" + beatmap.getBeatmapSetId() + "\n"
+                + "模式：" + convertGameModeToString(beatmap.getMode()) + "\n"
                 + beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]\n"
                 + score.getMaxCombo() + "x/" + beatmap.getMaxCombo() + "x，" + score.getCountMiss() + "*miss , "
-                + convertMOD(score.getEnabledMods()).keySet().toString().replaceAll("\\[\\]", "")
+                + convertModToString(score.getEnabledMods())
                 + " (" + new DecimalFormat("###.00").format(
                 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)";
@@ -220,6 +266,7 @@ public class ScoreUtil {
             //日后再说，暂时不去按自己的想法改造它……万一作者日后放出更新呢..
             //把这种充满静态内部类，PPv2Params没有有参构造、成员变量给包访问权限、没有get/set的危险东西局限在这个方法里，不要在外面用就是了……%
             Koohii.Map map = new Koohii.Parser().map(in);
+            map.mode = beatmap.getMode();
             Koohii.DiffCalc stars = new Koohii.DiffCalc().calc(map, score.getEnabledMods());
             Koohii.PPv2Parameters p = new Koohii.PPv2Parameters();
 
@@ -239,21 +286,31 @@ public class ScoreUtil {
             mapstats.hp = beatmap.getDiffDrain();
             //APPLY_AR OD CS HP是1 2 4 8，把flag改成15好像就会 四维都进行计算？
             mapstats = Koohii.mods_apply(score.getEnabledMods(), mapstats, 15);
-            Koohii.PPv2 pp = new Koohii.PPv2(p);
-            return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
-                    //Java实现如果出错会抛出异常，象征性给个0和null
-                    0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
-                    //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
-                    mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
-                    //scoreVersion只能是V1了，
-                    1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, pp.aim, pp.speed, pp.acc, pp.total, mapstats.speed);
+            if (map.mode == 0) {
+                Koohii.PPv2 pp = new Koohii.PPv2(p);
+                return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
+                        //Java实现如果出错会抛出异常，象征性给个0和null
+                        0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
+                        //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
+                        mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
+                        //scoreVersion只能是V1了，
+                        1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, pp.aim, pp.speed, pp.acc, pp.total, mapstats.speed);
+
+            } else {
+                return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
+                        //Java实现如果出错会抛出异常，象征性给个0和null
+                        0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
+                        //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
+                        mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
+                        //scoreVersion只能是V1了，非STD的计算应该是没有PP的，给四个0
+                        1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, 0, 0, 0, 0, mapstats.speed);
+
+            }
         } catch (Exception e) {
             logger.error("离线计算PP出错");
             logger.error(e.getMessage());
             return null;
         }
-
-
     }
 
     /**
@@ -269,5 +326,21 @@ public class ScoreUtil {
 
     public Integer calcNoneXScore(Beatmap beatmap) {
         return 0;
+    }
+
+    private String convertGameModeToString(Integer mode) {
+        switch (mode) {
+            case 0:
+                return "Standard";
+            case 1:
+                return "Taiko";
+            case 2:
+                return "Catch The Beat";
+            case 3:
+                return "osu!Mania";
+            default:
+                return null;
+
+        }
     }
 }

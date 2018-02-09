@@ -6,9 +6,12 @@ import lombok.Data;
 import java.time.LocalDate;
 @Data
 public class Userinfo {
-    //不写入数据库
+    /**
+     * 这个字段不写入数据库
+     */
     @SerializedName("username")
     private String userName;
+    private Integer mode;
     private int userId;
     private int count300;
     private int count100;

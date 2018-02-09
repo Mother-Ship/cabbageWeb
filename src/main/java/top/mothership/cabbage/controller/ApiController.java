@@ -17,8 +17,8 @@ import top.mothership.cabbage.pojo.WebResponse;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.serviceImpl.CqServiceImpl;
 import top.mothership.cabbage.serviceImpl.UserServiceImpl;
+import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
-import top.mothership.cabbage.util.qq.RoleUtil;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
@@ -44,17 +44,17 @@ public class ApiController {
     private final ApiManager apiManager;
     private final ImgUtil imgUtil;
     private final UserDAO userDAO;
-    private final RoleUtil roleUtil;
+    private final UserUtil userUtil;
     private final WebPageManager webPageManager;
 
     @Autowired
-    public ApiController(UserServiceImpl userService, UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, CqServiceImpl cqService, RoleUtil roleUtil, WebPageManager webPageManager) {
+    public ApiController(UserServiceImpl userService, UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, CqServiceImpl cqService, UserUtil userUtil, WebPageManager webPageManager) {
         this.userService = userService;
         this.userInfoDAO = userInfoDAO;
         this.apiManager = apiManager;
         this.imgUtil = imgUtil;
         this.userDAO = userDAO;
-        this.roleUtil = roleUtil;
+        this.userUtil = userUtil;
         this.webPageManager = webPageManager;
     }
 
@@ -65,15 +65,22 @@ public class ApiController {
     }
 
     @RequestMapping(value = "/userinfo/{uid}", method = RequestMethod.GET)
-    public String userInfo(@PathVariable Integer uid, @RequestParam("start") @DateTimeFormat(pattern = "yyyyMMdd") LocalDate start,
-                           @RequestParam("limit") int limit) {
+    public String userInfo(@PathVariable Integer uid,
+                           @RequestParam("start") @DateTimeFormat(pattern = "yyyyMMdd") LocalDate start,
+                           @RequestParam("limit") Integer limit,
+                           @RequestParam(value = "mode", required = false) Integer mode) {
+        User user = userDAO.getUser(null, uid);
+        if (user != null && mode == null) {
+            //如果没有指定模式，而且用户
+            mode = user.getMode();
+        }
         //去osu api验证用户名是否存在
-        Userinfo now = apiManager.getUser(null, uid);
+        Userinfo now = apiManager.getUser(mode, uid);
         if (now == null) {
             return new Gson().toJson(new WebResponse<>(1, "user not found", null));
         }
         //取到最接近8.29的那条记录
-        Userinfo earliest = userInfoDAO.getNearestUserInfo(now.getUserId(), LocalDate.of(2017, 8, 29));
+        Userinfo earliest = userInfoDAO.getNearestUserInfo(mode, now.getUserId(), LocalDate.of(2017, 8, 29));
         if (earliest == null) {
             return new Gson().toJson(new WebResponse<>(2, "user not registered", null));
         }
@@ -88,7 +95,7 @@ public class ApiController {
         }
         List<Userinfo> list = new ArrayList<>();
         for (long i = 0; i < limit; i++) {
-            Userinfo tmp = userInfoDAO.getUserInfo(now.getUserId(), start.plusDays(i));
+            Userinfo tmp = userInfoDAO.getUserInfo(mode, now.getUserId(), start.plusDays(i));
             list.add(tmp);
         }
 
@@ -110,11 +117,11 @@ public class ApiController {
 
     @RequestMapping(value = "/stat/{uid}", method = RequestMethod.GET)
     @CrossOrigin(origins = "http://localhost")
-    public void getStat(HttpServletResponse response, @PathVariable Integer uid) {
+    public void getStat(HttpServletResponse response, @PathVariable Integer uid, @RequestParam(value = "mode", defaultValue = "0", required = false) Integer mode) {
         String role;
         Integer scoreRank;
         User user = userDAO.getUser(null, uid);
-        Userinfo userFromAPI = apiManager.getUser(null, uid);
+        Userinfo userFromAPI = apiManager.getUser(mode, uid);
         Userinfo userInDB = null;
         boolean near = false;
         int day = 1;
@@ -124,7 +131,7 @@ public class ApiController {
             } else {
                 logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
                 //构造User对象写入数据库
-                user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, null, null, 0L, 0L);
+                user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
                 userDAO.addUser(user);
                 if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
                     userFromAPI.setQueryDate(LocalDate.now());
@@ -138,7 +145,7 @@ public class ApiController {
             role = "creep";
         } else if (user.isBanned()) {
             //当数据库查到该玩家，并且被ban时，从数据库里取出最新的一份userinfo伪造
-            userFromAPI = userInfoDAO.getNearestUserInfo(user.getUserId(), LocalDate.now());
+            userFromAPI = userInfoDAO.getNearestUserInfo(mode, user.getUserId(), LocalDate.now());
             //尝试补上当前用户名
             if (user.getCurrentUname() != null) {
                 userFromAPI.setUserName(user.getCurrentUname());
@@ -154,11 +161,11 @@ public class ApiController {
             role = user.getRole();
             day = 0;
         } else {
-            List<String> list = roleUtil.sortRoles(user.getRole());
+            List<String> list = userUtil.sortRoles(user.getRole());
             role = list.get(0);
-            userInDB = userInfoDAO.getUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(day));
+            userInDB = userInfoDAO.getUserInfo(mode, userFromAPI.getUserId(), LocalDate.now().minusDays(day));
             if (userInDB == null) {
-                userInDB = userInfoDAO.getNearestUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(day));
+                userInDB = userInfoDAO.getNearestUserInfo(mode, userFromAPI.getUserId(), LocalDate.now().minusDays(day));
                 near = true;
             }
         }
@@ -179,7 +186,7 @@ public class ApiController {
         } else {
             scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
         }
-        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, role, day, near, scoreRank);
+        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, role, day, near, scoreRank, user.getMode());
         byte[] bytes = Base64.getDecoder().decode(result);
         response.setContentType("image/png");
         try (InputStream in = new ByteArrayInputStream(bytes);
@@ -196,9 +203,22 @@ public class ApiController {
 
     @RequestMapping(value = "/userinfo/nearest/{uid}", method = RequestMethod.GET)
     @CrossOrigin(origins = "http://localhost")
-    public String nearestUserInfo(@PathVariable Integer uid) {
-        Userinfo userInDB = userInfoDAO.getNearestUserInfo(uid, LocalDate.now().minusDays(1));
+    public String nearestUserInfo(@PathVariable Integer uid, @RequestParam(value = "mode", defaultValue = "0", required = false) Integer mode) {
+        Userinfo userInDB = userInfoDAO.getNearestUserInfo(mode, uid, LocalDate.now().minusDays(1));
         if (userInDB == null) {
+            Userinfo userFromAPI = apiManager.getUser(mode, uid);
+            logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
+            //构造User对象写入数据库
+            User user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
+            userDAO.addUser(user);
+            if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
+                userFromAPI.setQueryDate(LocalDate.now());
+            } else {
+                userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+            }
+            //写入一行userinfo
+            userInfoDAO.addUserInfo(userFromAPI);
+            userInDB = userFromAPI;
             return new Gson().toJson(new WebResponse<>(1, "user not registered", null));
         }
         return new Gson().toJson(new WebResponse<>(0, "ok", userInDB));
