@@ -2,11 +2,15 @@ package top.mothership.cabbage.pojo.CoolQ;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+import top.mothership.cabbage.consts.ParameterEnum;
 
 //酷Q收到消息之后通过HTTPAPI给白菜的POST请求体
 //public class CqMsg implements Comparable<CqMsg> {
 @Data
 public class CqMsg  {
+    private Argument argument;
+    private ParameterEnum[] required;
+    private ParameterEnum[] optional;
     @SerializedName("post_type")
     private String postType;
     private String event;

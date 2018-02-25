@@ -1,6 +1,6 @@
 package top.mothership.cabbage.util.qq;
 
-import top.mothership.cabbage.consts.PatternConsts;
+import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
 import java.util.ArrayList;
@@ -151,21 +151,21 @@ public class MsgQueue {
      * @return 该消息是否算作复读
      */
     private boolean isThisRepeat(int i) {
-        Matcher cmdMatcher = PatternConsts.REG_CMD_REGEX.matcher(msg.getMessage());
+        Matcher cmdMatcher = RegularPattern.REG_CMD_REGEX.matcher(msg.getMessage());
         if (cmdMatcher.find()) {
             //如果是命令，直接false
             return false;
         }
-        Matcher singleImgMatcher = PatternConsts.SINGLE_IMG_REGEX.matcher(msg.getMessage());
+        Matcher singleImgMatcher = RegularPattern.SINGLE_IMG_REGEX.matcher(msg.getMessage());
         if (singleImgMatcher.find()) {
             //如果是纯图片，直接false
             return false;
         }
-        String msgFromArray = PatternConsts.IMG_REGEX.matcher(
-                PatternConsts.REPEAT_FILTER_REGEX.matcher(msgs[i].getMessage()).replaceAll(""))
+        String msgFromArray = RegularPattern.IMG_REGEX.matcher(
+                RegularPattern.REPEAT_FILTER_REGEX.matcher(msgs[i].getMessage()).replaceAll(""))
                 .replaceAll("");
-        String msgFromGroup = PatternConsts.IMG_REGEX.matcher(
-                PatternConsts.REPEAT_FILTER_REGEX.matcher(msg.getMessage()).replaceAll(""))
+        String msgFromGroup = RegularPattern.IMG_REGEX.matcher(
+                RegularPattern.REPEAT_FILTER_REGEX.matcher(msg.getMessage()).replaceAll(""))
                 .replaceAll("");
 
         if ("".equals(msgFromArray)) {

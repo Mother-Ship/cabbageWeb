@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.consts.PatternConsts;
+import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OppaiResult;
@@ -76,12 +76,12 @@ public class ImgUtil {
      * @param userInDB    作为对比的信息
      * @param role        用户组
      * @param day         对比的天数
-     * @param near        是否是接近的数据
+     * @param approximate        是否是接近的数据
      * @param scoreRank   scoreRank
      * @param mode        模式，只支持0/1/2/3
      * @return Base64字串 string
      */
-    public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean near, int scoreRank, Integer mode) {
+    public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean approximate, int scoreRank, Integer mode) {
         BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId());
         BufferedImage bg;
         BufferedImage layout = getCopyImage(images.get("layout.png"));
@@ -176,7 +176,7 @@ public class ImgUtil {
                 //临时关闭平滑
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
                 //只有day>1才会出现文字
-                if (near) {
+                if (approximate) {
                     //如果取到的是模糊数据
                     drawTextToImage(g2, "#666666", "宋体", 15, "请求的日期没有数据", 718, 138);
                     //算出天数差别
@@ -1244,7 +1244,7 @@ public class ImgUtil {
     }
 
     private String unicodeToString(String str) {
-        Matcher matcher = PatternConsts.UNICODE_TO_STRING.matcher(str);
+        Matcher matcher = RegularPattern.UNICODE_TO_STRING.matcher(str);
         char ch;
         while (matcher.find()) {
             ch = (char) Integer.parseInt(matcher.group(2), 16);

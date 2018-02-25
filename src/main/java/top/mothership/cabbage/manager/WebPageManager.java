@@ -19,8 +19,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.consts.OverallConsts;
-import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OsuFile;
@@ -531,7 +531,7 @@ public class WebPageManager {
         //2017-12-30 18:53:37改为从网页获取（不是所有的osu文件都缓存了
         String osuFile = getOsuFile(beatmap);
         String bgName;
-        Matcher m = PatternConsts.BGNAME_REGEX.matcher(osuFile);
+        Matcher m = RegularPattern.BGNAME_REGEX.matcher(osuFile);
         if (m.find()) {
             OsuFile result = new OsuFile();
             bgName = m.group(1);
@@ -727,7 +727,7 @@ public class WebPageManager {
             logger.error("玩家" + uid + "访问官网失败五次");
             return null;
         }
-        Matcher m = PatternConsts.CORRECT_X_S.matcher(doc.outerHtml());
+        Matcher m = RegularPattern.CORRECT_X_S.matcher(doc.outerHtml());
         m.find();
         if (!"".equals(m.group(1))) {
             list.add(Integer.valueOf(m.group(1)));

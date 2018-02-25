@@ -1,7 +1,5 @@
 package top.mothership.cabbage.aspect;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -12,8 +10,6 @@ import org.springframework.stereotype.Component;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -27,7 +23,7 @@ import java.time.format.DateTimeFormatter;
 /**
  * 异常通知的优先级必须在拦截之后
  */
-@Order(2)
+@Order(3)
 public class ExceptionNoticeAspect {
 private final CqManager cqManager;
 

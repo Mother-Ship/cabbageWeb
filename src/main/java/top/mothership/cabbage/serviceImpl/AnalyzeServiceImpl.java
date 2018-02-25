@@ -3,8 +3,8 @@ package top.mothership.cabbage.serviceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.annotation.UserRoleControl;
-import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.AnalyzerDAO;
@@ -41,7 +41,7 @@ public class AnalyzeServiceImpl {
     }
 
     public void addTargetMap(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ANALYZE_BID_PARAM.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ANALYZE_BID_PARAM.matcher(cqMsg.getMessage());
         if (m.find()) {
             Integer targetMap = Integer.valueOf(m.group(2));
             analyzerDAO.addTargetMap(targetMap);
@@ -53,7 +53,7 @@ public class AnalyzeServiceImpl {
     }
 
     public void delTargetMap(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ANALYZE_BID_PARAM.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ANALYZE_BID_PARAM.matcher(cqMsg.getMessage());
         if (m.find()) {
             Integer targetMap = Integer.valueOf(m.group(2));
             analyzerDAO.delTargetMap(targetMap);
@@ -92,7 +92,7 @@ public class AnalyzeServiceImpl {
     }
 
     public void addTargetUser(CqMsg cqMsg) {
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         Userinfo userinfo = apiManager.getUser(m.group(2), null);
         if (userinfo != null) {
@@ -105,7 +105,7 @@ public class AnalyzeServiceImpl {
     }
 
     public void delTargetUser(CqMsg cqMsg) {
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         Userinfo userinfo = apiManager.getUser(m.group(2), null);
         if (userinfo != null) {

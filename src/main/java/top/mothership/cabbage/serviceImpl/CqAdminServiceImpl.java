@@ -7,10 +7,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.annotation.UserRoleControl;
 import top.mothership.cabbage.consts.Base64Consts;
 import top.mothership.cabbage.consts.OverallConsts;
-import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.manager.WebPageManager;
@@ -102,7 +102,7 @@ public class CqAdminServiceImpl {
 
     public void addUserRole(CqMsg cqMsg) {
 
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String[] usernames = m.group(2).split(",");
         String role = m.group(3);
@@ -170,7 +170,7 @@ public class CqAdminServiceImpl {
     }
 
     public void delUserRole(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String role;
         String[] usernames;
@@ -234,7 +234,7 @@ public class CqAdminServiceImpl {
 
     @UserRoleControl({1427922341})
     public void getUserRole(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         User user = null;
         String username = null;
@@ -296,7 +296,7 @@ public class CqAdminServiceImpl {
     }
 
     public void listPPOverflow(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String role = m.group(2);
         String resp;
@@ -349,7 +349,7 @@ public class CqAdminServiceImpl {
 
     @UserRoleControl({1427922341})
     public void addComponent(CqMsg cqMsg) throws IOException {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String url = m.group(3);
         String target = m.group(2);
@@ -391,7 +391,7 @@ public class CqAdminServiceImpl {
     }
 
     public void recent(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String username = m.group(2);
         String mode = m.group(3);
@@ -437,7 +437,7 @@ public class CqAdminServiceImpl {
     }
 
     public void checkAfkPlayer(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String role;
         int day = Integer.valueOf(m.group(2));
@@ -530,7 +530,7 @@ public class CqAdminServiceImpl {
     }
 
     public void handleInvite(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String flag = m.group(2);
         logger.info("正在通过对Flag为：" + flag + "的邀请");
@@ -567,7 +567,7 @@ public class CqAdminServiceImpl {
     }
 
     public void unbind(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         Long qq = Long.valueOf(m.group(2));
         User user = userDAO.getUser(qq, null);
@@ -584,7 +584,7 @@ public class CqAdminServiceImpl {
 
     public void firstPlace(CqMsg cqMsg) {
         Integer bid;
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         try {
             bid = Integer.valueOf(m.group(2));
@@ -620,11 +620,11 @@ public class CqAdminServiceImpl {
     }
 
     public void listMsg(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         StringBuilder resp = new StringBuilder();
         String QQ = m.group(2);
-        Matcher atMatcher = PatternConsts.AT_REGEX.matcher(cqMsg.getMessage());
+        Matcher atMatcher = RegularPattern.AT_REGEX.matcher(cqMsg.getMessage());
         if (atMatcher.find()) {
             QQ = atMatcher.group(1);
         }
@@ -679,7 +679,7 @@ public class CqAdminServiceImpl {
     }
 
     public void listUserPP(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String role;
         if ("".equals(m.group(2))) {
@@ -712,7 +712,7 @@ public class CqAdminServiceImpl {
 
 
     public void searchPlayer(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String resp;
         String username = m.group(2);
@@ -740,7 +740,7 @@ public class CqAdminServiceImpl {
     }
 
     public void scanCard(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         CqResponse<List<QQInfo>> cqResponse1 = cqManager.getGroupMembers(Long.valueOf(m.group(2)));
         String resp;
@@ -780,7 +780,7 @@ public class CqAdminServiceImpl {
         CqResponse<List<QQInfo>> cqResponse;
         User user;
         String resp = "";
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         //根据是否带群号，取出相应的群成员
         if ("".equals(m.group(2))) {
@@ -819,7 +819,7 @@ public class CqAdminServiceImpl {
     }
 
     public void checkRoleBan(CqMsg cqMsg) {
-        Matcher m = PatternConsts.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String role = m.group(2);
         if ("".equals(role)) {

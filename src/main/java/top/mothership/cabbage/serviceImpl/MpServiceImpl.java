@@ -3,7 +3,7 @@ package top.mothership.cabbage.serviceImpl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
-import top.mothership.cabbage.consts.PatternConsts;
+import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.LobbyDAO;
@@ -55,7 +55,7 @@ public class MpServiceImpl {
      * @param cqMsg the cq msg
      */
     public void reserveLobby(CqMsg cqMsg) {
-        Matcher cmdMatcher = PatternConsts.MP_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher cmdMatcher = RegularPattern.MP_CMD_REGEX.matcher(cqMsg.getMessage());
         cmdMatcher.find();
         User user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
@@ -118,7 +118,7 @@ public class MpServiceImpl {
      * @param cqMsg the cq msg
      */
     public void invitePlayer(CqMsg cqMsg) {
-        Matcher cmdMatcher = PatternConsts.MP_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher cmdMatcher = RegularPattern.MP_CMD_REGEX.matcher(cqMsg.getMessage());
         cmdMatcher.find();
         User user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
@@ -136,7 +136,7 @@ public class MpServiceImpl {
             return;
         }
         String target = cmdMatcher.group(2);
-        Matcher atMatcher = PatternConsts.AT_REGEX.matcher(target);
+        Matcher atMatcher = RegularPattern.AT_REGEX.matcher(target);
         User targetUser;
         Userinfo userFromAPI;
         if (atMatcher.find()) {

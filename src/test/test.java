@@ -3,7 +3,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import top.mothership.cabbage.consts.PatternConsts;
+import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.mapper.UserDAO;
 
@@ -360,7 +360,7 @@ public class test {
 //        System.out .println(a==b);
 
 //        String  a = "[CQ:image,file=2324234243.jpg]123";
-//        Matcher m = PatternConsts.IMG_REGEX.matcher(a);
+//        Matcher m = RegularPattern.IMG_REGEX.matcher(a);
 //               if(m.find()) {
 //           for (int i = 0; i <= m.groupCount(); i++)
 //               System.out.println(m.group(i));
@@ -371,7 +371,7 @@ public class test {
 //Lobby lobby = apiManager.getMatch(38182172);
 //System.out.println(lobby);
         String s = "-a xi -t Fre edom -d Another -m Nakagawa -ar 9 -od 9 -cs 4 -hp 6\n";
-        Matcher m = PatternConsts.OSU_SEARCH_KETWORD_SHELL.matcher(s);
+        Matcher m = RegularPattern.OSU_SEARCH_KETWORD_SHELL.matcher(s);
         m.find();
 
         for (int j = m.start(); j < m.end(); j++) {
