@@ -8,18 +8,18 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.annotation.GroupRoleControl;
 import top.mothership.cabbage.consts.Base64Consts;
-import top.mothership.cabbage.consts.PatternConsts;
 import top.mothership.cabbage.consts.TipConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
+import top.mothership.cabbage.pojo.CoolQ.Argument;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.CoolQ.CqResponse;
-import top.mothership.cabbage.pojo.CoolQ.Params;
 import top.mothership.cabbage.pojo.CoolQ.QQInfo;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Beatmap;
@@ -29,7 +29,6 @@ import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
-import top.mothership.cabbage.util.qq.ParamVerifyUtil;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -49,6 +48,8 @@ import java.util.regex.Matcher;
  */
 @Service
 public class CqServiceImpl {
+    private static final int i = 0;
+    private static final int[] j = {i};
     private final ApiManager apiManager;
     private final CqManager cqManager;
     private final WebPageManager webPageManager;
@@ -56,25 +57,24 @@ public class CqServiceImpl {
     private final UserDAO userDAO;
     private final ImgUtil imgUtil;
     private final ScoreUtil scoreUtil;
-    private static final int i = 0;
-    private static final int[] j = {i};
-    private Logger logger = LogManager.getLogger(this.getClass());
     private final UserUtil userUtil;
-    private final ParamVerifyUtil paramVerifyUtil;
+    private Logger logger = LogManager.getLogger(this.getClass());
+
     /**
      * Instantiates a new Cq service.
-     * @param apiManager     the api manager
-     * @param cqManager      the cq manager
-     * @param webPageManager 网页相关抓取工具
-     * @param userDAO        the user dao
-     * @param userInfoDAO    the user info dao
-     * @param imgUtil        the img util
-     * @param scoreUtil      the score util
+     *
+     * @param apiManager      the api manager
+     * @param cqManager       the cq manager
+     * @param webPageManager  网页相关抓取工具
+     * @param userDAO         the user dao
+     * @param userInfoDAO     the user info dao
+     * @param imgUtil         the img util
+     * @param scoreUtil       the score util
      * @param userUtil
      * @param paramVerifyUtil
      */
     @Autowired
-    public CqServiceImpl(ApiManager apiManager, CqManager cqManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, UserUtil userUtil, ParamVerifyUtil paramVerifyUtil) {
+    public CqServiceImpl(ApiManager apiManager, CqManager cqManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, UserUtil userUtil) {
         this.apiManager = apiManager;
         this.cqManager = cqManager;
         this.webPageManager = webPageManager;
@@ -83,7 +83,7 @@ public class CqServiceImpl {
         this.imgUtil = imgUtil;
         this.scoreUtil = scoreUtil;
         this.userUtil = userUtil;
-        this.paramVerifyUtil = paramVerifyUtil;
+
     }
 
 
@@ -95,21 +95,17 @@ public class CqServiceImpl {
     public void statUserInfo(CqMsg cqMsg) {
 
         //参数校验部分单独提取
-        Params params = paramVerifyUtil.statUserInfo(cqMsg);
-        if (!params.isVaild()) {
-            cqMsg.setMessage(params.getResp());
-            cqManager.sendMsg(cqMsg);
-            return;
-        }
+        Argument argument = cqMsg.getArgument();
+
         User user = null;
         Userinfo userFromAPI = null;
-        boolean near = false;
+        boolean approximate = false;
         Userinfo userInDB = null;
         String role = null;
         int scoreRank;
         List<String> roles;
 
-        switch (params.getSubCommandLowCase()) {
+        switch (argument.getSubCommandLowCase()) {
             case "statme":
                 //由于statme是对本人的查询，先尝试取出绑定的user，如果没有绑定过给出相应提示
                 user = userDAO.getUser(cqMsg.getUserId(), null);
@@ -118,17 +114,17 @@ public class CqServiceImpl {
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
-                if (params.getMode() == null) {
+                if (argument.getMode() == null) {
                     //如果查询没有指定mode，用用户预设的mode覆盖
-                    params.setMode(user.getMode());
+                    argument.setMode(user.getMode());
                 }
                 //根据绑定的信息从ppy获取一份玩家信息
-                userFromAPI = apiManager.getUser(params.getMode(), user.getUserId());
+                userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
                 role = user.getRole();
 
                 if (user.isBanned()) {
                     //当数据库查到该玩家，并且被ban时，从数据库里取出最新的一份userinfo伪造
-                    userFromAPI = userInfoDAO.getNearestUserInfo(params.getMode(), user.getUserId(), LocalDate.now());
+                    userFromAPI = userInfoDAO.getNearestUserInfo(argument.getMode(), user.getUserId(), LocalDate.now());
                     if (userFromAPI == null) {
                         //如果数据库中该玩家该模式没有历史记录……
                         cqMsg.setMessage(TipConsts.USER_IS_BANNED);
@@ -148,22 +144,22 @@ public class CqServiceImpl {
                         }
                     }
                     //玩家被ban就把日期改成0，因为没有数据进行对比
-                    params.setDay(0);
+                    argument.setDay(0);
                 } else {
                     if (userFromAPI == null) {
                         cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, user.getQq(), user.getUserId()));
                         cqManager.sendMsg(cqMsg);
                         return;
                     }
-                    if (params.getDay() > 0) {
-                        userInDB = userInfoDAO.getUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
+                    if (argument.getDay() > 0) {
+                        userInDB = userInfoDAO.getUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
                         if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
+                            userInDB = userInfoDAO.getNearestUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
                             if (userInDB == null) {
                                 //FIXME 新增全模式的时候产生的兼容性问题(会导致已注册的用户却在数据库没有历史数据)，下个版本可以去除
-                                params.setDay(0);
+                                argument.setDay(0);
                             }
-                            near = true;
+                            approximate = true;
                         }
                     }
                 }
@@ -171,30 +167,32 @@ public class CqServiceImpl {
 
             case "statu":
                 //先尝试根据提供的uid从数据库取出数据
-                user = userDAO.getUser(null, params.getUserId());
-                userFromAPI = apiManager.getUser(0, params.getUserId());
+                user = userDAO.getUser(null, argument.getUserId());
+                userFromAPI = apiManager.getUser(0, argument.getUserId());
 
                 if (user == null) {
                     if (userFromAPI == null) {
-                        cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED_AND_NOT_USED, params.getUserId()));
+                        cqMsg.setMessage(String.format(TipConsts.USER_ID_GET_FAILED_AND_NOT_USED, argument.getUserId()));
                         cqManager.sendMsg(cqMsg);
                         return;
                     } else {
                         //构造User对象和4条Userinfo写入数据库，如果指定了mode就使用指定mode
-                        if (params.getMode() == null) {
-                            params.setMode(0);
+                        if (argument.getMode() == null) {
+                            argument.setMode(0);
                         }
-                        userUtil.registerUser(userFromAPI.getUserId(), params.getMode());
+                        userUtil.registerUser(userFromAPI.getUserId(), argument.getMode());
                         userInDB = userFromAPI;
+                        //初次使用，数据库肯定没有指定天数的数据
+                        approximate = true;
                     }
                     role = "creep";
                 } else if (user.isBanned()) {
                     //只有在确定user不是null的时候，如果参数没有提供mode，用user预设的覆盖
-                    if (params.getMode() == null) {
-                        params.setMode(user.getMode());
+                    if (argument.getMode() == null) {
+                        argument.setMode(user.getMode());
                     }
                     //当数据库查到该玩家，并且被ban时，从数据库里取出最新的一份userinfo，作为要展现的数据传给绘图类
-                    userFromAPI = userInfoDAO.getNearestUserInfo(params.getMode(), user.getUserId(), LocalDate.now());
+                    userFromAPI = userInfoDAO.getNearestUserInfo(argument.getMode(), user.getUserId(), LocalDate.now());
                     if (userFromAPI == null) {
                         //如果数据库中该玩家该模式没有历史记录……
                         cqMsg.setMessage(TipConsts.USER_IS_BANNED);
@@ -213,69 +211,72 @@ public class CqServiceImpl {
                             userFromAPI.setUserName(String.valueOf(user.getUserId()));
                         }
                     }
-                    params.setDay(0);
+                    argument.setDay(0);
                     role = user.getRole();
                 } else {
-                    if (params.getMode() == null) {
-                        params.setMode(user.getMode());
+                    if (argument.getMode() == null) {
+                        argument.setMode(user.getMode());
                     }
                     role = user.getRole();
-                    if (params.getDay() > 0) {
-                        userInDB = userInfoDAO.getUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
+                    if (argument.getDay() > 0) {
+                        userInDB = userInfoDAO.getUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
                         if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
+                            userInDB = userInfoDAO.getNearestUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
                             if (userInDB == null) {
                                 //FIXME 新增全模式的时候产生的兼容性问题(会导致已注册的用户却在数据库没有历史数据)，下个版本可以去除
-                                params.setDay(0);
+                                argument.setDay(0);
                             }
-                            near = true;
+                            approximate = true;
                         }
                     }
                 }
                 break;
             case "stat":
-                //直接从api根据参数提供的用户名获取
-                userFromAPI = apiManager.getUser(0, params.getUsername());
-                if (userFromAPI == null) {
-                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, params.getUserId()));
+                if ("白菜".equals(argument.getUsername())) {
+                    cqMsg.setMessage("没人疼，没人爱，我是地里一颗小白菜。");
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
-                //这个彩蛋不想用参数预检……要考虑下划线大小写
-                if (userFromAPI.getUserId() == 3) {
-                    cqMsg.setMessage(TipConsts.QUERY_BANCHO_BOT);
+                //直接从api根据参数提供的用户名获取
+                userFromAPI = apiManager.getUser(0, argument.getUsername());
+
+                if (userFromAPI == null) {
+                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, argument.getUsername()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
 
+
                 user = userDAO.getUser(null, userFromAPI.getUserId());
                 if (user == null) {
                     //未指定mode的时候改为0
-                    if (params.getMode() == null) {
-                        params.setMode(0);
+                    if (argument.getMode() == null) {
+                        argument.setMode(0);
                     }
-                    userUtil.registerUser(userFromAPI.getUserId(), params.getMode());
+                    userUtil.registerUser(userFromAPI.getUserId(), argument.getMode());
                     userInDB = userFromAPI;
                     role = "creep";
+                    //初次使用，数据库肯定没有指定天数的数据，直接标为近似数据
+                    approximate = true;
                 } else {
                     //未指定mode的时候改为玩家预设的模式
-                    if (params.getMode() == null) {
-                        params.setMode(user.getMode());
+                    if (argument.getMode() == null) {
+                        argument.setMode(user.getMode());
                     }
-                    if (!params.getMode().equals(0)) {
+                    if (!argument.getMode().equals(0)) {
                         //2018-1-22 12:59:06如果这个玩家的模式不是主模式，则取出相应模式
-                        userFromAPI = apiManager.getUser(params.getMode(), user.getUserId());
+                        userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
                     }
                     role = user.getRole();
-                    if (params.getDay() > 0) {
-                        userInDB = userInfoDAO.getUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
+                    if (argument.getDay() > 0) {
+                        userInDB = userInfoDAO.getUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
                         if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(params.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(params.getDay()));
+                            userInDB = userInfoDAO.getNearestUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
                             if (userInDB == null) {
                                 //FIXME 新增全模式的时候产生的兼容性问题(会导致已注册的用户却在数据库没有历史数据)，下个版本可以去除
-                                params.setDay(0);
+                                argument.setDay(0);
                             }
-                            near = true;
+                            approximate = true;
                         }
                     }
                 }
@@ -301,36 +302,40 @@ public class CqServiceImpl {
             scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
         }
         //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
-        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), params.getDay(), near, scoreRank, params.getMode());
+        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), argument.getDay(), approximate, scoreRank, argument.getMode());
         cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
         cqManager.sendMsg(cqMsg);
     }
 
+
     public void printBP(CqMsg cqMsg) {
-        Params params = paramVerifyUtil.printBP(cqMsg);
-        if (!params.isVaild()) {
-            cqMsg.setMessage(params.getResp());
+
+        Argument argument = cqMsg.getArgument();
+        if ("白菜".equals(argument.getUsername())) {
+            cqMsg.setMessage("大白菜（学名：Brassica rapa pekinensis，异名Brassica campestris pekinensis或Brassica pekinensis）" +
+                    "是一种原产于中国的蔬菜，又称“结球白菜”、“包心白菜”、“黄芽白”、“胶菜”等。(via 维基百科)");
             cqManager.sendMsg(cqMsg);
             return;
         }
+
         List<Score> bpList;
         Userinfo userFromAPI = null;
         User user = null;
-        switch (params.getSubCommandLowCase()) {
+        switch (argument.getSubCommandLowCase()) {
             case "bp":
             case "bps":
-                userFromAPI = apiManager.getUser(0, params.getUsername());
+                userFromAPI = apiManager.getUser(0, argument.getUsername());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, params.getUsername()));
+                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, argument.getUsername()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
             case "bpu":
             case "bpus":
-                userFromAPI = apiManager.getUser(0, params.getUserId());
+                userFromAPI = apiManager.getUser(0, argument.getUserId());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage(String.format(TipConsts.USERID_GET_FAILED, params.getUserId()));
+                    cqMsg.setMessage(String.format(TipConsts.USERID_GET_FAILED, argument.getUserId()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
@@ -362,15 +367,15 @@ public class CqServiceImpl {
                 break;
         }
         //如果不是mybp，并且没有指定mode
-        if (params.getMode() == null && user == null) {
+        if (argument.getMode() == null && user == null) {
             //取出四个模式所有BP
-            params.setMode(0);
+            argument.setMode(0);
         } else if (user != null) {
             //如果是mybp并且没有指定mode
-            params.setMode(user.getMode());
+            argument.setMode(user.getMode());
         }
         //如果不是mybp，并且指定了mode，就按指定的mode 获取
-        bpList = apiManager.getBP(params.getMode(), userFromAPI.getUserId());
+        bpList = apiManager.getBP(argument.getMode(), userFromAPI.getUserId());
         ArrayList<Score> todayBP = new ArrayList<>();
 
         for (int i = 0; i < bpList.size(); i++) {
@@ -387,7 +392,7 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-        if (params.isText()) {
+        if (argument.isText()) {
             cqMsg.setMessage("不（lan）支（de）持（zuo）以文本形式展现今日BP。");
             cqManager.sendMsg(cqMsg);
             return;
@@ -397,7 +402,7 @@ public class CqServiceImpl {
                 Beatmap map = apiManager.getBeatmap(aList.getBeatmapId());
                 aList.setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
             }
-            String result = imgUtil.drawUserBP(userFromAPI, todayBP, params.getMode());
+            String result = imgUtil.drawUserBP(userFromAPI, todayBP, argument.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
             cqManager.sendMsg(cqMsg);
         }
@@ -406,9 +411,10 @@ public class CqServiceImpl {
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
     @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void printSpecifiedBP(CqMsg cqMsg) {
-        Params params = paramVerifyUtil.printSpecifiedBP(cqMsg);
-        if (!params.isVaild()) {
-            cqMsg.setMessage(params.getResp());
+        Argument argument = cqMsg.getArgument();
+        if ("白菜".equals(argument.getUsername())) {
+            cqMsg.setMessage("大白菜（学名：Brassica rapa pekinensis，异名Brassica campestris pekinensis或Brassica pekinensis）" +
+                    "是一种原产于中国的蔬菜，又称“结球白菜”、“包心白菜”、“黄芽白”、“胶菜”等。(via 维基百科)");
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -416,21 +422,21 @@ public class CqServiceImpl {
         Userinfo userFromAPI = null;
         User user = null;
 
-        switch (params.getSubCommandLowCase()) {
+        switch (argument.getSubCommandLowCase()) {
             case "bp":
             case "bps":
-                userFromAPI = apiManager.getUser(0, params.getUsername());
+                userFromAPI = apiManager.getUser(0, argument.getUsername());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, params.getUsername()));
+                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, argument.getUsername()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
             case "bpu":
             case "bpus":
-                userFromAPI = apiManager.getUser(0, params.getUserId());
+                userFromAPI = apiManager.getUser(0, argument.getUserId());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage(String.format(TipConsts.USERID_GET_FAILED, params.getUserId()));
+                    cqMsg.setMessage(String.format(TipConsts.USERID_GET_FAILED, argument.getUserId()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
@@ -452,7 +458,7 @@ public class CqServiceImpl {
                 }
                 userFromAPI = apiManager.getUser(0, user.getUserId());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
+                    cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, user.getQq(), user.getUserId()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
@@ -463,33 +469,33 @@ public class CqServiceImpl {
 
         List<Score> bpList;
         //如果不是mybp，并且没有指定mode
-        if (params.getMode() == null && user == null) {
+        if (argument.getMode() == null && user == null) {
             //取出四个模式所有BP
-            params.setMode(0);
+            argument.setMode(0);
         } else if (user != null) {
             //如果是mybp并且没有指定mode
-            params.setMode(user.getMode());
+            argument.setMode(user.getMode());
         }
         //如果不是mybp，并且指定了mode，就按指定的mode 获取
-        bpList = apiManager.getBP(params.getMode(), userFromAPI.getUserId());
-        if (params.getNum() > bpList.size()) {
+        bpList = apiManager.getBP(argument.getMode(), userFromAPI.getUserId());
+        if (argument.getNum() > bpList.size()) {
             cqMsg.setMessage("该玩家没有打出指定的bp……");
             cqManager.sendMsg(cqMsg);
             return;
         } else {
-            if (params.isText()) {
+            if (argument.isText()) {
                 //list基于0，得-1
-                Score score = bpList.get(params.getNum() - 1);
-                logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + params.getMode() + "的第" + params.getNum() + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
+                Score score = bpList.get(argument.getNum() - 1);
+                logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + argument.getMode() + "的第" + argument.getNum() + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
                 Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
                 cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName()));
                 cqManager.sendMsg(cqMsg);
             } else {
                 //list基于0，得-1
-                Score score = bpList.get(params.getNum() - 1);
-                logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + params.getMode() + "的第" + params.getNum() + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
+                Score score = bpList.get(argument.getNum() - 1);
+                logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + argument.getMode() + "的第" + argument.getNum() + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
                 Beatmap map = apiManager.getBeatmap(score.getBeatmapId());
-                String result = imgUtil.drawResult(userFromAPI, score, map, params.getMode());
+                String result = imgUtil.drawResult(userFromAPI, score, map, argument.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
                 cqManager.sendMsg(cqMsg);
             }
@@ -498,16 +504,14 @@ public class CqServiceImpl {
 
 
     public void setId(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
         String username;
         Userinfo userFromAPI = null;
         User user;
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
 
-        username = m.group(2);
-        userFromAPI = apiManager.getUser(0, username);
+        userFromAPI = apiManager.getUser(0, argument.getUsername());
         if (userFromAPI == null) {
-            cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
+            cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, argument.getUsername()));
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -550,7 +554,7 @@ public class CqServiceImpl {
     }
 
     public void recent(CqMsg cqMsg) {
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         Userinfo userFromAPI = null;
         User user;
@@ -594,7 +598,7 @@ public class CqServiceImpl {
             default:
                 break;
         }
-        Matcher recentQianeseMatcher = PatternConsts.QIANESE_RECENT.matcher(m.group(1).toLowerCase(Locale.CHINA));
+        Matcher recentQianeseMatcher = RegularPattern.QIANESE_RECENT.matcher(m.group(1).toLowerCase(Locale.CHINA));
         if (recentQianeseMatcher.find()) {
             String filename = imgUtil.drawResult(userFromAPI, score, beatmap);
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
@@ -616,7 +620,7 @@ public class CqServiceImpl {
     }
 
     public void sleep(CqMsg cqMsg) {
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         Long hour;
         try {
@@ -646,7 +650,7 @@ public class CqServiceImpl {
     }
 
     public void firstPlace(CqMsg cqMsg) {
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         Beatmap beatmap;
         Score score;
@@ -789,7 +793,7 @@ public class CqServiceImpl {
         User user;
         String filename;
         String newRole;
-        Matcher m = PatternConsts.CHART_ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.CHART_ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         //面向mp4 5 chart组，相当于!setid+!sudo add
         List<Long> mpChartMember = new ArrayList<>();
@@ -1019,7 +1023,7 @@ public class CqServiceImpl {
     public void cost(CqMsg cqMsg) {
         User user = null;
         Userinfo userFromAPI;
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         String username;
         switch (m.group(1).toLowerCase(Locale.CHINA)) {
@@ -1080,20 +1084,45 @@ public class CqServiceImpl {
         }
         Map<String, Integer> map = webPageManager.getPPPlus(user.getUserId());
         if (map != null) {
-            double cost = Math.pow((map.get("Jump") / 3000F), 0.8F)
+            double midasModeS1Cost = Math.pow((map.get("Jump") / 3000F), 0.8F)
                     * Math.pow((map.get("Flow") / 1500F), 0.6F)
                     + Math.pow((map.get("Speed") / 2000F), 0.8F)
                     * Math.pow((map.get("Stamina") / 2000F), 0.5F)
                     + (map.get("Accuracy") / 2250F);
+            double drugsS4Cost = Math.pow((map.get("Jump") / 3000F), 0.9F)
+                    * Math.pow((map.get("Flow") / 1500F), 0.5F)
+                    + Math.pow((map.get("Speed") / 2000F), 1.25F)
+                    + (map.get("Accuracy") / 2700F);
+            double mp4S2Cost = Math.pow(
+                    ((0.02 * (10 * Math.sqrt((Math.atan((2 * map.get("Jump") - (2400 + 2135)) / (2400 - 2135)) + Math.PI / 2 + 8)
+                            * (Math.atan((2 * map.get("Flow") - (720 + 418)) / (720 - 418)) + Math.PI / 2 + 3))
+                            + 7 * (Math.atan((2 * map.get("Speed") - (1600 + 1324)) / (1600 - 1324)) + Math.PI / 2)
+                            + 3 * (Math.atan((2 * map.get("Stamina") - (1300 + 930)) / (1300 - 930)) + Math.PI / 2)
+                            + 1 * (Math.atan((2 * map.get("Accuracy") - (1300 + 1000)) / (1300 - 1000)) + Math.PI / 2)
+                            + 5 * (Math.atan((2 * map.get("Precision") - (700 + 450)) / (700 - 450)) + Math.PI / 2))) - 1)
+                    , 2.5f);
 //        cost=(jump/3000)^0.8*(flow/1500)^0.6+(speed/2000)^0.8*(stamina/2000)^0.5+accuracy/2250
-            cqMsg.setMessage(user.getCurrentUname() + "的Jump：" + map.get("Jump")
+//            毒品：(Jump/3000)^0.9*(Flow/1500)^0.5+(Spd/2000)^1.25+Acc/2700
+//           mp4： Cost=((0.02*(10*SQRT((ATAN((2*Jump-(2400+2135))/(2400-2135))+π/2+8)
+//                    *(ATAN((2*Flow-(720+418))/(720-418))+π/2+3))
+//                    +7*(ATAN((2*Speed-(1600+1324))/(1600-1324))+π/2)
+//                    +3*(ATAN((2*Stamina-(1300+930))/(1300-930))+π/2)
+//                    +1*(ATAN((2*Acc-(1300+1000))/(1300-1000))+π/2)
+//                    +5*(ATAN((2*Precision-(700+450))/(700-450))+π/2)))-1)^2.5
+            cqMsg.setMessage(user.getCurrentUname() + "的PP+ 六维数据："
+                    + "\nJump：" + map.get("Jump")
                     + "\nFlow：" + map.get("Flow")
                     + "\nPrecision：" + map.get("Precision")
                     + "\nSpeed：" + map.get("Speed")
                     + "\nStamina：" + map.get("Stamina")
                     + "\nAccuracy：" + map.get("Accuracy")
-                    + "\n在本届点金杯中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(cost) + "。" +
-                    "\n后期公式可能会变动，该Cost只对本次比赛有效。");
+                    + "\n在点金杯S1中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(midasModeS1Cost)
+                    + "。该比赛已于18-2-10结束。"
+                    + "\n在mp4S2中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(midasModeS1Cost)
+                    + "。该比赛正在开放报名，欢迎4000-5100PP玩家报名！"
+                    + "\n在毒品杯S4中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(midasModeS1Cost)
+                    + "。该比赛预计三月初报名，三月中旬开赛，允许该Cost小于2.6的玩家参赛。"
+                    + "\n每个比赛的Cost公式不同，只对指定的比赛有效。");
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -1103,7 +1132,7 @@ public class CqServiceImpl {
     }
 
     public void recentPassed(CqMsg cqMsg) {
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         Userinfo userFromAPI = null;
         User user;
@@ -1169,107 +1198,7 @@ public class CqServiceImpl {
     }
 
     private SearchParam parseSearchKeyword(CqMsg cqMsg) {
-        SearchParam searchParam = new SearchParam();
-        Matcher getKeyWordAndMod = PatternConsts.OSU_SEARCH_MOD_REGEX.matcher(cqMsg.getMessage());
-        Integer modsNum = null;
-        String mods = "None";
-        String keyword;
-        Double ar = null;
-        Double od = null;
-        Double cs = null;
-        Double hp = null;
-        if (getKeyWordAndMod.find()) {
-            mods = getKeyWordAndMod.group(3);
-            modsNum = scoreUtil.reverseConvertMod(mods);
-            //如果字符串解析出错，会返回null，因此这里用null值来判断输入格式
-            if (modsNum == null) {
-                cqMsg.setMessage("请使用MOD的双字母缩写，不需要任何分隔符。" +
-                        "\n接受的Mod有：NF EZ TD HD HR SD DT HT NC FL SO PF。");
-                cqManager.sendMsg(cqMsg);
-                return null;
-            }
-            searchParam.setMods(modsNum);
-            searchParam.setModsString(mods);
-            keyword = getKeyWordAndMod.group(2);
-        } else {
-            //未指定mod的情况下，mods和modnum依然为null
-            getKeyWordAndMod = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-            getKeyWordAndMod.find();
-            keyword = getKeyWordAndMod.group(2);
-        }
-        if (keyword.endsWith(" ")) {
-            keyword = keyword.substring(0, keyword.length() - 1);
-        }
-        Matcher allNumberKeyword = PatternConsts.ALL_NUMBER_SEARCH_KEYWORD.matcher(keyword);
-        if (allNumberKeyword.find()) {
-            searchParam.setBeatmapId(Integer.valueOf(allNumberKeyword.group(1)));
-            return searchParam;
-        }
-        //新格式
 
-        //比较菜，手动补齐参数
-        if (!keyword.contains("-")) {
-            //如果没有横杠，手动补齐
-            keyword = "-" + keyword;
-        }
-        if (!(keyword.endsWith("]") || keyword.endsWith(")") || keyword.endsWith("}"))) {
-            //如果圆括号 方括号 花括号都没有
-            keyword += "[](){}";
-        }
-        if (keyword.endsWith("]"))
-            //如果有方括号
-            keyword += "(){}";
-        if (keyword.endsWith(")"))
-            //如果有圆括号
-            keyword += "{}";
-        Matcher getArtistTitleEtc = PatternConsts.OSU_SEARCH_KETWORD.matcher(keyword);
-        if (!getArtistTitleEtc.find()) {
-            cqMsg.setMessage("请使用艺术家-歌曲标题[难度名](麻婆名){AR9.0OD9.0CS9.0HP9.0} +MOD双字母简称 的格式。\n" +
-                    "所有参数都可以省略(但横线、方括号和圆括号不能省略)，四维顺序必须按AR OD CS HP排列。");
-            cqManager.sendMsg(cqMsg);
-            return null;
-        } else {
-            //没啥办法……手动处理吧，这个正则管不了了，去掉可能存在的空格
-            String artist = getArtistTitleEtc.group(1);
-            if (artist.endsWith(" ")) {
-                artist = artist.substring(0, artist.length() - 1);
-            }
-            String title = getArtistTitleEtc.group(2);
-            if (title.startsWith(" ")) {
-                title = title.substring(1);
-            }
-            if (title.endsWith(" ")) {
-                title = title.substring(0, title.length() - 1);
-            }
-            searchParam.setArtist(artist);
-            searchParam.setTitle(title);
-            searchParam.setDiffName(getArtistTitleEtc.group(3));
-            searchParam.setMapper(getArtistTitleEtc.group(4));
-            //处理四维字符串
-            String fourDemensions = getArtistTitleEtc.group(5);
-            if (!"".equals(fourDemensions)) {
-                Matcher getFourDemens = PatternConsts.OSU_SEARCH_FOUR_DEMENSIONS_REGEX.matcher(fourDemensions);
-                getFourDemens.find();
-                if (getFourDemens.group(1) != null) {
-                    ar = Double.valueOf(getFourDemens.group(1));
-                }
-                if (getFourDemens.group(2) != null) {
-                    od = Double.valueOf(getFourDemens.group(2));
-                }
-                if (getFourDemens.group(3) != null) {
-                    cs = Double.valueOf(getFourDemens.group(3));
-                }
-                if (getFourDemens.group(4) != null) {
-                    hp = Double.valueOf(getFourDemens.group(4));
-                }
-
-            }
-            searchParam.setAr(ar);
-            searchParam.setOd(od);
-            searchParam.setCs(cs);
-            searchParam.setHp(hp);
-
-            return searchParam;
         }
 
     }
@@ -1280,7 +1209,7 @@ public class CqServiceImpl {
         User user;
         int num = 0;
         boolean text = true;
-        Matcher m = PatternConsts.REG_CMD_REGEX.matcher(cqMsg.getMessage());
+        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
         switch (m.group(1).toLowerCase(Locale.CHINA)) {
             case "bns":

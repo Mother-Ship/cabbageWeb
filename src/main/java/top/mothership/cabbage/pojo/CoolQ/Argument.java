@@ -1,6 +1,7 @@
 package top.mothership.cabbage.pojo.CoolQ;
 
 import lombok.Data;
+import top.mothership.cabbage.pojo.osu.SearchParam;
 
 import java.util.List;
 
@@ -8,9 +9,8 @@ import java.util.List;
  * 从命令中解析出的参数
  */
 @Data
-public class Params {
-    private boolean vaild;
-    private String resp;
+public class Argument {
+
     private String subCommandLowCase;
     private Integer mode;
     private Integer day;
@@ -19,9 +19,10 @@ public class Params {
     private String username;
     private Integer userId;
     private Long qq;
-    private Integer hour;
+    private Long hour;
     private List<String> usernames;
     private Long groupId;
     private String role;
     private String flag;
+    private SearchParam searchParam;
 }
