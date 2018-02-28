@@ -76,7 +76,7 @@ public class ImgUtil {
      * @param userInDB    作为对比的信息
      * @param role        用户组
      * @param day         对比的天数
-     * @param approximate        是否是接近的数据
+     * @param approximate 是否是接近的数据
      * @param scoreRank   scoreRank
      * @param mode        模式，只支持0/1/2/3
      * @return Base64字串 string
@@ -86,7 +86,12 @@ public class ImgUtil {
         BufferedImage bg;
         BufferedImage layout = getCopyImage(images.get("layout.png"));
         BufferedImage scoreRankBG = getCopyImage(images.get("scorerank.png"));
-        BufferedImage roleBg = getCopyImage(images.get("role-" + role + ".png"));
+        BufferedImage roleBg;
+        try {
+            roleBg = getCopyImage(images.get("role-" + role + ".png"));
+        } catch (NullPointerException e) {
+            roleBg = getCopyImage(images.get("role-creep.png"));
+        }
 
         bg = images.get(String.valueOf(userFromAPI.getUserId()) + ".png");
         if (bg != null) {
@@ -96,8 +101,9 @@ public class ImgUtil {
             try {
                 bg = getCopyImage(images.get(role + ".png"));
             } catch (NullPointerException ignore) {
-                //这个异常是在出现了新用户组，但是没有准备这个用户组的右下角标志时候出现
-                return null;
+                //这个异常是在出现了新用户组，但是没有准备这个用户组的背景时候出现
+                //2018-2-27 09:34:46 调整逻辑，没准备背景时候使用默认
+                bg = getCopyImage(images.get("creep.png"));
             }
         }
 
@@ -105,7 +111,7 @@ public class ImgUtil {
         //绘制布局
         g2.drawImage(layout, 0, 0, null);
         //模式的图标
-        g2.drawImage(images.get("mode-" + mode + ".png").getScaledInstance(57, 57, Image.SCALE_SMOOTH), 351, 68, null);
+        g2.drawImage(images.get("mode-" + mode + ".png"), 365, 80, null);
         //用户组对应的背景
         g2.drawImage(roleBg, 0, 0, null);
         try {
@@ -327,7 +333,7 @@ public class ImgUtil {
      * @param mode        the mode
      * @return the string
      */
-    public String drawUserBP(Userinfo userFromAPI, List<Score> list, int mode) {
+    public String drawUserBP(Userinfo userFromAPI, List<Score> list, int mode, boolean mixedmode) {
 
         //计算最终宽高
         int height = images.get("bptop.png").getHeight();
@@ -346,11 +352,13 @@ public class ImgUtil {
         //头部
         BufferedImage bpTop = getCopyImage(images.get("bptop.png"));
         Graphics2D g2 = (Graphics2D) bpTop.getGraphics();
-        //模式图标
-        g2.drawImage(images.get("mode-" + mode + ".png"), 650, 4, null);
+        //模式图标(所有bp为同一模式的时候画在顶上)
+        if (!mixedmode) {
+            g2.drawImage(images.get("mode-" + mode + ".png"), 650, 4, null);
+        }
         //那行字
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        drawTextToImage(g2, "#de3397", "Tahoma", 20, "Best Performance of " + userFromAPI.getUserName(), 67, 25);
+        drawTextToImage(g2, "#de3397", "Tahoma", 20, "Best Performance of " + userFromAPI.getUserName(), 27, 25);
         Calendar c = Calendar.getInstance();
         //日期补丁
         if (c.get(Calendar.HOUR_OF_DAY) < 4) {
@@ -365,7 +373,7 @@ public class ImgUtil {
 
         //开始绘制每行的bp
         for (Score aList : list) {
-            String acc = scoreUtil.genAccString(aList);
+            String acc = scoreUtil.genAccString(aList, (int) aList.getMode());
             String mods = scoreUtil.convertModToString(aList.getEnabledMods());
             int a;
             if (aList.getBeatmapName().length() <= 80) {
@@ -400,6 +408,9 @@ public class ImgUtil {
                     //歌名
                     drawTextToImage(g3, "#3843a6", "Arial", 16,
                             aList.getBeatmapName() + "(" + acc + "%)", 26, 16);
+                    if (mixedmode) {
+                        g3.drawImage(images.get("mode-" + aList.getMode() + ".png"), 650, 4, null);
+                    }
                     break;
                 case 3:
                     bpMid = getCopyImage(images.get("bpmid3.png"));
@@ -429,6 +440,10 @@ public class ImgUtil {
                     drawTextToImage(g3, "#3843a6", "Arial", 16, aList.getBeatmapName().substring(aList.getBeatmapName().substring(0, 81).lastIndexOf(" ") + 1, aList.getBeatmapName().length())
                                     + "(" + acc + "%)",
                             7, 30);
+                    //模式图标
+                    if (mixedmode) {
+                        g3.drawImage(images.get("mode-" + aList.getMode() + ".png"), 650, 4, null);
+                    }
                     break;
                 default:
                     break;
@@ -454,10 +469,9 @@ public class ImgUtil {
      * @return the string
      */
     public String drawResult(Userinfo userFromAPI, Score score, Beatmap beatmap, int mode) {
-        String accS = scoreUtil.genAccString(score);
+        String accS = scoreUtil.genAccString(score, mode);
         float acc = Float.valueOf(accS);
         BufferedImage bg;
-        BufferedImage result;
         Map<String, String> mods = scoreUtil.convertModToHashMap(score.getEnabledMods());
         //这个none是为了BP节省代码，在这里移除掉
         mods.remove("None");
@@ -468,7 +482,7 @@ public class ImgUtil {
         } catch (Exception ignore) {
             //如果acc过低或者不是std
         }
-        boolean defaultBG = false;
+
         try {
             bg = webPageManager.getBG(beatmap);
         } catch (NullPointerException e) {
@@ -480,7 +494,6 @@ public class ImgUtil {
                 //随机抽取一个bg
                 String randomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
                 bg = getCopyImage(images.get(randomBG));
-                defaultBG = true;
             }
         }
         //2017-11-3 17:51:47这里有莫名的空指针，比较迷，在webPageManager.getBG里加一个判断为空则抛出空指针看看
@@ -534,36 +547,7 @@ public class ImgUtil {
         //画上结尾的x
         g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * Combo.length + 30 - 7, 576 - 55 + 10, null);
 
-        /*
-        Mania：200=喝 320=激
-        300 320
-        200 100
-        50 miss
-        太鼓：没有50
-        300 激
-        100 喝
-        x
-        STD：
-        300 激
-        100 喝
-        50 x
-        CTB :
-        300 miss
-        100
-        50
-        300
-           g2.drawImage(Images.get(5), 40 - 4, 263 - 27, null);
-           激
-        g2.drawImage(Images.get(5), 360 - 4, 263 - 27, null);
-        100
-         g2.drawImage(Images.get(4), 44 - 5, 346 - 8, null);
-         喝
-        g2.drawImage(Images.get(4), 364 - 5, 346 - 8, null);
-        50
-          g2.drawImage(Images.get(6), 51 - 5, 455 - 21, null);
-          x
-           g2.drawImage(Images.get(3), 376 - 4, 437 - 5, null);
-         */
+
         char[] count300 = String.valueOf(score.getCount300()).toCharArray();
         char[] countgeki = String.valueOf(score.getCountGeki()).toCharArray();
         char[] count100 = String.valueOf(score.getCount100()).toCharArray();
@@ -573,9 +557,8 @@ public class ImgUtil {
         switch (mode) {
             case 0:
                 //STD
-                //300
 
-                //TODO: 其他东西改好后，把去掉300 100 50 x图标的banner传上去，以及对应模式的300 100 50 x图标也传上去
+                g2.drawImage(images.get("hit300.png").getScaledInstance(73, 73, Image.SCALE_SMOOTH), 30 - 4, 245 - 27, null);
                 for (int i = 0; i < count300.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(count300[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
@@ -584,16 +567,15 @@ public class ImgUtil {
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
 
                 //激
-
+                g2.drawImage(images.get("hit300.png").getScaledInstance(73, 73, Image.SCALE_SMOOTH), 350 - 4, 245 - 27, null);
                 for (int i = 0; i < countgeki.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(countgeki[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
                 }
                 //画上结尾的x
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
-
                 //100
-
+                g2.drawImage(images.get("hit100.png").getScaledInstance(50, 30, Image.SCALE_SMOOTH), 44 - 5, 346 - 8, null);
                 for (int i = 0; i < count100.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(count100[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
@@ -602,7 +584,7 @@ public class ImgUtil {
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
 
                 //喝
-
+                g2.drawImage(images.get("hit100.png").getScaledInstance(50, 30, Image.SCALE_SMOOTH), 364 - 5, 346 - 8, null);
                 for (int i = 0; i < countkatu.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(countkatu[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
@@ -610,7 +592,8 @@ public class ImgUtil {
                 //画上结尾的x
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 455 - 8, 374 - 55, null);
 
-
+                //50
+                g2.drawImage(images.get("hit50.png").getScaledInstance(35, 30, Image.SCALE_SMOOTH), 51 - 5, 455 - 21, null);
                 for (int i = 0; i < count50.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(count50[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
@@ -619,24 +602,57 @@ public class ImgUtil {
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count50.length + 134 - 7, 470 - 55, null);
 
                 //x
-
+                g2.drawImage(images.get("hit0.png").getScaledInstance(32, 32, Image.SCALE_SMOOTH), 376 - 4, 437 - 5, null);
                 for (int i = 0; i < count0.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(count0[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 470 - 55, null);
                 }
                 //画上结尾的x
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 455 - 8, 470 - 55, null);
+
+                if (oppaiResult != null) {
+
+                    int progress = 300 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())
+                            / (oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners());
+                    //进度条
+                    if (score.getRank().equals("F")) {
+                        g2.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                        g2.setColor(Color.decode("#99cc31"));
+                        g2.drawLine(262, 615, 262 + progress, 615);
+                        g2.setColor(Color.decode("#fe0000"));
+                        g2.drawLine(262 + progress, 615, 262 + progress, 753);
+                    }
+
+                    //底端PP面板，在oppai计算结果不是null的时候
+                    g2.drawImage(images.get("ppBanner.png"), 570, 700, null);
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setPaint(Color.decode("#ff66a9"));
+                    g2.setFont(new Font("Gayatri", 0, 60));
+                    if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
+                        g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 616, 753);
+                    } else {
+                        g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 601, 753);
+                    }
+                    g2.setFont(new Font("Gayatri", 0, 48));
+                    g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 834, 758);
+                    g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())), 932, 758);
+                    g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())), 1030, 758);
+
+                }
                 break;
             case 1:
                 //太鼓
                 //300
+                g2.drawImage(images.get("taiko-hit300.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 40 - 4, 263 - 27, null);
                 for (int i = 0; i < count300.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(count300[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
                 }
                 //画上结尾的x
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
+
                 //激
+                g2.drawImage(images.get("taiko-hit300g.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 360 - 4, 263 - 27, null);
                 for (int i = 0; i < countgeki.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(countgeki[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
@@ -644,13 +660,16 @@ public class ImgUtil {
                 //画上结尾的x
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
                 //100
+                g2.drawImage(images.get("taiko-hit100.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 42 - 5, 341 - 8, null);
                 for (int i = 0; i < count100.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(count100[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
                 }
                 //画上结尾的x
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
+
                 //喝
+                g2.drawImage(images.get("taiko-hit100k.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 362 - 5, 341 - 8, null);
                 for (int i = 0; i < countkatu.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(countkatu[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
@@ -659,19 +678,148 @@ public class ImgUtil {
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 455 - 8, 374 - 55, null);
 
                 //x
+                g2.drawImage(images.get("taiko-hit0.png").getScaledInstance(56, 56, Image.SCALE_SMOOTH), 42 - 5, 440 - 21, null);
                 for (int i = 0; i < count0.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(count0[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
                 }
                 //画上结尾的x
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 134 - 7, 470 - 55, null);
-
-                //Taiko
+                if (score.getPp() != null) {
+                    g2.drawImage(images.get("ppBanner2.png"), 570, 700, null);
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setPaint(Color.decode("#ff66a9"));
+                    g2.setFont(new Font("Gayatri", 0, 60));
+                    if (String.valueOf(Math.round(score.getPp())).contains("1")) {
+                        g2.drawString(String.valueOf(Math.round(score.getPp())), 616, 753);
+                    } else {
+                        g2.drawString(String.valueOf(Math.round(score.getPp())), 601, 753);
+                    }
+                }
                 break;
             case 2:
                 //CTB
+                //300
+                g2.drawImage(images.get("fruit-orange-overlay.png").getScaledInstance(64, 64, Image.SCALE_SMOOTH), 40 - 4, 250 - 27, null);
+                for (int i = 0; i < count300.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count300[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
+
+                //100
+
+                g2.drawImage(images.get("fruit-drop.png").getScaledInstance(54, 62, Image.SCALE_SMOOTH), 44 - 5, 330 - 8, null);
+                for (int i = 0; i < count100.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count100[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
+
+
+                //50
+                //翻转180度
+
+                g2.drawImage(images.get("fruit-drop-reverse.png").getScaledInstance(45, 51, Image.SCALE_SMOOTH), 51 - 5, 440 - 21, null);
+                for (int i = 0; i < count50.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count50[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count50.length + 134 - 7, 470 - 55, null);
+
+
+                //x
+                //将橘子图标缩小
+                g2.drawImage(images.get("fruit-orange-overlay.png").getScaledInstance(50, 50, Image.SCALE_SMOOTH), 360 - 4, 255 - 27, null);
+                //补上那个小x
+                g2.drawImage(images.get("hit0.png").getScaledInstance(10, 10, Image.SCALE_SMOOTH), 360 - 4, 255 - 27, null);
+                for (int i = 0; i < count0.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count0[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 455 - 8, 238 - 7, null);
+                if (score.getPp() != null) {
+                    g2.drawImage(images.get("ppBanner2.png"), 570, 700, null);
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setPaint(Color.decode("#ff66a9"));
+                    g2.setFont(new Font("Gayatri", 0, 60));
+                    if (String.valueOf(Math.round(score.getPp())).contains("1")) {
+                        g2.drawString(String.valueOf(Math.round(score.getPp())), 616, 753);
+                    } else {
+                        g2.drawString(String.valueOf(Math.round(score.getPp())), 601, 753);
+                    }
+                }
+                break;
             case 3:
                 //mania
+                g2.drawImage(images.get("mania-hit300.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 10 - 4, 263 - 27, null);
+                for (int i = 0; i < count300.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count300[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 2, 238 - 7, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 2, 238 - 7, null);
+
+                //320
+                g2.drawImage(images.get("mania-hit300g.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 320 - 4, 263 - 27, null);
+                for (int i = 0; i < countgeki.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(countgeki[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
+
+                //200
+                g2.drawImage(images.get("mania-hit200.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 14 - 5, 336 - 2, null);
+                for (int i = 0; i < countkatu.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(countkatu[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 2, 374 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 134 - 2, 374 - 55, null);
+
+                //100
+                g2.drawImage(images.get("mania-hit100.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 320 - 5, 336 - 8, null);
+                for (int i = 0; i < count100.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count100[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 455 - 8, 374 - 55, null);
+
+                //50
+                g2.drawImage(images.get("mania-hit50.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 1, 442 - 21, null);
+                for (int i = 0; i < count50.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count50[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 2, 470 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count50.length + 134 - 2, 470 - 55, null);
+
+                //x
+                g2.drawImage(images.get("mania-hit0.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 318 - 4, 429 - 5, null);
+                for (int i = 0; i < count0.length; i++) {
+                    //第二个参数是数字之间的距离+第一个数字离最左边的距离
+                    g2.drawImage(images.get("score-" + String.valueOf(count0[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 470 - 55, null);
+                }
+                //画上结尾的x
+                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 455 - 8, 470 - 55, null);
+                if (score.getPp() != null) {
+                    g2.drawImage(images.get("ppBanner2.png"), 570, 700, null);
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setPaint(Color.decode("#ff66a9"));
+                    g2.setFont(new Font("Gayatri", 0, 60));
+                    if (String.valueOf(Math.round(score.getPp())).contains("1")) {
+                        g2.drawString(String.valueOf(Math.round(score.getPp())), 616, 753);
+                    } else {
+                        g2.drawString(String.valueOf(Math.round(score.getPp())), 601, 753);
+                    }
+                }
+                break;
             default:
                 break;
         }
@@ -719,49 +867,10 @@ public class ImgUtil {
         g2.drawString("Beatmap by " + beatmap.getCreator(), 7, 52);
         g2.drawString("Played by " + userFromAPI.getUserName() + " on " + new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(score.getDate()) + ".", 7, 74);
 
-        if (oppaiResult != null) {
 
-            int progress = 300 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())
-                    / (oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners());
-            //进度条
-            if (score.getRank().equals("F")) {
-                g2.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-                g2.setColor(Color.decode("#99cc31"));
-                g2.drawLine(262, 615, 262 + progress, 615);
-                g2.setColor(Color.decode("#fe0000"));
-                g2.drawLine(262 + progress, 615, 262 + progress, 753);
-            }
-
-            //底端PP面板，在oppai计算结果不是null的时候
-            g2.drawImage(images.get("ppBanner.png"), 570, 700, null);
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setPaint(Color.decode("#ff66a9"));
-            g2.setFont(new Font("Gayatri", 0, 60));
-            if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 616, 753);
-            } else {
-                g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 601, 753);
-            }
-            g2.setFont(new Font("Gayatri", 0, 48));
-            g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 834, 758);
-            g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())), 932, 758);
-            g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())), 1030, 758);
-
-        }
         g2.dispose();
-        if (!defaultBG) {
-            //用了默认bg不压图
-            result = new BufferedImage(1366, 768, BufferedImage.TYPE_USHORT_555_RGB);
-            Graphics2D g3 = result.createGraphics();
-            g3.clearRect(0, 0, 1366, 768);
-            g3.drawImage(bg.getScaledInstance(1366, 768, Image.SCALE_SMOOTH), 0, 0, null);
-            g3.dispose();
-            result.flush();
-        } else {
-            result = bg;
-            bg.flush();
-        }
-        return drawImage(result);
+
+        return drawImage(bg);
     }
 
     /**
@@ -944,31 +1053,38 @@ public class ImgUtil {
         //右侧title
 
         g2.setPaint(Color.decode("#000000"));
+        int x;
         switch (mode) {
             case 0:
-//TODO: 不同模式绘制图标，STD的话没有图标，文字左移
+                x = 952;
+                break;
+            default:
+                x = 982;
+                g2.drawImage(images.get("mode-" + mode + ".png"), x, 166, null);
+                break;
+//TODO: 修正模式图标位置
         }
         if (unicode) {
 
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 30));
-            g2.drawString(oppaiResult.getTitleUnicode(), 982, 196);
+            g2.drawString(oppaiResult.getTitleUnicode(), x, 196);
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 21));
-            g2.drawString(oppaiResult.getArtistUnicode() + " // " + oppaiResult.getCreator(), 982, 223);
+            g2.drawString(oppaiResult.getArtistUnicode() + " // " + oppaiResult.getCreator(), x, 223);
         } else {
             g2.setFont(new Font("Aller light", Font.PLAIN, 30));
-            g2.drawString(oppaiResult.getTitle(), 982, 196);
+            g2.drawString(oppaiResult.getTitle(), x, 196);
             g2.setFont(new Font("Aller", Font.PLAIN, 21));
-            g2.drawString(oppaiResult.getArtist() + " // " + oppaiResult.getCreator(), 982, 223);
+            g2.drawString(oppaiResult.getArtist() + " // " + oppaiResult.getCreator(), x, 223);
         }
 
         //难度名
         g2.setFont(new Font("Aller", Font.BOLD, 22));
-        g2.drawString(oppaiResult.getVersion(), 982, 245);
+        g2.drawString(oppaiResult.getVersion(), x, 245);
         //小星星
         String[] b = String.valueOf(beatmap.getDifficultyRating()).split("\\.");
         //取出难度的整数部分，画上对应的star
         for (int i = 0; i < Integer.valueOf(b[0]); i++) {
-            g2.drawImage(images.get("fpStar.png"), 984 + 44 * i, 250, null);
+            g2.drawImage(images.get("fpStar.png"), x + 44 * i, 250, null);
         }
 
         //取出小数部分，缩放star并绘制在对应的地方
@@ -976,7 +1092,7 @@ public class ImgUtil {
         //小于0.04的宽高会是0，
         if (c > 0.04) {
             g2.drawImage(images.get("fpStar.png").getScaledInstance((int) (25 * c), (int) (25 * c), Image.SCALE_SMOOTH),
-                    (int) (984 + (Integer.valueOf(b[0])) * 44), (int) (250 + (1 - c) * 12.5), null);
+                    x + (Integer.valueOf(b[0])) * 44, (int) (250 + (1 - c) * 12.5), null);
         }
         //缩略图
         g2.drawImage(bg2, 762, 162, null);
@@ -993,19 +1109,11 @@ public class ImgUtil {
      * @param mode    the mode
      * @return the string
      */
-    public String drawBeatmap(Beatmap beatmap, Integer mods, int mode) {
+    public String drawBeatmap(Beatmap beatmap, Integer mods, OppaiResult oppaiResult, int mode) {
         boolean unicode = false;
         BufferedImage bg;
         Image bg2;
-        Score score = new Score();
-        score.setEnabledMods(mods);
-        score.setCount50(0);
-        score.setCount100(0);
-        score.setCount300(-1);
-        score.setCountMiss(0);
-        score.setMaxCombo(-1);
-        //这里默认构造FC成绩，所以不需要处理NPE……吧？
-        OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+
         beatmap.setTotalLength((int) (beatmap.getTotalLength() / oppaiResult.getSpeedMultiplier()));
         beatmap.setBpm(beatmap.getBpm() * oppaiResult.getSpeedMultiplier());
         Map<String, String> modsMap = scoreUtil.convertModToHashMap(mods);
@@ -1048,7 +1156,8 @@ public class ImgUtil {
         if (!modsMap.isEmpty()) {
             int i = 0;
             for (Map.Entry<String, String> entry : modsMap.entrySet()) {
-                g2.drawImage(images.get("selection-mod-" + entry.getValue() + ".png"), 224 + (50 * i), 133, null);
+                //2018-2-27 09:31:41上移Mod图标位置
+                g2.drawImage(images.get("selection-mod-" + entry.getValue() + ".png"), 460 + (50 * i), 46, null);
                 i++;
             }
         }
@@ -1144,26 +1253,26 @@ public class ImgUtil {
         g2.setPaint(Color.decode("#000000"));
         if (unicode) {
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 31));
-            g2.drawString(oppaiResult.getTitleUnicode(), 982, 196);
+            g2.drawString(oppaiResult.getTitleUnicode(), 942, 196);
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
             g2.drawString(oppaiResult.getArtistUnicode() + " // " + oppaiResult.getCreator(), 982, 223);
         } else {
             g2.setFont(new Font("Aller light", Font.PLAIN, 31));
-            g2.drawString(oppaiResult.getTitle(), 982, 196);
+            g2.drawString(oppaiResult.getTitle(), 942, 196);
             g2.setFont(new Font("Aller", Font.PLAIN, 22));
-            g2.drawString(oppaiResult.getArtist() + " // " + oppaiResult.getCreator(), 982, 223);
+            g2.drawString(oppaiResult.getArtist() + " // " + oppaiResult.getCreator(), 92, 223);
         }
 
         //artist//creator
 
         //难度名
         g2.setFont(new Font("Aller", Font.BOLD, 22));
-        g2.drawString(oppaiResult.getVersion(), 982, 245);
+        g2.drawString(oppaiResult.getVersion(), 942, 245);
         //小星星
         String[] b = String.valueOf(oppaiResult.getStars()).split("\\.");
         //取出难度的整数部分，画上对应的star
         for (int i = 0; i < Integer.valueOf(b[0]); i++) {
-            g2.drawImage(images.get("fpStar.png"), 984 + 44 * i, 250, null);
+            g2.drawImage(images.get("fpStar.png"), 944 + 44 * i, 250, null);
         }
 
         //取出小数部分，缩放star并绘制在对应的地方
@@ -1171,7 +1280,7 @@ public class ImgUtil {
         //小于0.04的宽高会是0，
         if (c > 0.04) {
             g2.drawImage(images.get("fpStar.png").getScaledInstance((int) (25 * c), (int) (25 * c), Image.SCALE_SMOOTH),
-                    984 + (Integer.valueOf(b[0])) * 44, (int) (250 + (1 - c) * 12.5), null);
+                    944 + (Integer.valueOf(b[0])) * 44, (int) (250 + (1 - c) * 12.5), null);
         }
         //缩略图
         g2.drawImage(bg2, 762, 162, null);

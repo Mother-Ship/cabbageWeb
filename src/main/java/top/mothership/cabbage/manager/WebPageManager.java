@@ -20,6 +20,7 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.Pattern.RegularPattern;
+import top.mothership.cabbage.Pattern.WebPagePattern;
 import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.osu.Beatmap;
@@ -543,11 +544,11 @@ public class WebPageManager {
     }
 
     /**
-     * Search beatmap beatmap.
+     * 对接osu search进行谱面搜索的方法。
      *
      * @return 谱面
      */
-    public Beatmap searchBeatmap(SearchParam searchParam) {
+    public Beatmap searchBeatmap(SearchParam searchParam, Integer mode) {
         int retry = 0;
         Beatmap beatmap = null;
         DecimalFormat FOUR_DEMENSIONS = new DecimalFormat("#0.00");
@@ -584,7 +585,26 @@ public class WebPageManager {
                     params.add(new BasicNameValuePair("hp",
                             "(" + FOUR_DEMENSIONS.format(searchParam.getHp()) + "," + FOUR_DEMENSIONS.format(searchParam.getHp()) + ")"));
                 }
-                params.add(new BasicNameValuePair("modes", "Standard"));
+                //虽然osu search支持多模式搜索，但这个命令本来就只取一个结果，还是switch吧
+
+                switch (mode) {
+                    case 0:
+                        params.add(new BasicNameValuePair("modes", "Standard"));
+                        break;
+                    case 1:
+                        params.add(new BasicNameValuePair("modes", "Taiko"));
+                        break;
+                    case 2:
+                        params.add(new BasicNameValuePair("modes", "CtB"));
+                        break;
+                    case 3:
+                        params.add(new BasicNameValuePair("modes", "Mania"));
+                        break;
+                    default:
+                        break;
+
+                }
+
                 params.add(new BasicNameValuePair("query_order", "play_count"));
 
                 url += "?" + URLEncodedUtils.format(params, "utf-8");
@@ -716,7 +736,7 @@ public class WebPageManager {
         Document doc = null;
         while (retry < 5) {
             try {
-                doc = Jsoup.connect(osuProfileDetailURL + "&?u=" + uid + "&m=" + mode).timeout((int) Math.pow(2, retry + 1) * 1000).get();
+                doc = Jsoup.connect(osuProfileDetailURL + "?u=" + uid + "&m=" + mode).timeout((int) Math.pow(2, retry + 1) * 1000).get();
                 break;
             } catch (IOException e) {
                 logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
@@ -727,13 +747,14 @@ public class WebPageManager {
             logger.error("玩家" + uid + "访问官网失败五次");
             return null;
         }
-        Matcher m = RegularPattern.CORRECT_X_S.matcher(doc.outerHtml());
-        m.find();
-        if (!"".equals(m.group(1))) {
-            list.add(Integer.valueOf(m.group(1)));
-        }
-        if (!"".equals(m.group(2))) {
-            list.add(Integer.valueOf(m.group(2)));
+        Matcher m = WebPagePattern.CORRECT_X_S.matcher(doc.outerHtml());
+        if (m.find()) {
+            if (!"".equals(m.group(1))) {
+                list.add(Integer.valueOf(m.group(1)));
+            }
+            if (!"".equals(m.group(2))) {
+                list.add(Integer.valueOf(m.group(2)));
+            }
         }
         if (list.size() == 2) {
             return list;

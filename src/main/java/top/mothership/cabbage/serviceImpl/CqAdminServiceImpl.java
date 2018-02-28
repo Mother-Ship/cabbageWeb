@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import top.mothership.cabbage.Pattern.CQCodePattern;
 import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.annotation.UserRoleControl;
 import top.mothership.cabbage.consts.Base64Consts;
@@ -20,6 +21,7 @@ import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.CoolQ.CqResponse;
 import top.mothership.cabbage.pojo.CoolQ.QQInfo;
+import top.mothership.cabbage.pojo.CoolQ.RespData;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
@@ -414,7 +416,7 @@ public class CqAdminServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-        Beatmap beatmap = apiManager.getBeatmap(Integer.valueOf(mode), score.getBeatmapId());
+        Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
         if (beatmap == null) {
             cqMsg.setMessage("网络错误：没有获取到Bid为" + score.getBeatmapId() + "的谱面信息。");
             cqManager.sendMsg(cqMsg);
@@ -597,7 +599,7 @@ public class CqAdminServiceImpl {
         if ("".equals(mode)) {
             mode = "0";
         }
-        Beatmap beatmap = apiManager.getBeatmap(Integer.valueOf(mode), bid);
+        Beatmap beatmap = apiManager.getBeatmap(bid);
         if (beatmap == null) {
             cqMsg.setMessage("提供的bid没有找到谱面信息。");
             cqManager.sendMsg(cqMsg);
@@ -624,7 +626,7 @@ public class CqAdminServiceImpl {
         m.find();
         StringBuilder resp = new StringBuilder();
         String QQ = m.group(2);
-        Matcher atMatcher = RegularPattern.AT_REGEX.matcher(cqMsg.getMessage());
+        Matcher atMatcher = CQCodePattern.AT.matcher(cqMsg.getMessage());
         if (atMatcher.find()) {
             QQ = atMatcher.group(1);
         }
@@ -678,37 +680,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    public void listUserPP(CqMsg cqMsg) {
-        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
-        String role;
-        if ("".equals(m.group(2))) {
-            role = "mp5";
-        } else {
-            role = m.group(2);
-        }
-        String mode = m.group(3);
-        if ("".equals(mode)) {
-            mode = "0";
-        }
-        logger.info("开始检查" + role + "用户组中所有人的PP");
-        List<Integer> list = userDAO.listUserIdByRole(role, true);
-        String resp;
-        if (list.size() > 0) {
-            resp = role + "用户组中所有人的PP：";
-            for (Integer aList : list) {
-                Userinfo userinfo = apiManager.getUser(Integer.valueOf(mode), aList);
-                if (userinfo != null) {
-                    logger.info(userinfo.getUserName() + "的PP是" + userinfo.getPpRaw());
-                    resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw());
-                }
-            }
-        } else {
-            resp = role + "用户组没有成员。";
-        }
-        cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
-    }
+
 
 
     public void searchPlayer(CqMsg cqMsg) {
@@ -797,12 +769,12 @@ public class CqAdminServiceImpl {
                 List<String> roles = Arrays.asList(user.getRole().split(","));
                 switch (String.valueOf(cqResponse.getData().get(0).getGroupId())) {
                     case "201872650":
-                        if (!roles.contains("mp5")) {
+                        if (!roles.contains("mp5") && !roles.contains("mp5chart")) {
                             resp += "QQ： " + qqInfo.getUserId() + " 绑定的id不在mp5用户组，osu! id：" + user.getCurrentUname() + "，用户组：" + user.getRole() + "。\n";
                         }
                         break;
                     case "564679329":
-                        if (!roles.contains("mp4")) {
+                        if (!roles.contains("mp4") && !roles.contains("mp4chart")) {
                             resp += "QQ： " + qqInfo.getUserId() + " 绑定的id不在mp4用户组，osu! id：" + user.getCurrentUname() + "，用户组：" + user.getRole() + "。\n";
                         }
                         break;
@@ -818,58 +790,44 @@ public class CqAdminServiceImpl {
 
     }
 
-    public void checkRoleBan(CqMsg cqMsg) {
-        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
-        String role = m.group(2);
-        if ("".equals(role)) {
-            role = "mp5";
-        }
-        String resp;
-        List<Integer> list = userDAO.listUserIdByRole(role, false);
-        User user;
-        if (list.size() == 0) {
-            resp = "该用户组没有成员。";
-            cqMsg.setMessage(resp);
-            cqManager.sendMsg(cqMsg);
-            return;
-        }
-        resp = "检测到" + role + "用户组中有以下玩家被ban：";
-        for (Integer i : list) {
-            user = userDAO.getUser(null, i);
-            if (user.isBanned()) {
-                resp += "uid：" + user.getUserId() + "，现用名：" + user.getCurrentUname() + "，曾用名：" + user.getLegacyUname() + "，绑定的QQ：" + user.getQq();
-            }
-        }
-        cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
-    }
 
     public void help(CqMsg cqMsg) {
-        String resp = "!sudo add xxx,xxx:yyy 将xxx,xxx添加到yyy用户组。\n" +
+        String resp = "用户组管理系列：\n" +
+                "!sudo add xxx,xxx:yyy 将xxx,xxx添加到yyy用户组。\n" +
                 "!sudo del xxx:yyy 将xxx的用户组中yyy删除，如果不带:yyy则重置为默认（creep）。\n" +
-                "!sudo check xxx 根据osu!id查找用户，包括绑定、用户组信息。\n" +
+                "!sudo roleinfo xxx 返回某个用户组所有成员的信息。\n" +
                 "!sudo 褪裙 xxx 查询xxx用户组中，std模式多少人超过PP上线。\n" +
-                "!sudo bg xxx:http://123 将给定连接中的图以xxx.png的文件名写入数据库。\n" +
-                "!sudo recent xxx:y 查询他人在指定模式的recent（y默认取0， std = 0, taiko = 1, ctb = 2, o!m = 3 ）。\n" +
                 "!sudo afk n:xxx 查询xxx用户组中，n天以上没有登录的玩家(以官网为准，如果不提供用户组，默认为mp5)。\n" +
+                "!sudo PP xxx 查询xxx组中所有成员PP。\n" +
+//                "!sudo checkRoleBan xxx 查询某用户组的被ban情况。\n"+
+
+                "群管理系列：\n" +
                 "!sudo smoke @xxx n 在白菜是管理的群，把被艾特的人禁言n秒。\n" +
                 "（艾特全体成员则遍历群成员并禁言，慎用）\n" +
+                "!sudo listMsg @xxx 打印被艾特的人最近的10条消息。在对方撤回消息时起作用。\n" +
+                "!sudo scanCard xxx扫描所在群的所有绑定了QQ的群成员，检测群名片是否包含完整id（无视大小写，并且会自动识别横线/空格）。\n" +
+                "!sudo repeatStar 打印所有开启复读计数群内，复读发言/所有发言 比值最高的人。\n" +
+                "!sudo checkGroupBind xxx 打印该群所有成员是否绑定id，以及绑定id是否在mp4/5组内。" +
+                "特别的，不带参数会将群号设置为当前消息的群号。（在mp4/5群外使用，不会检测用户组，只检测是否绑定。）\n" +
+
+                "群邀请管理系列：\n" +
                 "!sudo listInvite 列举当前的加群邀请（无论在哪里使用都会私聊返回结果）。\n" +
                 "!sudo handleInvite n 通过Flag为n的邀请。\n" +
                 "!sudo clearInvite 清空邀请列表。\n" +
+
+                "特权命令系列：\n" +
+                "!sudo bg xxx:http://123 将给定连接中的图以xxx.png的文件名写入数据库。\n" +
                 "!sudo unbind xxx 解绑某个QQ对应的id（找到该QQ对应的uid，并将QQ改为0）。\n" +
+                "!sudo recent xxx:mode 查询他人在指定模式的recent。\n" +
                 "!sudo fp xxx 打印给定bid的#1。\n" +
-                "!sudo listMsg @xxx 打印被艾特的人最近的10条消息。在对方撤回消息时起作用。\n" +
-                "!sudo PP xxx 查询xxx组中所有成员PP（一般用于比赛计算Cost）。\n" +
+                "!sudo adv xxx 向白菜加入的所有群发送广告（慎用）。\n" +
+
+                "玩家信息管理系列：\n" +
                 "!sudo findPlayer xxx 查询曾用/现用xxx用户名的玩家。\n" +
-                "!sudo scanCard xxx扫描所在群的所有绑定了QQ的群成员，检测群名片是否包含完整id（无视大小写，并且会自动识别横线/空格）。\n" +
+                "!sudo check xxx 根据osu!id查找用户，包括绑定、用户组信息。\n" +
                 "!sudo checku xxx 根据uid查找用户。\n" +
-                "!sudo checkq xxx 根据QQ查找用户。\n" +
-                "!sudo checkGroupBind xxx 打印该群所有成员是否绑定id，以及绑定id是否在mp4/5组内。" +
-                "特别的，不带参数会将群号设置为当前消息的群号。（在mp4/5群外使用，不会检测用户组，只检测是否绑定。）\n" +
-                "!sudo repeatStar 打印所有开启复读计数群内，复读发言/所有发言 比值最高的人。\n" +
-                "!sudo checkRoleBan xxx 查询某用户组的被ban情况。";
+                "!sudo checkq xxx 根据QQ查找用户。";
+
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
@@ -879,12 +837,12 @@ public class CqAdminServiceImpl {
         //这里是存引用……所以后面返回是null
         request.put(cqMsg, "否");
         CqMsg cqMsg1 = new CqMsg();
+        User user = userDAO.getUser(cqMsg.getUserId(), null);
         cqMsg1.setMessage("有新的拉群邀请，请注意查收：" + "Flag：" + cqMsg.getFlag() + "，群号：" + cqMsg.getGroupId()
-                + "，邀请人：" + cqMsg.getUserId() + "，时间：" + new SimpleDateFormat("HH:mm:ss").
-                format(new Date(cqMsg.getTime() * 1000L)));
+                + "，邀请人：" + cqMsg.getUserId() + "，根据邀请人QQ在白菜数据库中的查询结果：" + user);
         cqMsg1.setMessageType("private");
         for (long i : OverallConsts.ADMIN_LIST) {
-            //debug 这里设置的userid 应该是cqmsg1的，之前漏了个1
+            //debug 这里设置的user id 应该是cqMsg1的，之前漏了个1
             cqMsg1.setUserId(i);
             cqManager.sendMsg(cqMsg1);
         }
@@ -901,5 +859,81 @@ public class CqAdminServiceImpl {
             cqMsg.setMessage("暂时还没有复读之星。");
             cqManager.sendMsg(cqMsg);
         }
+    }
+
+    public void advertisement(CqMsg cqMsg) {
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        m.find();
+        String msg = m.group(2);
+        if ("changelog".equals(msg)) {
+            msg = OverallConsts.CHANGELOG;
+        }
+        CqMsg cqMsg1 = new CqMsg();
+        List<RespData> groups = cqManager.getGroups().getData();
+        for (RespData respData : groups) {
+            cqMsg1.setMessageType("group");
+            cqMsg1.setGroupId(respData.getGroupId());
+            cqMsg1.setMessage(msg);
+            cqManager.sendMsg(cqMsg1);
+        }
+        cqMsg.setMessage("所有消息发送完成。");
+        cqManager.sendMsg(cqMsg);
+
+    }
+
+    public void roleInfo(CqMsg cqMsg) {
+        Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
+        m.find();
+        String role = m.group(2);
+        if ("".equals(role)) {
+            role = "mp5";
+        }
+        String resp;
+        List<Integer> list = userDAO.listUserIdByRole(role, false);
+        User user;
+        if (list.size() == 0) {
+            resp = "该用户组没有成员。";
+            cqMsg.setMessage(resp);
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        String mode = m.group(3);
+        if ("".equals(mode)) {
+            mode = "0";
+        }
+        resp = role + "用户组中所有人的信息：";
+        for (Integer i : list) {
+            //此处刷新被ban状态
+            user = userDAO.getUser(null, i);
+            Userinfo userinfo = apiManager.getUser(Integer.valueOf(mode), i);
+            if (userinfo != null) {
+                resp += "uid：" + user.getUserId()
+                        + "，现用名：" + user.getCurrentUname()
+                        + "，曾用名：" + user.getLegacyUname()
+                        + "，绑定的QQ：" + user.getQq()
+                        + "，PP：" + userinfo.getPpRaw();
+            } else {
+
+                if (user.isBanned()) {
+                    resp += "uid：" + user.getUserId()
+                            + "，现用名：" + user.getCurrentUname()
+                            + "，曾用名：" + user.getLegacyUname()
+                            + "，绑定的QQ：" + user.getQq()
+                            + "\n该玩家在今天凌晨录入数据时获取失败，已标记为被ban，如果出错在下一个整点会自动解除";
+                } else {
+                    resp += "uid：" + user.getUserId()
+                            + "，现用名：" + user.getCurrentUname()
+                            + "，曾用名：" + user.getLegacyUname()
+                            + "，绑定的QQ：" + user.getQq()
+                            + "\n从osu!api获取该玩家信息失败。";
+                }
+            }
+
+
+        }
+        cqMsg.setMessage(resp);
+        cqManager.sendMsg(cqMsg);
+
+
     }
 }

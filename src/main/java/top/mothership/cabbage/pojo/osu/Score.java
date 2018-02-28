@@ -41,7 +41,7 @@ private Integer countGeki;
     private Integer enabledMods;
     private Date date;
     private String rank;
-    //recent的API里没有
+    //recent的API里压根没有这个字段
     private Float pp;
     //md ppysb
     @SerializedName("username")

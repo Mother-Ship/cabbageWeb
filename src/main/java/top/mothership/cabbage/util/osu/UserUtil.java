@@ -31,7 +31,8 @@ public class UserUtil {
         this.apiManager = apiManager;
     }
 
-    public void registerUser(Integer userId, Integer mode) {
+
+    public void registerUser(Integer userId, Integer mode, Long QQ, String role) {
         //构造User对象写入数据库，如果指定了mode就使用指定mode
         Userinfo userFromAPI = null;
         for (int i = 0; i < 4; i++) {
@@ -44,26 +45,10 @@ public class UserUtil {
             //写入一行userinfo
             userInfoDAO.addUserInfo(userFromAPI);
         }
-        User user = new User(userId, "creep", 0L, "[]", userFromAPI.getUserName(), false, mode, null, null, 0L, 0L);
+        User user = new User(userId, role, QQ, "[]", userFromAPI.getUserName(), false, mode, null, null, 0L, 0L);
         userDAO.addUser(user);
     }
 
-    public void registerUser(Integer userId, Integer mode, String role) {
-        //构造User对象写入数据库，如果指定了mode就使用指定mode
-        Userinfo userFromAPI = null;
-        for (int i = 0; i < 4; i++) {
-            userFromAPI = apiManager.getUser(i, userId);
-            if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
-                userFromAPI.setQueryDate(LocalDate.now());
-            } else {
-                userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
-            }
-            //写入一行userinfo
-            userInfoDAO.addUserInfo(userFromAPI);
-        }
-        User user = new User(userId, role, 0L, "[]", userFromAPI.getUserName(), false, mode, null, null, 0L, 0L);
-        userDAO.addUser(user);
-    }
 
     public List<String> sortRoles(String role) {
         List<String> roles = Arrays.asList(role.split(","));

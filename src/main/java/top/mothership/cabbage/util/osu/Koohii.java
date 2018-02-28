@@ -59,88 +59,107 @@ import java.util.Collections;
  */
 public final class Koohii {
 
-    public static final int VERSION_PATCH = 7;
+    public static final int VERSION_PATCH = 12;
 
     public static final int VERSION_MAJOR = 1;
     public static final int VERSION_MINOR = 0;
-    public static final String OSU_MAGIC = "osu file format v";
-    public static final int OBJ_CIRCLE = 1<<0;
+    public static final int MODE_STD = 0;
+    /* ------------------------------------------------------------- */
+/* beatmap utils                                                 */
+    public static final int OBJ_CIRCLE = 1 << 0;
 
 /* ------------------------------------------------------------- */
 /* math                                                          */
     public static final int OBJ_SLIDER = 1<<1;
-
+    public static final int MODS_NOMOD = 0;
+    public static final int MODS_NF = 1 << 0;
+    /* note: I just let parser throw built-in exceptions instead of
+    error checking stuff because it's as good as making my own
+    exception since you can check lastline/lastpos when you catch */
+    public static final int MODS_EZ = 1 << 1;
 /* ------------------------------------------------------------- */
-/* beatmap utils                                                 */
+/* mods utils                                                    */
+public static final int MODS_TOUCH_DEVICE = 1 << 2;
     public static final int OBJ_SPINNER = 1<<3;
-    public static final int MODE_STD = 0;
     /** strain index for speed */
     public final static int DIFF_SPEED = 0;
     /** strain index for aim */
     public final static int DIFF_AIM = 1;
-    public static final int MODS_NF = 1<<0;
-    public static final int MODS_EZ = 1<<1;
-    public static final int MODS_TOUCH_DEVICE = 1<<2;
-    public static final int MODS_HD = 1<<3;
-    public static final int MODS_HR = 1<<4;
-    public static final int MODS_DT = 1<<6;
-    public static final int MODS_HT = 1<<8;
-    public static final int MODS_NC = 1<<9;
+    public static final int MODS_HT = 1 << 8;
+    public static final int MODS_NC = 1 << 9;
+    public static final int MODS_FL = 1 << 10;
+    public static final int MODS_SO = 1 << 12;
 
-/* ------------------------------------------------------------- */
+    /* ------------------------------------------------------------- */
 /* beatmap parser                                                */
-
-/* note: I just let parser throw built-in exceptions instead of
-error checking stuff because it's as good as making my own
-exception since you can check lastline/lastpos when you catch */
-    public static final int MODS_FL = 1<<10;
-
-/* ------------------------------------------------------------- */
-/* mods utils                                                    */
-
-    public static final int MODS_NOMOD = 0;
-    public static final int MODS_SO = 1<<12;
-    private static final int APPLY_AR = 1<<0;
-    private static final int APPLY_OD = 1<<1;
-    private static final int APPLY_CS = 1<<2;
-    private static final int APPLY_HP = 1<<3;
-    /** almost the normalized circle diameter. */
-    private final static double ALMOST_DIAMETER = 90.0;
-    /** strain decay per interval. */
-    private final static double[] DECAY_BASE = { 0.3, 0.15 };
-    /** balances speed and aim. */
-    private final static double[] WEIGHT_SCALING = { 1400.0, 26.25 };
-    /** non-normalized diameter where the small circle buff starts. */
-    private final static double CIRCLESIZE_BUFF_THRESHOLD = 30.0;
-    /** global stars multiplier. */
-    private final static double STAR_SCALING_FACTOR = 0.0675;
-
     public static final int MODS_SPEED_CHANGING =
             MODS_DT | MODS_HT | MODS_NC;
-
     public static final int MODS_MAP_CHANGING =
             MODS_HR | MODS_EZ | MODS_SPEED_CHANGING;
-    /** in osu! pixels */
-    private final static double PLAYFIELD_WIDTH = 512.0,
-            PLAYFIELD_HEIGHT = 384.0;
-
-    private Koohii() {}
-
-    /** prints a message to stderr. */
-    public static
-    void info(String fmt, Object... args) {
-        System.err.printf(fmt, args);
-    }
-
+    public static final int MODS_HD = 1 << 3;
+    public static final int MODS_HR = 1 << 4;
+    public static final int MODS_DT = 1 << 6;
     private static final double OD0_MS = 79.5;
     private static final double OD10_MS = 19.5;
     private static final double AR0_MS = 1800.0;
     private static final double AR5_MS = 1200.0;
     private static final double AR10_MS = 450.0;
-
     private static final double OD_MS_STEP = (OD0_MS - OD10_MS) / 10.0;
     private static final double AR_MS_STEP1 = (AR0_MS - AR5_MS) / 5.0;
     private static final double AR_MS_STEP2 = (AR5_MS - AR10_MS) / 5.0;
+    private static final int APPLY_CS = 1 << 2;
+    private static final int APPLY_HP = 1 << 3;
+    /**
+     * almost the normalized circle diameter.
+     */
+    private final static double ALMOST_DIAMETER = 90.0;
+    /**
+     * arbitrary thresholds to determine when a stream is spaced
+     * enough that it becomes hard to alternate.
+     */
+    private final static double STREAM_SPACING = 110.0,
+            SINGLE_SPACING = 125.0;
+    /**
+     * strain decay per interval.
+     */
+    private final static double[] DECAY_BASE = {0.3, 0.15};
+    /**
+     * balances speed and aim.
+     */
+    private final static double[] WEIGHT_SCALING = {1400.0, 26.25};
+    /**
+     * max strains are weighted from highest to lowest, this is how
+     * much the weight decays.
+     */
+    private final static double DECAY_WEIGHT = 0.9;
+    private static final int APPLY_AR = 1 << 0;
+    private static final int APPLY_OD = 1 << 1;
+    /**
+     * strains are calculated by analyzing the map in chunks and taking
+     * the peak strains in each chunk. this is the length of a strain
+     * interval in milliseconds
+     */
+    private final static double STRAIN_STEP = 400.0;
+    /**
+     * in osu! pixels
+     */
+    private final static double PLAYFIELD_WIDTH = 512.0,
+            PLAYFIELD_HEIGHT = 384.0;
+    private final static Vector2 PLAYFIELD_CENTER = new Vector2(
+            PLAYFIELD_WIDTH / 2.0, PLAYFIELD_HEIGHT / 2.0
+    );
+    /**
+     * 50% of the difference between aim and speed is added to total
+     * star rating to compensate for aim/speed only maps
+     */
+    private final static double EXTREME_SCALING_FACTOR = 0.5;
+
+    /**
+     * prints a message to stderr.
+     */
+    public static void info(String fmt, Object... args) {
+        System.err.printf(fmt, args);
+    }
 
     /** @return a string representation of the mods, such as HDDT */
     public static
@@ -168,16 +187,14 @@ exception since you can check lastline/lastpos when you catch */
             sb.append("HR");
         }
 
-        if ((mods & MODS_DT) != 0) {
+        if ((mods & MODS_NC) != 0) {
+            sb.append("NC");
+        } else if ((mods & MODS_DT) != 0) {
             sb.append("DT");
         }
 
         if ((mods & MODS_HT) != 0) {
             sb.append("HT");
-        }
-
-        if ((mods & MODS_NC) != 0) {
-            sb.append("NC");
         }
 
         if ((mods & MODS_FL) != 0) {
@@ -191,53 +208,293 @@ exception since you can check lastline/lastpos when you catch */
         return sb.toString();
     }
 
-    /** @return mod bitmask from the string representation */
-    public static
-    int mods_from_str(String str)
-    {
+    /**
+     * @return mod bitmask from the string representation
+     */
+    public static int mods_from_str(String str) {
         int mask = 0;
 
-        if (str.indexOf("NF") >= 0) {
-            mask |= MODS_NF;
-        }
-
-        if (str.indexOf("EZ") >= 0) {
-            mask |= MODS_EZ;
-        }
-
-        if (str.indexOf("TD") >= 0) {
-            mask |= MODS_TOUCH_DEVICE;
-        }
-
-        if (str.indexOf("HD") >= 0) {
-            mask |= MODS_HD;
-        }
-
-        if (str.indexOf("HR") >= 0) {
-            mask |= MODS_HR;
-        }
-
-        if (str.indexOf("DT") >= 0) {
-            mask |= MODS_DT;
-        }
-
-        if (str.indexOf("HT") >= 0) {
-            mask |= MODS_HT;
-        }
-
-        if (str.indexOf("NC") >= 0) {
-            mask |= MODS_NC;
-        }
-
-        if (str.indexOf("FL") >= 0) {
-            mask |= MODS_FL;
-        }
-
-        if (str.indexOf("SO") >= 0) {
-            mask |= MODS_SO;
+        while (str.length() > 0) {
+            if (str.startsWith("NF")) mask |= MODS_NF;
+            else if (str.startsWith("EZ")) mask |= MODS_EZ;
+            else if (str.startsWith("TD")) mask |= MODS_TOUCH_DEVICE;
+            else if (str.startsWith("HD")) mask |= MODS_HD;
+            else if (str.startsWith("HR")) mask |= MODS_HR;
+            else if (str.startsWith("DT")) mask |= MODS_DT;
+            else if (str.startsWith("HT")) mask |= MODS_HT;
+            else if (str.startsWith("NC")) mask |= MODS_NC;
+            else if (str.startsWith("FL")) mask |= MODS_FL;
+            else if (str.startsWith("SO")) mask |= MODS_SO;
+            else {
+                str = str.substring(1);
+                continue;
+            }
+            str = str.substring(2);
         }
 
         return mask;
+    }
+
+    /**
+     * 2D vector with double values
+     */
+    public static class Vector2 {
+        public double x = 0.0, y = 0.0;
+
+        public Vector2() {
+        }
+
+        public Vector2(Vector2 other) {
+            this(other.x, other.y);
+        }
+
+        public Vector2(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public String toString() {
+            return String.format("(%s, %s)", x, y);
+        }
+
+        /**
+         * this -= other .
+         *
+         * @return this
+         */
+        public Vector2 sub(Vector2 other) {
+            x -= other.x;
+            y -= other.y;
+            return this;
+        }
+
+        /**
+         * this *= value .
+         *
+         * @return this
+         */
+        public Vector2 mul(double value) {
+            x *= value;
+            y *= value;
+            return this;
+        }
+
+        /**
+         * length (magnitude) of the vector.
+         */
+        public double len() {
+            return Math.sqrt(x * x + y * y);
+        }
+    }
+
+/* ------------------------------------------------------------- */
+/* difficulty calculator                                         */
+    /**
+     * non-normalized diameter where the small circle buff starts.
+     */
+    private final static double CIRCLESIZE_BUFF_THRESHOLD = 30.0;
+    /**
+     * global stars multiplier.
+     */
+    private final static double STAR_SCALING_FACTOR = 0.0675;
+
+    public static class Circle {
+        public Vector2 pos = new Vector2();
+
+        public String toString() {
+            return pos.toString();
+        }
+    }
+
+    public static class Slider {
+        public Vector2 pos = new Vector2();
+
+        /**
+         * distance travelled by one repetition.
+         */
+        public double distance = 0.0;
+
+        /**
+         * 1 = no repeats.
+         */
+        public int repetitions = 1;
+
+        public String toString() {
+            return String.format(
+                    "{ pos=%s, distance=%s, repetitions=%d }",
+                    pos, distance, repetitions
+            );
+        }
+    }
+
+    public static class Timing {
+        /**
+         * start time in milliseconds.
+         */
+        public double time = 0.0;
+        public double ms_per_beat = -100.0;
+
+        /**
+         * if false, ms_per_beat is -100 * bpm_multiplier.
+         */
+        public boolean change = false;
+    }
+
+    private Koohii() {
+    }
+
+    /**
+     * the bare minimum beatmap data for difficulty calculation.
+     * <p>
+     * this object can be reused for multiple beatmaps without
+     * re-allocation by simply calling reset()
+     */
+    public static class Map {
+        public final ArrayList<HitObject> objects =
+                new ArrayList<HitObject>(512);
+        public final ArrayList<Timing> tpoints =
+                new ArrayList<Timing>(32);
+        public int format_version;
+        public int mode;
+        public String title, title_unicode;
+        public String artist, artist_unicode;
+        /**
+         * mapper name.
+         */
+        public String creator;
+        /**
+         * difficulty name.
+         */
+        public String version;
+        public int ncircles, nsliders, nspinners;
+        public float hp, cs, od, ar;
+        public float sv, tick_rate;
+
+        public Map() {
+            reset();
+        }
+
+        /**
+         * clears the instance so that it can be reused.
+         */
+        public void reset() {
+            title = title_unicode =
+                    artist = artist_unicode =
+                            creator =
+                                    version = "";
+
+            ncircles = nsliders = nspinners = 0;
+            hp = cs = od = ar = 5.0f;
+            sv = tick_rate = 1.0f;
+
+            objects.clear();
+            tpoints.clear();
+        }
+
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+
+            for (HitObject obj : objects) {
+                sb.append(obj);
+                sb.append(", ");
+            }
+
+            String objs_str = sb.toString();
+
+            sb.setLength(0);
+
+            for (Timing t : tpoints) {
+                sb.append(t);
+                sb.append(", ");
+            }
+
+            String timing_str = sb.toString();
+
+            return String.format(
+                    "beatmap { mode=%d, title=%s, title_unicode=%s, " +
+                            "artist=%s, artist_unicode=%s, creator=%s, " +
+                            "version=%s, ncircles=%d, nsliders=%d, nspinners=%d," +
+                            " hp=%s, cs=%s, od=%s, ar=%s, sv=%s, tick_rate=%s, " +
+                            "tpoints=[ %s ], objects=[ %s ] }",
+                    mode, title, title_unicode, artist, artist_unicode,
+                    creator, version, ncircles, nsliders, nspinners, hp,
+                    cs, od, ar, sv, tick_rate, timing_str, objs_str
+            );
+        }
+
+        public int max_combo() {
+            int res = 0;
+            int tindex = -1;
+            double tnext = Double.NEGATIVE_INFINITY;
+            double px_per_beat = 0.0;
+
+            for (HitObject obj : objects) {
+                if ((obj.type & OBJ_SLIDER) == 0) {
+                /* non-sliders add 1 combo */
+                    ++res;
+                    continue;
+                }
+
+            /* keep track of the current timing point without
+            looping through all of them for every object */
+                while (obj.time >= tnext) {
+                    ++tindex;
+
+                    if (tpoints.size() > tindex + 1) {
+                        tnext = tpoints.get(tindex + 1).time;
+                    } else {
+                        tnext = Double.POSITIVE_INFINITY;
+                    }
+
+                    Timing t = tpoints.get(tindex);
+
+                    double sv_multiplier = 1.0;
+
+                    if (!t.change && t.ms_per_beat < 0) {
+                        sv_multiplier = -100.0 / t.ms_per_beat;
+                    }
+
+                    px_per_beat = sv * 100.0 * sv_multiplier;
+                    if (format_version < 8) {
+                        px_per_beat /= sv_multiplier;
+                    }
+                }
+
+            /* slider, we need to calculate slider ticks */
+                Slider sl = (Slider) obj.data;
+
+                double num_beats =
+                        (sl.distance * sl.repetitions) / px_per_beat;
+
+                int ticks = (int)
+                        Math.ceil(
+                                (num_beats - 0.1) / sl.repetitions * tick_rate
+                        );
+
+                --ticks;
+                ticks *= sl.repetitions;
+                ticks += sl.repetitions + 1;
+
+                res += Math.max(0, ticks);
+            }
+
+            return res;
+        }
+    }
+
+    /**
+     * beatmap stats with mods applied.
+     * should be populated with the base beatmap stats and passed to
+     * mods_apply which will modify the stats for the given mods
+     */
+    public static class MapStats {
+        float ar, od, cs, hp;
+
+        /**
+         * speed multiplier / music rate.
+         * this doesn't need to be initialized before calling mods_apply
+         */
+        float speed;
     }
 
     /**
@@ -408,9 +665,6 @@ exception since you can check lastline/lastpos when you catch */
         obj.strains[type] = prev.strains[type] * decay + value;
     }
 
-/* ------------------------------------------------------------- */
-/* difficulty calculator                                         */
-
     /* base pp value for stars, used internally by ppv2 */
     private static
     double pp_base(double stars)
@@ -419,97 +673,18 @@ exception since you can check lastline/lastpos when you catch */
                 / 100000.0;
     }
 
-    /**
-     * arbitrary thresholds to determine when a stream is spaced
-     * enough that it becomes hard to alternate.
-     */
-    private final static double STREAM_SPACING = 110.0,
-            SINGLE_SPACING = 125.0;
-
-    /** 2D vector with double values */
-    public static class Vector2
-    {
-        public double x = 0.0, y = 0.0;
-
-        public Vector2() {}
-        public Vector2(Vector2 other) { this(other.x, other.y); }
-        public Vector2(double x, double y) { this.x = x; this.y = y; }
-
-        public String toString() {
-            return String.format("(%s, %s)", x, y);
-        }
-
-        /**
-         * this -= other .
-         * @return this
-         */
-        public Vector2 sub(Vector2 other)
-        {
-            x -= other.x; y -= other.y;
-            return this;
-        }
-
-        /**
-         * this *= value .
-         * @return this
-         */
-        public Vector2 mul(double value)
-        {
-            x *= value; y *= value;
-            return this;
-        }
-
-        /** length (magnitude) of the vector. */
-        public double len() { return Math.sqrt(x * x + y * y); }
-    }
-
-    public static class Circle
-    {
-        public Vector2 pos = new Vector2();
-        public String toString() { return pos.toString(); }
-    }
-
-    /**
-     * max strains are weighted from highest to lowest, this is how
-     * much the weight decays.
-     */
-    private final static double DECAY_WEIGHT = 0.9;
-
-    /**
-     * strains are calculated by analyzing the map in chunks and taking
-     * the peak strains in each chunk. this is the length of a strain
-     * interval in milliseconds
-     */
-    private final static double STRAIN_STEP = 400.0;
-
-    public static class Slider
-    {
-        public Vector2 pos = new Vector2();
-
-        /** distance travelled by one repetition. */
-        public double distance = 0.0;
-
-        /** 1 = no repeats. */
-        public int repetitions = 1;
-
-        public String toString()
-        {
-            return String.format(
-                    "{ pos=%s, distance=%s, repetitions=%d }",
-                    pos, distance, repetitions
-            );
-        }
-    }
-
     public static class HitObject
     {
-        public final double[] strains = new double[] { 0.0, 0.0 };
-        public int type = OBJ_CIRCLE;
-        /** start time in milliseconds. */
+        /**
+         * start time in milliseconds.
+         */
         public double time = 0.0;
+        public final double[] strains = new double[] { 0.0, 0.0 };
+
         /** an instance of Circle or Slider or null. */
         public Object data = null;
         public Vector2 normpos =  new Vector2();
+        public int type = OBJ_CIRCLE;
         public boolean is_single = false;
 
         /** string representation of the type bitmask. */
@@ -535,472 +710,6 @@ exception since you can check lastline/lastpos when you catch */
             );
         }
     }
-
-    public static class Timing
-    {
-        /** start time in milliseconds. */
-        public double time = 0.0;
-        public double ms_per_beat = -100.0;
-
-        /** if false, ms_per_beat is -100 * bpm_multiplier. */
-        public boolean change = false;
-    }
-
-    private final static Vector2 PLAYFIELD_CENTER = new Vector2(
-            PLAYFIELD_WIDTH / 2.0, PLAYFIELD_HEIGHT / 2.0
-    );
-
-    /**
-     * 50% of the difference between aim and speed is added to total
-     * star rating to compensate for aim/speed only maps
-     */
-    private final static double EXTREME_SCALING_FACTOR = 0.5;
-
-    /**
-     * the bare minimum beatmap data for difficulty calculation.
-     *
-     * this object can be reused for multiple beatmaps without
-     * re-allocation by simply calling reset()
-     */
-    public static class Map
-    {
-        public int format_version;
-        public int mode;
-        public String title, title_unicode;
-        public String artist, artist_unicode;
-
-        /** mapper name. */
-        public String creator;
-
-        /** difficulty name. */
-        public String version;
-
-        public int ncircles, nsliders, nspinners;
-        public float hp, cs, od, ar;
-        public float sv, tick_rate;
-
-        public final ArrayList<HitObject> objects =
-                new ArrayList<HitObject>(512);
-
-        public final ArrayList<Timing> tpoints =
-                new ArrayList<Timing>(32);
-
-        public Map() { reset(); }
-
-        /** clears the instance so that it can be reused. */
-        public void reset()
-        {
-            title = title_unicode =
-                    artist = artist_unicode =
-                            creator =
-                                    version = "";
-
-            ncircles = nsliders = nspinners = 0;
-            hp = cs = od = ar = 5.0f;
-            sv = tick_rate = 1.0f;
-
-            objects.clear(); tpoints.clear();
-        }
-
-        public String toString()
-        {
-            StringBuilder sb = new StringBuilder();
-
-            for (HitObject obj : objects)
-            {
-                sb.append(obj);
-                sb.append(", ");
-            }
-
-            String objs_str = sb.toString();
-
-            sb.setLength(0);
-
-            for (Timing t : tpoints)
-            {
-                sb.append(t);
-                sb.append(", ");
-            }
-
-            String timing_str = sb.toString();
-
-            return String.format(
-                    "beatmap { mode=%d, title=%s, title_unicode=%s, " +
-                            "artist=%s, artist_unicode=%s, creator=%s, " +
-                            "version=%s, ncircles=%d, nsliders=%d, nspinners=%d," +
-                            " hp=%s, cs=%s, od=%s, ar=%s, sv=%s, tick_rate=%s, " +
-                            "tpoints=[ %s ], objects=[ %s ] }",
-                    mode, title, title_unicode, artist, artist_unicode,
-                    creator, version, ncircles, nsliders, nspinners, hp,
-                    cs, od, ar, sv, tick_rate, timing_str, objs_str
-            );
-        }
-
-        public int max_combo()
-        {
-            int res = 0;
-            int tindex = -1;
-            double tnext = Double.NEGATIVE_INFINITY;
-            double px_per_beat = 0.0;
-
-            for (HitObject obj : objects)
-            {
-                if ((obj.type & OBJ_SLIDER) == 0)
-                {
-                /* non-sliders add 1 combo */
-                    ++res;
-                    continue;
-                }
-
-            /* keep track of the current timing point without
-            looping through all of them for every object */
-                while (obj.time >= tnext)
-                {
-                    ++tindex;
-
-                    if (tpoints.size() > tindex + 1) {
-                        tnext = tpoints.get(tindex + 1).time;
-                    } else {
-                        tnext = Double.POSITIVE_INFINITY;
-                    }
-
-                    Timing t = tpoints.get(tindex);
-
-                    double sv_multiplier = 1.0;
-
-                    if (!t.change && t.ms_per_beat < 0) {
-                        sv_multiplier = -100.0 / t.ms_per_beat;
-                    }
-
-                    px_per_beat = sv * 100.0 * sv_multiplier;
-                    if (format_version < 8) {
-                        px_per_beat /= sv_multiplier;
-                    }
-                }
-
-            /* slider, we need to calculate slider ticks */
-                Slider sl = (Slider)obj.data;
-
-                double num_beats =
-                        (sl.distance * sl.repetitions) / px_per_beat;
-
-                int ticks = (int)
-                        Math.ceil(
-                                (num_beats - 0.1) / sl.repetitions * tick_rate
-                        );
-
-                --ticks;
-                ticks *= sl.repetitions;
-                ticks += sl.repetitions + 1;
-
-                res += Math.max(0, ticks);
-            }
-
-            return res;
-        }
-    }
-
-    public static class Parser
-    {
-        /** last line touched. */
-        public String lastline;
-
-        /** last line number touched. */
-        public int nline;
-
-        /** last token touched. */
-        public String lastpos;
-
-        /** true if the parsing completed successfully. */
-        public boolean done;
-
-        /**
-         * the parsed beatmap will be stored in this object.
-         * willl persist throughout reset() calls and will be reused by
-         * subsequent parse calls until changed.
-         * @see Parser#reset
-         */
-        public Map beatmap = null;
-
-        private String section; /* current section */
-
-        public Parser() { reset(); }
-
-        private void reset()
-        {
-            lastline = lastpos = section = "";
-            nline = 0;
-            done = false;
-            if (beatmap != null) {
-                beatmap.reset();
-            }
-        }
-
-        public String toString()
-        {
-            return String.format(
-                    "in line %d\n%s\n> %s", nline, lastline, lastpos
-            );
-        }
-
-        private void warn(String fmt, Object... args)
-        {
-            info("W: ");
-            info(fmt, args);
-            info("\n%s\n", this);
-        }
-
-        /**
-         * trims v, sets lastpos to it and returns trimmed v.
-         * should be used to access any string that can make the parser
-         * fail
-         */
-        private String setlastpos(String v)
-        {
-            v = v.trim();
-            lastpos = v;
-            return v;
-        }
-
-        private String[] property()
-        {
-            String[] split = lastline.split(":", 2);
-            split[0] = setlastpos(split[0]);
-            if (split.length > 1) {
-                split[1] = setlastpos(split[1]);
-            }
-        /* why does java have such inconsistent naming? ArrayList
-        length is .size(), normal array length is .length, string
-        length is .length(). why do I have to look up documentation
-        for stuff that should have the same interface? */
-            return split;
-        }
-
-        private void metadata()
-        {
-            String[] p = property();
-
-            if (p[0].equals("Title")) {
-                beatmap.title = p[1];
-            }
-            else if (p[0].equals("TitleUnicode")) {
-                beatmap.title_unicode = p[1];
-            }
-            else if (p[0].equals("Artist")) {
-                beatmap.artist = p[1];
-            }
-            else if (p[0].equals("ArtistUnicode")) {
-                beatmap.artist_unicode = p[1];
-            }
-            else if (p[0].equals("Creator")) {
-                beatmap.creator = p[1];
-            }
-            else if (p[0].equals("Version")) {
-                beatmap.version = p[1];
-            }
-        }
-
-        private void general()
-        {
-            String[] p = property();
-
-            if (p[0].equals("Mode"))
-            {
-                beatmap.mode = Integer.parseInt(setlastpos(p[1]));
-
-                if (beatmap.mode != MODE_STD)
-                {
-                    throw new UnsupportedOperationException(
-                            "this gamemode is not yet supported"
-                    );
-                }
-            }
-        }
-
-        private void difficulty()
-        {
-            String[] p = property();
-
-        /* what's up with the redundant Float.parseFloat ?_? */
-            if (p[0].equals("CircleSize")) {
-                beatmap.cs = Float.parseFloat(setlastpos(p[1]));
-            }
-            else if (p[0].equals("OverallDifficulty")) {
-                beatmap.od = Float.parseFloat(setlastpos(p[1]));
-            }
-            else if (p[0].equals("ApproachRate")) {
-                beatmap.ar = Float.parseFloat(setlastpos(p[1]));
-            }
-            else if (p[0].equals("HPDrainRate")) {
-                beatmap.hp = Float.parseFloat(setlastpos(p[1]));
-            }
-            else if (p[0].equals("SliderMultiplier")) {
-                beatmap.sv = Float.parseFloat(setlastpos(p[1]));
-            }
-            else if (p[0].equals("SliderTickRate")) {
-                beatmap.tick_rate = Float.parseFloat(setlastpos(p[1]));
-            }
-        }
-
-        private void timing()
-        {
-            String[] s = lastline.split(",");
-
-            if (s.length > 8) {
-                warn("timing point with trailing values");
-            }
-
-            Timing t = new Timing();
-            t.time = Double.parseDouble(setlastpos(s[0]));
-            t.ms_per_beat = Double.parseDouble(setlastpos(s[1]));
-
-            if (s.length >= 7) {
-                t.change = !s[6].trim().equals("0");
-            }
-
-            beatmap.tpoints.add(t);
-        }
-
-        private void objects()
-        {
-            String[] s = lastline.split(",");
-
-            if (s.length > 11) {
-                warn("object with trailing values");
-            }
-
-            HitObject obj = new HitObject();
-            obj.time = Double.parseDouble(setlastpos(s[2]));
-            obj.type = Integer.parseInt(setlastpos(s[3]));
-
-            if ((obj.type & OBJ_CIRCLE) != 0)
-            {
-                ++beatmap.ncircles;
-                Circle c = new Circle();
-                c.pos.x = Double.parseDouble(setlastpos(s[0]));
-                c.pos.y = Double.parseDouble(setlastpos(s[1]));
-                obj.data = c;
-            }
-
-            else if ((obj.type & OBJ_SPINNER) != 0) {
-                ++beatmap.nspinners;
-            }
-
-            else if ((obj.type & OBJ_SLIDER) != 0)
-            {
-                ++beatmap.nsliders;
-                Slider sli = new Slider();
-                sli.pos.x = Double.parseDouble(setlastpos(s[0]));
-                sli.pos.y = Double.parseDouble(setlastpos(s[1]));
-                sli.repetitions = Integer.parseInt(setlastpos(s[6]));
-                sli.distance = Double.parseDouble(setlastpos(s[7]));
-                obj.data = sli;
-            }
-
-            beatmap.objects.add(obj);
-        }
-
-        /**
-         * calls reset() on beatmap and parses a osu file into it.
-         * if beatmap is null, it will be initialized to a new Map
-         * @return this.beatmap
-         * @throws IOException
-         */
-        public Map map(BufferedReader reader) throws IOException
-        {
-            String line = null;
-            int magic_index = -1;
-
-            if (beatmap == null) {
-                beatmap = new Map();
-            }
-
-            reset();
-
-        /* check for the magic string and parse format version */
-            line = reader.readLine();
-            if (line == null) {
-                throw new IllegalArgumentException("empty file");
-            }
-            magic_index = line.indexOf(OSU_MAGIC);
-            if (magic_index < 0) {
-                throw new IllegalArgumentException(
-                        "not a valid .osu file"
-                );
-            }
-
-            beatmap.format_version = Integer.parseInt(
-                    line.substring(magic_index + OSU_MAGIC.length())
-            );
-
-            while ((line = reader.readLine()) != null)
-            {
-                lastline = line;
-                ++nline;
-
-            /* comments (according to lazer) */
-                if (line.startsWith(" ") || line.startsWith("_")) {
-                    continue;
-                }
-
-                line = lastline = line.trim();
-                if (line.length() <= 0) {
-                    continue;
-                }
-
-            /* c++ style comments */
-                if (line.startsWith("//")) {
-                    continue;
-                }
-
-            /* [SectionName] */
-                if (line.startsWith("[")) {
-                    section = line.substring(1, line.length() - 1);
-                    continue;
-                }
-
-                if (section.equals("Metadata")) metadata();
-                else if (section.equals("General")) general();
-                else if (section.equals("Difficulty")) difficulty();
-                else if (section.equals("TimingPoints")) timing();
-                else if (section.equals("HitObjects")) objects();
-            }
-
-            done = true;
-            return beatmap;
-        }
-
-        /**
-         * sets beatmap and returns map(reader)
-         * @return this.beatmap
-         * @throws IOException
-         */
-        public Map map(BufferedReader reader, Map beatmap)
-                throws IOException
-        {
-            this.beatmap = beatmap;
-            return map(reader);
-        }
-    }
-
-    /**
-     * beatmap stats with mods applied.
-     * should be populated with the base beatmap stats and passed to
-     * mods_apply which will modify the stats for the given mods
-     */
-    public static class MapStats
-    {
-        float ar, od, cs, hp;
-
-        /**
-         * speed multiplier / music rate.
-         * this doesn't need to be initialized before calling mods_apply
-         */
-        float speed;
-    }
-
-/* ------------------------------------------------------------- */
-/* acc calc                                                      */
 
     /**
      * difficulty calculator, can be reused in subsequent calc() calls.
@@ -1273,18 +982,16 @@ exception since you can check lastline/lastpos when you catch */
          * @see DiffCalc#calc(int, double)
          * @see DiffCalc#DEFAULT_SINGLETAP_THRESHOLD
          */
-        public DiffCalc calc(Map beatmap)
-        {
+        public DiffCalc calc(Map beatmap) {
             return calc(beatmap, MODS_NOMOD,
                     DEFAULT_SINGLETAP_THRESHOLD);
         }
     }
 
 /* ------------------------------------------------------------- */
-/* pp calc                                                       */
+/* acc calc                                                      */
 
-    public static class Accuracy
-    {
+    public static class Accuracy {
         public int n300 = 0, n100 = 0, n50 = 0, nmisses = 0;
 
         public Accuracy() {}
@@ -1293,8 +1000,7 @@ exception since you can check lastline/lastpos when you catch */
          * @param n300 the number of 300s, if -1 it will be calculated
          *             from the object count in Accuracy#value(int).
          */
-        public Accuracy(int n300, int n100, int n50, int nmisses)
-        {
+        public Accuracy(int n300, int n100, int n50, int nmisses) {
             this.n300 = n300;
             this.n100 = n100;
             this.n50 = n50;
@@ -1331,8 +1037,7 @@ exception since you can check lastline/lastpos when you catch */
          * @param nobjects the total number of hits (n300 + n100 + n50 +
          *        nmisses)
          */
-        public Accuracy(double acc_percent, int nobjects, int nmisses)
-        {
+        public Accuracy(double acc_percent, int nobjects, int nmisses) {
             nmisses = Math.min(nobjects, nmisses);
             int max300 = nobjects - nmisses;
 
@@ -1349,8 +1054,7 @@ exception since you can check lastline/lastpos when you catch */
                                     0.5
                     );
 
-            if (n100 > max300)
-            {
+            if (n100 > max300) {
             /* acc lower than all 100s, use 50s */
                 n100 = 0;
 
@@ -1373,10 +1077,8 @@ exception since you can check lastline/lastpos when you catch */
          *                 will be used to deduce this value.
          * @return the accuracy value (0.0-1.0)
          */
-        public double value(int nobjects)
-        {
-            if (nobjects < 0 && n300 < 0)
-            {
+        public double value(int nobjects) {
+            if (nobjects < 0 && n300 < 0) {
                 throw new IllegalArgumentException(
                         "either nobjects or n300 must be specified"
                 );
@@ -1397,10 +1099,288 @@ exception since you can check lastline/lastpos when you catch */
 
         /**
          * calls value(-1) .
+         *
          * @see Accuracy#value(int)
          */
         public double value() {
             return value(-1);
+        }
+    }
+
+/* ------------------------------------------------------------- */
+/* pp calc                                                       */
+
+    public static class Parser {
+        /**
+         * last line touched.
+         */
+        public String lastline;
+
+        /**
+         * last line number touched.
+         */
+        public int nline;
+
+        /**
+         * last token touched.
+         */
+        public String lastpos;
+
+        /**
+         * true if the parsing completed successfully.
+         */
+        public boolean done;
+
+        /**
+         * the parsed beatmap will be stored in this object.
+         * willl persist throughout reset() calls and will be reused by
+         * subsequent parse calls until changed.
+         *
+         * @see Parser#reset
+         */
+        public Map beatmap = null;
+
+        private String section; /* current section */
+        private boolean ar_found = false;
+
+        public Parser() {
+            reset();
+        }
+
+        private void reset() {
+            lastline = lastpos = section = "";
+            nline = 0;
+            done = false;
+            if (beatmap != null) {
+                beatmap.reset();
+            }
+        }
+
+        public String toString() {
+            return String.format(
+                    "in line %d\n%s\n> %s", nline, lastline, lastpos
+            );
+        }
+
+        private void warn(String fmt, Object... args) {
+            info("W: ");
+            info(fmt, args);
+            info("\n%s\n", this);
+        }
+
+        /**
+         * trims v, sets lastpos to it and returns trimmed v.
+         * should be used to access any string that can make the parser
+         * fail
+         */
+        private String setlastpos(String v) {
+            v = v.trim();
+            lastpos = v;
+            return v;
+        }
+
+        private String[] property() {
+            String[] split = lastline.split(":", 2);
+            split[0] = setlastpos(split[0]);
+            if (split.length > 1) {
+                split[1] = setlastpos(split[1]);
+            }
+        /* why does java have such inconsistent naming? ArrayList
+        length is .size(), normal array length is .length, string
+        length is .length(). why do I have to look up documentation
+        for stuff that should have the same interface? */
+            return split;
+        }
+
+        private void metadata() {
+            String[] p = property();
+
+            if (p[0].equals("Title")) {
+                beatmap.title = p[1];
+            } else if (p[0].equals("TitleUnicode")) {
+                beatmap.title_unicode = p[1];
+            } else if (p[0].equals("Artist")) {
+                beatmap.artist = p[1];
+            } else if (p[0].equals("ArtistUnicode")) {
+                beatmap.artist_unicode = p[1];
+            } else if (p[0].equals("Creator")) {
+                beatmap.creator = p[1];
+            } else if (p[0].equals("Version")) {
+                beatmap.version = p[1];
+            }
+        }
+
+        private void general() {
+            String[] p = property();
+
+            if (p[0].equals("Mode")) {
+                beatmap.mode = Integer.parseInt(setlastpos(p[1]));
+
+                if (beatmap.mode != MODE_STD) {
+                    throw new UnsupportedOperationException(
+                            "this gamemode is not yet supported"
+                    );
+                }
+            }
+        }
+
+        private void difficulty() {
+            String[] p = property();
+
+        /* what's up with the redundant Float.parseFloat ?_? */
+            if (p[0].equals("CircleSize")) {
+                beatmap.cs = Float.parseFloat(setlastpos(p[1]));
+            } else if (p[0].equals("OverallDifficulty")) {
+                beatmap.od = Float.parseFloat(setlastpos(p[1]));
+            } else if (p[0].equals("ApproachRate")) {
+                beatmap.ar = Float.parseFloat(setlastpos(p[1]));
+                ar_found = true;
+            } else if (p[0].equals("HPDrainRate")) {
+                beatmap.hp = Float.parseFloat(setlastpos(p[1]));
+            } else if (p[0].equals("SliderMultiplier")) {
+                beatmap.sv = Float.parseFloat(setlastpos(p[1]));
+            } else if (p[0].equals("SliderTickRate")) {
+                beatmap.tick_rate = Float.parseFloat(setlastpos(p[1]));
+            }
+        }
+
+        private void timing() {
+            String[] s = lastline.split(",");
+
+            if (s.length > 8) {
+                warn("timing point with trailing values");
+            }
+
+            Timing t = new Timing();
+            t.time = Double.parseDouble(setlastpos(s[0]));
+            t.ms_per_beat = Double.parseDouble(setlastpos(s[1]));
+
+            if (s.length >= 7) {
+                t.change = !s[6].trim().equals("0");
+            }
+
+            beatmap.tpoints.add(t);
+        }
+
+        private void objects() {
+            String[] s = lastline.split(",");
+
+            if (s.length > 11) {
+                warn("object with trailing values");
+            }
+
+            HitObject obj = new HitObject();
+            obj.time = Double.parseDouble(setlastpos(s[2]));
+            obj.type = Integer.parseInt(setlastpos(s[3]));
+
+            if ((obj.type & OBJ_CIRCLE) != 0) {
+                ++beatmap.ncircles;
+                Circle c = new Circle();
+                c.pos.x = Double.parseDouble(setlastpos(s[0]));
+                c.pos.y = Double.parseDouble(setlastpos(s[1]));
+                obj.data = c;
+            } else if ((obj.type & OBJ_SPINNER) != 0) {
+                ++beatmap.nspinners;
+            } else if ((obj.type & OBJ_SLIDER) != 0) {
+                ++beatmap.nsliders;
+                Slider sli = new Slider();
+                sli.pos.x = Double.parseDouble(setlastpos(s[0]));
+                sli.pos.y = Double.parseDouble(setlastpos(s[1]));
+                sli.repetitions = Integer.parseInt(setlastpos(s[6]));
+                sli.distance = Double.parseDouble(setlastpos(s[7]));
+                obj.data = sli;
+            }
+
+            beatmap.objects.add(obj);
+        }
+
+        /**
+         * calls reset() on beatmap and parses a osu file into it.
+         * if beatmap is null, it will be initialized to a new Map
+         *
+         * @return this.beatmap
+         * @throws IOException
+         */
+        public Map map(BufferedReader reader) throws IOException {
+            String line = null;
+
+            if (beatmap == null) {
+                beatmap = new Map();
+            }
+
+            reset();
+
+            while ((line = reader.readLine()) != null) {
+                lastline = line;
+                ++nline;
+
+            /* comments (according to lazer) */
+                if (line.startsWith(" ") || line.startsWith("_")) {
+                    continue;
+                }
+
+                line = lastline = line.trim();
+                if (line.length() <= 0) {
+                    continue;
+                }
+
+            /* c++ style comments */
+                if (line.startsWith("//")) {
+                    continue;
+                }
+
+            /* [SectionName] */
+                if (line.startsWith("[")) {
+                    section = line.substring(1, line.length() - 1);
+                    continue;
+                }
+
+                try {
+                    if (section.equals("Metadata"))
+                        metadata();
+                    else if (section.equals("General"))
+                        general();
+                    else if (section.equals("Difficulty"))
+                        difficulty();
+                    else if (section.equals("TimingPoints"))
+                        timing();
+                    else if (section.equals("HitObjects"))
+                        objects();
+                    else {
+                        int fmt_index = line.indexOf("file format v");
+                        if (fmt_index < 0) {
+                            continue;
+                        }
+
+                        beatmap.format_version = Integer.parseInt(
+                                line.substring(fmt_index + 13)
+                        );
+                    }
+                } catch (NumberFormatException e) {
+                    warn("ignoring line with bad number");
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    warn("ignoring malformed line");
+                }
+            }
+
+            if (!ar_found) {
+                beatmap.ar = beatmap.od;
+            }
+
+            done = true;
+            return beatmap;
+        }
+
+        /**
+         * sets beatmap and returns map(reader)
+         *
+         * @return this.beatmap
+         * @throws IOException
+         */
+        public Map map(BufferedReader reader, Map beatmap)
+                throws IOException {
+            this.beatmap = beatmap;
+            return map(reader);
         }
     }
 

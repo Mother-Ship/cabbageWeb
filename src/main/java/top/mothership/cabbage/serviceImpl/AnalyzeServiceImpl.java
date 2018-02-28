@@ -5,6 +5,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.annotation.UserRoleControl;
+import top.mothership.cabbage.consts.TipConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.AnalyzerDAO;
@@ -94,12 +95,12 @@ public class AnalyzeServiceImpl {
     public void addTargetUser(CqMsg cqMsg) {
         Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
-        Userinfo userinfo = apiManager.getUser(m.group(2), null);
+        Userinfo userinfo = apiManager.getUser(0, m.group(2));
         if (userinfo != null) {
             analyzerDAO.addTargetUser(userinfo.getUserId());
             cqMsg.setMessage("增加成功：" + userinfo.getUserName());
         } else {
-            cqMsg.setMessage("没有从osu!api获取到id为" + m.group(2) + "的玩家信息");
+            cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, m.group(2)));
         }
         cqManager.sendMsg(cqMsg);
     }
@@ -107,12 +108,12 @@ public class AnalyzeServiceImpl {
     public void delTargetUser(CqMsg cqMsg) {
         Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
-        Userinfo userinfo = apiManager.getUser(m.group(2), null);
+        Userinfo userinfo = apiManager.getUser(0, m.group(2));
         if (userinfo != null) {
             analyzerDAO.delTargetUser(userinfo.getUserId());
             cqMsg.setMessage("删除成功：" + userinfo.getUserName());
         } else {
-            cqMsg.setMessage("没有从osu!api获取到id为" + m.group(2) + "的玩家信息");
+            cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, m.group(2)));
         }
         cqManager.sendMsg(cqMsg);
     }
@@ -123,7 +124,7 @@ public class AnalyzeServiceImpl {
         if (list.size() > 0) {
             resp = new StringBuilder("目标玩家：\n");
             for (Integer i : list) {
-                Userinfo userinfo = apiManager.getUser(null, i);
+                Userinfo userinfo = apiManager.getUser(0, i);
                 if (userinfo != null) {
                     resp.append(userinfo.getUserName()).append("\n");
                 } else {
@@ -151,7 +152,7 @@ public class AnalyzeServiceImpl {
         for (Integer aList : targetUser) {
             for (Integer bList : targetMap) {
                 //对每个bid
-                List<Score> tmp = apiManager.getScore(bList, aList);
+                List<Score> tmp = apiManager.getScore(0, bList, aList);
                 List<Score> lastTmp = analyzerDAO.getLastScoreByUidAndBid(aList, bList);
 
                 if (tmp.size() == 0) {
