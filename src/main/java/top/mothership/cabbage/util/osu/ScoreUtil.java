@@ -143,17 +143,37 @@ public class ScoreUtil {
         return convertModToHashMap(mod).keySet().toString().replaceAll("\\[\\]", "");
     }
 
-    public String genAccString(Score score) {
-        return new DecimalFormat("###.00").format(genAccDouble(score));
+    public String genAccString(Score score, Integer mode) {
+        return new DecimalFormat("###.00").format(genAccDouble(score, mode));
     }
 
-    public Double genAccDouble(Score score) {
-        return 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
-                / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()));
+    public Double genAccDouble(Score score, Integer mode) {
+        switch (mode) {
+            case 0:
+                return 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
+                        / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()));
+            case 1:
+                //太鼓
+                return 100.0 * (2 * score.getCount300() + score.getCount100())
+                        / (2 * (score.getCount100() + score.getCount300() + score.getCountMiss()));
+            case 2:
+                //ctb
+                return 100.0 * (score.getCount50() + score.getCount100() + score.getCount300())
+                        / (score.getCountKatu() + score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss());
+            case 3:
+                //mania
+                return 100.0 * (300 * (score.getCount300() + score.getCountGeki()) + 200 * score.getCountKatu() + 100 * score.getCount100() + 50 * score.getCount50())
+                        / (300 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss() + score.getCountKatu() + score.getCountGeki()));
+            default:
+                return 0D;
+        }
+
     }
+
     /**
      * 先有蔓蔓后有天，反向转换日神仙
      * 用于处理Search命令传入的Mod，所以应该不必支持STD以外的模式……
+     *
      * @param mods the mods
      * @return the integer
      */
@@ -216,7 +236,27 @@ public class ScoreUtil {
                 case "PF":
                     m += 16384;
                     break;
-
+                case "4K":
+                    m += 32768;
+                    break;
+                case "5K":
+                    m += 65536;
+                    break;
+                case "6K":
+                    m += 131072;
+                    break;
+                case "7K":
+                    m += 262144;
+                    break;
+                case "8K":
+                    m += 524288;
+                    break;
+                case "FI":
+                    m += 1048576;
+                    break;
+                case "9K":
+                    m += 16777216;
+                    break;
                 default:
                     break;
             }
@@ -328,7 +368,7 @@ public class ScoreUtil {
         return 0;
     }
 
-    private String convertGameModeToString(Integer mode) {
+    public String convertGameModeToString(Integer mode) {
         switch (mode) {
             case 0:
                 return "Standard";

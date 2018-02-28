@@ -1,5 +1,6 @@
 package top.mothership.cabbage.util.qq;
 
+import top.mothership.cabbage.Pattern.CQCodePattern;
 import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
@@ -20,6 +21,8 @@ public class MsgQueue {
     public MsgQueue(){}
     public MsgQueue(int N) {
         this.N=N;
+        //2018-2-27 10:50:34构造方法居然没有重做一个数组……
+        msgs = new CqMsg[N];
     }
 
     /**
@@ -156,15 +159,15 @@ public class MsgQueue {
             //如果是命令，直接false
             return false;
         }
-        Matcher singleImgMatcher = RegularPattern.SINGLE_IMG_REGEX.matcher(msg.getMessage());
+        Matcher singleImgMatcher = CQCodePattern.SINGLE_IMG.matcher(msg.getMessage());
         if (singleImgMatcher.find()) {
             //如果是纯图片，直接false
             return false;
         }
-        String msgFromArray = RegularPattern.IMG_REGEX.matcher(
+        String msgFromArray = CQCodePattern.SINGLE_IMG.matcher(
                 RegularPattern.REPEAT_FILTER_REGEX.matcher(msgs[i].getMessage()).replaceAll(""))
                 .replaceAll("");
-        String msgFromGroup = RegularPattern.IMG_REGEX.matcher(
+        String msgFromGroup = CQCodePattern.SINGLE_IMG.matcher(
                 RegularPattern.REPEAT_FILTER_REGEX.matcher(msg.getMessage()).replaceAll(""))
                 .replaceAll("");
 

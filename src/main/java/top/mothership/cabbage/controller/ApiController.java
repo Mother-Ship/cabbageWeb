@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.UserDAO;
@@ -30,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -130,16 +130,7 @@ public class ApiController {
                 return;
             } else {
                 logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-                //构造User对象写入数据库
-                user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
-                userDAO.addUser(user);
-                if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
-                    userFromAPI.setQueryDate(LocalDate.now());
-                } else {
-                    userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
-                }
-                //写入一行userinfo
-                userInfoDAO.addUserInfo(userFromAPI);
+                userUtil.registerUser(userFromAPI.getUserId(), mode, 0L, OverallConsts.DEFAULT_ROLE);
                 userInDB = userFromAPI;
             }
             role = "creep";
@@ -206,19 +197,8 @@ public class ApiController {
     public String nearestUserInfo(@PathVariable Integer uid, @RequestParam(value = "mode", defaultValue = "0", required = false) Integer mode) {
         Userinfo userInDB = userInfoDAO.getNearestUserInfo(mode, uid, LocalDate.now().minusDays(1));
         if (userInDB == null) {
-            Userinfo userFromAPI = apiManager.getUser(mode, uid);
-            logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-            //构造User对象写入数据库
-            User user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
-            userDAO.addUser(user);
-            if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
-                userFromAPI.setQueryDate(LocalDate.now());
-            } else {
-                userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
-            }
-            //写入一行userinfo
-            userInfoDAO.addUserInfo(userFromAPI);
-            userInDB = userFromAPI;
+            userInDB = apiManager.getUser(mode, uid);
+            userUtil.registerUser(userInDB.getUserId(), mode, 0L, OverallConsts.DEFAULT_ROLE);
             return new Gson().toJson(new WebResponse<>(1, "user not registered", null));
         }
         return new Gson().toJson(new WebResponse<>(0, "ok", userInDB));

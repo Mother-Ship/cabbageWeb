@@ -19,7 +19,7 @@ import java.util.Map;
 @Component
 public class SmokeUtil {
 
-    private static List<String> repeatSmokeGroups = Arrays.asList("201872650,564679329,677545541,112177148,532783765".split(","));
+    private static List<String> repeatSmokeGroups = Arrays.asList("201872650,564679329,677545541,112177148,532783765,213078438,714925706".split(","));
     private static List<String> repeatRecordGroups = Arrays.asList("576214175,532783765".split(","));
     private Logger logger = LogManager.getLogger(this.getClass());
     private final CqManager cqManager;

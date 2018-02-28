@@ -80,6 +80,14 @@ public interface UserDAO {
             })
     List<User> listUserIdByUname(@Param("username") String username);
 
+    @Select("SELECT * FROM `userrole` "
+            + "WHERE `is_banned` =1 ")
+    @Results(
+            {
+                    //手动绑定这个字段
+                    @Result(column = "is_banned", property = "banned")
+            })
+    List<User> listBannedUser();
     /**
      * Gets repeat star.
      * 去掉100%复读的
@@ -109,6 +117,7 @@ public interface UserDAO {
             + "<if test=\"user.banned != null\">is_banned=#{user.banned},</if>"
             + "<if test=\"user.repeatCount != null\">repeat_count=#{user.repeatCount},</if>"
             + "<if test=\"user.speakingCount != null\">speaking_count=#{user.speakingCount},</if>"
+            + "<if test=\"user.mode != null\">mode=#{user.mode},</if>"
             + "</set>"
             + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);
@@ -120,7 +129,7 @@ public interface UserDAO {
      * @return the integer
      */
     @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.qq}" +
-            ",#{user.legacyUname},#{user.currentUname},#{user.banned},#{user.repeatCount},#{user.speakingCount})")
+            ",#{user.legacyUname},#{user.currentUname},#{user.banned},#{user.repeatCount},#{user.speakingCount},#{user.mode})")
     Integer addUser(@Param("user") User user);
 
 

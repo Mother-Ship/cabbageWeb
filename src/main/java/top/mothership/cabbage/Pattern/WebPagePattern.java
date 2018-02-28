@@ -11,6 +11,5 @@ public class WebPagePattern {
     /**
      * 从旧官网取出正确的S和SS数据
      */
-    public final static Pattern CORRECT_X_S = Pattern.compile("<td width='42'><img height='42' src='//s.ppy.sh/images/X.png'></td><td width='50'>(\\d*)</td>\n" +
-            "<td width='42'><img height='42' src='//s.ppy.sh/images/S.png'></td><td width='50'>(\\d*)</td>\n");
+    public final static Pattern CORRECT_X_S = Pattern.compile("<td width=\"50\">(\\d*)</td>(?:.|\\r|\\n)*<td width=\"50\">(\\d*)</td>(?:.|\\r|\\n)*<td width=\"50\">(\\d*)</td>");
 }

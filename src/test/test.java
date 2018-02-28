@@ -3,12 +3,10 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.mapper.UserDAO;
 
 import java.io.IOException;
-import java.util.regex.Matcher;
 
 //
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -370,14 +368,14 @@ public class test {
 //        userDAO.getUser(1335734657L,null);
 //Lobby lobby = apiManager.getMatch(38182172);
 //System.out.println(lobby);
-        String s = "-a xi -t Fre edom -d Another -m Nakagawa -ar 9 -od 9 -cs 4 -hp 6\n";
-        Matcher m = RegularPattern.OSU_SEARCH_KETWORD_SHELL.matcher(s);
-        m.find();
-
-        for (int j = m.start(); j < m.end(); j++) {
-            for (int i = 0; i <= m.groupCount(); i++)
-                System.out.println(m.group(i));
-        }
+//        String s = "-a xi -t Fre edom -d Another -m Nakagawa -ar 9 -od 9 -cs 4 -hp 6\n";
+//        Matcher m = RegularPattern.OSU_SEARCH_KETWORD_SHELL.matcher(s);
+//        m.find();
+//
+//        for (int j = m.start(); j < m.end(); j++) {
+//            for (int i = 0; i <= m.groupCount(); i++)
+//                System.out.println(m.group(i));
+//        }
 
 //        org.jsoup.nodes.Document doc = Jsoup.connect("https://osu.ppy.sh/users/7679162").timeout(10000).get();
 //        Elements link = doc.select("div[class*=profile-stats]");

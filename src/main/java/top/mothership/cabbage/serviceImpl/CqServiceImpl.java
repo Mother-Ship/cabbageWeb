@@ -8,9 +8,9 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.annotation.GroupRoleControl;
 import top.mothership.cabbage.consts.Base64Consts;
+import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.consts.TipConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
@@ -22,10 +22,7 @@ import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.CoolQ.CqResponse;
 import top.mothership.cabbage.pojo.CoolQ.QQInfo;
 import top.mothership.cabbage.pojo.User;
-import top.mothership.cabbage.pojo.osu.Beatmap;
-import top.mothership.cabbage.pojo.osu.Score;
-import top.mothership.cabbage.pojo.osu.SearchParam;
-import top.mothership.cabbage.pojo.osu.Userinfo;
+import top.mothership.cabbage.pojo.osu.*;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
@@ -36,10 +33,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.regex.Matcher;
 
 /**
  * 普通命令进行业务处理的类
@@ -48,8 +43,7 @@ import java.util.regex.Matcher;
  */
 @Service
 public class CqServiceImpl {
-    private static final int i = 0;
-    private static final int[] j = {i};
+    //
     private final ApiManager apiManager;
     private final CqManager cqManager;
     private final WebPageManager webPageManager;
@@ -102,7 +96,7 @@ public class CqServiceImpl {
         boolean approximate = false;
         Userinfo userInDB = null;
         String role = null;
-        int scoreRank;
+        int scoreRank = 0;
         List<String> roles;
 
         switch (argument.getSubCommandLowCase()) {
@@ -180,12 +174,12 @@ public class CqServiceImpl {
                         if (argument.getMode() == null) {
                             argument.setMode(0);
                         }
-                        userUtil.registerUser(userFromAPI.getUserId(), argument.getMode());
+                        userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), 0L, OverallConsts.DEFAULT_ROLE);
                         userInDB = userFromAPI;
                         //初次使用，数据库肯定没有指定天数的数据
                         approximate = true;
                     }
-                    role = "creep";
+                    role = OverallConsts.DEFAULT_ROLE;
                 } else if (user.isBanned()) {
                     //只有在确定user不是null的时候，如果参数没有提供mode，用user预设的覆盖
                     if (argument.getMode() == null) {
@@ -253,9 +247,9 @@ public class CqServiceImpl {
                     if (argument.getMode() == null) {
                         argument.setMode(0);
                     }
-                    userUtil.registerUser(userFromAPI.getUserId(), argument.getMode());
+                    userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), 0L, OverallConsts.DEFAULT_ROLE);
                     userInDB = userFromAPI;
-                    role = "creep";
+                    role = OverallConsts.DEFAULT_ROLE;
                     //初次使用，数据库肯定没有指定天数的数据，直接标为近似数据
                     approximate = true;
                 } else {
@@ -286,22 +280,25 @@ public class CqServiceImpl {
 
         }
         roles = userUtil.sortRoles(role);
-        //获取score rank
-        //gust？
-        if (userFromAPI.getUserId() == 1244312
-                //怕他
-                || userFromAPI.getUserId() == 6149313
-                //小飞菜
-                || userFromAPI.getUserId() == 3995056
-                //苏娜小苏娜
-                || userFromAPI.getUserId() == 3213720
-                //MFA
-                || userFromAPI.getUserId() == 6854920) {
-            scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 10000);
-        } else {
-            scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
+
+        if (argument.getMode().equals(0)) {
+            //主模式才获取score rank
+            //gust？
+            if (userFromAPI.getUserId() == 1244312
+                    //怕他
+                    || userFromAPI.getUserId() == 6149313
+                    //小飞菜
+                    || userFromAPI.getUserId() == 3995056
+                    //苏娜小苏娜
+                    || userFromAPI.getUserId() == 3213720
+                    //MFA
+                    || userFromAPI.getUserId() == 6854920) {
+                scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 10000);
+            } else {
+                scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
+            }
+            //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
         }
-        //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
         String result = imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), argument.getDay(), approximate, scoreRank, argument.getMode());
         cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
         cqManager.sendMsg(cqMsg);
@@ -317,10 +314,16 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-
-        List<Score> bpList;
+        if (argument.isText()) {
+            cqMsg.setMessage("不（lan）支（de）持（zuo）以文本形式展现今日BP。");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        ArrayList<Score> todayBP = new ArrayList<>();
+        List<List<Score>> bpListMixedMode;
         Userinfo userFromAPI = null;
         User user = null;
+        boolean mixedMode = false;
         switch (argument.getSubCommandLowCase()) {
             case "bp":
             case "bps":
@@ -366,46 +369,70 @@ public class CqServiceImpl {
             default:
                 break;
         }
+
         //如果不是mybp，并且没有指定mode
         if (argument.getMode() == null && user == null) {
             //取出四个模式所有BP
-            argument.setMode(0);
-        } else if (user != null) {
-            //如果是mybp并且没有指定mode
-            argument.setMode(user.getMode());
-        }
-        //如果不是mybp，并且指定了mode，就按指定的mode 获取
-        bpList = apiManager.getBP(argument.getMode(), userFromAPI.getUserId());
-        ArrayList<Score> todayBP = new ArrayList<>();
-
-        for (int i = 0; i < bpList.size(); i++) {
-            //对BP进行遍历，如果产生时间在24小时内，就加入今日bp豪华午餐，并且加上bp所在的编号
-            if (bpList.get(i).getDate().after(Date.from(Instant.now().minus(1, ChronoUnit.DAYS)))) {
-                bpList.get(i).setBpId(i);
-                todayBP.add(bpList.get(i));
+            bpListMixedMode = apiManager.getBP(userFromAPI.getUserId());
+            for (int i = 0; i < bpListMixedMode.size(); i++) {
+                //双重for
+                for (int j = 0; j < bpListMixedMode.get(i).size(); j++)
+                    if (bpListMixedMode.get(i).get(j).getDate().after(Date.from(Instant.now().minus(1, ChronoUnit.DAYS)))) {
+                        bpListMixedMode.get(i).get(j).setBpId(j);
+                        //对BP进行遍历，请求API将名称写入
+                        Beatmap map = apiManager.getBeatmap(bpListMixedMode.get(i).get(j).getBeatmapId());
+                        bpListMixedMode.get(i).get(j).setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
+                        todayBP.add(bpListMixedMode.get(i).get(j));
+                    }
             }
-        }
-        if (todayBP.size() == 0) {
-            cqMsg.setMessage("[CQ:record,file=base64://" + Base64Consts.WAN_BU_LIAO_LA + "]");
-            cqManager.sendMsg(cqMsg);
-            cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
-            cqManager.sendMsg(cqMsg);
-            return;
-        }
-        if (argument.isText()) {
-            cqMsg.setMessage("不（lan）支（de）持（zuo）以文本形式展现今日BP。");
-            cqManager.sendMsg(cqMsg);
-            return;
-        } else {
+            if (todayBP.size() == 0) {
+                cqMsg.setMessage("[CQ:record,file=base64://" + Base64Consts.WAN_BU_LIAO_LA + "]");
+                cqManager.sendMsg(cqMsg);
+                cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
+                cqManager.sendMsg(cqMsg);
+                return;
+            }
+            if (todayBP.size() == 1) {
+                argument.setMode((int) todayBP.get(0).getMode());
+            }
+            byte lastTodayBpMode = todayBP.get(0).getMode();
             for (Score aList : todayBP) {
-                //对BP进行遍历，请求API将名称写入
-                Beatmap map = apiManager.getBeatmap(aList.getBeatmapId());
-                aList.setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
+                //如果今日bp里出现了不同的模式，就设allmode为true
+                if (!aList.getMode().equals(lastTodayBpMode)) {
+                    mixedMode = true;
+                }
             }
-            String result = imgUtil.drawUserBP(userFromAPI, todayBP, argument.getMode());
-            cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
-            cqManager.sendMsg(cqMsg);
+        } else {
+            if (argument.getMode() == null && user != null) {
+                //如果是mybp并且没有指定mode
+                argument.setMode(user.getMode());
+            }
+            //如果不是mybp，并且指定了mode，就按指定的mode 获取
+            List<Score> bpListSingleMode = apiManager.getBP(argument.getMode(), userFromAPI.getUserId());
+            for (int i = 0; i < bpListSingleMode.size(); i++) {
+                //对BP进行遍历，如果产生时间在24小时内，就加入今日bp豪华午餐，并且加上bp所在的编号
+                if (bpListSingleMode.get(i).getDate().after(Date.from(Instant.now().minus(1, ChronoUnit.DAYS)))) {
+                    bpListSingleMode.get(i).setBpId(i);
+                    Beatmap map = apiManager.getBeatmap(bpListSingleMode.get(i).getBeatmapId());
+                    bpListSingleMode.get(i).setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
+                    todayBP.add(bpListSingleMode.get(i));
+                }
+            }
+            if (todayBP.size() == 0) {
+                cqMsg.setMessage("[CQ:record,file=base64://" + Base64Consts.WAN_BU_LIAO_LA + "]");
+                cqManager.sendMsg(cqMsg);
+                cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
+                cqManager.sendMsg(cqMsg);
+                return;
+            }
         }
+
+
+        //如果是多模式的BP，mixedmode是true，getmode是null
+        String result = imgUtil.drawUserBP(userFromAPI, todayBP, argument.getMode(), mixedMode);
+        cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
+        cqManager.sendMsg(cqMsg);
+
     }
 
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
@@ -467,17 +494,20 @@ public class CqServiceImpl {
                 break;
         }
 
-        List<Score> bpList;
-        //如果不是mybp，并且没有指定mode
+        List<Score> bpList = null;
+        //如果不是bpme（没有取出user），并且没有指定mode
         if (argument.getMode() == null && user == null) {
-            //取出四个模式所有BP
+            //默认为主模式
             argument.setMode(0);
-        } else if (user != null) {
+        }
+        if (argument.getMode() == null && user != null) {
             //如果是mybp并且没有指定mode
             argument.setMode(user.getMode());
         }
-        //如果不是mybp，并且指定了mode，就按指定的mode 获取
+
         bpList = apiManager.getBP(argument.getMode(), userFromAPI.getUserId());
+
+
         if (argument.getNum() > bpList.size()) {
             cqMsg.setMessage("该玩家没有打出指定的bp……");
             cqManager.sendMsg(cqMsg);
@@ -515,7 +545,7 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-        logger.info("尝试将" + userFromAPI.getUserName() + "绑定到QQ：" + cqMsg.getUserId() + "上");
+        logger.info("尝试将" + userFromAPI.getUserName() + "绑定到QQ：" + cqMsg.getUserId() + "上，指定的模式是" + argument.getMode());
 
         //只有这个QQ对应的id是null
         user = userDAO.getUser(cqMsg.getUserId(), null);
@@ -523,16 +553,11 @@ public class CqServiceImpl {
             //只有这个id对应的QQ是null
             user = userDAO.getUser(null, userFromAPI.getUserId());
             if (user == null) {
-                //如果没有使用过白菜的话
-                user = new User(userFromAPI.getUserId(), "creep", cqMsg.getUserId(), "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
-                userDAO.addUser(user);
-                if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
-                    userFromAPI.setQueryDate(LocalDate.now());
-                } else {
-                    userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
+                if (argument.getMode() == null) {
+                    argument.setMode(0);
                 }
-                //写入一行userinfo
-                userInfoDAO.addUserInfo(userFromAPI);
+                userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), cqMsg.getUserId(), OverallConsts.DEFAULT_ROLE);
+
                 cqMsg.setMessage("将" + userFromAPI.getUserName() + "绑定到" + cqMsg.getUserId() + "成功。");
             } else {
                 if (user.getQq() == 0) {
@@ -546,7 +571,8 @@ public class CqServiceImpl {
                 }
             }
         } else {
-            userFromAPI = apiManager.getUser(null, user.getUserId());
+            //TODO 小号机制
+            userFromAPI = apiManager.getUser(0, user.getUserId());
             cqMsg.setMessage("你的QQ已经绑定了玩家：" + userFromAPI.getUserName() + "，如果发生错误请联系妈妈船。");
         }
         cqManager.sendMsg(cqMsg);
@@ -554,24 +580,27 @@ public class CqServiceImpl {
     }
 
     public void recent(CqMsg cqMsg) {
-        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
+        Argument argument = cqMsg.getArgument();
         Userinfo userFromAPI = null;
         User user;
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
-            cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
+            cqMsg.setMessage(TipConsts.USER_NOT_BIND);
             cqManager.sendMsg(cqMsg);
             return;
         }
         if (user.isBanned()) {
-            cqMsg.setMessage("……期待你回来的那一天。");
+            cqMsg.setMessage(TipConsts.USER_IS_BANNED);
             cqManager.sendMsg(cqMsg);
             return;
         }
-        userFromAPI = apiManager.getUser(null, user.getUserId());
+        if (argument.getMode() == null) {
+            //如果没有指定mode，就改为user的mode
+            argument.setMode(user.getMode());
+        }
+        userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
         if (userFromAPI == null) {
-            cqMsg.setMessage("没有获取到QQ" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "玩家的信息。");
+            cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, user.getQq(), user.getUserId()));
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -585,22 +614,16 @@ public class CqServiceImpl {
         }
         Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
         if (beatmap == null) {
-            cqMsg.setMessage("网络错误：没有获取到Bid为" + score.getBeatmapId() + "的谱面信息。");
+            cqMsg.setMessage(String.format(TipConsts.BEATMAP_GET_FAILED, score.getBeatmapId()));
             cqManager.sendMsg(cqMsg);
             return;
         }
-        switch (m.group(1).toLowerCase(Locale.CHINA)) {
-            case "rs":
-                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName());
-                cqMsg.setMessage(resp);
-                cqManager.sendMsg(cqMsg);
-                break;
-            default:
-                break;
-        }
-        Matcher recentQianeseMatcher = RegularPattern.QIANESE_RECENT.matcher(m.group(1).toLowerCase(Locale.CHINA));
-        if (recentQianeseMatcher.find()) {
-            String filename = imgUtil.drawResult(userFromAPI, score, beatmap);
+        if (argument.isText()) {
+            String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName());
+            cqMsg.setMessage(resp);
+            cqManager.sendMsg(cqMsg);
+        } else {
+            String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
             cqManager.sendMsg(cqMsg);
         }
@@ -620,79 +643,20 @@ public class CqServiceImpl {
     }
 
     public void sleep(CqMsg cqMsg) {
-        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
-        Long hour;
-        try {
-            hour = Long.valueOf(m.group(2));
-        } catch (java.lang.Exception e) {
-            hour = 6L;
-        }
-        if (hour > 13) {
-            hour = 13L;
-        }
-        if (hour == 0) {
-            if (cqMsg.getUserId() == 546748348) {
-                hour = 720L;
-            } else {
-                hour = 6L;
-            }
-        }
-        if (hour < 0) {
-            hour = 6L;
-        }
-        logger.info(cqMsg.getUserId() + "被自己禁言" + hour + "小时。");
+        Argument argument = cqMsg.getArgument();
+        logger.info(cqMsg.getUserId() + "被自己禁言" + argument.getHour() + "小时。");
         cqMsg.setMessage("[CQ:record,file=base64://" + Base64Consts.ZOU_HAO_BU_SONG + "]");
         cqManager.sendMsg(cqMsg);
         cqMsg.setMessageType("smoke");
-        cqMsg.setDuration((int) (hour * 3600));
-        cqManager.sendMsg(cqMsg);
-    }
-
-    public void firstPlace(CqMsg cqMsg) {
-        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
-        Beatmap beatmap;
-        Score score;
-        int bid;
-        try {
-            bid = Integer.valueOf(m.group(2));
-        } catch (java.lang.NumberFormatException e) {
-            cqMsg.setMessage("It's a disastah!!");
-            cqManager.sendMsg(cqMsg);
-            return;
-        }
-        beatmap = apiManager.getBeatmap(bid);
-        if (beatmap == null) {
-            cqMsg.setMessage("提供的bid没有找到谱面信息。");
-            cqManager.sendMsg(cqMsg);
-            return;
-        }
-        //一次性取2个
-        List<Score> scores = apiManager.getFirstScore(bid, 2);
-        if (scores.size() == 0) {
-            cqMsg.setMessage("提供的bid没有找到#1成绩。");
-            cqManager.sendMsg(cqMsg);
-            return;
-        }
-        if (!scores.get(0).getUserId().equals(userDAO.getUser(cqMsg.getUserId(), null).getUserId())) {
-            cqMsg.setMessage("不是你打的#1不给看哦。\n如果你确定是你打的，看看是不是没登记osu!id？(使用!setid命令)");
-            cqManager.sendMsg(cqMsg);
-            return;
-        }
-        Userinfo userFromAPI = apiManager.getUser(null, scores.get(0).getUserId());
-        //为了日志+和BP的PP计算兼容，补上get_score的API缺失的部分
-        scores.get(0).setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
-        scores.get(0).setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
-        String filename = imgUtil.drawFirstRank(beatmap, scores.get(0), userFromAPI, scores.get(0).getScore() - scores.get(1).getScore());
-        cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+        cqMsg.setDuration((int) (argument.getHour() * 3600));
         cqManager.sendMsg(cqMsg);
     }
 
 
-    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L})
+    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 213078438L, 714925706L})
     public void myScore(CqMsg cqMsg) {
-        SearchParam searchParam = parseSearchKeyword(cqMsg);
+        Argument argument = cqMsg.getArgument();
+        SearchParam searchParam = argument.getSearchParam();
         if (searchParam == null) {
             return;
         }
@@ -704,7 +668,7 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-        userFromAPI = apiManager.getUser(null, user.getUserId());
+        userFromAPI = apiManager.getUser(0, user.getUserId());
         if (userFromAPI == null) {
             cqMsg.setMessage("没有获取到QQ：" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "玩家的信息。");
             cqManager.sendMsg(cqMsg);
@@ -713,56 +677,93 @@ public class CqServiceImpl {
         Beatmap beatmap;
 
         if (searchParam.getBeatmapId() == null) {
-            beatmap = webPageManager.searchBeatmap(searchParam);
+            beatmap = webPageManager.searchBeatmap(searchParam, argument.getMode());
         } else {
             //如果是纯数字的搜索词，则改为用API直接获取
             beatmap = apiManager.getBeatmap(searchParam.getBeatmapId());
         }
-        logger.info("开始处理" + userFromAPI.getUserName() + "进行的谱面搜索，关键词为：" + searchParam);
+        logger.info("开始处理" + userFromAPI.getUserName() + "进行的本人成绩搜索");
         if (beatmap == null) {
             cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。" +
                     "\n请尝试根据解析出的结果，去掉关键词中的特殊符号……");
             cqManager.sendMsg(cqMsg);
             return;
         }
-        List<Score> scores = apiManager.getScore(beatmap.getBeatmapId(), user.getUserId());
-        if (scores.size() > 0) {
-            if (searchParam.getMods() != null) {
-                for (Score s : scores) {
-                    if (s.getEnabledMods().equals(searchParam.getMods())) {
-                        String filename = imgUtil.drawResult(userFromAPI, s, beatmap);
-                        cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-                        cqManager.sendMsg(cqMsg);
-                        return;
-                    }
-                }
-                cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId()
-                        + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")。" +
-                        "\n你在该谱面没有指定Mod：" + searchParam.getModsString() + "的成绩。");
-            } else {
-                String filename = imgUtil.drawResult(userFromAPI, scores.get(0), beatmap);
-                cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-            }
-        } else {
-            cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId()
-                    + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")" +
-                    "，你在该谱面没有成绩。");
+        if (argument.getMode() == null) {
+            //2018-2-28 16:05:51 !me命令未指定模式的时候应该改为用户预设模式
+            argument.setMode(user.getMode());
         }
-        cqManager.sendMsg(cqMsg);
+        //先取到前两个分数
+        List<Score> scores = apiManager.getFirstScore(argument.getMode(), beatmap.getBeatmapId(), 2);
+        if (scores.size() == 0) {
+            cqMsg.setMessage(String.format(TipConsts.BEATMAP_NO_SCORE, beatmap.getBeatmapId(), scoreUtil.convertGameModeToString(argument.getMode())));
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        //如果不是#1
+        if (!scores.get(0).getUserId().equals(userDAO.getUser(cqMsg.getUserId(), null).getUserId())) {
+            scores = apiManager.getScore(argument.getMode(), beatmap.getBeatmapId(), user.getUserId());
+            if (scores.size() > 0) {
+                if (searchParam.getMods() != null) {
+                    for (Score s : scores) {
+                        if (s.getEnabledMods().equals(searchParam.getMods())) {
+                            String filename = imgUtil.drawResult(userFromAPI, s, beatmap, argument.getMode());
+                            cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+                            cqManager.sendMsg(cqMsg);
+                            return;
+                        }
+                    }
+                    cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId()
+                            + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")。" +
+                            "\n你在该谱面没有指定Mod：" + searchParam.getModsString() + "，模式：" + scoreUtil.convertModToString(argument.getMode()) + "的成绩。");
+                } else {
+                    //如果没有指定mod
+                    String filename = imgUtil.drawResult(userFromAPI, scores.get(0), beatmap, argument.getMode());
+                    cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+                }
+            } else {
+                cqMsg.setMessage("找到的谱面为：https://osu.ppy.sh/b/" + beatmap.getBeatmapId()
+                        + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")" +
+                        "，你在该谱面没有模式：" + scoreUtil.convertGameModeToString(argument.getMode()) + "的成绩。");
+            }
+            cqManager.sendMsg(cqMsg);
+
+
+        } else {
+            userFromAPI = apiManager.getUser(0, scores.get(0).getUserId());
+            //为了日志+和BP的PP计算兼容，补上get_score的API缺失的部分
+            scores.get(0).setBeatmapName(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]");
+            scores.get(0).setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
+            String filename = imgUtil.drawFirstRank(beatmap, scores.get(0), userFromAPI, scores.get(0).getScore() - scores.get(1).getScore(), argument.getMode());
+            cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
+            cqManager.sendMsg(cqMsg);
+        }
+
+
     }
 
 
     @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void search(CqMsg cqMsg) {
-        SearchParam searchParam = parseSearchKeyword(cqMsg);
+        Argument argument = cqMsg.getArgument();
+        SearchParam searchParam = argument.getSearchParam();
         if (searchParam == null) {
             return;
         }
+        if (argument.getMode() == null) {
+            argument.setMode(0);
+        }
         Beatmap beatmap;
         if (searchParam.getBeatmapId() == null) {
-            beatmap = webPageManager.searchBeatmap(searchParam);
+            beatmap = webPageManager.searchBeatmap(searchParam, argument.getMode());
         } else {
             beatmap = apiManager.getBeatmap(searchParam.getBeatmapId());
+
+        }
+        if (!beatmap.getMode().equals(0)) {
+            cqMsg.setMessage("根据提供的bid找到了一张" + scoreUtil.convertGameModeToString(beatmap.getMode()) + "模式的专谱。由于oppai不支持其他模式，因此白菜也只有主模式支持!search命令。");
+            cqManager.sendMsg(cqMsg);
+            return;
         }
         logger.info("开始处理" + cqMsg.getUserId() + "进行的谱面搜索，关键词为：" + searchParam);
 
@@ -776,7 +777,32 @@ public class CqServiceImpl {
                 //在search中，未指定mod即视为none
                 searchParam.setMods(0);
             }
-            String filename = imgUtil.drawBeatmap(beatmap, searchParam.getMods());
+
+            Score score = new Score();
+            //逆计算stdacc
+            score.setEnabledMods(searchParam.getMods());
+            score.setCountMiss(searchParam.getCountMiss());
+            score.setMaxCombo(searchParam.getMaxCombo());
+            score.setCount50(searchParam.getCount50());
+            if (searchParam.getAcc() == null) {
+                score.setCount100(searchParam.getCount100());
+                score.setCount300(-1);
+            } else {
+                score.setCount100(0);
+                score.setCount300(-1);
+                OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+                //随意指定300 100,先计算出谱面总物件数
+                int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
+//                100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
+//                        / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()));
+                //解方程：acc = 100*(6*(a-x)+2x)/(6*a)
+                score.setCount100((int) (100D - searchParam.getAcc()) * 3 * objects / 200);
+                score.setCount300(objects - score.getCount100());
+            }
+
+            //这里默认构造FC成绩，所以不需要处理NPE……吧？
+            OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+            String filename = imgUtil.drawBeatmap(beatmap, searchParam.getMods(), oppaiResult, argument.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
                     + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")"
                     + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId()
@@ -787,14 +813,14 @@ public class CqServiceImpl {
     }
 
     public void chartMemberCmd(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
         String role;
         Userinfo userFromAPI;
         Long qq;
         User user;
         String filename;
         String newRole;
-        Matcher m = RegularPattern.CHART_ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
+
         //面向mp4 5 chart组，相当于!setid+!sudo add
         List<Long> mpChartMember = new ArrayList<>();
         //加入两个chart组群员
@@ -810,9 +836,9 @@ public class CqServiceImpl {
             return;
         }
 
-        userFromAPI = apiManager.getUser(m.group(2), null);
+        userFromAPI = apiManager.getUser(0, argument.getUsername());
         if (userFromAPI == null) {
-            cqMsg.setMessage("没有从osu!api获取到用户名为" + m.group(2) + "的玩家信息。");
+            cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, argument.getUsername()));
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -833,20 +859,12 @@ public class CqServiceImpl {
                 return;
         }
         String resp = "";
-        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+        switch (argument.getSubCommandLowCase()) {
             case "add":
-                qq = Long.valueOf(m.group(3));
                 if (user == null) {
                     //进行登记，构建user存入，将userinfo加上时间存入
                     //2018-1-24 16:04:55修正：构建user的时候就写入role
-                    user = new User(userFromAPI.getUserId(), role, qq, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
-                    userDAO.addUser(user);
-                    if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
-                        userFromAPI.setQueryDate(LocalDate.now());
-                    } else {
-                        userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
-                    }
-                    userInfoDAO.addUserInfo(userFromAPI);
+                    userUtil.registerUser(userFromAPI.getUserId(), 0, argument.getQq(), role);
                     int scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
                     filename = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank, user.getMode());
                     resp = "登记成功，用户组已修改为" + role;
@@ -855,11 +873,11 @@ public class CqServiceImpl {
                     //拿到原先的user，把role拼上去，塞回去
                     //如果当前的用户组是creep，就直接改成现有的组
                     resp = "\n该用户之前已使用过白菜。原有用户组为：" + user.getRole();
-                    user = roleUtil.addRole(role, user);
+                    user = userUtil.addRole(role, user);
                     resp += "，修改后的用户组为：" + user.getRole();
                     if (user.getQq().equals(0L)) {
-                        user.setQq(qq);
-                        resp += "\n绑定的QQ已登记为" + qq;
+                        user.setQq(argument.getQq());
+                        resp += "\n绑定的QQ已登记为" + argument.getQq();
                     } else {
                         resp += "\n该玩家已经绑定了QQ：" + user.getQq() + "，没有做出修改。";
                     }
@@ -878,7 +896,7 @@ public class CqServiceImpl {
                     return;
                 } else {
                     resp = "已将玩家" + userFromAPI.getUserName() + "从" + role + "用户组中移除。";
-                    user = roleUtil.delRole(role, user);
+                    user = userUtil.delRole(role, user);
                     resp += "\n修改后的用户组为：" + user.getRole();
                     userDAO.updateUser(user);
                     cqMsg.setMessage(resp);
@@ -917,7 +935,7 @@ public class CqServiceImpl {
                     //拿到原先的user，把role拼上去，塞回去
                     //如果当前的用户组是creep，就直接改成现有的组
                     resp += "\n该玩家之前已使用过白菜。原有用户组为：" + user.getRole();
-                    if ("creep".equals(user.getRole())) {
+                    if (OverallConsts.DEFAULT_ROLE.equals(user.getRole())) {
                         newRole = role;
                     } else {
                         //当用户不在想要添加的用户组的时候才添加 2017-11-27 20:45:20
@@ -931,15 +949,15 @@ public class CqServiceImpl {
                     resp += "，修改后的用户组为：" + newRole;
                     user.setRole(newRole);
 
-                    Userinfo userFromAPI = apiManager.getUser(null, user.getUserId());
+                    Userinfo userFromAPI = apiManager.getUser(0, user.getUserId());
                     if (userFromAPI == null) {
                         resp += "\n警告：从API获取绑定的玩家信息失败，已将被ban状态设为True；如果出现错误，请提醒我手动修改！";
                         user.setBanned(true);
                     } else {
                         boolean near = false;
-                        Userinfo userInDB = userInfoDAO.getUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(1));
+                        Userinfo userInDB = userInfoDAO.getUserInfo(0, userFromAPI.getUserId(), LocalDate.now().minusDays(1));
                         if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(userFromAPI.getUserId(), LocalDate.now().minusDays(1));
+                            userInDB = userInfoDAO.getNearestUserInfo(0, userFromAPI.getUserId(), LocalDate.now().minusDays(1));
                             near = true;
                         }
                         int scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
@@ -963,6 +981,9 @@ public class CqServiceImpl {
                 break;
             case "112177148":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第一届MP4杯赛群。\n本群作为历届mp4选手聚集地，之后比赛结束后会将赛群合并到本群。";
+                break;
+            case "213078438":
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第二届MP4杯赛群。\n由于本人沉迷dota没有及时更新进群说明，这条提示可能没几次出现的机会了，不管怎样还是请阅读群公告和群文件的比赛规章……";
                 break;
             default:
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎加入本群。";
@@ -1007,8 +1028,8 @@ public class CqServiceImpl {
             //褪裙的人没有用过白菜
             resp += "该玩家没有使用过白菜。";
         } else {
-            Userinfo userFromAPI = apiManager.getUser(null, user.getUserId());
-            user = roleUtil.delRole(role, user);
+            Userinfo userFromAPI = apiManager.getUser(0, user.getUserId());
+            user = userUtil.delRole(role, user);
             userDAO.updateUser(user);
             resp += "已自动将玩家" + userFromAPI.getUserName() + "从" + role + "用户组中移除。";
             resp += "\n修改后的用户组为：" + user.getRole();
@@ -1021,28 +1042,27 @@ public class CqServiceImpl {
 
     @GroupRoleControl(allBanned = true)
     public void cost(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
         User user = null;
         Userinfo userFromAPI;
-        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
-        String username;
-        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+
+        switch (argument.getSubCommandLowCase()) {
             case "costme":
             case "mycost":
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
-                    cqMsg.setMessage("你没有绑定osu!id。请使用!setid 你的osuid 命令。");
+                    cqMsg.setMessage(TipConsts.USER_NOT_BIND);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 if (user.isBanned()) {
-                    cqMsg.setMessage("玩家" + user.getCurrentUname() + "。。\n这么悲伤的事情，不忍心说啊。");
+                    cqMsg.setMessage(TipConsts.USER_IS_BANNED);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
             case "cost":
-                username = m.group(2);
+                String username = argument.getUsername();
                 //处理彩蛋
                 if ("白菜".equals(username)) {
                     cqMsg.setMessage("[Crz]Makii  11:00:45\n" +
@@ -1052,30 +1072,21 @@ public class CqServiceImpl {
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiManager.getUser(username, null);
+                userFromAPI = apiManager.getUser(0, username);
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
+                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, username));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 if (userFromAPI.getUserId() == 3) {
-                    cqMsg.setMessage("EASTER_EGG_OF_COST_BANCHO_BOT");
+                    cqMsg.setMessage(TipConsts.QUERY_BANCHO_BOT);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 user = userDAO.getUser(null, userFromAPI.getUserId());
                 if (user == null) {
                     logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-                    //构造User对象写入数据库
-                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
-                    userDAO.addUser(user);
-                    if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
-                        userFromAPI.setQueryDate(LocalDate.now());
-                    } else {
-                        userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
-                    }
-                    //写入一行userinfo
-                    userInfoDAO.addUserInfo(userFromAPI);
+                    userUtil.registerUser(userFromAPI.getUserId(), 0, 0L, OverallConsts.DEFAULT_ROLE);
                 }
                 break;
             default:
@@ -1084,31 +1095,19 @@ public class CqServiceImpl {
         }
         Map<String, Integer> map = webPageManager.getPPPlus(user.getUserId());
         if (map != null) {
-            double midasModeS1Cost = Math.pow((map.get("Jump") / 3000F), 0.8F)
-                    * Math.pow((map.get("Flow") / 1500F), 0.6F)
-                    + Math.pow((map.get("Speed") / 2000F), 0.8F)
-                    * Math.pow((map.get("Stamina") / 2000F), 0.5F)
-                    + (map.get("Accuracy") / 2250F);
             double drugsS4Cost = Math.pow((map.get("Jump") / 3000F), 0.9F)
                     * Math.pow((map.get("Flow") / 1500F), 0.5F)
                     + Math.pow((map.get("Speed") / 2000F), 1.25F)
                     + (map.get("Accuracy") / 2700F);
             double mp4S2Cost = Math.pow(
-                    ((0.02 * (10 * Math.sqrt((Math.atan((2 * map.get("Jump") - (2400 + 2135)) / (2400 - 2135)) + Math.PI / 2 + 8)
-                            * (Math.atan((2 * map.get("Flow") - (720 + 418)) / (720 - 418)) + Math.PI / 2 + 3))
-                            + 7 * (Math.atan((2 * map.get("Speed") - (1600 + 1324)) / (1600 - 1324)) + Math.PI / 2)
-                            + 3 * (Math.atan((2 * map.get("Stamina") - (1300 + 930)) / (1300 - 930)) + Math.PI / 2)
-                            + 1 * (Math.atan((2 * map.get("Accuracy") - (1300 + 1000)) / (1300 - 1000)) + Math.PI / 2)
-                            + 5 * (Math.atan((2 * map.get("Precision") - (700 + 450)) / (700 - 450)) + Math.PI / 2))) - 1)
-                    , 2.5f);
-//        cost=(jump/3000)^0.8*(flow/1500)^0.6+(speed/2000)^0.8*(stamina/2000)^0.5+accuracy/2250
-//            毒品：(Jump/3000)^0.9*(Flow/1500)^0.5+(Spd/2000)^1.25+Acc/2700
-//           mp4： Cost=((0.02*(10*SQRT((ATAN((2*Jump-(2400+2135))/(2400-2135))+π/2+8)
-//                    *(ATAN((2*Flow-(720+418))/(720-418))+π/2+3))
-//                    +7*(ATAN((2*Speed-(1600+1324))/(1600-1324))+π/2)
-//                    +3*(ATAN((2*Stamina-(1300+930))/(1300-930))+π/2)
-//                    +1*(ATAN((2*Acc-(1300+1000))/(1300-1000))+π/2)
-//                    +5*(ATAN((2*Precision-(700+450))/(700-450))+π/2)))-1)^2.5
+                    ((0.02D * (10D * Math.sqrt((Math.atan((2 * map.get("Jump") - (2400D + 2135D)) / (2400D - 2135D)) + Math.PI / 2D + 8D)
+                            * (Math.atan((2D * map.get("Flow") - (720D + 418D)) / (720D - 418D)) + Math.PI / 2D + 3D))
+                            + 7D * (Math.atan((2D * map.get("Speed") - (1600D + 1324D)) / (1600D - 1324D)) + Math.PI / 2D)
+                            + 3D * (Math.atan((2D * map.get("Stamina") - (1300D + 930D)) / (1300D - 930D)) + Math.PI / 2D)
+                            + 1D * (Math.atan((2D * map.get("Accuracy") - (1300D + 1000D)) / (1300D - 1000D)) + Math.PI / 2D)
+                            + 5D * (Math.atan((2D * map.get("Precision") - (700D + 450D)) / (700D - 450D)) + Math.PI / 2D))) - 1D)
+                    , 2.5D);
+//           mp4： Cost=((0.02*(10*SQRT((ATAN((2*B1-(2400+2135))/(2400-2135))+PI()/2+8)*(ATAN((2*B2-(720+418))/(720-418))+PI()/2+3))+7*(ATAN((2*B4-(1600+1324))/(1600-1324))+PI()/2)+3*(ATAN((2*B5-(1300+930))/(1300-930))+PI()/2)+1*(ATAN((2*B6-(1300+1000))/(1300-1000))+PI()/2)+5*(ATAN((2*B3-(700+450))/(700-450))+PI()/2)))-1)^2.5
             cqMsg.setMessage(user.getCurrentUname() + "的PP+ 六维数据："
                     + "\nJump：" + map.get("Jump")
                     + "\nFlow：" + map.get("Flow")
@@ -1116,12 +1115,10 @@ public class CqServiceImpl {
                     + "\nSpeed：" + map.get("Speed")
                     + "\nStamina：" + map.get("Stamina")
                     + "\nAccuracy：" + map.get("Accuracy")
-                    + "\n在点金杯S1中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(midasModeS1Cost)
-                    + "。该比赛已于18-2-10结束。"
-                    + "\n在mp4S2中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(midasModeS1Cost)
-                    + "。该比赛正在开放报名，欢迎4000-5100PP玩家报名！"
-                    + "\n在毒品杯S4中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(midasModeS1Cost)
-                    + "。该比赛预计三月初报名，三月中旬开赛，允许该Cost小于2.6的玩家参赛。"
+                    + "\n在**mp4S2**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S2Cost)
+                    + "。你没有听错 你没有听错，不要八九千 不要六七千，只要你的PP在4000-5100PP范围，就能报名参加mp4比赛啦！皇城PK，胜者为王，最后六人，报完即止，你还在犹豫什么，马上加入赛群213078438报名吧！\n"
+                    + "\n在**毒品杯S4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS4Cost)
+                    + "。该比赛已开放报名，赛群：364434451。视报名情况，最早将于2018-03-17开始，最晚将于2018-03-24开始。欢迎该Cost小于2.6的玩家报名参赛！"
                     + "\n每个比赛的Cost公式不同，只对指定的比赛有效。");
             cqManager.sendMsg(cqMsg);
             return;
@@ -1132,24 +1129,26 @@ public class CqServiceImpl {
     }
 
     public void recentPassed(CqMsg cqMsg) {
-        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
+        Argument argument = cqMsg.getArgument();
+        if (argument.getMode() == null) {
+            argument.setMode(0);
+        }
         Userinfo userFromAPI = null;
         User user;
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
-            cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
+            cqMsg.setMessage(TipConsts.USER_NOT_BIND);
             cqManager.sendMsg(cqMsg);
             return;
         }
         if (user.isBanned()) {
-            cqMsg.setMessage("……期待你回来的那一天。");
+            cqMsg.setMessage(TipConsts.USER_IS_BANNED);
             cqManager.sendMsg(cqMsg);
             return;
         }
-        userFromAPI = apiManager.getUser(null, user.getUserId());
+        userFromAPI = apiManager.getUser(0, user.getUserId());
         if (userFromAPI == null) {
-            cqMsg.setMessage("没有获取到QQ" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "玩家的信息。");
+            cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -1157,7 +1156,7 @@ public class CqServiceImpl {
         logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
         List<Score> scores = apiManager.getRecents(null, userFromAPI.getUserId());
         if (scores.size() == 0) {
-            cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有游戏记录。");
+            cqMsg.setMessage(String.format(TipConsts.NO_RECENT_RECORD, userFromAPI.getUserName()));
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -1170,24 +1169,24 @@ public class CqServiceImpl {
             }
         }
         if (score == null) {
-            cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有Pass的游戏记录。");
+            cqMsg.setMessage(String.format(TipConsts.NO_RECENT_RECORD_PASSED, userFromAPI.getUserName()));
             cqManager.sendMsg(cqMsg);
             return;
         }
         Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
         if (beatmap == null) {
-            cqMsg.setMessage("网络错误：没有获取到Bid为" + score.getBeatmapId() + "的谱面信息。");
+            cqMsg.setMessage(String.format(TipConsts.BEATMAP_GET_FAILED, score.getBeatmapId()));
             cqManager.sendMsg(cqMsg);
             return;
         }
-        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+        switch (argument.getSubCommandLowCase()) {
             case "prs":
                 String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName());
                 cqMsg.setMessage(resp);
                 cqManager.sendMsg(cqMsg);
                 break;
             case "pr":
-                String filename = imgUtil.drawResult(userFromAPI, score, beatmap);
+                String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
                 cqManager.sendMsg(cqMsg);
                 break;
@@ -1197,76 +1196,66 @@ public class CqServiceImpl {
 
     }
 
-    private SearchParam parseSearchKeyword(CqMsg cqMsg) {
-
-        }
-
-    }
 
     public void getBonusPP(CqMsg cqMsg) {
-        String username;
+        //为什么这个方法会被切面拦截两次。。
+        //2018-2-28 17:25:09 卧槽 没写break 我是sb
         Userinfo userFromAPI = null;
         User user;
         int num = 0;
         boolean text = true;
-        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(cqMsg.getMessage());
-        m.find();
-        switch (m.group(1).toLowerCase(Locale.CHINA)) {
+        Argument argument = cqMsg.getArgument();
+        if (argument.getMode() == null) {
+            argument.setMode(0);
+        }
+        switch (argument.getSubCommandLowCase()) {
             case "bns":
-                username = m.group(2);
+                String username = argument.getUsername();
                 //处理彩蛋
                 if ("白菜".equals(username)) {
                     cqMsg.setMessage("你以为会有彩蛋吗x");
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiManager.getUser(username, null);
+                userFromAPI = apiManager.getUser(0, username);
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("没有从osu!api获取到用户名为" + username + "的玩家信息。");
+                    cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, argument.getUsername()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 if (userFromAPI.getUserId() == 3) {
-                    cqMsg.setMessage("我懒得想彩蛋x");
+                    cqMsg.setMessage(TipConsts.QUERY_BANCHO_BOT);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 user = userDAO.getUser(null, userFromAPI.getUserId());
                 if (user == null) {
                     logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-                    //构造User对象写入数据库
-                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
-                    userDAO.addUser(user);
-                    if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
-                        userFromAPI.setQueryDate(LocalDate.now());
-                    } else {
-                        userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
-                    }
-                    //写入一行userinfo
-                    userInfoDAO.addUserInfo(userFromAPI);
+                    userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), 0L, OverallConsts.DEFAULT_ROLE);
                 }
                 if (user.isBanned()) {
-                    cqMsg.setMessage("……期待你回来的那一天。");
+                    cqMsg.setMessage(TipConsts.USER_IS_BANNED);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
 
                 break;
             case "mybns":
+            case "bnsme":
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
-                    cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
+                    cqMsg.setMessage(TipConsts.USER_NOT_BIND);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
                 if (user.isBanned()) {
-                    cqMsg.setMessage("……期待你回来的那一天。");
+                    cqMsg.setMessage(TipConsts.USER_IS_BANNED);
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiManager.getUser(null, user.getUserId());
+                userFromAPI = apiManager.getUser(0, user.getUserId());
                 if (userFromAPI == null) {
-                    cqMsg.setMessage("没有获取到" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "的玩家信息。");
+                    cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
@@ -1275,7 +1264,7 @@ public class CqServiceImpl {
                 break;
         }
         //获取页面：getuser
-        List<Score> bps = apiManager.getBP(userFromAPI.getUserName(), null);
+        List<Score> bps = apiManager.getBP(argument.getMode(), userFromAPI.getUserName());
 
         double scorepp = calculateScorePP(bps);
         double totalpp = userFromAPI.getPpRaw();
@@ -1366,12 +1355,35 @@ public class CqServiceImpl {
         return new double[]{avgY - (Oxy / Ox2) * avgX, Oxy / Ox2};
     }
 
-    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
-    public void changeLog(CqMsg cqMsg) {
-        String resp = "2018-1-29" +
-                "\n*新增 All-Mode Support。";
-        cqMsg.setMessage(resp);
+    public void setMode(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
+        String username;
+        Userinfo userFromAPI = null;
+        User user;
+
+
+        //只有这个QQ对应的id是null
+        user = userDAO.getUser(cqMsg.getUserId(), null);
+        if (user == null) {
+            cqMsg.setMessage(TipConsts.USER_NOT_BIND);
+            cqManager.sendMsg(cqMsg);
+            return;
+        } else {
+            userFromAPI = apiManager.getUser(0, user.getUserId());
+            if (userFromAPI == null) {
+                cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
+                cqManager.sendMsg(cqMsg);
+                return;
+            }
+            logger.info("尝试将" + userFromAPI.getUserName() + "的模式修改为" + argument.getMode());
+
+            user.setMode(argument.getMode());
+            userDAO.updateUser(user);
+            cqMsg.setMessage("更新成功：你的游戏模式已修改为" + scoreUtil.convertGameModeToString(argument.getMode()));
+        }
+
         cqManager.sendMsg(cqMsg);
+
     }
 
     @Scheduled(cron = "0 0 4 * * ?")
@@ -1384,7 +1396,6 @@ public class CqServiceImpl {
         List<Integer> list = userDAO.listUserIdByRole(null, false);
         for (Integer aList : list) {
             User user = userDAO.getUser(null, aList);
-            //TODO userinfo和user表加字段存储mode
             //这里四个模式都要更新，但是只有主模式的才判断PP超限
             for (int i = 0; i < 4; i++) {
                 Userinfo userinfo = apiManager.getUser(i, aList);
@@ -1417,6 +1428,36 @@ public class CqServiceImpl {
                 }
             }
         }
+    }
+
+    @Scheduled(cron = "0 0 * * * ?")
+    public void refreshBannedStatus() {
+        List<User> list = userDAO.listBannedUser();
+        for (User user : list) {
+            Userinfo userinfo = apiManager.getUser(0, user.getUserId());
+            if (userinfo != null) {
+                //将日期改为一天前写入
+                userinfo.setQueryDate(LocalDate.now().minusDays(1));
+                userInfoDAO.addUserInfo(userinfo);
+                logger.info("将" + userinfo.getUserName() + "的数据补录成功");
+                if (!userinfo.getUserName().equals(user.getCurrentUname())) {
+                    //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
+                    List<String> legacyUname = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
+                    }.getType());
+                    if (user.getCurrentUname() != null) {
+                        legacyUname.add(user.getCurrentUname());
+                    }
+                    user.setLegacyUname(new Gson().toJson(legacyUname));
+                    user.setCurrentUname(userinfo.getUserName());
+                    logger.info("检测到玩家" + userinfo.getUserName() + "改名，已登记");
+                }
+                //如果能获取到userinfo，就把banned设置为0
+                user.setBanned(false);
+                userDAO.updateUser(user);
+            }
+
+        }
+
     }
 
     private void handlePPOverflow(User user, Userinfo userinfo) {

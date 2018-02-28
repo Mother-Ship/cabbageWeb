@@ -215,9 +215,7 @@ public class CqController {
                                     }
                                     cqAdminService.listMsg(cqMsg);
                                     break;
-                                case "pp":
-                                    cqAdminService.listUserPP(cqMsg);
-                                    break;
+
                                 case "searchplayer":
                                     cqAdminService.searchPlayer(cqMsg);
                                     break;
@@ -233,8 +231,12 @@ public class CqController {
                                 case "repeatstar":
                                     cqAdminService.getRepeatStar(cqMsg);
                                     break;
-                                case "checkroleban":
-                                    cqAdminService.checkRoleBan(cqMsg);
+//
+                                case "adv":
+                                    cqAdminService.advertisement(cqMsg);
+                                    break;
+                                case "roleinfo":
+                                    cqAdminService.roleInfo(cqMsg);
                                 default:
                                     break;
                             }
@@ -284,6 +286,7 @@ public class CqController {
                         default:
                             Matcher recentQianeseMatcher = RegularPattern.QIANESE_RECENT.matcher(cmdMatcher.group(1).toLowerCase(Locale.CHINA));
                             if (recentQianeseMatcher.find()) {
+                                cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
                                 cqService.recent(cqMsg);
                             }
                             switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
@@ -374,6 +377,7 @@ public class CqController {
                                     cqService.setId(cqMsg);
                                     break;
                                 case "rs":
+                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
                                     cqService.recent(cqMsg);
                                     break;
                                 case "help":
@@ -398,7 +402,6 @@ public class CqController {
                                     break;
                                 case "costme":
                                 case "mycost":
-
                                     cqService.cost(cqMsg);
                                     break;
                                 case "cost":
@@ -407,16 +410,22 @@ public class CqController {
                                     break;
                                 case "pr":
                                 case "prs":
+                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
                                     cqService.recentPassed(cqMsg);
                                     break;
                                 case "bns":
-                                case "mybns":
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME});
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
                                     cqService.getBonusPP(cqMsg);
                                     break;
-                                case "changelog":
-                                    cqService.changeLog(cqMsg);
+                                case "mybns":
+                                case "bnsme":
+                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
+                                    cqService.getBonusPP(cqMsg);
+                                    break;
+                                case "mode":
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.MODE});
+                                    cqService.setMode(cqMsg);
                                     break;
                                 case "addmap":
                                     analyzeService.addTargetMap(cqMsg);

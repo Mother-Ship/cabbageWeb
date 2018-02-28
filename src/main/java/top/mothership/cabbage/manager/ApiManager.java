@@ -75,21 +75,30 @@ public class ApiManager {
     }
 
     public List<Score> getBP(Integer mode, String username) {
-        String result = result = accessAPI("bp", username, "string", null, null, null, null, mode);
+        String result = accessAPI("bp", username, "string", null, null, null, null, mode);
         //由于这里用到List，手动补上双括号
         result = "[" + result + "]";
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
+        List<Score> list = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
                 .fromJson(result, new TypeToken<List<Score>>() {
                 }.getType());
+        for (Score s : list) {
+            //2018-2-28 15:54:11哪怕是返回单模式的bp也设置模式，避免计算acc时候判断是单模式还是多模式
+            s.setMode(mode.byteValue());
+        }
+        return list;
     }
 
     public List<Score> getBP(Integer mode, Integer userId) {
         String result = accessAPI("bp", String.valueOf(userId), "id", null, null, null, null, mode);
         //由于这里用到List，手动补上双括号
         result = "[" + result + "]";
-        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
+        List<Score> list = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
                 .fromJson(result, new TypeToken<List<Score>>() {
                 }.getType());
+        for (Score s : list) {
+            s.setMode(mode.byteValue());
+        }
+        return list;
     }
 
     public List<Score> getBP(String username) {
@@ -101,13 +110,17 @@ public class ApiManager {
             List<Score> list = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
                     .fromJson(result, new TypeToken<List<Score>>() {
                     }.getType());
+            for (Score s : list) {
+                s.setMode((byte) i);
+            }
             resultList.addAll(list);
         }
         return resultList;
     }
 
-    public List<Score> getBP(Integer userId) {
-        List<Score> resultList = new ArrayList<>();
+    public List<List<Score>> getBP(Integer userId) {
+        List<List<Score>> resultList = new ArrayList<>();
+        //小技巧，这里i设为byte
         for (int i = 0; i < 4; i++) {
             String result = accessAPI("bp", String.valueOf(userId), "id", null, null, null, null, i);
             //由于这里用到List，手动补上双括号
@@ -115,7 +128,10 @@ public class ApiManager {
             List<Score> list = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
                     .fromJson(result, new TypeToken<List<Score>>() {
                     }.getType());
-            resultList.addAll(list);
+            for (Score s : list) {
+                s.setMode((byte) i);
+            }
+            resultList.add(list);
         }
         return resultList;
     }
@@ -174,7 +190,7 @@ public class ApiManager {
         logger.info(result);
         //他妈的ppysb，上面那些获取单个对象的时候给加个中括号，害的我得在下面删掉再在上面看情况加上
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                //这个的API，date可能是null，而Gson2.8.1会有问题
+                //这个的API，date可能是null，而Gson2.8.1会有问题，因此升级Gson库
                 .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Lobby.class);
     }
 
