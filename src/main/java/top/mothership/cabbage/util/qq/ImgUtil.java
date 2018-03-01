@@ -404,9 +404,9 @@ public class ImgUtil {
                     //绘制MOD
                     drawTextToImage(g3, "#222222", "Tahoma Bold", 14, mods, 493, 34);
                     //绘制PP
-                    drawTextToImage(g3, "#9492dc", "Arial Bold", 24, Integer.toString(Math.round(aList.getPp())) + "pp", 709, 28);
+                    drawTextToImage(g3, "#9492dc", "Tahoma Bold", 24, Integer.toString(Math.round(aList.getPp())) + "pp", 709, 28);
                     //歌名
-                    drawTextToImage(g3, "#3843a6", "Arial", 16,
+                    drawTextToImage(g3, "#3843a6", "Ubuntu Medium", 16,
                             aList.getBeatmapName() + "(" + acc + "%)", 26, 16);
                     if (mixedmode) {
                         g3.drawImage(images.get("mode-" + aList.getMode() + ".png"), 650, 4, null);
@@ -432,12 +432,12 @@ public class ImgUtil {
                     //绘制MOD
                     drawTextToImage(g3, "#222222", "Tahoma Bold", 14, mods, 493, 48);
                     //绘制PP
-                    drawTextToImage(g3, "#9492dc", "Arial Bold", 24, Integer.toString(Math.round(aList.getPp())) + "pp", 709, 35);
+                    drawTextToImage(g3, "#9492dc", "Tahoma Bold", 24, Integer.toString(Math.round(aList.getPp())) + "pp", 709, 35);
 
                     //两行的歌名
-                    drawTextToImage(g3, "#3843a6", "Arial", 16, aList.getBeatmapName().substring(0, aList.getBeatmapName().substring(0, 81).lastIndexOf(" ") + 1),
+                    drawTextToImage(g3, "#3843a6", "Ubuntu Medium", 16, aList.getBeatmapName().substring(0, aList.getBeatmapName().substring(0, 81).lastIndexOf(" ") + 1),
                             26, 15);
-                    drawTextToImage(g3, "#3843a6", "Arial", 16, aList.getBeatmapName().substring(aList.getBeatmapName().substring(0, 81).lastIndexOf(" ") + 1, aList.getBeatmapName().length())
+                    drawTextToImage(g3, "#3843a6", "Ubuntu Medium", 16, aList.getBeatmapName().substring(aList.getBeatmapName().substring(0, 81).lastIndexOf(" ") + 1, aList.getBeatmapName().length())
                                     + "(" + acc + "%)",
                             7, 30);
                     //模式图标
@@ -1062,10 +1062,8 @@ public class ImgUtil {
                 x = 982;
                 g2.drawImage(images.get("mode-" + mode + ".png"), x, 166, null);
                 break;
-//TODO: 修正模式图标位置
         }
         if (unicode) {
-
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 30));
             g2.drawString(oppaiResult.getTitleUnicode(), x, 196);
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 21));
@@ -1260,7 +1258,7 @@ public class ImgUtil {
             g2.setFont(new Font("Aller light", Font.PLAIN, 31));
             g2.drawString(oppaiResult.getTitle(), 942, 196);
             g2.setFont(new Font("Aller", Font.PLAIN, 22));
-            g2.drawString(oppaiResult.getArtist() + " // " + oppaiResult.getCreator(), 92, 223);
+            g2.drawString(oppaiResult.getArtist() + " // " + oppaiResult.getCreator(), 942, 223);
         }
 
         //artist//creator
