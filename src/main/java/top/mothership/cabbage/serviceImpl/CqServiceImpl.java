@@ -77,7 +77,6 @@ public class CqServiceImpl {
         this.imgUtil = imgUtil;
         this.scoreUtil = scoreUtil;
         this.userUtil = userUtil;
-
     }
 
 
