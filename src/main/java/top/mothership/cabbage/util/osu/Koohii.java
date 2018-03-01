@@ -92,13 +92,13 @@ public static final int MODS_TOUCH_DEVICE = 1 << 2;
 
     /* ------------------------------------------------------------- */
 /* beatmap parser                                                */
+    public static final int MODS_HD = 1 << 3;
+    public static final int MODS_HR = 1 << 4;
+    public static final int MODS_DT = 1 << 6;
     public static final int MODS_SPEED_CHANGING =
             MODS_DT | MODS_HT | MODS_NC;
     public static final int MODS_MAP_CHANGING =
             MODS_HR | MODS_EZ | MODS_SPEED_CHANGING;
-    public static final int MODS_HD = 1 << 3;
-    public static final int MODS_HR = 1 << 4;
-    public static final int MODS_DT = 1 << 6;
     private static final double OD0_MS = 79.5;
     private static final double OD10_MS = 19.5;
     private static final double AR0_MS = 1800.0;
