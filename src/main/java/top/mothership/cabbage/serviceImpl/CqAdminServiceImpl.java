@@ -21,7 +21,6 @@ import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.CoolQ.CqResponse;
 import top.mothership.cabbage.pojo.CoolQ.QQInfo;
-import top.mothership.cabbage.pojo.CoolQ.RespData;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
@@ -681,8 +680,6 @@ public class CqAdminServiceImpl {
     }
 
 
-
-
     public void searchPlayer(CqMsg cqMsg) {
         Matcher m = RegularPattern.ADMIN_CMD_REGEX.matcher(cqMsg.getMessage());
         m.find();
@@ -698,7 +695,7 @@ public class CqAdminServiceImpl {
                         + "\nosu!uid：" + user.getUserId()
                         + "\n被Ban状态：" + user.isBanned()
                         + "\nQQ：" + user.getQq()
-                        + "\n主玩模式：" + user.getMode()
+                        + "\n主玩模式：" + scoreUtil.convertGameModeToString(user.getMode())
                         + "\n在开启复读计数的群中："
                         + "总复读次数：" + user.getRepeatCount()
                         + "，总发言次数：" + user.getSpeakingCount();
@@ -869,13 +866,17 @@ public class CqAdminServiceImpl {
             msg = OverallConsts.CHANGELOG;
         }
         CqMsg cqMsg1 = new CqMsg();
-        List<RespData> groups = cqManager.getGroups().getData();
-        for (RespData respData : groups) {
-            cqMsg1.setMessageType("group");
-            cqMsg1.setGroupId(respData.getGroupId());
-            cqMsg1.setMessage(msg);
-            cqManager.sendMsg(cqMsg1);
-        }
+//        List<RespData> groups = cqManager.getGroups().getData();
+//        for (RespData respData : groups) {
+        cqMsg1.setMessageType("group");
+        cqMsg1.setMessage(msg);
+        cqMsg1.setGroupId(201872650L);
+
+        cqManager.sendMsg(cqMsg1);
+        cqMsg1.setGroupId(564679329L);
+
+        cqManager.sendMsg(cqMsg1);
+//        }
         cqMsg.setMessage("所有消息发送完成。");
         cqManager.sendMsg(cqMsg);
 

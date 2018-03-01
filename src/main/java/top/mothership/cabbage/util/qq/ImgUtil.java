@@ -333,7 +333,7 @@ public class ImgUtil {
      * @param mode        the mode
      * @return the string
      */
-    public String drawUserBP(Userinfo userFromAPI, List<Score> list, int mode, boolean mixedmode) {
+    public String drawUserBP(Userinfo userFromAPI, List<Score> list, Integer mode, boolean mixedmode) {
 
         //计算最终宽高
         int height = images.get("bptop.png").getHeight();

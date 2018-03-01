@@ -11,7 +11,7 @@ import java.util.List;
 public interface UserInfoDAO{
 
     @Insert("INSERT INTO `userinfo` VALUES(null," +
-            "#{userinfo.userId},#{userinfo.mode}," +
+            "#{userinfo.mode},#{userinfo.userId}," +
             "#{userinfo.count300},#{userinfo.count100}," +
             "#{userinfo.count50},#{userinfo.playCount}," +
             "#{userinfo.accuracy},#{userinfo.ppRaw}," +

@@ -606,7 +606,7 @@ public class CqServiceImpl {
         }
 
         logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
-        Score score = apiManager.getRecent(null, userFromAPI.getUserId());
+        Score score = apiManager.getRecent(argument.getMode(), userFromAPI.getUserId());
         if (score == null) {
             cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "最近没有游戏记录。");
             cqManager.sendMsg(cqMsg);
@@ -866,7 +866,8 @@ public class CqServiceImpl {
                     //2018-1-24 16:04:55修正：构建user的时候就写入role
                     userUtil.registerUser(userFromAPI.getUserId(), 0, argument.getQq(), role);
                     int scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
-                    filename = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank, user.getMode());
+                    //2018-3-1 10:23:28 debug 这边传的参数是user.getMode(),但是封装独立方法之后不生成user对象了，所以这边直接传0就可以了
+                    filename = imgUtil.drawUserInfo(userFromAPI, null, role, 0, false, scoreRank, 0);
                     resp = "登记成功，用户组已修改为" + role;
                     resp = resp.concat("\n[CQ:image,file=base64://" + filename + "]");
                 } else {
@@ -1086,7 +1087,7 @@ public class CqServiceImpl {
                 user = userDAO.getUser(null, userFromAPI.getUserId());
                 if (user == null) {
                     logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-                    userUtil.registerUser(userFromAPI.getUserId(), 0, 0L, OverallConsts.DEFAULT_ROLE);
+                    user = userUtil.registerUser(userFromAPI.getUserId(), 0, 0L, OverallConsts.DEFAULT_ROLE);
                 }
                 break;
             default:
@@ -1116,10 +1117,10 @@ public class CqServiceImpl {
                     + "\nStamina：" + map.get("Stamina")
                     + "\nAccuracy：" + map.get("Accuracy")
                     + "\n在**mp4S2**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S2Cost)
-                    + "。你没有听错 你没有听错，不要八九千 不要六七千，只要你的PP在4000-5100PP范围，就能报名参加mp4比赛啦！皇城PK，胜者为王，最后六人，报完即止，你还在犹豫什么，马上加入赛群213078438报名吧！\n"
-                    + "\n在**毒品杯S4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS4Cost)
+                    + "。该比赛已经结束报名，正式开始组队。\n"
+                    + "\n在**某个连名字都不能提的比赛S4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS4Cost)
                     + "。该比赛已开放报名，赛群：364434451。视报名情况，最早将于2018-03-17开始，最晚将于2018-03-24开始。欢迎该Cost小于2.6的玩家报名参赛！"
-                    + "\n每个比赛的Cost公式不同，只对指定的比赛有效。");
+                    + "\n每个比赛的Cost公式不同，每个Cost只在对应的比赛有效。");
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -1231,7 +1232,7 @@ public class CqServiceImpl {
                 user = userDAO.getUser(null, userFromAPI.getUserId());
                 if (user == null) {
                     logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-                    userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), 0L, OverallConsts.DEFAULT_ROLE);
+                    user = userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), 0L, OverallConsts.DEFAULT_ROLE);
                 }
                 if (user.isBanned()) {
                     cqMsg.setMessage(TipConsts.USER_IS_BANNED);
@@ -1272,7 +1273,7 @@ public class CqServiceImpl {
 
         int scoreCount = ((int) (Math.log10(-(bonuspp / 416.6667D) + 1.0D) / Math.log10(0.9994D)));
         String scoreCountS = (scoreCount == 0 && bonuspp > 0.0D) ? "25397+" : String.valueOf(scoreCount);
-        String resp = "玩家" + userFromAPI.getUserName() + "的BonusPP为：" + new DecimalFormat("#0.00").format(bonuspp)
+        String resp = "玩家" + userFromAPI.getUserName() + "在模式" + scoreUtil.convertGameModeToString(argument.getMode()) + "的BonusPP为：" + new DecimalFormat("#0.00").format(bonuspp)
                 + "\n计算出的ScorePP（所有成绩提供的PP）为：" + new DecimalFormat("#0.00").format(scorepp)
                 + "\n总PP为：" + new DecimalFormat("#0.00").format(userFromAPI.getPpRaw())
                 + "\n计算出的总成绩数为：" + scoreCountS
@@ -1393,6 +1394,8 @@ public class CqServiceImpl {
         //清掉前一天全部信息
         userInfoDAO.clearTodayInfo(LocalDate.now().minusDays(1));
         logger.info("开始进行每日登记");
+        List<String> bannedList = new ArrayList<>();
+        Integer successCount = 0;
         List<Integer> list = userDAO.listUserIdByRole(null, false);
         for (Integer aList : list) {
             User user = userDAO.getUser(null, aList);
@@ -1403,7 +1406,7 @@ public class CqServiceImpl {
                     //将日期改为一天前写入
                     userinfo.setQueryDate(LocalDate.now().minusDays(1));
                     userInfoDAO.addUserInfo(userinfo);
-                    logger.info("将" + userinfo.getUserName() + "的数据录入成功");
+                    logger.info("将" + userinfo.getUserName() + "在模式" + scoreUtil.convertGameModeToString(i) + "的数据录入成功");
                     if (!userinfo.getUserName().equals(user.getCurrentUname())) {
                         //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
                         List<String> legacyUname = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
@@ -1415,19 +1418,29 @@ public class CqServiceImpl {
                         user.setCurrentUname(userinfo.getUserName());
                         logger.info("检测到玩家" + userinfo.getUserName() + "改名，已登记");
                     }
-                    handlePPOverflow(user, userinfo);
-
+                    if (i == 0) {
+                        handlePPOverflow(user, userinfo);
+                        //借着这个if，每个玩家只计算一次模式
+                        successCount++;
+                    }
                     //如果能获取到userinfo，就把banned设置为0
                     user.setBanned(false);
                     userDAO.updateUser(user);
+
                 } else {
                     //将null的用户直接设为banned
                     user.setBanned(true);
                     logger.info("检测到玩家" + user.getUserId() + "被Ban，已登记");
                     userDAO.updateUser(user);
+                    bannedList.add(user.getCurrentUname());
                 }
             }
         }
+        CqMsg cqMsg = new CqMsg();
+        cqMsg.setMessageType("private");
+        cqMsg.setUserId(1335734657L);
+        cqMsg.setMessage("录入完成，共录入条目数：" + successCount + "，以下玩家本次被标明已封禁：" + bannedList);
+        cqManager.sendMsg(cqMsg);
     }
 
     @Scheduled(cron = "0 0 * * * ?")

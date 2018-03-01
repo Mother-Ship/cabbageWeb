@@ -32,7 +32,7 @@ public class UserUtil {
     }
 
 
-    public void registerUser(Integer userId, Integer mode, Long QQ, String role) {
+    public User registerUser(Integer userId, Integer mode, Long QQ, String role) {
         //构造User对象写入数据库，如果指定了mode就使用指定mode
         Userinfo userFromAPI = null;
         for (int i = 0; i < 4; i++) {
@@ -47,6 +47,7 @@ public class UserUtil {
         }
         User user = new User(userId, role, QQ, "[]", userFromAPI.getUserName(), false, mode, null, null, 0L, 0L);
         userDAO.addUser(user);
+        return user;
     }
 
 
