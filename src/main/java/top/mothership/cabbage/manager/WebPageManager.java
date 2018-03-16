@@ -459,6 +459,9 @@ public class WebPageManager {
             return null;
         }
         Elements link = doc.select("time[class*=timeago]");
+        if (link.size() == 0) {
+            return null;
+        }
         String a = link.get(1).text();
         a = a.substring(0, 19);
         try {
@@ -677,6 +680,11 @@ public class WebPageManager {
             return null;
         }
         Elements link = doc.select("tr[class*=perform]");
+        if (link.size() == 0) {
+            logger.error("玩家" + uid + "访问PP+失败五次");
+            return null;
+        }
+
         map.put("Jump", Integer.valueOf(link.get(2).children().get(1).text().replaceAll("[p,]", "")));
         map.put("Flow", Integer.valueOf(link.get(3).children().get(1).text().replaceAll("[p,]", "")));
         map.put("Precision", Integer.valueOf(link.get(4).children().get(1).text().replaceAll("[p,]", "")));

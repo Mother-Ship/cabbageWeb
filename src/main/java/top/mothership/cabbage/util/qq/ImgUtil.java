@@ -774,7 +774,7 @@ public class ImgUtil {
                 g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
 
                 //200
-                g2.drawImage(images.get("mania-hit200.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 14 - 5, 336 - 2, null);
+                g2.drawImage(images.get("mania-hit200.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 14 - 5, 336 - 8, null);
                 for (int i = 0; i < countkatu.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
                     g2.drawImage(images.get("score-" + String.valueOf(countkatu[i]) + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 2, 374 - 55, null);
@@ -1056,7 +1056,7 @@ public class ImgUtil {
         int x;
         switch (mode) {
             case 0:
-                x = 952;
+                x = 942;
                 break;
             default:
                 x = 982;
@@ -1253,7 +1253,7 @@ public class ImgUtil {
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 31));
             g2.drawString(oppaiResult.getTitleUnicode(), 942, 196);
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
-            g2.drawString(oppaiResult.getArtistUnicode() + " // " + oppaiResult.getCreator(), 982, 223);
+            g2.drawString(oppaiResult.getArtistUnicode() + " // " + oppaiResult.getCreator(), 942, 223);
         } else {
             g2.setFont(new Font("Aller light", Font.PLAIN, 31));
             g2.drawString(oppaiResult.getTitle(), 942, 196);

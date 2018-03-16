@@ -7,6 +7,7 @@ import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.mapper.UserDAO;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 //
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -380,6 +381,13 @@ public class test {
 //        org.jsoup.nodes.Document doc = Jsoup.connect("https://osu.ppy.sh/users/7679162").timeout(10000).get();
 //        Elements link = doc.select("div[class*=profile-stats]");
 //        System.out.println(doc.outerHtml());
+//        Matcher m = RegularPattern.REG_CMD_REGEX_COLON_NUM_PARAM.matcher("！bpme：2");
+//        System.out.println(m.find());
+        String a = "a";
+        String[] args = a.split("#|:");
+        System.out.println(args.length);
+        System.out.println(Arrays.toString(args));
+
     }
 
 

@@ -25,4 +25,7 @@ public class Argument {
     private String role;
     private String flag;
     private SearchParam searchParam;
+    private String fileName;
+    private String url;
+    private Integer second;
 }

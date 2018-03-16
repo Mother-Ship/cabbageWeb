@@ -61,16 +61,16 @@ public interface UserDAO {
 
     /**
      * List user id by uname list.
-     *
+     *改为Gson序列化，只需考虑在中间的问题，同时加入分隔符
+     * 2018-3-12 16:26:59改为模糊查询
      * @param username the username
      * @return the list
      */
-//改为Gson序列化，只需考虑在中间的问题，同时加入分隔符
     @Select("<script>"
             + "SELECT * FROM `userrole` "
             + "<if test=\"username != null\">"
-            + "WHERE `legacy_uname` LIKE CONCAT('%\"',#{username},'\"%') "
-            + "OR `current_uname` = #{username} "
+            + "WHERE `legacy_uname` LIKE CONCAT('%',#{username},'%') "
+            + "OR `current_uname` LIKE CONCAT('%',#{username},'%')"
             + " </if>"
             + "</script>")
     @Results(
@@ -104,10 +104,11 @@ public interface UserDAO {
 
     /**
      * Update user integer.
-     *
+     * 由于采用动态SQL，QQ只能是0不能是null
      * @param user the user
      * @return the integer
      */
+
     @Update("<script>" + "update `userrole`"
             + "<set>"
             + "<if test=\"user.role != null\">role=#{user.role},</if>"

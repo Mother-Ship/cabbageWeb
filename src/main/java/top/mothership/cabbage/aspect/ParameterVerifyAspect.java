@@ -1,18 +1,21 @@
 package top.mothership.cabbage.aspect;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.Pattern.CQCodePattern;
 import top.mothership.cabbage.Pattern.RegularPattern;
 import top.mothership.cabbage.Pattern.SearchKeywordPattern;
-import top.mothership.cabbage.consts.Base64Consts;
 import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.consts.ParameterEnum;
 import top.mothership.cabbage.consts.TipConsts;
 import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pojo.CoolQ.Argument;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 import top.mothership.cabbage.pojo.osu.SearchParam;
@@ -20,6 +23,7 @@ import top.mothership.cabbage.util.osu.ScoreUtil;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Locale;
 import java.util.regex.Matcher;
 
@@ -29,22 +33,22 @@ import java.util.regex.Matcher;
 public class ParameterVerifyAspect {
     private final CqManager cqManager;
     private final ScoreUtil scoreUtil;
+    private final ResDAO resDAO;
+    private Logger logger = LogManager.getLogger(this.getClass());
 
-    public ParameterVerifyAspect(CqManager cqManager, ScoreUtil scoreUtil) {
+    public ParameterVerifyAspect(CqManager cqManager, ScoreUtil scoreUtil, ResDAO resDAO) {
         this.cqManager = cqManager;
         this.scoreUtil = scoreUtil;
+        this.resDAO = resDAO;
     }
 
-    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.CqServiceImpl.*(top.mothership.cabbage.pojo.CoolQ.CqMsg,..))")
+    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.Cq*.*(top.mothership.cabbage.pojo.CoolQ.CqMsg,..))")
     private void regularService() {
     }
 
-    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.CqServiceImpl.*(top.mothership.cabbage.pojo.CoolQ.CqMsg,..))")
-    private void adminService() {
-    }
 
     @Around("regularService() && args(cqMsg,..)")
-    public Object regularCommandParamVerify(ProceedingJoinPoint pjp, CqMsg cqMsg) throws Throwable {
+    public Object regularCommand(ProceedingJoinPoint pjp, CqMsg cqMsg) throws Throwable {
         switch (cqMsg.getPostType()) {
             case "message":
                 //只处理消息，事件直接放行
@@ -60,9 +64,16 @@ public class ParameterVerifyAspect {
                             //如果命令没有指定required和optional，直接让它执行
                             //2018-2-27 16:09:47漏掉了argument，在这里也需要一个argument（
                             Matcher m = RegularPattern.REG_CMD_REGEX.matcher(msg);
-                            m.find();
-                            argument.setSubCommandLowCase(m.group(1).toLowerCase(Locale.CHINA));
-                            cqMsg.setArgument(argument);
+                            if (m.find()) {
+                                argument.setSubCommandLowCase(m.group(1).toLowerCase(Locale.CHINA));
+                                cqMsg.setArgument(argument);
+                            }
+                            if ("sudo".equals(argument.getSubCommandLowCase())) {
+                                m = RegularPattern.ADMIN_CMD_REGEX.matcher(msg);
+                                m.find();
+                                argument.setSubCommandLowCase(m.group(1).toLowerCase(Locale.CHINA));
+                                cqMsg.setArgument(argument);
+                            }
                             return pjp.proceed(new Object[]{cqMsg});
                         }
                         if (cqMsg.getRequired() == null) {
@@ -72,77 +83,93 @@ public class ParameterVerifyAspect {
                             cqMsg.setOptional(OverallConsts.EMPTY_PARAMETER_LIST);
                         }
                         int argumentCount = 0;
-                        String numRaw = null;
-                        String modeRaw = null;
+                        String firstParam = null;
+                        String secondParam = null;
+                        String thirdParam = null;
                         //预定义变量，day默认为1，这样才能默认和昨天的比较
                         Integer day = 1;
                         //mode预设为null
                         //2018-2-27 09:42:45 由于各个命令 未指定Mode的时候表现不同，所以不能预设为0
                         Integer mode = null;
                         Integer num = null;
-                        String targetRaw = null;
 
-                        Matcher m = RegularPattern.REG_CMD_REGEX_TWO_PARAMS.matcher(msg);
 
-                        if (m.find()) {
-                            modeRaw = m.group(4);
-                            numRaw = m.group(3);
-                            if (!"".equals(m.group(2))) {
-                                //如果空格后有东西，那就表示有一个参数
-                                argumentCount = 3;
-                            } else {
-                                argumentCount = 2;
-                            }
-                        } else {
-                            m = RegularPattern.REG_CMD_REGEX_TWO_PARAMS_REVERSE.matcher(msg);
-                            if (m.find()) {
-                                modeRaw = m.group(3);
-                                numRaw = m.group(4);
-                                if (!"".equals(m.group(2))) {
-                                    //如果空格后有东西，那就表示有一个参数
-                                    argumentCount = 3;
-                                } else {
-                                    argumentCount = 2;
-                                }
-                            } else {
-                                //如果不是两个参数的
-                                m = RegularPattern.REG_CMD_REGEX_COLON_NUM_PARAM.matcher(msg);
-                                if (m.find()) {
-                                    modeRaw = m.group(3);
-                                    if (!"".equals(m.group(2))) {
-                                        //如果空格后有东西，那就表示有一个参数
-                                        argumentCount = 2;
-                                    } else {
-                                        argumentCount = 1;
-                                    }
-                                } else {
-                                    //如果没有冒号
-                                    m = RegularPattern.REG_CMD_REGEX_SHARP_NUM_PARAM.matcher(msg);
-                                    if (m.find()) {
-                                        //如果是带井号的，尝试取出日期
-                                        numRaw = m.group(3);
-                                        if (!"".equals(m.group(2))) {
-                                            //如果空格后有东西，那就表示有一个参数
-                                            argumentCount = 2;
-                                        } else {
-                                            argumentCount = 1;
-                                        }
-                                    } else {
-                                        //如果井号和冒号都没有
-                                        m = RegularPattern.REG_CMD_REGEX.matcher(msg);
-                                        m.find();
-                                        if (!"".equals(m.group(2))) {
-                                            //如果空格后有东西，那就表示有一个参数
-                                            argumentCount = 1;
-                                        }
-                                    }
-                                }
-                            }
+                        Matcher m = RegularPattern.REG_CMD_REGEX.matcher(msg);
+                        m.find();
+                        //取出子命令
+                        argument.setSubCommandLowCase(m.group(1).toLowerCase(Locale.CHINA));
+                        if ("sudo".equals(argument.getSubCommandLowCase())) {
+                            m = RegularPattern.ADMIN_CMD_REGEX.matcher(msg);
+                            m.find();
+                            argument.setSubCommandLowCase(m.group(1).toLowerCase(Locale.CHINA));
+                            cqMsg.setArgument(argument);
                         }
-                        targetRaw = m.group(2);
+                        if (!"".equals(m.group(2))) {
+                            firstParam = m.group(2);
+                            //取出井号和冒号的位置
+                            int indexOfSharp = firstParam.indexOf("#");
+                            int indexOfColon = -1;
+                            if (firstParam.contains(":")) {
+                                indexOfColon = firstParam.indexOf(":");
+                            }
+                            if (firstParam.contains("：")) {
+                                indexOfColon = firstParam.indexOf("：");
+                            }
+                            //进行分割
+                            String[] args = firstParam.split("[#:：]");
+                            argumentCount = args.length;
+                            if ("".equals(args[0])) {
+                                argumentCount--;
+                            }
+
+                            for (int i = 0; i < args.length; i++) {
+                                if (args[i].endsWith(" ")) {
+                                    args[i] = args[i].substring(0, args[i].length() - 1);
+                                }
+                                switch (i) {
+                                    case 0:
+                                        firstParam = args[i];
+                                        break;
+                                    case 1:
+                                        if (indexOfColon < indexOfSharp) {
+                                            //如果参数段里冒号在前，那列表里的第二个是冒号开头的三号参数
+                                            if (indexOfColon == -1) {
+                                                //如果只指定了井号，那这个还是2号参数
+                                                secondParam = args[i];
+                                            } else {
+                                                thirdParam = args[i];
+                                            }
+                                        } else {
+                                            if (indexOfSharp == -1) {
+                                                //如果只指定了冒号，那这个还是三号参数
+                                                thirdParam = args[i];
+                                            } else {
+                                                secondParam = args[i];
+                                            }
+                                        }
+                                        break;
+                                    case 2:
+                                        if (indexOfColon < indexOfSharp) {
+                                            //如果参数段里冒号在前，那参数表的第三个参数是井号开头的二号参数
+                                            secondParam = args[i];
+                                        } else {
+                                            //如果有三个参数，肯定两个符号，进行比较即可
+                                            thirdParam = args[i];
+                                        }
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            //解析结束后，如果没有对应的分隔符，后面的参数会是默认值null
+                        }
+                        if ("bg".equals(argument.getSubCommandLowCase())) {
+                            //由于URL里的冒号问题
+                            argumentCount--;
+                        }
                         //确保实参数目不小于最小形参数目，也不大于最大形参数目
                         if (argumentCount < cqMsg.getRequired().length) {
-                            cqMsg.setMessage(String.format(TipConsts.ARGUMENTS_LESS_THAN_PARAMETERS, argumentCount, cqMsg.getRequired().length));
+                            cqMsg.setMessage(String.format(TipConsts.ARGUMENTS_LESS_THAN_PARAMETERS, Arrays.toString(cqMsg.getRequired()), argumentCount));
                             cqManager.sendMsg(cqMsg);
                             return null;
                         }
@@ -152,13 +179,11 @@ public class ParameterVerifyAspect {
                             maxArgumentCount++;
                         }
                         if (argumentCount > maxArgumentCount) {
-
-                            cqMsg.setMessage(String.format(TipConsts.ARGUMENTS_MORE_THAN_PARAMETERS, argumentCount, cqMsg.getRequired().length + cqMsg.getOptional().length));
+                            cqMsg.setMessage(String.format(TipConsts.ARGUMENTS_MORE_THAN_PARAMETERS, Arrays.toString(cqMsg.getRequired()), Arrays.toString(cqMsg.getOptional()), argumentCount));
                             cqManager.sendMsg(cqMsg);
                             return null;
                         }
-                        //取出子命令
-                        argument.setSubCommandLowCase(m.group(1).toLowerCase(Locale.CHINA));
+
                         //判断是否需要以文字形式输出
                         Matcher text = RegularPattern.TEXT_VERSION_COMMAND.matcher(argument.getSubCommandLowCase());
                         argument.setText(text.find());
@@ -168,25 +193,29 @@ public class ParameterVerifyAspect {
                             //对所有必须参数进行检查
                             switch (p) {
                                 case QQ:
-                                    //只有add命令需要QQ，而QQ是参数2
-                                    legalParamMatcher = RegularPattern.QQ.matcher(m.group(3));
-                                    if (legalParamMatcher.find()) {
-                                        argument.setQq(Long.valueOf(m.group(3)));
+                                    //add命令的必须参数 QQ是第二个参数
+                                    String qqRaw;
+                                    if (secondParam != null) {
+                                        qqRaw = secondParam;
                                     } else {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, m.group(3), "QQ号"));
+                                        //sudo checkq 用的
+                                        qqRaw = firstParam;
+                                    }
+                                    legalParamMatcher = RegularPattern.QQ.matcher(qqRaw);
+                                    if (legalParamMatcher.find()) {
+                                        argument.setQq(Long.valueOf(qqRaw));
+                                    } else {
+                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, qqRaw, "QQ号"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     break;
                                 case USERID:
-                                    if (targetRaw.endsWith(" ")) {
-                                        targetRaw = targetRaw.substring(0, targetRaw.length() - 1);
-                                    }
-                                    legalParamMatcher = RegularPattern.OSU_USER_ID.matcher(targetRaw);
+                                    legalParamMatcher = RegularPattern.OSU_USER_ID.matcher(firstParam);
                                     if (legalParamMatcher.find()) {
-                                        argument.setUserId(Integer.valueOf(targetRaw));
+                                        argument.setUserId(Integer.valueOf(firstParam));
                                     } else {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, targetRaw, "osu!uid"));
+                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, firstParam, "osu!uid"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
@@ -197,15 +226,12 @@ public class ParameterVerifyAspect {
                                     }
                                     break;
                                 case USERNAME:
-                                    if (targetRaw.endsWith(" ")) {
-                                        targetRaw = targetRaw.substring(0, targetRaw.length() - 1);
-                                    }
-                                    legalParamMatcher = RegularPattern.OSU_USER_NAME.matcher(targetRaw);
-                                    if (legalParamMatcher.find() || "白菜".equals(targetRaw)) {
+                                    legalParamMatcher = RegularPattern.OSU_USER_NAME.matcher(firstParam);
+                                    if (legalParamMatcher.find() || "白菜".equals(firstParam)) {
                                         //2018-2-27 09:40:11这里把彩蛋放过去，在各个命令的方法里具体处理
-                                        argument.setUsername(targetRaw);
+                                        argument.setUsername(firstParam);
                                     } else {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, targetRaw, "osu!用户名"));
+                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, firstParam, "osu!用户名"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
@@ -217,26 +243,82 @@ public class ParameterVerifyAspect {
                                     break;
                                 case MODE:
                                     //!mode xxx，是参数1
-                                    if (targetRaw.endsWith(" ")) {
-                                        targetRaw = targetRaw.substring(0, targetRaw.length() - 1);
-                                    }
-                                    mode = convertModeStrToInteger(targetRaw);
+                                    mode = convertModeStrToInteger(firstParam);
                                     if (mode == null) {
                                         //兼容备选参数
-                                        if (modeRaw != null) {
+                                        if (thirdParam != null) {
                                             //兼容带空格的
-                                            if (modeRaw.endsWith(" ")) {
-                                                modeRaw = modeRaw.substring(0, modeRaw.length() - 1);
+                                            if (thirdParam.endsWith(" ")) {
+                                                thirdParam = thirdParam.substring(0, thirdParam.length() - 1);
                                             }
-                                            mode = convertModeStrToInteger(modeRaw);
+                                            mode = convertModeStrToInteger(thirdParam);
                                         }
                                     }
                                     if (mode == null) {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, modeRaw, "osu!游戏模式"));
+                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, firstParam, "osu!游戏模式"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     argument.setMode(mode);
+                                    break;
+                                case FILENAME:
+                                    //没必要做验证
+                                    argument.setFileName(firstParam);
+                                    break;
+                                case URL:
+                                    //由于连接中的冒号与其他参数处理冲突，这里单独处理msg
+                                    String url = msg.substring(msg.indexOf(":") + 1);
+                                    Matcher urlMatcher = RegularPattern.URL.matcher(url);
+                                    if (urlMatcher.find()) {
+                                        argument.setUrl(url);
+                                    } else {
+                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, url, "URL"));
+                                        cqManager.sendMsg(cqMsg);
+                                        return null;
+                                    }
+                                    break;
+                                case ROLE:
+                                    //如果是未指定usernames和username的（既不是add/del也不是钦点命令），并且指定了第一个参数，就使用第一个参数
+                                    if (argument.getUsernames() == null && argument.getUsername() == null && firstParam != null) {
+                                        //兼容两种参数
+                                        argument.setRole(firstParam);
+                                    } else {
+                                        argument.setRole(thirdParam);
+                                    }
+                                    //以后可以考虑大规模重构，把用户组抽出来做一个表
+                                    break;
+                                case USERNAME_LIST:
+                                    if (firstParam != null) {
+                                        String[] usernames = firstParam.split(",");
+                                        argument.setUsernames(Arrays.asList(usernames));
+                                    }
+                                    break;
+                                case AT:
+                                    //AT的逻辑不一样，检查第一参数
+                                    Matcher atMatcher = CQCodePattern.AT.matcher(firstParam);
+                                    if (atMatcher.find()) {
+                                        //如果是艾特qq
+                                        if ("all".equals(atMatcher.group(1))) {
+                                            //艾特全员改成-1
+                                            argument.setQq(-1L);
+                                        } else {
+                                            argument.setQq(Long.valueOf(atMatcher.group(1)));
+                                        }
+                                    } else {
+                                        //也兼容直接输入qq
+                                        Matcher qqMatcher = RegularPattern.QQ.matcher(firstParam);
+                                        if (qqMatcher.find()) {
+                                            argument.setQq(Long.valueOf(firstParam));
+                                        } else {
+                                            cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, firstParam, "QQ号"));
+                                            cqManager.sendMsg(cqMsg);
+                                            return null;
+                                        }
+                                    }
+                                    break;
+                                case FLAG:
+                                    //懒得验证了
+                                    argument.setFlag(firstParam);
                                     break;
                                 case SEARCHPARAM:
                                     SearchParam searchParam = new SearchParam();
@@ -249,22 +331,27 @@ public class ParameterVerifyAspect {
                                     Double cs = null;
                                     Double hp = null;
                                     boolean keywordFound = false;
-                                    //先检测是否指定了模式
-                                    Matcher getKeyWordAndMod = SearchKeywordPattern.MODE.matcher(msg);
+                                    //先从字符串结尾的mod开始检测
+                                    Matcher getKeyWordAndMod = SearchKeywordPattern.MOD.matcher(msg);
                                     if (getKeyWordAndMod.find()) {
-                                        keyword = getKeyWordAndMod.group(2);
-                                        keywordFound = true;
-                                        mode = convertModeStrToInteger(getKeyWordAndMod.group(3));
-                                        if (mode == null) {
-                                            cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, getKeyWordAndMod.group(3), "osu!游戏模式"));
+                                        if (!keywordFound) {
+                                            keyword = getKeyWordAndMod.group(2);
+                                            keywordFound = true;
+                                        }
+                                        mods = getKeyWordAndMod.group(3);
+                                        modsNum = scoreUtil.reverseConvertMod(mods);
+                                        //如果字符串解析出错，会返回null，因此这里用null值来判断输入格式
+                                        if (modsNum == null) {
+                                            cqMsg.setMessage("请使用MOD的双字母缩写，不需要任何分隔符。" +
+                                                    "\n接受的Mod有：NF EZ TD HD HR SD DT HT NC FL SO PF。");
                                             cqManager.sendMsg(cqMsg);
                                             return null;
                                         }
-                                        argument.setMode(mode);
-                                    } else {
-                                        argument.setMode(0);
+                                        //如果检测出来就去掉
+                                        msg = msg.replace("+" + mods, "");
                                     }
-                                    //再检测是否有PP计算参数
+                                    //再检测是否指定了成绩字符串
+
                                     //兼容koohii 加默认值
                                     searchParam.setMaxCombo(-1);
                                     searchParam.setCount50(0);
@@ -300,28 +387,28 @@ public class ParameterVerifyAspect {
                                             if (getScoreParams.find()) {
                                                 searchParam.setCountMiss(Integer.valueOf(getScoreParams.group(1)));
                                             }
-
-
                                         }
+                                        msg = msg.replace(scoreString, "");
+                                        msg = msg.replaceAll("[《<>》]", "");
                                     }
-
-                                    //最后检测是否指定了mod
-                                    getKeyWordAndMod = SearchKeywordPattern.MOD.matcher(msg);
+                                    //最后检测是否指定了模式（如果先检测，会把后面的文字也计算进去）
+                                    getKeyWordAndMod = SearchKeywordPattern.MODE.matcher(msg);
                                     if (getKeyWordAndMod.find()) {
-                                        if (!keywordFound) {
-                                            keyword = getKeyWordAndMod.group(2);
-                                            keywordFound = true;
-                                        }
-                                        mods = getKeyWordAndMod.group(3);
-                                        modsNum = scoreUtil.reverseConvertMod(mods);
-                                        //如果字符串解析出错，会返回null，因此这里用null值来判断输入格式
-                                        if (modsNum == null) {
-                                            cqMsg.setMessage("请使用MOD的双字母缩写，不需要任何分隔符。" +
-                                                    "\n接受的Mod有：NF EZ TD HD HR SD DT HT NC FL SO PF。");
+                                        keyword = getKeyWordAndMod.group(2);
+                                        keywordFound = true;
+                                        mode = convertModeStrToInteger(getKeyWordAndMod.group(3));
+                                        if (mode == null) {
+                                            logger.debug(getKeyWordAndMod.group(3));
+                                            cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, getKeyWordAndMod.group(3), "osu!游戏模式"));
                                             cqManager.sendMsg(cqMsg);
                                             return null;
                                         }
+                                        argument.setMode(mode);
+                                    } else {
+                                        argument.setMode(0);
                                     }
+
+
                                     if (!keywordFound) {
                                         //这种情况，三个参数都没有指定
                                         keyword = m.group(2);
@@ -429,29 +516,30 @@ public class ParameterVerifyAspect {
                             //这里是可选参数
                             switch (p) {
                                 case DAY:
-                                    if (numRaw != null) {
-
-                                        if (numRaw.endsWith(" ")) {
-                                            numRaw = numRaw.substring(0, numRaw.length() - 1);
+                                    try {
+                                        if (secondParam != null) {
+                                            day = Integer.valueOf(secondParam);
                                         }
-                                        try {
-                                            day = Integer.valueOf(numRaw);
-                                            if (day < 0) {
-                                                cqMsg.setMessage("白菜不会预知未来。");
-                                                cqManager.sendMsg(cqMsg);
-                                                return null;
-                                            }
-                                            if (LocalDate.now().minusDays(day).isBefore(LocalDate.of(2007, 9, 16))) {
-                                                cqMsg.setMessage("你要找史前时代的数据吗。");
-                                                cqManager.sendMsg(cqMsg);
-                                                return null;
-                                            }
-                                        } catch (java.lang.NumberFormatException e) {
-                                            cqMsg.setMessage("假使这些完全……不能用的参数，你再给他传一遍，你等于……你也等于……你也有泽任吧？");
+                                        if ("afk".equals(argument.getSubCommandLowCase()) && firstParam != null) {
+                                            //兼容!sudo afk 180:mp5
+                                            day = Integer.valueOf(firstParam);
+                                        }
+                                        if (day < 0) {
+                                            cqMsg.setMessage("白菜不会预知未来。");
                                             cqManager.sendMsg(cqMsg);
                                             return null;
                                         }
+                                        if (LocalDate.now().minusDays(day).isBefore(LocalDate.of(2007, 9, 16))) {
+                                            cqMsg.setMessage("你要找史前时代的数据吗。");
+                                            cqManager.sendMsg(cqMsg);
+                                            return null;
+                                        }
+                                    } catch (java.lang.NumberFormatException e) {
+                                        cqMsg.setMessage("假使这些完全……不能用的参数，你再给他传一遍，你等于……你也等于……你也有泽任吧？");
+                                        cqManager.sendMsg(cqMsg);
+                                        return null;
                                     }
+
                                     argument.setDay(day);
                                     break;
                                 case HOUR:
@@ -461,13 +549,10 @@ public class ParameterVerifyAspect {
                                         //sleep专用正则，sleep前面加东西不工作
                                         return null;
                                     }
-                                    if (targetRaw != null) {
-                                        if (targetRaw.endsWith(" ")) {
-                                            targetRaw = targetRaw.substring(0, targetRaw.length() - 1);
-                                        }
+                                    if (firstParam != null) {
                                         Long hour;
                                         try {
-                                            hour = Long.valueOf(targetRaw);
+                                            hour = Long.valueOf(firstParam);
                                         } catch (java.lang.Exception e) {
                                             hour = 6L;
                                         }
@@ -490,19 +575,19 @@ public class ParameterVerifyAspect {
                                     }
                                     break;
                                 case NUM:
-                                    if (numRaw != null) {
-                                        if (numRaw.endsWith(" ")) {
-                                            numRaw = numRaw.substring(0, numRaw.length() - 1);
+                                    if (secondParam != null) {
+                                        if (secondParam.endsWith(" ")) {
+                                            secondParam = secondParam.substring(0, secondParam.length() - 1);
                                         }
                                         try {
-                                            num = Integer.valueOf(numRaw);
+                                            num = Integer.valueOf(secondParam);
                                             if (num < 0 || num > 100) {
                                                 cqMsg.setMessage("其他人看不到的东西，白菜也看不到啦。");
                                                 cqManager.sendMsg(cqMsg);
                                                 return null;
                                             }
                                         } catch (java.lang.NumberFormatException e) {
-                                            cqMsg.setMessage("[CQ:record,file=base64://" + Base64Consts.AYA_YA_YA + "]");
+                                            cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("ay_ay_ay.wav")) + "]");
                                             cqManager.sendMsg(cqMsg);
                                             return null;
                                         }
@@ -510,20 +595,53 @@ public class ParameterVerifyAspect {
                                     }
                                     break;
                                 case MODE:
-                                    //!stat :xxx，是上面取的modeRaw
-                                    if (modeRaw != null) {
-                                        //兼容带空格的
-                                        if (modeRaw.endsWith(" ")) {
-                                            modeRaw = modeRaw.substring(0, modeRaw.length() - 1);
-                                        }
-                                        mode = convertModeStrToInteger(modeRaw);
+                                    //!stat :xxx，是上面取的thirdParam
+                                    if (thirdParam != null) {
+                                        mode = convertModeStrToInteger(thirdParam);
                                         if (mode == null) {
-                                            cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, modeRaw, "osu!游戏模式"));
+                                            cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, thirdParam, "osu!游戏模式"));
                                             cqManager.sendMsg(cqMsg);
                                             return null;
                                         }
                                         argument.setMode(mode);
                                     }
+                                    break;
+                                case ROLE:
+                                    argument.setRole(thirdParam);
+                                    //以后可以考虑大规模重构，把用户组抽出来做一个表
+                                    break;
+                                case SECOND:
+                                    //我这个参数比较特殊
+                                    String[] args = firstParam.split(" ");
+                                    if (args.length > 1) {
+                                        argument.setSecond(Integer.valueOf(args[1]));
+                                    } else {
+                                        argument.setSecond(600);
+                                    }
+                                    break;
+                                case GROUPID:
+                                    //群号和QQ试用同一个正则
+                                    legalParamMatcher = RegularPattern.QQ.matcher(firstParam);
+                                    if (legalParamMatcher.find()) {
+                                        argument.setGroupId(Long.valueOf(firstParam));
+                                    } else {
+                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, firstParam, "群号"));
+                                        cqManager.sendMsg(cqMsg);
+                                        return null;
+                                    }
+                                    break;
+                                case QQ:
+                                    //可选项QQ参数只有在钦点里用到
+                                    legalParamMatcher = RegularPattern.QQ.matcher(secondParam);
+                                    if (legalParamMatcher.find()) {
+                                        argument.setQq(Long.valueOf(secondParam));
+                                    } else {
+                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, secondParam, "QQ号"));
+                                        cqManager.sendMsg(cqMsg);
+                                        return null;
+                                    }
+
+
                                     break;
                                 default:
                                     break;
@@ -531,6 +649,7 @@ public class ParameterVerifyAspect {
                         }
                         cqMsg.setArgument(argument);
                         break;
+
                     default:
                         break;
                 }
@@ -538,8 +657,10 @@ public class ParameterVerifyAspect {
             default:
                 break;
         }
+        logger.debug(cqMsg.getArgument());
         return pjp.proceed(new Object[]{cqMsg});
     }
+
 
     private Integer convertModeStrToInteger(String mode) {
         switch (mode.toLowerCase(Locale.CHINA)) {
@@ -551,12 +672,15 @@ public class ParameterVerifyAspect {
             case "屙屎":
             case "o!std":
             case "s":
+            case "osu!std":
+            case "泡泡":
                 return 0;
             case "1":
             case "太鼓":
             case "taiko":
             case "o!taiko":
             case "t":
+            case "打鼓":
                 return 1;
             case "2":
             case "catch the beat":
@@ -567,6 +691,7 @@ public class ParameterVerifyAspect {
             case "fruit":
             case "艹他爸":
             case "c":
+            case "接屎":
                 return 2;
             case "3":
             case "osu!mania":
@@ -575,6 +700,8 @@ public class ParameterVerifyAspect {
             case "钢琴":
             case "o!m":
             case "m":
+            case "下落":
+            case "下落式":
                 return 3;
             default:
                 return null;
