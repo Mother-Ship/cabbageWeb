@@ -40,6 +40,6 @@ public class SearchKeywordPattern {
     public final static Pattern KEYWORD_ACC = Pattern.compile("^(?:(\\d{1,2}[.。]?(?:\\d{1,2})?))(?:%|acc)$");
     public final static Pattern KEYWORD_COUNT_100 = Pattern.compile("^(\\d{1,4})(?:x100|\\*100)$");
     public final static Pattern KEYWORD_COUNT_50 = Pattern.compile("^(\\d{1,4})(?:x50|\\*50)$");
-    public final static Pattern KEYWORD_MISS = Pattern.compile("^(\\d{1,4})(?:x|\\*miss|xm|\\*m)$");
+    public final static Pattern KEYWORD_MISS = Pattern.compile("^(\\d{1,4})(?:x|\\*miss|xm|\\*m|xmiss)$");
     public final static Pattern KEYWORD_COMBO = Pattern.compile("^(\\d{1,5})(?:c|cb)$");
 }

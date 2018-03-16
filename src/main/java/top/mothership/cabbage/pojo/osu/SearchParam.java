@@ -15,7 +15,6 @@ public class SearchParam {
     private Integer mods;
     private String modsString;
     private Integer beatmapId;
-    private Integer mode;
     private Integer countMiss;
     private Integer count100;
     private Integer count50;

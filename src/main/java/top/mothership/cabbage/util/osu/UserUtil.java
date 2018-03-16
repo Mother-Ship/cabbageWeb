@@ -1,5 +1,8 @@
 package top.mothership.cabbage.util.osu;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,7 +123,7 @@ public class UserUtil {
         if (roles.contains(role)) {
             roles.remove(role);
         }
-        if ("all".equals(role) || roles.size() == 0) {
+        if ("All".equals(role) || roles.size() == 0) {
             newRole = "creep";
         } else {
             //转换为字符串，此处得去除空格（懒得遍历+拼接了）
@@ -129,6 +132,19 @@ public class UserUtil {
         }
 
         user.setRole(newRole);
+        return user;
+    }
+
+    public User renameUser(User user, String newName) {
+        //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
+        List<String> legacyUname = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
+        }.getType());
+        if (user.getCurrentUname() != null) {
+            legacyUname.add(user.getCurrentUname());
+        }
+        user.setLegacyUname(new Gson().toJson(legacyUname));
+        user.setCurrentUname(newName);
+        logger.info("检测到玩家" + newName + "改名，已登记");
         return user;
     }
 

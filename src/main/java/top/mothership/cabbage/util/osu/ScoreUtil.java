@@ -173,15 +173,19 @@ public class ScoreUtil {
     /**
      * 先有蔓蔓后有天，反向转换日神仙
      * 用于处理Search命令传入的Mod，所以应该不必支持STD以外的模式……
-     *
+     *  其实并不完善，对所有的偶数长度 不包含mod的字符串都会返回0
+     *  2018-3-8 11:43:38已修复：现在没有匹配的mod会返回null，同时也能正确的识别none了
      * @param mods the mods
      * @return the integer
      */
     public Integer reverseConvertMod(String mods) {
-        Integer m = 0;
+        Integer m = -1;
         if (mods.length() % 2 != 0) {
             //双字母MOD字符串长度必然是偶数
             return null;
+        }
+        if (mods.toLowerCase(Locale.CHINA).equals("none")) {
+            return 0;
         }
         int j = 0;
         String[] modList = new String[mods.length() / 2];
@@ -260,6 +264,9 @@ public class ScoreUtil {
                 default:
                     break;
             }
+        }
+        if (m.equals(-1)) {
+            m = null;
         }
         return m;
     }

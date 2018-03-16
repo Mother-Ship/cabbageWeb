@@ -151,15 +151,14 @@ public class AnalyzeServiceImpl {
         List<Integer> targetMap = analyzerDAO.listTargetMap();
         for (Integer aList : targetUser) {
             for (Integer bList : targetMap) {
-                //对每个bid
+                //对每个bid去API取到分数
                 List<Score> tmp = apiManager.getScore(0, bList, aList);
                 List<Score> lastTmp = analyzerDAO.getLastScoreByUidAndBid(aList, bList);
 
                 if (tmp.size() == 0) {
                     continue;
                 }
-                Beatmap beatmap = apiManager.getBeatmap(bList);
-                String username = userDAO.getUser(null, aList).getCurrentUname();
+
                 if (tmp.size() != lastTmp.size()) {
                     for (int i = 0; i < tmp.size(); i++) {
                         //在原有成绩的范畴内
@@ -175,7 +174,9 @@ public class AnalyzeServiceImpl {
                             //在原有成绩的范畴外，直接取成绩
                             score = tmp.get(i);
                         }
-
+                        //将代码重复一遍，避免无谓的数据库读写
+                        Beatmap beatmap = apiManager.getBeatmap(bList);
+                        String username = userDAO.getUser(null, aList).getCurrentUname();
                         cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, username));
                         cqManager.sendMsg(cqMsg);
                         score.setBeatmapId(bList);
@@ -184,6 +185,8 @@ public class AnalyzeServiceImpl {
                 } else {
                     for (int i = 0; i < lastTmp.size(); i++) {
                         if (tmp.get(i).getDate().getTime() != (lastTmp.get(i).getDate().getTime())) {
+                            Beatmap beatmap = apiManager.getBeatmap(bList);
+                            String username = userDAO.getUser(null, aList).getCurrentUname();
                             cqMsg.setMessage(scoreUtil.genScoreString(tmp.get(i), beatmap, username));
                             cqManager.sendMsg(cqMsg);
                             tmp.get(i).setBeatmapId(bList);
