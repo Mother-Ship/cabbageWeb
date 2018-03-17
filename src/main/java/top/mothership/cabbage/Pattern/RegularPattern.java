@@ -13,16 +13,16 @@ public class RegularPattern {
      * 当处理!statme类命令时：group(1)为statme，2和3为""
      * !setid xxx类命令是：group(1)为setid，group(2)为xxx，3为""
      */
-    public final static Pattern REG_CMD_REGEX = Pattern.compile("[!！]\s*([^#:： ]*)[ ]?(.*)");
+    public final static Pattern REG_CMD_REGEX = Pattern.compile("[!！]\\s*([^#:： ]*)[ ]?(.*)");
     /**
      * sleep命令专用正则，只有感叹号在全文开头时才匹配
      */
-    public final static Pattern SLEEP_REGEX = Pattern.compile("^[!！]\s*([^#:： ]*)[ ]?(.*)");
+    public final static Pattern SLEEP_REGEX = Pattern.compile("^[!！]\\s*([^#:： ]*)[ ]?(.*)");
 
     /**
      * 匹配出sudo命令
      */
-    public final static Pattern ADMIN_CMD_REGEX = Pattern.compile("[!！]\s*sudo ([^#:： ]*)[ ]?(.*)");
+    public final static Pattern ADMIN_CMD_REGEX = Pattern.compile("[!！]\\s*sudo ([^#:： ]*)[ ]?(.*)");
     /**
      * 复读禁言时抗干扰的匹配表达式
      */
