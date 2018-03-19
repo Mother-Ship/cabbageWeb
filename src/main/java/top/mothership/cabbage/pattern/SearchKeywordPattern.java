@@ -1,4 +1,4 @@
-package top.mothership.cabbage.Pattern;
+package top.mothership.cabbage.pattern;
 
 import java.util.regex.Pattern;
 
@@ -13,7 +13,7 @@ public class SearchKeywordPattern {
     /**
      * 搞了一半失败的Shell格式
      */
-//    public final static Pattern OSU_SEARCH_KETWORD_SHELL = Pattern.compile("((?:-(a|t|d|m|ar|od|cs|hp)) ([^-]*)){1,8}");
+//    public final static pattern OSU_SEARCH_KETWORD_SHELL = pattern.compile("((?:-(a|t|d|m|ar|od|cs|hp)) ([^-]*)){1,8}");
 
     /**
      * MOD

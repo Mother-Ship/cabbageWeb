@@ -6,7 +6,7 @@ public class SimpleTest {
     public void Test() {
 //        String a = "123asd";
 //        Instant s = Instant.now();
-//        Pattern ALL_NUMBER_SEARCH_KEYWORD = Pattern.compile("^(\\d{1,7})$");
+//        pattern ALL_NUMBER_SEARCH_KEYWORD = pattern.compile("^(\\d{1,7})$");
 //        for (int i = 0; i < 100000; i++) {
 //            try {
 //                Integer in = Integer.valueOf(a);

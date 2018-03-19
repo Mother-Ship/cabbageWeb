@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import top.mothership.cabbage.Pattern.CQCodePattern;
-import top.mothership.cabbage.Pattern.MpCommandPattern;
-import top.mothership.cabbage.Pattern.RegularPattern;
+import top.mothership.cabbage.pattern.CQCodePattern;
+import top.mothership.cabbage.pattern.MpCommandPattern;
+import top.mothership.cabbage.pattern.RegularPattern;
 import top.mothership.cabbage.consts.ParameterEnum;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.manager.DayLilyManager;
@@ -121,7 +121,8 @@ public class CqController {
                         //处理命令
                         case "sudo":
                             cmdMatcher = RegularPattern.ADMIN_CMD_REGEX.matcher(msg);
-                            cmdMatcher.find();
+
+                            if(!cmdMatcher.find()){return;}
                             //无视命令大小写
                             switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                                 case "add":

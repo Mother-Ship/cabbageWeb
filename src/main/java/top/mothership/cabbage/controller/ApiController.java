@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.WebPageManager;
+import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
@@ -46,9 +47,10 @@ public class ApiController {
     private final UserDAO userDAO;
     private final UserUtil userUtil;
     private final WebPageManager webPageManager;
+    private final RedisDAO redisDAO;
 
     @Autowired
-    public ApiController(UserServiceImpl userService, UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, CqServiceImpl cqService, UserUtil userUtil, WebPageManager webPageManager) {
+    public ApiController(UserServiceImpl userService, UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, CqServiceImpl cqService, UserUtil userUtil, WebPageManager webPageManager, RedisDAO redisDAO) {
         this.userService = userService;
         this.userInfoDAO = userInfoDAO;
         this.apiManager = apiManager;
@@ -56,6 +58,7 @@ public class ApiController {
         this.userDAO = userDAO;
         this.userUtil = userUtil;
         this.webPageManager = webPageManager;
+        this.redisDAO = redisDAO;
     }
 
     @RequestMapping(value = "/code", method = RequestMethod.GET)
@@ -154,10 +157,13 @@ public class ApiController {
         } else {
             List<String> list = userUtil.sortRoles(user.getRole());
             role = list.get(0);
-            userInDB = userInfoDAO.getUserInfo(mode, userFromAPI.getUserId(), LocalDate.now().minusDays(day));
-            if (userInDB == null) {
-                userInDB = userInfoDAO.getNearestUserInfo(mode, userFromAPI.getUserId(), LocalDate.now().minusDays(day));
-                near = true;
+            userInDB = redisDAO.get(userFromAPI.getUserId(), mode);
+            if(userInDB==null) {
+                userInDB = userInfoDAO.getUserInfo(mode, userFromAPI.getUserId(), LocalDate.now().minusDays(day));
+                if (userInDB == null) {
+                    userInDB = userInfoDAO.getNearestUserInfo(mode, userFromAPI.getUserId(), LocalDate.now().minusDays(day));
+                    near = true;
+                }
             }
         }
 
@@ -195,11 +201,14 @@ public class ApiController {
     @RequestMapping(value = "/userinfo/nearest/{uid}", method = RequestMethod.GET)
     @CrossOrigin(origins = "http://localhost")
     public String nearestUserInfo(@PathVariable Integer uid, @RequestParam(value = "mode", defaultValue = "0", required = false) Integer mode) {
-        Userinfo userInDB = userInfoDAO.getNearestUserInfo(mode, uid, LocalDate.now().minusDays(1));
+        Userinfo userInDB  = redisDAO.get(uid,mode);
         if (userInDB == null) {
-            userInDB = apiManager.getUser(mode, uid);
-            userUtil.registerUser(userInDB.getUserId(), mode, 0L, OverallConsts.DEFAULT_ROLE);
-            return new Gson().toJson(new WebResponse<>(1, "user not registered", null));
+           userInDB =  userInfoDAO.getNearestUserInfo(mode, uid, LocalDate.now().minusDays(1));
+            if (userInDB == null) {
+                userInDB = apiManager.getUser(mode, uid);
+                userUtil.registerUser(userInDB.getUserId(), mode, 0L, OverallConsts.DEFAULT_ROLE);
+                return new Gson().toJson(new WebResponse<>(1, "user not registered", null));
+            }
         }
         return new Gson().toJson(new WebResponse<>(0, "ok", userInDB));
     }

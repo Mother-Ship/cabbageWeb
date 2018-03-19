@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.Pattern.RegularPattern;
+import top.mothership.cabbage.pattern.RegularPattern;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OppaiResult;

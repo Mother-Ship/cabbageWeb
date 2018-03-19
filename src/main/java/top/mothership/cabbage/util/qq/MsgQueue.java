@@ -1,7 +1,7 @@
 package top.mothership.cabbage.util.qq;
 
-import top.mothership.cabbage.Pattern.CQCodePattern;
-import top.mothership.cabbage.Pattern.RegularPattern;
+import top.mothership.cabbage.pattern.CQCodePattern;
+import top.mothership.cabbage.pattern.RegularPattern;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
 import java.util.ArrayList;

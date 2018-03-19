@@ -87,7 +87,7 @@ public class test {
 //           String html = EntityUtils.toString(entity, "GBK");
 //           httpGet.releaseConnection();
 //           System.out.println(html);
-//           Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
+//           Matcher m = pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
 //           m.find();
 //
 //           System.out.println(m.group(1));
@@ -156,12 +156,12 @@ public class test {
 //        } catch(IOException e){
 //            e.printStackTrace();
 //        }
-//        Matcher m = Pattern.compile("(?<=\\[Events]\\r\\n)([^\\r\\n]*)\\r\\n([^\\r\\n]*)").matcher(osuFile);
+//        Matcher m = pattern.compile("(?<=\\[Events]\\r\\n)([^\\r\\n]*)\\r\\n([^\\r\\n]*)").matcher(osuFile);
 //        m.find();
 //        osuFile="0,0,\"bg.png\",0,0";
 //        osuFile = "0,0,\"deetz.jpg\",0,0";
 //        System.out.println(osuFile);
-//        Matcher m=Pattern.compile("(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|.*\\.(png))").matcher(osuFile);
+//        Matcher m=pattern.compile("(?<=[\\d*],[\\d*],\")(.*\\.(jpg)|.*\\.(png))").matcher(osuFile);
 //        m.find();
 //        System.out.println(m.group(0));
 //        final Path path = Paths.get(Overall.CABBAGE_CONFIG.getString("path") + "\\data\\image");
@@ -322,7 +322,7 @@ public class test {
 //        System.out.println(link.get(6).children().get(1).text());
 //        System.out.println(link.get(7).children().get(1).text());
 //        String a = "-[]()";
-//       Matcher m = Pattern.compile("^([^-]*)-(.*)\\[(.*)]\\((.*)\\)").matcher(a);
+//       Matcher m = pattern.compile("^([^-]*)-(.*)\\[(.*)]\\((.*)\\)").matcher(a);
 //       if(m.find()) {
 //           for (int i = 0; i <= m.groupCount(); i++)
 //               System.out.println(m.group(i));
@@ -413,7 +413,7 @@ public class test {
 //            entity = response.getEntity();
 //            String html = EntityUtils.toString(entity, "GBK");
 //            httpGet.releaseConnection();
-//            Matcher m = Pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
+//            Matcher m = pattern.compile("<div class='centrep'>\\n<a href='([^']*)").matcher(html);
 //            m.find();
 //            String addLink = m.group(1);
 //            if (addLink.contains("remove")) {
