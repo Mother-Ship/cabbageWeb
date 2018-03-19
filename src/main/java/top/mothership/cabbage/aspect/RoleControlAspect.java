@@ -8,8 +8,8 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.annotation.GroupRoleControl;
-import top.mothership.cabbage.annotation.UserRoleControl;
+import top.mothership.cabbage.annotation.GroupAuthorityControl;
+import top.mothership.cabbage.annotation.UserAuthorityControl;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.CoolQ.CqMsg;
 
@@ -50,27 +50,27 @@ public class RoleControlAspect {
     @Around("aspectjMethod() && args(cqMsg,..)")
     public Object roleControl(ProceedingJoinPoint pjp, CqMsg cqMsg) throws Throwable {
         //取出Class上的注解
-        UserRoleControl userRoleControl = null;
+        UserAuthorityControl userAuthorityControl = null;
         List<Long> allowedUser = new ArrayList<>();
         Annotation[] a = pjp.getTarget().getClass().getAnnotations();
         for (Annotation aList : a) {
-            if (aList.annotationType().equals(UserRoleControl.class)) {
-                userRoleControl = (UserRoleControl) a[1];
+            if (aList.annotationType().equals(UserAuthorityControl.class)) {
+                userAuthorityControl = (UserAuthorityControl) a[1];
             }
         }
         //如果Class上的注解不是null
-        if (userRoleControl != null) {
-            for (long l : userRoleControl.value()) {
+        if (userAuthorityControl != null) {
+            for (long l : userAuthorityControl.value()) {
                 allowedUser.add(l);
             }
         }
         //同理 取出方法上的注解
-        userRoleControl = pjp.getTarget().getClass().getMethod(
+        userAuthorityControl = pjp.getTarget().getClass().getMethod(
                 pjp.getSignature().getName(),
                 ((MethodSignature) pjp.getSignature()).getParameterTypes()
-        ).getAnnotation(UserRoleControl.class);
-        if (userRoleControl != null) {
-            for (long l : userRoleControl.value()) {
+        ).getAnnotation(UserAuthorityControl.class);
+        if (userAuthorityControl != null) {
+            for (long l : userAuthorityControl.value()) {
                 allowedUser.add(l);
             }
         }
@@ -86,20 +86,20 @@ public class RoleControlAspect {
                 //如果不是群消息，不吃群权限控制
                 return pjp.proceed();
             }
-            GroupRoleControl groupRoleControl = pjp.getTarget().getClass().getMethod(
+            GroupAuthorityControl groupAuthorityControl = pjp.getTarget().getClass().getMethod(
                     pjp.getSignature().getName(),
                     ((MethodSignature) pjp.getSignature()).getParameterTypes()
-            ).getAnnotation(GroupRoleControl.class);
-            if (groupRoleControl != null) {
+            ).getAnnotation(GroupAuthorityControl.class);
+            if (groupAuthorityControl != null) {
                 //如果不允许任何群内使用
-                if (groupRoleControl.allBanned()) {
+                if (groupAuthorityControl.allBanned()) {
                     cqMsg.setMessage("本命令不允许任何群内使用。请私聊。");
                     cqManager.sendMsg(cqMsg);
                     return null;
                 }
-                if (!Arrays.equals(groupRoleControl.allowed(), ZERO)) {
+                if (!Arrays.equals(groupAuthorityControl.allowed(), ZERO)) {
                     //当Allowed不是只有一个0的数组的时候，只有群号符合才通过
-                    for (long l : groupRoleControl.allowed()) {
+                    for (long l : groupAuthorityControl.allowed()) {
                         if (cqMsg.getGroupId().equals(l)) {
                             return pjp.proceed();
                         }
@@ -107,7 +107,7 @@ public class RoleControlAspect {
                     return null;
                 }
                 //如果Allowed是0，则判断Banned列表
-                for (long l : groupRoleControl.banned()) {
+                for (long l : groupAuthorityControl.banned()) {
                     if (cqMsg.getGroupId().equals(l)) {
                         cqMsg.setMessage("该群已停用本命令。");
                         cqManager.sendMsg(cqMsg);

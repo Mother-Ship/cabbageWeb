@@ -11,7 +11,7 @@
 
 
     <!-- 1）配置扫描的包-->
-    <context:component-scan base-package="top.mothership.cabbage.controller"/>
+    <!--<context:component-scan base-package="top.mothership.cabbage.controller"/>-->
 
     <!-- 2）开启注解 -->
     <mvc:annotation-driven/>
@@ -86,7 +86,6 @@
     <task:annotation-driven/>
     <context:annotation-config/>
     <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
-    <!--<context:component-scan base-package="top.mothership.cabbage.task "/>-->
 
 
     <!--11）druid的Spring监控配置(beta)-->

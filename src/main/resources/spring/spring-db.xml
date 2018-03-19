@@ -7,7 +7,7 @@
       http://www.springframework.org/schema/context
       http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <context:component-scan base-package="top.mothership.cabbage.mapper"/>
+    <!--<context:component-scan base-package="top.mothership.cabbage.mapper"/>-->
     <!-- Spring+Mybatis步骤-->
     <!--1.设置单独属性文件放置数据库地址密码，实现解耦，后面的true是为了实现多个配置文件-->
     <context:property-placeholder location="classpath:jdbc.properties"  ignore-unresolvable="true" order="1"/>
@@ -105,12 +105,19 @@
 
     <!--redisTemplate组装-->
     <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+        <!--既然是用String存储字符串，就指定Spring的String序列化器即可，JDK的序列化器会添加乱码\xAC\xED\x00\x05t\x00\x010-->
         <property name="connectionFactory" ref="connectionFactory"/>
         <property name="keySerializer">
             <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
         </property>
         <property name="valueSerializer">
-            <bean class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer"/>
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+        </property>
+        <property name="hashKeySerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+        </property>
+        <property name="hashValueSerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
         </property>
     </bean>
 

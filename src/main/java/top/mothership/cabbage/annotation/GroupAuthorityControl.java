@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Component
-public @interface GroupRoleControl {
+public @interface GroupAuthorityControl {
     /**
      * 禁止使用命令的群。
      *

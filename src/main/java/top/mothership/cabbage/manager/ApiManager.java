@@ -48,16 +48,18 @@ public class ApiManager {
         String result = accessAPI("user", username, "string", null, null, null, null, mode);
         Userinfo userFromAPI = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Userinfo.class);
         if (userFromAPI != null) {
+            //请求API时加入mode的标记，并且修复Rank问题
             userFromAPI.setMode(mode);
             fixRank(userFromAPI);
         }
         return userFromAPI;
     }
 
-    public Userinfo getUser(int mode, Integer userId) {
+    public Userinfo getUser(Integer mode, Integer userId) {
         String result = accessAPI("user", String.valueOf(userId), "id", null, null, null, null, mode);
         Userinfo userFromAPI = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Userinfo.class);
         if (userFromAPI != null) {
+            //请求API时加入mode的标记，并且修复Rank问题
             userFromAPI.setMode(mode);
             fixRank(userFromAPI);
         }

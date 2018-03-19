@@ -133,18 +133,6 @@ public class CqController {
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.ROLE});
                                     cqAdminService.delUserRole(cqMsg);
                                     break;
-                                case "check":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME});
-                                    cqAdminService.getUserRole(cqMsg);
-                                    break;
-                                case "checku":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERID});
-                                    cqAdminService.getUserRole(cqMsg);
-                                    break;
-                                case "checkq":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.QQ});
-                                    cqAdminService.getUserRole(cqMsg);
-                                    break;
                                 case "bg":
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.FILENAME, ParameterEnum.URL});
                                     cqAdminService.addComponent(cqMsg);
@@ -398,7 +386,9 @@ public class CqController {
                                 case "roll":
                                     cqService.roll(cqMsg);
                                     break;
-
+                                case "time":
+                                    cqService.time(cqMsg);
+                                    break;
                                 case "addmap":
                                     analyzeService.addTargetMap(cqMsg);
                                     break;

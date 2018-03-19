@@ -1,10 +1,12 @@
 package top.mothership.cabbage.serviceImpl;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import top.mothership.cabbage.annotation.UserRoleControl;
+import top.mothership.cabbage.annotation.UserAuthorityControl;
 import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.consts.TipConsts;
 import top.mothership.cabbage.manager.ApiManager;
@@ -48,7 +50,7 @@ import java.util.*;
  * @author QHS
  */
 @Service
-@UserRoleControl
+@UserAuthorityControl
 public class CqAdminServiceImpl {
     public static Map<CqMsg, String> request = new HashMap<>();
     private final CqManager cqManager;
@@ -222,65 +224,8 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @UserRoleControl({1427922341})
-    public void getUserRole(CqMsg cqMsg) {
-        Argument argument = cqMsg.getArgument();
-        User user = null;
-        switch (argument.getSubCommandLowCase()) {
-            case "check":
 
-                Userinfo userFromAPI = apiManager.getUser(0, argument.getUsername());
-                if (userFromAPI == null) {
-                    cqMsg.setMessage("没有获取到玩家" + argument.getUsername() + "的信息。");
-                    cqManager.sendMsg(cqMsg);
-                    return;
-                }
-                user = userDAO.getUser(null, userFromAPI.getUserId());
-                break;
-            case "checku":
-                user = userDAO.getUser(null, argument.getUserId());
-                break;
-            case "checkq":
-                user = userDAO.getUser(argument.getQq(), null);
-                break;
-            default:
-                break;
-        }
-
-        if (user == null) {
-            cqMsg.setMessage("该玩家没有使用过白菜。请先用!add命令、!sudo 钦点或!sudo add命令添加。");
-        } else {
-            Userinfo userFromAPI = apiManager.getUser(0, user.getUserId());
-            if (userFromAPI == null) {
-                //check会刷新被ban状态
-                user.setBanned(true);
-            } else {
-                user.setBanned(false);
-                if (!userFromAPI.getUserName().equals(user.getCurrentUname())) {
-                    //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
-                    user = userUtil.renameUser(user, userFromAPI.getUserName());
-
-                }
-            }
-            userDAO.updateUser(user);
-            cqMsg.setMessage("搜索结果：\n"
-                    + "该玩家的用户组是" + user.getRole()
-                    + "\nosu!id：" + user.getCurrentUname()
-                    + "\nosu!uid：" + user.getUserId()
-                    + "\n被Ban状态：" + user.isBanned()
-                    + "\nQQ：" + user.getQq()
-                    + "\n主玩模式：" + user.getMode()
-                    + "\n曾用名：" + user.getLegacyUname()
-                    + "\n在OCLC赛群中："
-                    + "总复读次数：" + user.getRepeatCount()
-                    + "，总发言次数：" + user.getSpeakingCount());
-        }
-        cqManager.sendMsg(cqMsg);
-
-    }
-
-
-    @UserRoleControl({1427922341})
+    @UserAuthorityControl({1427922341})
     public void addComponent(CqMsg cqMsg) throws IOException {
         Argument argument = cqMsg.getArgument();
         //实验性功能
@@ -395,7 +340,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @UserRoleControl({372427060})
+    @UserAuthorityControl({372427060})
     public void smoke(CqMsg cqMsg) {
         //开放给树姐
         Argument argument = cqMsg.getArgument();
@@ -600,31 +545,35 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-
+    @UserAuthorityControl({1427922341})
     public void searchPlayer(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         String resp;
-        List<User> list = userDAO.listUserIdByUname(argument.getUsername());
+        List<User> list = userDAO.searchUser(argument.getUsername());
         if (list.size() > 0) {
-            resp = "搜索到以下玩家曾用/现用名包含" + argument.getUsername() + "：\n";
+            resp = "根据给定的关键字" + argument.getUsername() + "搜索到以下玩家：\n";
             for (User user : list) {
                 resp += "搜索结果：\n"
-                        + "该玩家的用户组是" + user.getRole()
+                        + "用户组：" + user.getRole()
                         + "\nosu!id：" + user.getCurrentUname()
-                        + "\nosu!uid：" + user.getUserId()
-                        + "\n被Ban状态：" + user.isBanned()
+                        + "\nosu!uid：" + user.getUserId();
+                List<String> legacyUname = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
+                }.getType());
+                if (legacyUname.size() > 0) {
+                    resp += "\n曾用名：" + user.getLegacyUname();
+                }
+                resp += "\n被Ban状态：" + user.isBanned()
                         + "\nQQ：" + user.getQq()
                         + "\n主玩模式：" + scoreUtil.convertGameModeToString(user.getMode())
-                        + "\n曾用名：" + user.getLegacyUname()
                         + "\n在OCLC赛群中："
                         + "总复读次数：" + user.getRepeatCount()
                         + "，总发言次数：" + user.getSpeakingCount();
-                if (list.size() > 0) {
+                if (list.size() > 1) {
                     resp += "\n";
                 }
             }
         } else {
-            resp = "没有找到现用/曾用" + argument.getUsername() + "作为用户名的玩家。";
+            resp = "根据提供的关键词" + argument.getUsername() + "没有找到任何玩家。";
         }
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
@@ -721,10 +670,7 @@ public class CqAdminServiceImpl {
                 "!sudo fp xxx 打印给定bid的#1。\n" +
 
                 "玩家信息管理系列：\n" +
-                "!sudo searchPlayer xxx 查询曾用/现用xxx用户名的玩家。\n" +
-                "!sudo check xxx 根据osu!id查找用户，包括绑定、用户组信息。\n" +
-                "!sudo checku xxx 根据uid查找用户。\n" +
-                "!sudo checkq xxx 根据QQ查找用户。";
+                "!sudo searchPlayer xxx 查询曾用/现用用户名中包含xxx，或者QQ/uid全文匹配xxx的玩家。\n";
 
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
@@ -747,7 +693,7 @@ public class CqAdminServiceImpl {
 
     }
 
-    @UserRoleControl({526942417})
+    @UserAuthorityControl({526942417})
     public void getRepeatStar(CqMsg cqMsg) {
         User user = userDAO.getRepeatStar();
         if (!user.getRepeatCount().equals(0L) && !user.getSpeakingCount().equals(0L)) {

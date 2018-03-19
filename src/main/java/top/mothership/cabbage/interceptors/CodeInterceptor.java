@@ -38,7 +38,7 @@ public class CodeInterceptor extends HandlerInterceptorAdapter {
         Map<String,Object> map = captchaUtil.genCaptcha();
         String verifyCode = (String) map.get("code");
         //把URL参数和code写入redis
-        redisDAO.addValue(urlParam,verifyCode);
+        redisDAO.add(urlParam, verifyCode);
         //10分钟过期
         redisDAO.expire(urlParam,600,TimeUnit.SECONDS);
         response.setContentType("image/jpg");

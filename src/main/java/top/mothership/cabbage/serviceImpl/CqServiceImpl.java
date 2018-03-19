@@ -8,12 +8,13 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import top.mothership.cabbage.annotation.GroupRoleControl;
+import top.mothership.cabbage.annotation.GroupAuthorityControl;
 import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.consts.TipConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.manager.WebPageManager;
+import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
@@ -33,8 +34,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 普通命令进行业务处理的类
@@ -53,6 +56,7 @@ public class CqServiceImpl {
     private final ScoreUtil scoreUtil;
     private final UserUtil userUtil;
     private final ResDAO resDAO;
+    private final RedisDAO redisDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     /**
@@ -68,9 +72,10 @@ public class CqServiceImpl {
      * @param scoreUtil       the score util
      * @param userUtil
      * @param resDAO
+     * @param redisDAO
      */
     @Autowired
-    public CqServiceImpl(ApiManager apiManager, CqManager cqManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, UserUtil userUtil, ResDAO resDAO) {
+    public CqServiceImpl(ApiManager apiManager, CqManager cqManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, UserUtil userUtil, ResDAO resDAO, RedisDAO redisDAO) {
         this.apiManager = apiManager;
         this.cqManager = cqManager;
         this.webPageManager = webPageManager;
@@ -80,6 +85,7 @@ public class CqServiceImpl {
         this.scoreUtil = scoreUtil;
         this.userUtil = userUtil;
         this.resDAO = resDAO;
+        this.redisDAO = redisDAO;
     }
 
 
@@ -95,6 +101,7 @@ public class CqServiceImpl {
 
         User user = null;
         Userinfo userFromAPI = null;
+        //指定日期没有数据
         boolean approximate = false;
         Userinfo userInDB = null;
         String role = null;
@@ -148,14 +155,16 @@ public class CqServiceImpl {
                         return;
                     }
                     if (argument.getDay() > 0) {
-                        userInDB = userInfoDAO.getUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
+                        if (argument.getDay().equals(1)) {
+                            //加一个从redis取数据的设定
+                            userInDB = redisDAO.get(userFromAPI.getUserId(), argument.getMode());
+                        }
                         if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
+                            userInDB = userInfoDAO.getUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
                             if (userInDB == null) {
-                                //FIXME 新增全模式的时候产生的兼容性问题(会导致已注册的用户却在数据库没有历史数据)，下个版本可以去除
-                                argument.setDay(0);
+                                userInDB = userInfoDAO.getNearestUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
+                                approximate = true;
                             }
-                            approximate = true;
                         }
                     }
                 }
@@ -215,14 +224,16 @@ public class CqServiceImpl {
                     }
                     role = user.getRole();
                     if (argument.getDay() > 0) {
-                        userInDB = userInfoDAO.getUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
+                        if (argument.getDay().equals(1)) {
+                            //加一个从redis取数据的设定
+                            userInDB = redisDAO.get(userFromAPI.getUserId(), argument.getMode());
+                        }
                         if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
+                            userInDB = userInfoDAO.getUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
                             if (userInDB == null) {
-                                //FIXME 新增全模式的时候产生的兼容性问题(会导致已注册的用户却在数据库没有历史数据)，下个版本可以去除
-                                argument.setDay(0);
+                                userInDB = userInfoDAO.getNearestUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
+                                approximate = true;
                             }
-                            approximate = true;
                         }
                     }
                 }
@@ -265,14 +276,17 @@ public class CqServiceImpl {
                     }
                     role = user.getRole();
                     if (argument.getDay() > 0) {
-                        userInDB = userInfoDAO.getUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
+                        if (argument.getDay().equals(1)) {
+                            //加一个从redis取数据的设定
+                            //TODO 开debug测试一下这个特性
+                            userInDB = redisDAO.get(userFromAPI.getUserId(), argument.getMode());
+                        }
                         if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
+                            userInDB = userInfoDAO.getUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
                             if (userInDB == null) {
-                                //FIXME 新增全模式的时候产生的兼容性问题(会导致已注册的用户却在数据库没有历史数据)，下个版本可以去除
-                                argument.setDay(0);
+                                userInDB = userInfoDAO.getNearestUserInfo(argument.getMode(), userFromAPI.getUserId(), LocalDate.now().minusDays(argument.getDay()));
+                                approximate = true;
                             }
-                            approximate = true;
                         }
                     }
                 }
@@ -438,7 +452,7 @@ public class CqServiceImpl {
     }
 
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
-    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void printSpecifiedBP(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         if ("白菜".equals(argument.getUsername())) {
@@ -655,7 +669,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 213078438L, 714925706L})
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 213078438L, 714925706L})
     public void myScore(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         SearchParam searchParam = argument.getSearchParam();
@@ -743,7 +757,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupRoleControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void search(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         SearchParam searchParam = argument.getSearchParam();
@@ -1048,7 +1062,7 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @GroupRoleControl(allBanned = true)
+    @GroupAuthorityControl(allBanned = true)
     public void cost(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         User user = null;
@@ -1404,15 +1418,27 @@ public class CqServiceImpl {
 
     }
 
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
     public void roll(CqMsg cqMsg) {
         cqMsg.setMessage(String.valueOf(new Random().nextInt(100)));
         cqManager.sendMsg(cqMsg);
     }
+
+    @GroupAuthorityControl(allowed = {308419061})
+    public void time(CqMsg cqMsg) {
+        LocalTime localTime = LocalTime.now();
+        cqMsg.setMessage("当前美国东部时间（UTC-5）为："
+                + localTime.minusHours(13)
+                + "\n当前UTC时间为：" + localTime.minusHours(8));
+        cqManager.sendMsg(cqMsg);
+    }
+
     @Scheduled(cron = "0 0 4 * * ?")
     public void importUserInfo() {
         //似乎每分钟并发也就600+，不需要加延迟……
         java.util.Date start = Calendar.getInstance().getTime();
         //清掉前一天全部信息
+        redisDAO.flushDb();
         userInfoDAO.clearTodayInfo(LocalDate.now().minusDays(1));
         logger.info("开始进行每日登记");
         List<String> bannedList = new ArrayList<>();
@@ -1427,10 +1453,14 @@ public class CqServiceImpl {
                     //将日期改为一天前写入
                     userinfo.setQueryDate(LocalDate.now().minusDays(1));
                     userInfoDAO.addUserInfo(userinfo);
+                    //2018-3-16 17:47:51实验性特性：加入redis缓存
+                    redisDAO.add(aList, userinfo);
+                    redisDAO.expire(aList, 1, TimeUnit.DAYS);
                     logger.info("将" + userinfo.getUserName() + "在模式" + scoreUtil.convertGameModeToString(i) + "的数据录入成功");
                     if (!userinfo.getUserName().equals(user.getCurrentUname())) {
                         //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
                         user = userUtil.renameUser(user, userinfo.getUserName());
+                        userDAO.updateUser(user);
                     }
                     if (i == 0) {
                         handlePPOverflow(user, userinfo);
@@ -1438,14 +1468,17 @@ public class CqServiceImpl {
                         successCount++;
                     }
                     //如果能获取到userinfo，就把banned设置为0
+//                    if(user.isBanned()) {
                     user.setBanned(false);
                     userDAO.updateUser(user);
-
+//                    }
                 } else {
                     //将null的用户直接设为banned
-                    user.setBanned(true);
-                    logger.info("检测到玩家" + user.getUserId() + "被Ban，已登记");
-                    userDAO.updateUser(user);
+                    if (!user.isBanned()) {
+                        user.setBanned(true);
+                        logger.info("检测到玩家" + user.getUserId() + "被Ban，已登记");
+                        userDAO.updateUser(user);
+                    }
                     if (!bannedList.contains(user.getCurrentUname())) {
                         //避免重复添加
                         bannedList.add(user.getCurrentUname());
@@ -1523,32 +1556,35 @@ public class CqServiceImpl {
                         //如果大前天这个时候也超了，就飞了
                         if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 5100 + 0.49) {
                             if (!user.getQq().equals(0L)) {
+                                //2018-3-16 13:13:53似乎现在白菜踢人不会自动删组？在这里补上试试
+                                user = userUtil.delRole("mp4", user);
+                                userDAO.updateUser(user);
                                 cqMsg.setUserId(user.getQq());
                                 cqMsg.setMessageType("kick");
                                 cqManager.sendMsg(cqMsg);
                                 cqMsg.setMessageType("private");
-                                cqMsg.setMessage("由于PP超限，已将你移出MP4群。请考虑加入mp3群：234219559。");
+                                cqMsg.setMessage("由于PP超限，已将你移出MP4群。请考虑加入mp3群：210342787。");
                                 cqManager.sendMsg(cqMsg);
                                 //2018-1-29 12:01:06 现在飞的时候会自动清理用户组
                             }
                         } else {
                             //大前天没超
                             if (!user.getQq().equals(0L)) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp3群：234219559。");
+                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp3群：210342787。");
                                 cqManager.sendMsg(cqMsg);
                             }
                         }
                     } else {
                         //前天没超
                         if (!user.getQq().equals(0L)) {
-                            cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp3群：234219559。");
+                            cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp3群：210342787。");
                             cqManager.sendMsg(cqMsg);
                         }
                     }
                 } else {
                     //昨天没超
                     if (!user.getQq().equals(0L)) {
-                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp3群：234219559。");
+                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp3群：210342787。");
                         cqManager.sendMsg(cqMsg);
                     }
 
@@ -1587,6 +1623,9 @@ public class CqServiceImpl {
                         //如果大前天这个时候也超了，就飞了
                         if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4000 + 0.49) {
                             if (!user.getQq().equals(0L)) {
+                                //2018-3-16 13:13:53似乎现在白菜踢人不会自动删组？在这里补上试试
+                                user = userUtil.delRole("mp5", user);
+                                userDAO.updateUser(user);
                                 cqMsg.setUserId(user.getQq());
                                 cqMsg.setMessageType("kick");
                                 cqManager.sendMsg(cqMsg);

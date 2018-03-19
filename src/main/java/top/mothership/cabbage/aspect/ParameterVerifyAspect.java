@@ -167,6 +167,10 @@ public class ParameterVerifyAspect {
                             //由于URL里的冒号问题
                             argumentCount--;
                         }
+                        if ("listmsg".equals(argument.getSubCommandLowCase())) {
+                            argumentCount--;
+                            firstParam += thirdParam;
+                        }
                         //确保实参数目不小于最小形参数目，也不大于最大形参数目
                         if (argumentCount < cqMsg.getRequired().length) {
                             cqMsg.setMessage(String.format(TipConsts.ARGUMENTS_LESS_THAN_PARAMETERS, Arrays.toString(cqMsg.getRequired()), argumentCount));
@@ -294,7 +298,7 @@ public class ParameterVerifyAspect {
                                     }
                                     break;
                                 case AT:
-                                    //AT的逻辑不一样，检查第一参数
+                                    //AT的逻辑不一样，检查第一参数+第三参数（CQ码有冒号）
                                     Matcher atMatcher = CQCodePattern.AT.matcher(firstParam);
                                     if (atMatcher.find()) {
                                         //如果是艾特qq
@@ -657,7 +661,6 @@ public class ParameterVerifyAspect {
             default:
                 break;
         }
-        logger.debug(cqMsg.getArgument());
         return pjp.proceed(new Object[]{cqMsg});
     }
 

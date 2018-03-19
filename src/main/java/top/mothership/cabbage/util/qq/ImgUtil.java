@@ -983,10 +983,18 @@ public class ImgUtil {
                 + "  转盘数：" + new DecimalFormat("###,###").format(oppaiResult.getNumSpinners()), 7, 108);
 
         //四围、难度
+        String arms = scoreUtil.calcMilliSecondForFourDimensions("AR", oppaiResult.getAr());
+        String od300ms = scoreUtil.calcMilliSecondForFourDimensions("OD300", oppaiResult.getOd());
+        String od100ms = scoreUtil.calcMilliSecondForFourDimensions("OD100", oppaiResult.getOd());
+        String od50ms = scoreUtil.calcMilliSecondForFourDimensions("OD50", oppaiResult.getOd());
         g2.setFont(new Font("Aller", Font.PLAIN, 13));
-        g2.drawString("CS:" + beatmap.getDiffSize() + " AR:" + beatmap.getDiffApproach()
-                + " OD:" + beatmap.getDiffOverall() + " HP:" + beatmap.getDiffDrain()
-                + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(beatmap.getDifficultyRating())), 7, 125);
+        g2.drawString("CS:" + (double) Math.round(oppaiResult.getCs() * 100) / 100
+                + " AR:" + (double) Math.round(oppaiResult.getAr() * 100) / 100
+                + "(" + arms + ")"
+                + " OD:" + (double) Math.round(oppaiResult.getOd() * 100) / 100
+                + "(" + od300ms + "/" + od100ms + "/" + od50ms + ")"
+                + " HP:" + (double) Math.round(oppaiResult.getHp() * 100) / 100
+                + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(oppaiResult.getStars())), 7, 125);
         //小头像
         g2.drawImage(ava.getScaledInstance(66, 66, Image.SCALE_SMOOTH), 14, 217, null);
         //id
@@ -1237,10 +1245,17 @@ public class ImgUtil {
             g2.setPaint(Color.decode("#FFFFFF"));
         }
 
-
         g2.setFont(new Font("Aller", Font.PLAIN, 13));
-        g2.drawString("CS:" + (double) Math.round(oppaiResult.getCs() * 100) / 100 + " AR:" + (double) Math.round(oppaiResult.getAr() * 100) / 100
-                + " OD:" + (double) Math.round(oppaiResult.getOd() * 100) / 100 + " HP:" + (double) Math.round(oppaiResult.getHp() * 100) / 100
+        String arms = scoreUtil.calcMilliSecondForFourDimensions("AR", oppaiResult.getAr());
+        String od300ms = scoreUtil.calcMilliSecondForFourDimensions("OD300", oppaiResult.getOd());
+        String od100ms = scoreUtil.calcMilliSecondForFourDimensions("OD100", oppaiResult.getOd());
+        String od50ms = scoreUtil.calcMilliSecondForFourDimensions("OD50", oppaiResult.getOd());
+        g2.drawString("CS:" + (double) Math.round(oppaiResult.getCs() * 100) / 100
+                + " AR:" + (double) Math.round(oppaiResult.getAr() * 100) / 100
+                + "(" + arms + ")"
+                + " OD:" + (double) Math.round(oppaiResult.getOd() * 100) / 100
+                + "(" + od300ms + "/" + od100ms + "/" + od50ms + ")"
+                + " HP:" + (double) Math.round(oppaiResult.getHp() * 100) / 100
                 + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(oppaiResult.getStars())), 7, 125);
 
 

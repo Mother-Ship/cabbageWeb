@@ -173,13 +173,15 @@ public class ScoreUtil {
     /**
      * 先有蔓蔓后有天，反向转换日神仙
      * 用于处理Search命令传入的Mod，所以应该不必支持STD以外的模式……
-     *  其实并不完善，对所有的偶数长度 不包含mod的字符串都会返回0
-     *  2018-3-8 11:43:38已修复：现在没有匹配的mod会返回null，同时也能正确的识别none了
+     * 其实并不完善，对所有的偶数长度 不包含mod的字符串都会返回0
+     * 2018-3-8 11:43:38已修复：现在没有匹配的mod会返回null，同时也能正确的识别none了
+     * 2018-3-19 12:27:46默认-1触发了bug，已修正
+     *
      * @param mods the mods
      * @return the integer
      */
     public Integer reverseConvertMod(String mods) {
-        Integer m = -1;
+        Integer m = null;
         if (mods.length() % 2 != 0) {
             //双字母MOD字符串长度必然是偶数
             return null;
@@ -203,70 +205,124 @@ public class ScoreUtil {
         for (String s : modList) {
             switch (s.toUpperCase(Locale.CHINA)) {
                 case "NF":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 1;
                     break;
                 case "EZ":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 2;
                     break;
                 case "TD":
+                    if (m == null) {
+                        m = 0;
+                    }
                     //但是在字符串的输入处还是更新一下 支持一下吧
                     m += 4;
                     break;
                 case "HD":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 8;
                     break;
                 case "HR":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 16;
                     break;
                 case "SD":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 32;
                     break;
                 case "DT":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 64;
                     break;
                 case "HT":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 256;
                     break;
                 case "NC":
+                    if (m == null) {
+                        m = 0;
+                    }
                     //NCDT
                     m += 576;
                     break;
                 case "FL":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 1024;
                     break;
                 case "SO":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 4096;
                     break;
                 case "PF":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 16384;
                     break;
                 case "4K":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 32768;
                     break;
                 case "5K":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 65536;
                     break;
                 case "6K":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 131072;
                     break;
                 case "7K":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 262144;
                     break;
                 case "8K":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 524288;
                     break;
                 case "FI":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 1048576;
                     break;
                 case "9K":
+                    if (m == null) {
+                        m = 0;
+                    }
                     m += 16777216;
                     break;
                 default:
                     break;
             }
-        }
-        if (m.equals(-1)) {
-            m = null;
         }
         return m;
     }
@@ -373,6 +429,26 @@ public class ScoreUtil {
 
     public Integer calcNoneXScore(Beatmap beatmap) {
         return 0;
+    }
+
+    public String calcMilliSecondForFourDimensions(String dimensions, Double value) {
+        switch (dimensions) {
+            case "AR":
+                if (value > 5.0D) {
+                    return new DecimalFormat("##0.0").format(1200D - (value - 5.0D) * 150D) + "ms";
+                } else {
+                    return new DecimalFormat("##0.0").format(1200D - (value - 5.0D) * 120D) + "ms";
+                }
+            case "OD300":
+                return "300:" + new DecimalFormat("##0.0").format(79.5D - 6D * value) + "ms";
+            case "OD100":
+                return "100:" + new DecimalFormat("##0.0").format(139.5D - 8D * value) + "ms";
+            case "OD50":
+                return "50:" + new DecimalFormat("##0.0").format(199.5D - 10D * value) + "ms";
+            default:
+                return null;
+        }
+
     }
 
     public String convertGameModeToString(Integer mode) {

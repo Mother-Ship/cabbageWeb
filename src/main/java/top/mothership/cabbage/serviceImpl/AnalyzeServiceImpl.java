@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.Pattern.RegularPattern;
-import top.mothership.cabbage.annotation.UserRoleControl;
+import top.mothership.cabbage.annotation.UserAuthorityControl;
 import top.mothership.cabbage.consts.TipConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
@@ -21,7 +21,7 @@ import java.util.regex.Matcher;
 
 
 @Service
-@UserRoleControl({1335734657L})
+@UserAuthorityControl({1335734657L})
 public class AnalyzeServiceImpl {
     private static CqMsg cqMsg = new CqMsg();
     private final AnalyzerDAO analyzerDAO;
