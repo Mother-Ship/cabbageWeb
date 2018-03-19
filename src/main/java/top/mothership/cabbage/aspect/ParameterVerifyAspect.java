@@ -167,8 +167,10 @@ public class ParameterVerifyAspect {
                             //由于URL里的冒号问题
                             argumentCount--;
                         }
-                        if ("listmsg".equals(argument.getSubCommandLowCase())) {
+                        if (Arrays.asList(cqMsg.getRequired()).contains(ParameterEnum.AT)) {
+                            //对@中CQ码的冒号与分隔符冲突的特殊处理
                             argumentCount--;
+                            firstParam += ":";
                             firstParam += thirdParam;
                         }
                         //确保实参数目不小于最小形参数目，也不大于最大形参数目

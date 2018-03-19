@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.manager.ApiManager;
+import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
@@ -25,13 +26,15 @@ public class UserUtil {
     private final UserInfoDAO userInfoDAO;
     private final UserDAO userDAO;
     private final ApiManager apiManager;
+    private final RedisDAO redisDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
-    public UserUtil(UserInfoDAO userInfoDAO, UserDAO userDAO, ApiManager apiManager) {
+    public UserUtil(UserInfoDAO userInfoDAO, UserDAO userDAO, ApiManager apiManager, RedisDAO redisDAO) {
         this.userInfoDAO = userInfoDAO;
         this.userDAO = userDAO;
         this.apiManager = apiManager;
+        this.redisDAO = redisDAO;
     }
 
 
@@ -46,6 +49,7 @@ public class UserUtil {
                 userFromAPI.setQueryDate(LocalDate.now().minusDays(1));
             }
             //写入一行userinfo
+            redisDAO.add(userId, userFromAPI);
             userInfoDAO.addUserInfo(userFromAPI);
         }
         User user = new User(userId, role, QQ, "[]", userFromAPI.getUserName(), false, mode, null, null, 0L, 0L);
