@@ -64,7 +64,7 @@ public class RegularPattern {
      * 匹配QQ（5-10个数字）
      */
     public final static Pattern QQ = Pattern.compile("^(\\d{5,10})$");
-
+    public final static Pattern BPNUM = Pattern.compile("^(\\d{1,3})$");
     public final static Pattern URL = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
 
 }

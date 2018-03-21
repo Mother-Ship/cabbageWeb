@@ -582,17 +582,15 @@ public class ParameterVerifyAspect {
                                     break;
                                 case NUM:
                                     if (secondParam != null) {
-                                        if (secondParam.endsWith(" ")) {
-                                            secondParam = secondParam.substring(0, secondParam.length() - 1);
-                                        }
-                                        try {
+                                        Matcher bpNumMatcher = RegularPattern.BPNUM.matcher(secondParam);
+                                        if (bpNumMatcher.find()) {
                                             num = Integer.valueOf(secondParam);
-                                            if (num < 0 || num > 100) {
+                                            if (num <= 0 || num > 100) {
                                                 cqMsg.setMessage("其他人看不到的东西，白菜也看不到啦。");
                                                 cqManager.sendMsg(cqMsg);
                                                 return null;
                                             }
-                                        } catch (java.lang.NumberFormatException e) {
+                                        } else {
                                             cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("ay_ay_ay.wav")) + "]");
                                             cqManager.sendMsg(cqMsg);
                                             return null;
@@ -639,7 +637,7 @@ public class ParameterVerifyAspect {
                                 case QQ:
                                     //可选项QQ参数只有在钦点里用到
                                     legalParamMatcher = RegularPattern.QQ.matcher(secondParam);
-                                    if (legalParamMatcher.find()) {
+                                    if (legalParamMatcher.find() || "0".equals(secondParam)) {
                                         argument.setQq(Long.valueOf(secondParam));
                                     } else {
                                         cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, secondParam, "QQ号"));

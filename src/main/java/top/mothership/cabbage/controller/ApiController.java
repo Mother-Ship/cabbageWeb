@@ -157,7 +157,7 @@ public class ApiController {
         } else {
             List<String> list = userUtil.sortRoles(user.getRole());
             role = list.get(0);
-            userInDB = redisDAO.get(userFromAPI.getUserId(), mode);
+            userInDB = redisDAO.get(uid, mode);
             if(userInDB==null) {
                 userInDB = userInfoDAO.getUserInfo(mode, userFromAPI.getUserId(), LocalDate.now().minusDays(day));
                 if (userInDB == null) {

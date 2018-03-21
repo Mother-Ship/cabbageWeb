@@ -1144,11 +1144,11 @@ public class CqServiceImpl {
                     + "\nStamina：" + map.get("Stamina")
                     + "\nAccuracy：" + map.get("Accuracy")
                     + "\n在**第二届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S2Cost)
-                    + "。该比赛已经组队完毕，预计下周开始第一轮比赛。\n"
+                    + "。\n"
                     + "\n在**第四届某个连名字都不能提的比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS4Cost)
                     + "。\n"
                     + "\n在**第十届OCLB**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
-                    + "。该比赛即日起开放报名，预计下周结束报名。Cost上限3.5，无强制下限，但考虑游戏体验，推荐Cost为2.5以上的玩家报名。"
+                    + "。该比赛本周末结束报名。Cost上限3.5，无强制下限，但考虑游戏体验，推荐Cost为2.5以上的玩家报名。"
                     + "\n如组队报名将受到惩罚：上限3.5→3.4，且平均cost不能超过随机组队的平均cost-0.1。"
                     + " \n单人报名时比赛为队长选人组队，cost最高的若干人成为队长，5人一队，上场3v3。"
                     + "\n\n每个比赛的Cost公式不同，每个Cost只在对应的比赛有效。");

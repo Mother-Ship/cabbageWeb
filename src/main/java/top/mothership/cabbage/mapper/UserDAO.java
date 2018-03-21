@@ -64,14 +64,12 @@ public interface UserDAO {
      *改为Gson序列化，只需考虑在中间的问题，同时加入分隔符
      * 2018-3-12 16:26:59改为模糊查询
      * 2018-3-16 13:29:44没必要用动态sql吧？试试改为多个字段查询
+     * 2018-3-21 12:13:29直接用OR字段搜user_id=用户名时会返回几百个结果，搜索了一下改为现在的查询
      * @param keyword 搜索关键字
      * @return the list
      */
     @Select("SELECT * FROM `userrole` "
-            + "WHERE `legacy_uname` LIKE CONCAT('%',#{keyword},'%') "
-            + "OR `current_uname` LIKE CONCAT('%',#{keyword},'%')"
-            + "OR `user_id` = #{keyword}"
-            + "OR `qq` = #{keyword}")
+            + "WHERE concat( `user_id` ,',', `qq` ,',', `legacy_uname`,',', `current_uname`) LIKE CONCAT('%',#{keyword},'%')")
     @Results(
             {
                     //手动绑定这个字段
