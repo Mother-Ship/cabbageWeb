@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.manager.CqManager;
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
+import top.mothership.cabbage.pojo.coolq.CqMsg;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

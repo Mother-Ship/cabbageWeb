@@ -1,9 +1,11 @@
-package top.mothership.cabbage.manager;
+package top.mothership.cabbage.serviceImpl;
 
 import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 
 import java.io.BufferedReader;
@@ -13,24 +15,34 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-@Component
-public class DayLilyManager {
-    private final String baseURL = "http://123.206.100.246:23333/api/getresponse";
+@Service
+public class ShadowSocksCmdServiceImpl {
+    private final String baseURL = "https://cmd.gogosu.moe/api/";
+    private final CqManager cqManager;
     private Logger logger = LogManager.getLogger(this.getClass());
 
-    public void sendMsg(CqMsg cqMsg) {
-        logger.info("开始转发消息到黄花菜：" + cqMsg.getMessage());
+    @Autowired
+    public ShadowSocksCmdServiceImpl(CqManager cqManager) {
+        this.cqManager = cqManager;
+    }
+
+    public void service(CqMsg cqMsg) {
+        if ("getcode".equals(cqMsg.getArgument().getSubCommandLowCase()))
+            cqMsg.getArgument().setSubCommandLowCase("code");
         HttpURLConnection httpConnection;
         try {
             httpConnection =
-                    (HttpURLConnection) new URL(baseURL).openConnection();
+                    (HttpURLConnection) new URL(baseURL + cqMsg.getArgument().getSubCommandLowCase()).openConnection();
             httpConnection.setRequestMethod("POST");
             httpConnection.setRequestProperty("Accept", "application/json");
             httpConnection.setRequestProperty("Content-Type", "application/json");
             httpConnection.setDoOutput(true);
 
             OutputStream os = httpConnection.getOutputStream();
-            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes("UTF-8"));
+            //防止转义
+            //折腾了半天最后是少了UTF-8………………我tm想给自己一巴掌
+
+            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg.getArgument().getSsr()).getBytes("UTF-8"));
             os.flush();
             os.close();
             BufferedReader responseBuffer =
@@ -41,9 +53,11 @@ public class DayLilyManager {
                 tmp2.append(tmp);
             }
             //这里不用用到下划线转驼峰
-            logger.debug(tmp2.toString());
+            cqMsg.setMessage(tmp2.toString());
+            cqManager.sendMsg(cqMsg);
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
 
     }

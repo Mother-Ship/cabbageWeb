@@ -1,4 +1,4 @@
-package top.mothership.cabbage.pojo.CoolQ;
+package top.mothership.cabbage.pojo.coolq;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;

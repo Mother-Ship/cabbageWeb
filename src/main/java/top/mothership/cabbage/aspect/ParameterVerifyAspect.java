@@ -8,17 +8,18 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pattern.CQCodePattern;
-import top.mothership.cabbage.pattern.RegularPattern;
-import top.mothership.cabbage.pattern.SearchKeywordPattern;
 import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.consts.ParameterEnum;
 import top.mothership.cabbage.consts.TipConsts;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.ResDAO;
-import top.mothership.cabbage.pojo.CoolQ.Argument;
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
+import top.mothership.cabbage.pattern.CQCodePattern;
+import top.mothership.cabbage.pattern.RegularPattern;
+import top.mothership.cabbage.pattern.SearchKeywordPattern;
+import top.mothership.cabbage.pojo.coolq.Argument;
+import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.osu.SearchParam;
+import top.mothership.cabbage.pojo.shadowsocks.ShadowSocksRequest;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 
 import java.time.LocalDate;
@@ -42,7 +43,8 @@ public class ParameterVerifyAspect {
         this.resDAO = resDAO;
     }
 
-    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.Cq*.*(top.mothership.cabbage.pojo.CoolQ.CqMsg,..))")
+    //当时为啥要指定CQ开头来着……
+    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.*.*(top.mothership.cabbage.pojo.coolq.CqMsg,..))")
     private void regularService() {
     }
 
@@ -180,7 +182,7 @@ public class ParameterVerifyAspect {
                             return null;
                         }
                         int maxArgumentCount = cqMsg.getRequired().length + cqMsg.getOptional().length;
-                        if (Arrays.binarySearch(cqMsg.getRequired(), ParameterEnum.SEARCHPARAM) > -1) {
+                        if (Arrays.binarySearch(cqMsg.getRequired(), ParameterEnum.SEARCH_PARAM) > -1) {
                             //由于Search命令用的正则不一样，允许单独包含模式，所以这里+1
                             maxArgumentCount++;
                         }
@@ -216,7 +218,7 @@ public class ParameterVerifyAspect {
                                         return null;
                                     }
                                     break;
-                                case USERID:
+                                case USER_ID:
                                     legalParamMatcher = RegularPattern.OSU_USER_ID.matcher(firstParam);
                                     if (legalParamMatcher.find()) {
                                         argument.setUserId(Integer.valueOf(firstParam));
@@ -326,189 +328,37 @@ public class ParameterVerifyAspect {
                                     //懒得验证了
                                     argument.setFlag(firstParam);
                                     break;
-                                case SEARCHPARAM:
-                                    SearchParam searchParam = new SearchParam();
-                                    Integer modsNum = null;
-                                    String mods = "None";
-                                    String keyword = null;
-                                    String scoreString = null;
-                                    Double ar = null;
-                                    Double od = null;
-                                    Double cs = null;
-                                    Double hp = null;
-                                    boolean keywordFound = false;
-                                    //先从字符串结尾的mod开始检测
-                                    Matcher getKeyWordAndMod = SearchKeywordPattern.MOD.matcher(msg);
-                                    if (getKeyWordAndMod.find()) {
-                                        if (!keywordFound) {
-                                            keyword = getKeyWordAndMod.group(2);
-                                            keywordFound = true;
-                                        }
-                                        mods = getKeyWordAndMod.group(3);
-                                        modsNum = scoreUtil.reverseConvertMod(mods);
-                                        //如果字符串解析出错，会返回null，因此这里用null值来判断输入格式
-                                        if (modsNum == null) {
-                                            cqMsg.setMessage("请使用MOD的双字母缩写，不需要任何分隔符。" +
-                                                    "\n接受的Mod有：NF EZ TD HD HR SD DT HT NC FL SO PF。");
-                                            cqManager.sendMsg(cqMsg);
-                                            return null;
-                                        }
-                                        //如果检测出来就去掉
-                                        msg = msg.replace("+" + mods, "");
-                                    }
-                                    //再检测是否指定了成绩字符串
-
-                                    //兼容koohii 加默认值
-                                    searchParam.setMaxCombo(-1);
-                                    searchParam.setCount50(0);
-                                    searchParam.setCount100(0);
-                                    searchParam.setCountMiss(0);
-                                    getKeyWordAndMod = SearchKeywordPattern.PP_CALC.matcher(msg);
-                                    if (getKeyWordAndMod.find()) {
-                                        if (!keywordFound) {
-                                            keyword = getKeyWordAndMod.group(2);
-                                            keywordFound = true;
-                                        }
-
-                                        scoreString = getKeyWordAndMod.group(3);
-                                        String[] scoreParams = scoreString.split(" ");
-                                        for (String s : scoreParams) {
-                                            Matcher getScoreParams = SearchKeywordPattern.KEYWORD_ACC.matcher(s);
-                                            if (getScoreParams.find()) {
-                                                searchParam.setAcc(Double.valueOf(getScoreParams.group(1)));
-                                            }
-                                            getScoreParams = SearchKeywordPattern.KEYWORD_COMBO.matcher(s);
-                                            if (getScoreParams.find()) {
-                                                searchParam.setMaxCombo(Integer.valueOf(getScoreParams.group(1)));
-                                            }
-                                            getScoreParams = SearchKeywordPattern.KEYWORD_COUNT_50.matcher(s);
-                                            if (getScoreParams.find()) {
-                                                searchParam.setCount50(Integer.valueOf(getScoreParams.group(1)));
-                                            }
-                                            getScoreParams = SearchKeywordPattern.KEYWORD_COUNT_100.matcher(s);
-                                            if (getScoreParams.find()) {
-                                                searchParam.setCount100(Integer.valueOf(getScoreParams.group(1)));
-                                            }
-                                            getScoreParams = SearchKeywordPattern.KEYWORD_MISS.matcher(s);
-                                            if (getScoreParams.find()) {
-                                                searchParam.setCountMiss(Integer.valueOf(getScoreParams.group(1)));
-                                            }
-                                        }
-                                        msg = msg.replace(scoreString, "");
-                                        msg = msg.replaceAll("[《<>》]", "");
-                                    }
-                                    //最后检测是否指定了模式（如果先检测，会把后面的文字也计算进去）
-                                    getKeyWordAndMod = SearchKeywordPattern.MODE.matcher(msg);
-                                    if (getKeyWordAndMod.find()) {
-                                        keyword = getKeyWordAndMod.group(2);
-                                        keywordFound = true;
-                                        mode = convertModeStrToInteger(getKeyWordAndMod.group(3));
-                                        if (mode == null) {
-                                            logger.debug(getKeyWordAndMod.group(3));
-                                            cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, getKeyWordAndMod.group(3), "osu!游戏模式"));
-                                            cqManager.sendMsg(cqMsg);
-                                            return null;
-                                        }
-                                        argument.setMode(mode);
-                                    } else {
-                                        argument.setMode(0);
-                                    }
-
-
-                                    if (!keywordFound) {
-                                        //这种情况，三个参数都没有指定
-                                        keyword = m.group(2);
-                                    }
-
-                                    //如果mode不是主模式，而且命令是search
-                                    if (!argument.getMode().equals(0) && "search".equals(argument.getSubCommandLowCase())) {
-                                        cqMsg.setMessage("由于oppai不支持其他模式，因此白菜也只有主模式支持!search命令。");
-                                        cqManager.sendMsg(cqMsg);
-                                        return null;
-                                    }
-
-                                    searchParam.setMods(modsNum);
-                                    searchParam.setModsString(mods);
-
-
-                                    if (keyword.endsWith(" ")) {
-                                        keyword = keyword.substring(0, keyword.length() - 1);
-                                    }
-                                    Matcher allNumberKeyword = SearchKeywordPattern.ALL_NUMBER_SEARCH_KEYWORD.matcher(keyword);
-                                    if (allNumberKeyword.find()) {
-                                        searchParam.setBeatmapId(Integer.valueOf(allNumberKeyword.group(1)));
-                                        argument.setSearchParam(searchParam);
-                                        break;
-                                    }
-                                    //新格式(咕)
-
-                                    //比较菜，手动补齐参数
-                                    if (!keyword.contains("-")) {
-                                        //如果没有横杠，手动补齐
-                                        keyword = "-" + keyword;
-                                    }
-                                    if (!(keyword.endsWith("]") || keyword.endsWith(")") || keyword.endsWith("}"))) {
-                                        //如果圆括号 方括号 花括号都没有
-                                        keyword += "[](){}";
-                                    }
-                                    if (keyword.endsWith("]")) {
-                                        //如果有方括号
-                                        keyword += "(){}";
-                                    }
-                                    if (keyword.endsWith(")")) {
-                                        //如果有圆括号
-                                        keyword += "{}";
-                                    }
-                                    Matcher getArtistTitleEtc = SearchKeywordPattern.KETWORD.matcher(keyword);
-                                    if (!getArtistTitleEtc.find()) {
-                                        cqMsg.setMessage("请使用艺术家-歌曲标题[难度名](麻婆名){AR9.0OD9.0CS9.0HP9.0}:osu!std<> +MOD双字母简称 的格式。\n" +
-                                                "所有参数都可以省略(但横线、方括号和圆括号不能省略)，四维顺序必须按AR OD CS HP排列。");
-                                        cqManager.sendMsg(cqMsg);
-                                        return null;
-                                    } else {
-                                        //没啥办法……手动处理吧，这个正则管不了了，去掉可能存在的空格
-                                        String artist = getArtistTitleEtc.group(1);
-                                        if (artist.endsWith(" ")) {
-                                            artist = artist.substring(0, artist.length() - 1);
-                                        }
-                                        String title = getArtistTitleEtc.group(2);
-                                        if (title.startsWith(" ")) {
-                                            title = title.substring(1);
-                                        }
-                                        if (title.endsWith(" ")) {
-                                            title = title.substring(0, title.length() - 1);
-                                        }
-                                        searchParam.setArtist(artist);
-                                        searchParam.setTitle(title);
-                                        searchParam.setDiffName(getArtistTitleEtc.group(3));
-                                        searchParam.setMapper(getArtistTitleEtc.group(4));
-                                        //处理四维字符串
-                                        String fourDimensions = getArtistTitleEtc.group(5);
-                                        if (!"".equals(fourDimensions)) {
-                                            Matcher getFourDimens = SearchKeywordPattern.FOUR_DIMENSIONS_REGEX.matcher(fourDimensions);
-                                            getFourDimens.find();
-                                            if (getFourDimens.group(1) != null) {
-                                                ar = Double.valueOf(getFourDimens.group(1));
-                                            }
-                                            if (getFourDimens.group(2) != null) {
-                                                od = Double.valueOf(getFourDimens.group(2));
-                                            }
-                                            if (getFourDimens.group(3) != null) {
-                                                cs = Double.valueOf(getFourDimens.group(3));
-                                            }
-                                            if (getFourDimens.group(4) != null) {
-                                                hp = Double.valueOf(getFourDimens.group(4));
-                                            }
-
-                                        }
-                                        searchParam.setAr(ar);
-                                        searchParam.setOd(od);
-                                        searchParam.setCs(cs);
-                                        searchParam.setHp(hp);
-
-                                    }
-
+                                case SEARCH_PARAM:
+                                    SearchParam searchParam = genSearchParam(cqMsg);
                                     argument.setSearchParam(searchParam);
+                                    break;
+                                case SHADOWSOCKS_USER:
+                                    ShadowSocksRequest ssr = new ShadowSocksRequest();
+                                    ssr.setUser(firstParam);
+                                    argument.setSsr(ssr);
+                                    break;
+                                case SHADOWSOCKS_UPD_USER_NUMBER:
+                                    ssr = argument.getSsr();
+                                    ssr.setNumber(Integer.valueOf(secondParam.replaceAll("[gm]", "")));
+                                    switch (secondParam.substring(secondParam.length() - 1)) {
+                                        case "m":
+                                            ssr.setType("time");
+                                            break;
+                                        case "g":
+                                            ssr.setType("traffic");
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                    argument.setSsr(ssr);
+                                    break;
+                                case SHADOWSOCKS_GIGABYTENUMBER:
+                                    ssr = new ShadowSocksRequest();
+                                    ssr.setNumber(Integer.valueOf(firstParam));
+                                    argument.setSsr(ssr);
+                                    break;
+                                case BEATMAP_ID:
+                                    argument.setBeatmapId(Integer.valueOf(secondParam));
                                     break;
                                 default:
                                     break;
@@ -588,6 +438,7 @@ public class ParameterVerifyAspect {
                                             if (num <= 0 || num > 100) {
                                                 cqMsg.setMessage("其他人看不到的东西，白菜也看不到啦。");
                                                 cqManager.sendMsg(cqMsg);
+
                                                 return null;
                                             }
                                         } else {
@@ -647,6 +498,20 @@ public class ParameterVerifyAspect {
 
 
                                     break;
+                                case SHADOWSOCKS_CONFIRM:
+                                    if (thirdParam != null) {
+                                        ShadowSocksRequest ssr = argument.getSsr();
+                                        ssr.setConfirm(Integer.valueOf(thirdParam));
+                                        argument.setSsr(ssr);
+                                    }
+                                    break;
+                                case SHADOWSOCKS_COUNT:
+                                    if (thirdParam != null) {
+                                        ShadowSocksRequest ssr = argument.getSsr();
+                                        ssr.setCount(Integer.valueOf(thirdParam));
+                                        argument.setSsr(ssr);
+                                    }
+                                    break;
                                 default:
                                     break;
                             }
@@ -664,6 +529,198 @@ public class ParameterVerifyAspect {
         return pjp.proceed(new Object[]{cqMsg});
     }
 
+    private SearchParam genSearchParam(CqMsg cqMsg) {
+        String msg = cqMsg.getMessage();
+        Argument argument = cqMsg.getArgument();
+        SearchParam searchParam = new SearchParam();
+        Integer modsNum = null;
+        String mods = "None";
+        Integer mode;
+        String keyword = null;
+        String scoreString = null;
+        Double ar = null;
+        Double od = null;
+        Double cs = null;
+        Double hp = null;
+        boolean keywordFound = false;
+        //先从字符串结尾的mod开始检测
+        Matcher getKeyWordAndMod = SearchKeywordPattern.MOD.matcher(msg);
+        if (getKeyWordAndMod.find()) {
+            if (!keywordFound) {
+                keyword = getKeyWordAndMod.group(2);
+                keywordFound = true;
+            }
+            mods = getKeyWordAndMod.group(3);
+            modsNum = scoreUtil.reverseConvertMod(mods);
+            //如果字符串解析出错，会返回null，因此这里用null值来判断输入格式
+            if (modsNum == null) {
+                cqMsg.setMessage("请使用MOD的双字母缩写，不需要任何分隔符。" +
+                        "\n接受的Mod有：NF EZ TD HD HR SD DT HT NC FL SO PF。");
+                cqManager.sendMsg(cqMsg);
+                return null;
+            }
+            //如果检测出来就去掉
+            msg = msg.replace("+" + mods, "");
+        }
+        //再检测是否指定了成绩字符串
+
+        //兼容koohii 加默认值
+        searchParam.setMaxCombo(-1);
+        searchParam.setCount50(0);
+        searchParam.setCount100(0);
+        searchParam.setCountMiss(0);
+        getKeyWordAndMod = SearchKeywordPattern.PP_CALC.matcher(msg);
+        if (getKeyWordAndMod.find()) {
+            if (!keywordFound) {
+                keyword = getKeyWordAndMod.group(2);
+                keywordFound = true;
+            }
+
+            scoreString = getKeyWordAndMod.group(3);
+            String[] scoreParams = scoreString.split(" ");
+            for (String s : scoreParams) {
+                Matcher getScoreParams = SearchKeywordPattern.KEYWORD_ACC.matcher(s);
+                if (getScoreParams.find()) {
+                    searchParam.setAcc(Double.valueOf(getScoreParams.group(1)));
+                }
+                getScoreParams = SearchKeywordPattern.KEYWORD_COMBO.matcher(s);
+                if (getScoreParams.find()) {
+                    searchParam.setMaxCombo(Integer.valueOf(getScoreParams.group(1)));
+                }
+                getScoreParams = SearchKeywordPattern.KEYWORD_COUNT_50.matcher(s);
+                if (getScoreParams.find()) {
+                    searchParam.setCount50(Integer.valueOf(getScoreParams.group(1)));
+                }
+                getScoreParams = SearchKeywordPattern.KEYWORD_COUNT_100.matcher(s);
+                if (getScoreParams.find()) {
+                    searchParam.setCount100(Integer.valueOf(getScoreParams.group(1)));
+                }
+                getScoreParams = SearchKeywordPattern.KEYWORD_MISS.matcher(s);
+                if (getScoreParams.find()) {
+                    searchParam.setCountMiss(Integer.valueOf(getScoreParams.group(1)));
+                }
+            }
+            msg = msg.replace(scoreString, "");
+            msg = msg.replaceAll("[《<>》]", "");
+        }
+        //最后检测是否指定了模式（如果先检测，会把后面的文字也计算进去）
+        getKeyWordAndMod = SearchKeywordPattern.MODE.matcher(msg);
+        if (getKeyWordAndMod.find()) {
+            keyword = getKeyWordAndMod.group(2);
+            keywordFound = true;
+            mode = convertModeStrToInteger(getKeyWordAndMod.group(3));
+            if (mode == null) {
+                logger.debug(getKeyWordAndMod.group(3));
+                cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, getKeyWordAndMod.group(3), "osu!游戏模式"));
+                cqManager.sendMsg(cqMsg);
+                return null;
+            }
+            argument.setMode(mode);
+        } else {
+            argument.setMode(0);
+        }
+
+
+        if (!keywordFound) {
+            //这种情况，三个参数都没有指定
+            Matcher m = RegularPattern.REG_CMD_REGEX.matcher(msg);
+            m.find();
+            if ("sudo".equals(argument.getSubCommandLowCase())) {
+                m = RegularPattern.ADMIN_CMD_REGEX.matcher(msg);
+                m.find();
+            }
+            keyword = m.group(2);
+        }
+
+        //如果mode不是主模式，而且命令是search
+        if (!argument.getMode().equals(0) && "search".equals(argument.getSubCommandLowCase())) {
+            cqMsg.setMessage("由于oppai不支持其他模式，因此白菜也只有主模式支持!search命令。");
+            cqManager.sendMsg(cqMsg);
+            return null;
+        }
+
+        searchParam.setMods(modsNum);
+        searchParam.setModsString(mods);
+
+
+        if (keyword.endsWith(" ")) {
+            keyword = keyword.substring(0, keyword.length() - 1);
+        }
+        Matcher allNumberKeyword = SearchKeywordPattern.ALL_NUMBER_SEARCH_KEYWORD.matcher(keyword);
+        if (allNumberKeyword.find()) {
+            searchParam.setBeatmapId(Integer.valueOf(allNumberKeyword.group(1)));
+            return searchParam;
+        }
+        //新格式(咕)
+
+        //比较菜，手动补齐参数
+        if (!keyword.contains("-")) {
+            //如果没有横杠，手动补齐
+            keyword = "-" + keyword;
+        }
+        if (!(keyword.endsWith("]") || keyword.endsWith(")") || keyword.endsWith("}")
+                || keyword.endsWith("】") || keyword.endsWith("）")
+        )) {
+            //如果圆括号 方括号 花括号都没有
+            keyword += "[](){}";
+        }
+        if (keyword.endsWith("]") || keyword.endsWith("】")) {
+            //如果有方括号
+            keyword += "(){}";
+        }
+        if (keyword.endsWith(")") || keyword.endsWith("）")) {
+            //如果有圆括号
+            keyword += "{}";
+        }
+        Matcher getArtistTitleEtc = SearchKeywordPattern.KETWORD.matcher(keyword);
+        if (!getArtistTitleEtc.find()) {
+            cqMsg.setMessage("搜索格式：艺术家-歌曲标题[难度名](麻婆名){AR9.0OD9.0CS9.0HP9.0}:osu!std<98acc 1x100 2x50 3xmiss 4cb> +MOD双字母简称。\n" +
+                    "所有参数都可以省略(但横线、方括号和圆括号不能省略)，方括号 圆括号和四维的小数点支持全/半角；四维顺序必须按AR OD CS HP排列。");
+            cqManager.sendMsg(cqMsg);
+            return null;
+        } else {
+            //没啥办法……手动处理吧，这个正则管不了了，去掉可能存在的空格
+            String artist = getArtistTitleEtc.group(1);
+            if (artist.endsWith(" ")) {
+                artist = artist.substring(0, artist.length() - 1);
+            }
+            String title = getArtistTitleEtc.group(2);
+            if (title.startsWith(" ")) {
+                title = title.substring(1);
+            }
+            if (title.endsWith(" ")) {
+                title = title.substring(0, title.length() - 1);
+            }
+            searchParam.setArtist(artist);
+            searchParam.setTitle(title);
+            searchParam.setDiffName(getArtistTitleEtc.group(3));
+            searchParam.setMapper(getArtistTitleEtc.group(4));
+            //处理四维字符串
+            String fourDimensions = getArtistTitleEtc.group(5);
+            if (!"".equals(fourDimensions)) {
+                Matcher getFourDimens = SearchKeywordPattern.FOUR_DIMENSIONS_REGEX.matcher(fourDimensions);
+                getFourDimens.find();
+                if (getFourDimens.group(1) != null) {
+                    ar = Double.valueOf(getFourDimens.group(1));
+                }
+                if (getFourDimens.group(2) != null) {
+                    od = Double.valueOf(getFourDimens.group(2));
+                }
+                if (getFourDimens.group(3) != null) {
+                    cs = Double.valueOf(getFourDimens.group(3));
+                }
+                if (getFourDimens.group(4) != null) {
+                    hp = Double.valueOf(getFourDimens.group(4));
+                }
+
+            }
+            searchParam.setAr(ar);
+            searchParam.setOd(od);
+            searchParam.setCs(cs);
+            searchParam.setHp(hp);
+            return searchParam;
+        }
+    }
 
     private Integer convertModeStrToInteger(String mode) {
         switch (mode.toLowerCase(Locale.CHINA)) {

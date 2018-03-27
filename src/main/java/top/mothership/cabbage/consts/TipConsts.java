@@ -16,6 +16,7 @@ public class TipConsts {
             "\n她想念自己的小ppy，而不是被逼着查PP。" +
             "\n你有考虑过这些吗？没有！你只考虑过你自己。";
     public static final String BEATMAP_NO_SCORE = "没有从osu!api获取到谱面%d在模式%s的排行榜。";
+    public static final String THIS_USER_BEATMAP_NO_SCORE = "没有从osu!api获取到玩家%s在谱面%d、模式%s的分数。";
     public static final String NO_RECENT_RECORD = "玩家%s在模式%s最近没有游戏记录。";
     public static final String NO_RECENT_RECORD_PASSED = "玩家%s在模式%s最近没有Pass的游戏记录。";
 }

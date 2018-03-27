@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.UserDAO;
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
-import top.mothership.cabbage.pojo.CoolQ.RespData;
 import top.mothership.cabbage.pojo.User;
+import top.mothership.cabbage.pojo.coolq.CqMsg;
+import top.mothership.cabbage.pojo.coolq.RespData;
 
 import java.util.Arrays;
 import java.util.HashMap;

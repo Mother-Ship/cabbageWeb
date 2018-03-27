@@ -15,11 +15,11 @@ import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
-import top.mothership.cabbage.pojo.CoolQ.Argument;
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
-import top.mothership.cabbage.pojo.CoolQ.CqResponse;
-import top.mothership.cabbage.pojo.CoolQ.QQInfo;
 import top.mothership.cabbage.pojo.User;
+import top.mothership.cabbage.pojo.coolq.Argument;
+import top.mothership.cabbage.pojo.coolq.CqMsg;
+import top.mothership.cabbage.pojo.coolq.CqResponse;
+import top.mothership.cabbage.pojo.coolq.QQInfo;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.SearchParam;
@@ -247,6 +247,9 @@ public class CqAdminServiceImpl {
                 resDAO.addResource(argument.getFileName(), bytes);
                 is.close();
             } catch (IOException ignore) {
+                cqMsg.setMessage("修改组件" + argument.getFileName() + "失败，错误信息：" + ignore.getMessage());
+                cqManager.sendMsg(cqMsg);
+                return;
             }
             cqMsg.setMessage("修改组件" + argument.getFileName() + "成功。");
             cqManager.sendMsg(cqMsg);
@@ -545,7 +548,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @UserAuthorityControl({1427922341})
+    @UserAuthorityControl({1427922341, 526942417})
     public void searchPlayer(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         String resp;
@@ -641,6 +644,20 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
+    public void unbind(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
+        Long qq = argument.getQq();
+        User user = userDAO.getUser(qq, null);
+        if (user == null) {
+            cqMsg.setMessage("该QQ没有绑定用户……");
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        user.setQq(0L);
+        userDAO.updateUser(user);
+        cqMsg.setMessage("QQ " + qq + " 的绑定信息已经清除。");
+        cqManager.sendMsg(cqMsg);
+    }
 
     public void help(CqMsg cqMsg) {
         String resp = "用户组管理系列：\n" +
@@ -665,7 +682,8 @@ public class CqAdminServiceImpl {
 
                 "特权命令系列：\n" +
                 "!sudo bg xxx:http://123 将给定连接中的图以xxx.png的文件名写入数据库。\n" +
-                "!sudo 钦点 xxx:role#qq 强行修改玩家信息。\n" +
+                "!sudo unbind qq 简单的将某个QQ对应的玩家解绑。\n" +
+                "!sudo 钦点 xxx:role#qq 强行修改完整的用户信息。\n" +
                 "!sudo recent xxx:mode 查询他人在指定模式的recent。\n" +
                 "!sudo fp xxx 打印给定bid的#1。\n" +
 
@@ -756,6 +774,36 @@ public class CqAdminServiceImpl {
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
 
+
+    }
+
+    public void score(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
+        if (argument.getMode() == null) {
+            argument.setMode(0);
+        }
+
+        Userinfo userinfo = apiManager.getUser(argument.getMode(), argument.getUsername());
+        if (userinfo == null) {
+            cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, argument.getUsername()));
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        Beatmap beatmap = apiManager.getBeatmap(argument.getBeatmapId());
+        if (beatmap == null) {
+            cqMsg.setMessage(String.format(TipConsts.BEATMAP_GET_FAILED, argument.getBeatmapId()));
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        List<Score> scores = apiManager.getScore(argument.getMode(), beatmap.getBeatmapId(), userinfo.getUserId());
+        if (scores.size() == 0) {
+            cqMsg.setMessage(String.format(TipConsts.THIS_USER_BEATMAP_NO_SCORE, argument.getUsername(), beatmap.getBeatmapId(), scoreUtil.convertGameModeToString(argument.getMode())));
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        String image = imgUtil.drawResult(userinfo, scores.get(0), beatmap, argument.getMode());
+        cqMsg.setMessage("[CQ:image,file=base64://" + image + "]");
+        cqManager.sendMsg(cqMsg);
 
     }
 }

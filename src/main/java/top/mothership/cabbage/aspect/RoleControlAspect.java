@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import top.mothership.cabbage.annotation.GroupAuthorityControl;
 import top.mothership.cabbage.annotation.UserAuthorityControl;
 import top.mothership.cabbage.manager.CqManager;
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
+import top.mothership.cabbage.pojo.coolq.CqMsg;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ public class RoleControlAspect {
     /**
      * 拦截service层所有方法中带AllowedUser注解的方法
      */
-    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.*.*(top.mothership.cabbage.pojo.CoolQ.CqMsg,..))")
+    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.*.*(top.mothership.cabbage.pojo.coolq.CqMsg,..))")
     private void aspectjMethod() {
     }
 

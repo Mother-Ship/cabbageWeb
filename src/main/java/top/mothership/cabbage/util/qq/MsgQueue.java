@@ -2,7 +2,7 @@ package top.mothership.cabbage.util.qq;
 
 import top.mothership.cabbage.pattern.CQCodePattern;
 import top.mothership.cabbage.pattern.RegularPattern;
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
+import top.mothership.cabbage.pojo.coolq.CqMsg;
 
 import java.util.ArrayList;
 import java.util.regex.Matcher;

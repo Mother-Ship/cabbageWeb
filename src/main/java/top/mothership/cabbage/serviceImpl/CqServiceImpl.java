@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.annotation.GroupAuthorityControl;
 import top.mothership.cabbage.consts.OverallConsts;
+import top.mothership.cabbage.consts.ShigureTiming;
 import top.mothership.cabbage.consts.TipConsts;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
@@ -18,11 +19,11 @@ import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
-import top.mothership.cabbage.pojo.CoolQ.Argument;
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
-import top.mothership.cabbage.pojo.CoolQ.CqResponse;
-import top.mothership.cabbage.pojo.CoolQ.QQInfo;
 import top.mothership.cabbage.pojo.User;
+import top.mothership.cabbage.pojo.coolq.Argument;
+import top.mothership.cabbage.pojo.coolq.CqMsg;
+import top.mothership.cabbage.pojo.coolq.CqResponse;
+import top.mothership.cabbage.pojo.coolq.QQInfo;
 import top.mothership.cabbage.pojo.osu.*;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
@@ -1433,6 +1434,25 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
+    @Scheduled(cron = "58 59 * * * ?")
+    public void timing() {
+        CqMsg cqMsg = new CqMsg();
+        cqMsg.setMessageType("private");
+        LocalTime localTime = LocalTime.now();
+        localTime = localTime.plusHours(1);
+        logger.info(localTime.getHour());
+        cqMsg.setMessage("[CQ:record,file=base64://" +
+                Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("shigure" + localTime.getHour() + ".mp3")) + "]");
+        cqMsg.setUserId(735862173L);
+        cqManager.sendMsg(cqMsg);
+        cqMsg.setUserId(770677061L);
+        cqManager.sendMsg(cqMsg);
+        cqMsg.setMessage(ShigureTiming.TIMING[localTime.getHour()]);
+        cqMsg.setUserId(735862173L);
+        cqManager.sendMsg(cqMsg);
+        cqMsg.setUserId(770677061L);
+        cqManager.sendMsg(cqMsg);
+    }
     @Scheduled(cron = "0 0 4 * * ?")
     public void importUserInfo() {
         //似乎每分钟并发也就600+，不需要加延迟……

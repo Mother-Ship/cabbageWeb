@@ -1,7 +1,8 @@
-package top.mothership.cabbage.pojo.CoolQ;
+package top.mothership.cabbage.pojo.coolq;
 
 import lombok.Data;
 import top.mothership.cabbage.pojo.osu.SearchParam;
+import top.mothership.cabbage.pojo.shadowsocks.ShadowSocksRequest;
 
 import java.util.List;
 
@@ -28,4 +29,6 @@ public class Argument {
     private String fileName;
     private String url;
     private Integer second;
+    private ShadowSocksRequest ssr;
+    private Integer beatmapId;
 }

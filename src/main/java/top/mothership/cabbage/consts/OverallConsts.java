@@ -19,11 +19,10 @@ public class OverallConsts {
 
     public final static ParameterEnum[] EMPTY_PARAMETER_LIST = new ParameterEnum[]{};
 
-    public final static String CHANGELOG = "2018-3-19\n" +
-            "*移除 !sudo check系列命令。（被!sudo searchplayer取代）\n" +
-            "*修正 !pr命令的模式错误问题。\n" +
-            "*修正 !bp系列命令无法使用的问题。\n" +
-            "*新增 !每日数据录入增加了redis缓存。\n" +
-            "*新增 !search命令的结果加入了AR的缩圈毫秒，以及OD对应的判定毫秒数。\n";
+    public final static String CHANGELOG = "2018-3-27 15:23:07\n" +
+            "*恢复 !sudo unbind命令。\n" +
+            "*新增 一键获取兑换码功能。\n" +
+            "*新增 给两个时雨厨加上时雨的报时。\n" +
+            "*恢复 黄花菜对接相关。\n";
 }
 

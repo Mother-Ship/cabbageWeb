@@ -217,7 +217,7 @@ public class ApiController {
 //    @RequestMapping(value = "/upload",method = RequestMethod.POST)
 //    @CrossOrigin(origins = "http://localhost")
 //    public String upload(@RequestParam(value = "myfile") MultipartFile file) throws Exception {
-//        String path = "C:\\CoolQ Pro\\data\\image\\resource\\db\\";
+//        String path = "C:\\coolq Pro\\data\\image\\resource\\db\\";
 //        String fileName = file.getOriginalFilename();
 //        String resp;
 //

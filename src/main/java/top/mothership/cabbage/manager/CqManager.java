@@ -4,10 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
-import top.mothership.cabbage.pojo.CoolQ.CqResponse;
-import top.mothership.cabbage.pojo.CoolQ.QQInfo;
-import top.mothership.cabbage.pojo.CoolQ.RespData;
+import top.mothership.cabbage.pojo.coolq.CqMsg;
+import top.mothership.cabbage.pojo.coolq.CqResponse;
+import top.mothership.cabbage.pojo.coolq.QQInfo;
+import top.mothership.cabbage.pojo.coolq.RespData;
 
 import java.io.BufferedReader;
 import java.io.IOException;

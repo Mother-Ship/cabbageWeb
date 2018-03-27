@@ -7,17 +7,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import top.mothership.cabbage.pattern.CQCodePattern;
-import top.mothership.cabbage.pattern.MpCommandPattern;
-import top.mothership.cabbage.pattern.RegularPattern;
 import top.mothership.cabbage.consts.ParameterEnum;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.manager.DayLilyManager;
-import top.mothership.cabbage.pojo.CoolQ.CqMsg;
-import top.mothership.cabbage.serviceImpl.AnalyzeServiceImpl;
-import top.mothership.cabbage.serviceImpl.CqAdminServiceImpl;
-import top.mothership.cabbage.serviceImpl.CqServiceImpl;
-import top.mothership.cabbage.serviceImpl.MpServiceImpl;
+import top.mothership.cabbage.pattern.CQCodePattern;
+import top.mothership.cabbage.pattern.MpCommandPattern;
+import top.mothership.cabbage.pattern.RegularPattern;
+import top.mothership.cabbage.pojo.coolq.CqMsg;
+import top.mothership.cabbage.serviceImpl.*;
 import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.annotation.PostConstruct;
@@ -40,21 +37,23 @@ public class CqController {
     private final CqManager cqManager;
     private final AnalyzeServiceImpl analyzeService;
     private final DayLilyManager dayLilyManager;
+    private final ShadowSocksCmdServiceImpl shadowSocksCmdService;
+
     private Logger logger = LogManager.getLogger(this.getClass());
 
     /**
      * Spring构造方法自动注入
-     *
-     * @param cqService      Service层
+     *  @param cqService      Service层
      * @param smokeUtil      负责禁言的工具类
      * @param cqAdminService
      * @param mpService
      * @param cqManager
      * @param analyzeService
      * @param dayLilyManager
+     * @param shadowSocksCmdService
      */
     @Autowired
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, MpServiceImpl mpService, CqManager cqManager, AnalyzeServiceImpl analyzeService, DayLilyManager dayLilyManager) {
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, MpServiceImpl mpService, CqManager cqManager, AnalyzeServiceImpl analyzeService, DayLilyManager dayLilyManager, ShadowSocksCmdServiceImpl shadowSocksCmdService) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
         this.cqAdminService = cqAdminService;
@@ -62,6 +61,7 @@ public class CqController {
         this.cqManager = cqManager;
         this.analyzeService = analyzeService;
         this.dayLilyManager = dayLilyManager;
+        this.shadowSocksCmdService = shadowSocksCmdService;
     }
 
     /**
@@ -149,7 +149,7 @@ public class CqController {
                                     cqAdminService.checkAfkPlayer(cqMsg);
                                     break;
                                 case "smoke":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.QQ});
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.AT});
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.SECOND});
                                     cqAdminService.smoke(cqMsg);
                                     break;
@@ -171,7 +171,7 @@ public class CqController {
                                     cqAdminService.appoint(cqMsg);
                                     break;
                                 case "fp":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SEARCHPARAM});
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SEARCH_PARAM});
                                     cqAdminService.firstPlace(cqMsg);
                                     break;
                                 case "listmsg":
@@ -182,7 +182,6 @@ public class CqController {
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME});
                                     cqAdminService.searchPlayer(cqMsg);
                                     break;
-
                                 case "groupinfo":
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.GROUPID});
                                     cqAdminService.groupInfo(cqMsg);
@@ -196,6 +195,15 @@ public class CqController {
                                 case "roleinfo":
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.ROLE});
                                     cqAdminService.roleInfo(cqMsg);
+                                    break;
+                                case "unbind":
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.QQ});
+                                    cqAdminService.unbind(cqMsg);
+                                    break;
+                                case "score":
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME, ParameterEnum.BEATMAP_ID});
+                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
+                                    cqAdminService.score(cqMsg);
                                 default:
                                     break;
                             }
@@ -255,7 +263,7 @@ public class CqController {
                                     cqService.statUserInfo(cqMsg);
                                     break;
                                 case "statu":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERID});
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USER_ID});
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.DAY, ParameterEnum.MODE});
                                     cqService.statUserInfo(cqMsg);
                                     break;
@@ -267,6 +275,10 @@ public class CqController {
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME});
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.NUM, ParameterEnum.MODE});
                                     cqService.pretreatmentParameterForBPCommand(cqMsg);
+                                    if (cqMsg.getArgument() == null) {
+                                        //在BP的参数错误情况下，会直接返回到Controller中，此时没有Argument会触发NPE
+                                        return;
+                                    }
                                     if (cqMsg.getArgument().getNum() != null) {
                                         //如果有指定#n
                                         //如果Service内部调用，AOP无法拦截
@@ -276,9 +288,13 @@ public class CqController {
                                     }
                                     break;
                                 case "bpu":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERID});
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USER_ID});
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.NUM, ParameterEnum.MODE});
                                     cqService.pretreatmentParameterForBPCommand(cqMsg);
+                                    if (cqMsg.getArgument() == null) {
+                                        //在BP的参数错误情况下，会直接返回到Controller中，此时没有Argument会触发NPE
+                                        return;
+                                    }
                                     if (cqMsg.getArgument().getNum() != null) {
                                         //如果有指定#n
                                         //如果Service内部调用，AOP无法拦截
@@ -291,6 +307,10 @@ public class CqController {
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME});
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.NUM, ParameterEnum.MODE});
                                     cqService.pretreatmentParameterForBPCommand(cqMsg);
+                                    if (cqMsg.getArgument() == null) {
+                                        //在BP的参数错误情况下，会直接返回到Controller中，此时没有Argument会触发NPE
+                                        return;
+                                    }
                                     if (cqMsg.getArgument().getNum() != null) {
                                         //如果有指定#n
                                         //如果Service内部调用，AOP无法拦截
@@ -300,9 +320,13 @@ public class CqController {
                                     }
                                     break;
                                 case "bpus":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERID});
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USER_ID});
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.NUM, ParameterEnum.MODE});
                                     cqService.pretreatmentParameterForBPCommand(cqMsg);
+                                    if (cqMsg.getArgument() == null) {
+                                        //在BP的参数错误情况下，会直接返回到Controller中，此时没有Argument会触发NPE
+                                        return;
+                                    }
                                     if (cqMsg.getArgument().getNum() != null) {
                                         //如果有指定#n
                                         //如果Service内部调用，AOP无法拦截
@@ -317,6 +341,10 @@ public class CqController {
                                 case "bpmes":
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.NUM, ParameterEnum.MODE});
                                     cqService.pretreatmentParameterForBPCommand(cqMsg);
+                                    if (cqMsg.getArgument() == null) {
+                                        //在BP的参数错误情况下，会直接返回到Controller中，此时没有Argument会触发NPE
+                                        return;
+                                    }
                                     if (cqMsg.getArgument().getNum() != null) {
                                         //如果有指定#n
                                         //如果Service内部调用，AOP无法拦截
@@ -350,11 +378,11 @@ public class CqController {
                                     cqService.chartMemberCmd(cqMsg);
                                     break;
                                 case "me":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SEARCHPARAM});
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SEARCH_PARAM});
                                     cqService.myScore(cqMsg);
                                     break;
                                 case "search":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SEARCHPARAM});
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SEARCH_PARAM});
                                     cqService.search(cqMsg);
                                     break;
                                 case "costme":
@@ -414,10 +442,31 @@ public class CqController {
                                 case "listuser":
                                     analyzeService.listTargetUser(cqMsg);
                                     break;
-
+                                case "upduser":
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_USER, ParameterEnum.SHADOWSOCKS_UPD_USER_NUMBER});
+                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_CONFIRM});
+                                    shadowSocksCmdService.service(cqMsg);
+                                    break;
+                                case "getcode":
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_GIGABYTENUMBER});
+                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_COUNT});
+                                    shadowSocksCmdService.service(cqMsg);
+                                    break;
                                 default:
-                                    /// 转交给黄花菜
-//                                    dayLilyManager.sendMsg(cqMsg);
+                                    // 转交给黄花菜
+//                                    boolean hasDayLily = false;
+//                                    if ("group".equals(cqMsg.getMessageType())) {
+//                                        CqResponse<List<QQInfo>> cqResponse;
+//                                        cqResponse = cqManager.getGroupMembers(cqMsg.getGroupId());
+//                                        for (QQInfo qqInfo : cqResponse.getData()) {
+//                                            if (Long.valueOf(2181697779L).equals(qqInfo.getUserId())) {
+//                                                hasDayLily = true;
+//                                            }
+//                                        }
+//                                    }
+//                                    if (!hasDayLily) {
+                                    dayLilyManager.sendMsg(cqMsg);
+//                                    }
                                     break;
 
                             }
