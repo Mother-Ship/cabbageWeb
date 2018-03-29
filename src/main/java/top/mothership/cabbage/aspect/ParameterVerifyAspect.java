@@ -337,12 +337,17 @@ public class ParameterVerifyAspect {
                                     ssr.setUser(firstParam);
                                     argument.setSsr(ssr);
                                     break;
-                                case SHADOWSOCKS_UPD_USER_NUMBER:
+                                case SHADOWSOCKS_NUMBER:
                                     ssr = argument.getSsr();
+                                    if (ssr == null) {
+                                        //getCode命令兼容
+                                        ssr = new ShadowSocksRequest();
+                                    }
                                     ssr.setNumber(Integer.valueOf(secondParam.replaceAll("[gm]", "")));
                                     switch (secondParam.substring(secondParam.length() - 1)) {
                                         case "m":
                                             ssr.setType("time");
+                                            ssr.setMonthly(1);
                                             break;
                                         case "g":
                                             ssr.setType("traffic");
@@ -350,11 +355,6 @@ public class ParameterVerifyAspect {
                                         default:
                                             break;
                                     }
-                                    argument.setSsr(ssr);
-                                    break;
-                                case SHADOWSOCKS_GIGABYTENUMBER:
-                                    ssr = new ShadowSocksRequest();
-                                    ssr.setNumber(Integer.valueOf(firstParam));
                                     argument.setSsr(ssr);
                                     break;
                                 case BEATMAP_ID:

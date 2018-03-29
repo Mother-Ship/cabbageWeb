@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pattern.RegularPattern;
 import top.mothership.cabbage.manager.WebPageManager;
+import top.mothership.cabbage.pattern.RegularPattern;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
@@ -616,6 +616,7 @@ public class ImgUtil {
                             / (oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners());
                     //进度条
                     if (score.getRank().equals("F")) {
+                        //设置直线断点平滑
                         g2.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                         g2.setColor(Color.decode("#99cc31"));
                         g2.drawLine(262, 615, 262 + progress, 615);
@@ -1332,6 +1333,84 @@ public class ImgUtil {
 //        return b;
     }
 
+    public String drawRadarImage(Map<String, Integer> ppPlus, Userinfo userinfo) {
+//                    + "\nJump：" + map.get("Jump")
+//                    + "\nFlow：" + map.get("Flow")
+//                    + "\nPrecision：" + map.get("Precision")
+//                    + "\nSpeed：" + map.get("Speed")
+//                    + "\nStamina：" + map.get("Stamina")
+//                    + "\nAccuracy：" + map.get("Accuracy")
+        BufferedImage bg = getCopyImage(images.get("costbg.png"));
+        Graphics2D g2 = bg.createGraphics();
+        double threshold = 2000;
+        for (Integer i : ppPlus.values()) {
+            if (i > 2000) {
+                threshold = 5000;
+            }
+            if (i > 5000) {
+                threshold = 8000;
+            }
+        }
+
+        //坐标计算：横坐标为152-(PP+数值)/10000*80,纵坐标为131-(PP+数值)/10000*80*根号3 /2
+        int jumpX = (int) (152D - ppPlus.get("Jump") / threshold * 40D);
+        int jumpY = (int) (131D - ppPlus.get("Jump") / threshold * 40D * Math.sqrt(3));
+        int flowX = (int) (152D + ppPlus.get("Flow") / threshold * 40D);
+        int flowY = (int) (131D - ppPlus.get("Flow") / threshold * 40D * Math.sqrt(3));
+        int precisionX = (int) (152D - ppPlus.get("Precision") / threshold * 40D);
+        int precisionY = 131;
+        int speedX = (int) (152D - ppPlus.get("Speed") / threshold * 40D);
+        int speedY = (int) (131D + ppPlus.get("Speed") / threshold * 40D * Math.sqrt(3));
+        int staminaX = (int) (152D + ppPlus.get("Stamina") / threshold * 40D);
+        int staminaY = (int) (131D + ppPlus.get("Stamina") / threshold * 40D * Math.sqrt(3));
+        int accuracyX = (int) (152D + ppPlus.get("Accuracy") / threshold * 40D);
+        int accuracyY = 131;
+        //构造多边形
+        Polygon p = new Polygon();
+        p.addPoint(jumpX, jumpY);
+        p.addPoint(precisionX, precisionY);
+        p.addPoint(speedX, speedY);
+        p.addPoint(staminaX, staminaY);
+        p.addPoint(accuracyX, accuracyY);
+        p.addPoint(flowX, flowY);
+        //开启平滑、端点圆形
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_DEFAULT);
+        Stroke s = new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER);
+        g2.setStroke(s);
+        //多边形边框颜色
+        g2.setColor(new Color(253, 148, 62));
+        g2.drawPolygon(p);
+        //端点
+        g2.fillOval(jumpX - 3, jumpY - 3, 6, 6);
+        g2.fillOval(precisionX - 3, precisionY - 3, 6, 6);
+        g2.fillOval(speedX - 3, speedY - 3, 6, 6);
+        g2.fillOval(staminaX - 3, staminaY - 3, 6, 6);
+        g2.fillOval(accuracyX - 3, accuracyY - 3, 6, 6);
+        g2.fillOval(flowX - 3, flowY - 3, 6, 6);
+        //填充六边形
+
+        g2.setColor(new Color(253, 148, 62, 100));
+        g2.fill(p);
+        //具体值
+        g2.setColor(new Color(10, 13, 16, 200));
+        g2.fillRoundRect(jumpX - 45, jumpY, 36, 12, 4, 4);
+        g2.fillRoundRect(precisionX - 45, precisionY, 36, 12, 4, 4);
+        g2.fillRoundRect(speedX - 45, speedY, 36, 12, 4, 4);
+        g2.fillRoundRect(staminaX + 10, staminaY, 36, 12, 4, 4);
+        g2.fillRoundRect(accuracyX + 10, accuracyY, 36, 12, 4, 4);
+        g2.fillRoundRect(flowX + 10, flowY, 36, 12, 4, 4);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Flow").toString(), flowX + 13, flowY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Stamina").toString(), staminaX + 13, staminaY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Accuracy").toString(), accuracyX + 13, accuracyY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Speed").toString(), speedX - 42, speedY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Precision").toString(), precisionX - 42, precisionY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Jump").toString(), jumpX - 42, jumpY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, userinfo.getUserName(), 182, 245);
+
+        return drawImage(bg);
+
+    }
     /**
      * 向图片上绘制字符串的方法……当时抽出来复用，但是方法名没取好
      * 2018-1-24 17:05:11去除配置文件的设定，反正以后要改也不可能去除旧命令。

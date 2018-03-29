@@ -443,12 +443,12 @@ public class CqController {
                                     analyzeService.listTargetUser(cqMsg);
                                     break;
                                 case "upduser":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_USER, ParameterEnum.SHADOWSOCKS_UPD_USER_NUMBER});
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_USER, ParameterEnum.SHADOWSOCKS_NUMBER});
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_CONFIRM});
                                     shadowSocksCmdService.service(cqMsg);
                                     break;
                                 case "getcode":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_GIGABYTENUMBER});
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_NUMBER});
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_COUNT});
                                     shadowSocksCmdService.service(cqMsg);
                                     break;

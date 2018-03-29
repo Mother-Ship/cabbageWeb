@@ -22,5 +22,6 @@ public class ShadowSocksRequest {
     private Integer number;
     private Integer confirm = 1;
     private Integer count;
+    private Integer monthly;
     private String key = OverallConsts.CABBAGE_CONFIG.getString("ssCmdVerifyCode");
 }

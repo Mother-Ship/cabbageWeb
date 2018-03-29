@@ -686,6 +686,7 @@ public class CqAdminServiceImpl {
                 "!sudo 钦点 xxx:role#qq 强行修改完整的用户信息。\n" +
                 "!sudo recent xxx:mode 查询他人在指定模式的recent。\n" +
                 "!sudo fp xxx 打印给定bid的#1。\n" +
+                "!sudo score xxx#yyy 打印xxx玩家在yyy谱面的分数。\n" +
 
                 "玩家信息管理系列：\n" +
                 "!sudo searchPlayer xxx 查询曾用/现用用户名中包含xxx，或者QQ/uid全文匹配xxx的玩家。\n";

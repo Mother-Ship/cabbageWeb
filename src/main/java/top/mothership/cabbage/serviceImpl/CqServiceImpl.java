@@ -1067,7 +1067,7 @@ public class CqServiceImpl {
     public void cost(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         User user = null;
-        Userinfo userFromAPI;
+        Userinfo userFromAPI = null;
 
         switch (argument.getSubCommandLowCase()) {
             case "costme":
@@ -1080,6 +1080,12 @@ public class CqServiceImpl {
                 }
                 if (user.isBanned()) {
                     cqMsg.setMessage(TipConsts.USER_IS_BANNED);
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                userFromAPI = apiManager.getUser(0, user.getUserId());
+                if (userFromAPI == null) {
+                    cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, user.getQq(), user.getUserId()));
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
@@ -1117,7 +1123,8 @@ public class CqServiceImpl {
 
         }
         Map<String, Integer> map = webPageManager.getPPPlus(user.getUserId());
-        if (map != null) {
+        //2018-3-29 09:52:16加入Map容量判断
+        if (map != null && map.size() == 6) {
             double drugsS4Cost = Math.pow((map.get("Jump") / 3000F), 0.9F)
                     * Math.pow((map.get("Flow") / 1500F), 0.5F)
                     + Math.pow((map.get("Speed") / 2000F), 1.25F)
@@ -1137,22 +1144,21 @@ public class CqServiceImpl {
                     + (map.get("Accuracy") / 2700F);
 //           mp4： Cost=((0.02*(10*SQRT((ATAN((2*B1-(2400+2135))/(2400-2135))+PI()/2+8)*(ATAN((2*B2-(720+418))/(720-418))+PI()/2+3))+7*(ATAN((2*B4-(1600+1324))/(1600-1324))+PI()/2)+3*(ATAN((2*B5-(1300+930))/(1300-930))+PI()/2)+1*(ATAN((2*B6-(1300+1000))/(1300-1000))+PI()/2)+5*(ATAN((2*B3-(700+450))/(700-450))+PI()/2)))-1)^2.5
 //           oclbs10： (\frac{\mbox{jump}}{3000})^{0.8}*(\frac{\mbox{flow}}{1500})^{0.6}+(\frac{\mbox{speed}}{2000})^{0.8}*(\frac{\mbox{stamina}}{2000})^{0.5}+\frac{\mbox{accuracy}}{2700}
-            cqMsg.setMessage(user.getCurrentUname() + "的PP+ 六维数据："
-                    + "\nJump：" + map.get("Jump")
-                    + "\nFlow：" + map.get("Flow")
-                    + "\nPrecision：" + map.get("Precision")
-                    + "\nSpeed：" + map.get("Speed")
-                    + "\nStamina：" + map.get("Stamina")
-                    + "\nAccuracy：" + map.get("Accuracy")
+//            cqMsg.setMessage(user.getCurrentUname() + "的PP+ 六维数据："
+//                    + "\nJump：" + map.get("Jump")
+//                    + "\nFlow：" + map.get("Flow")
+//                    + "\nPrecision：" + map.get("Precision")
+//                    + "\nSpeed：" + map.get("Speed")
+//                    + "\nStamina：" + map.get("Stamina")
+//                    + "\nAccuracy：" + map.get("Accuracy")
+            String filename = imgUtil.drawRadarImage(map, userFromAPI);
+            cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]\n"
                     + "\n在**第二届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S2Cost)
                     + "。\n"
                     + "\n在**第四届某个连名字都不能提的比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS4Cost)
                     + "。\n"
                     + "\n在**第十届OCLB**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
-                    + "。该比赛本周末结束报名。Cost上限3.5，无强制下限，但考虑游戏体验，推荐Cost为2.5以上的玩家报名。"
-                    + "\n如组队报名将受到惩罚：上限3.5→3.4，且平均cost不能超过随机组队的平均cost-0.1。"
-                    + " \n单人报名时比赛为队长选人组队，cost最高的若干人成为队长，5人一队，上场3v3。"
-                    + "\n\n每个比赛的Cost公式不同，每个Cost只在对应的比赛有效。");
+                    + "。");
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -1231,7 +1237,7 @@ public class CqServiceImpl {
 
     }
 
-
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L})
     public void getBonusPP(CqMsg cqMsg) {
         //为什么这个方法会被切面拦截两次。。
         //2018-2-28 17:25:09 卧槽 没写break 我是sb

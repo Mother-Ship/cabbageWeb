@@ -23,6 +23,7 @@ public class OverallConsts {
             "*恢复 !sudo unbind命令。\n" +
             "*新增 一键获取兑换码功能。\n" +
             "*新增 给两个时雨厨加上时雨的报时。\n" +
+            "*新增 !sudo score命令。\n" +
             "*恢复 黄花菜对接相关。\n";
 }
 
