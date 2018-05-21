@@ -348,7 +348,8 @@ public class ScoreUtil {
                 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)";
         if (oppaiResult != null) {
-            resp += "，" + String.valueOf(Math.round(oppaiResult.getPp())) + "PP\n";
+            resp += "，" + String.valueOf(Math.round(oppaiResult.getPp())) + "PP(Now)";
+            resp += "，" + String.valueOf(Math.round(oppaiResult.getPpLegacy())) + "PP(Legacy)\n";
         }
         resp += "Played by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(score.getDate().toInstant());
         return resp;
@@ -365,14 +366,15 @@ public class ScoreUtil {
     public OppaiResult calcPP(Score score, Beatmap beatmap) {
         logger.info("开始计算PP");
         String osuFile = webPageManager.getOsuFile(beatmap);
-        try (BufferedReader in = new BufferedReader(new StringReader(osuFile))) {
+        try (BufferedReader in = new BufferedReader(new StringReader(osuFile));
+             //似乎oppai会自动关闭流？用同一个流会出现第二个PP计算为0的情况
+        BufferedReader in2 = new BufferedReader(new StringReader(osuFile))) {
             //日后再说，暂时不去按自己的想法改造它……万一作者日后放出更新呢..
             //把这种充满静态内部类，PPv2Params没有有参构造、成员变量给包访问权限、没有get/set的危险东西局限在这个方法里，不要在外面用就是了……%
             Koohii.Map map = new Koohii.Parser().map(in);
             map.mode = beatmap.getMode();
             Koohii.DiffCalc stars = new Koohii.DiffCalc().calc(map, score.getEnabledMods());
             Koohii.PPv2Parameters p = new Koohii.PPv2Parameters();
-
             p.beatmap = map;
             p.aim_stars = stars.aim;
             p.speed_stars = stars.speed;
@@ -389,15 +391,41 @@ public class ScoreUtil {
             mapstats.hp = beatmap.getDiffDrain();
             //APPLY_AR OD CS HP是1 2 4 8，把flag改成15好像就会 四维都进行计算？
             mapstats = Koohii.mods_apply(score.getEnabledMods(), mapstats, 15);
+
+
+            KoohiiLegacy.Map map2 = new KoohiiLegacy.Parser().map(in2);
+            map2.mode = beatmap.getMode();
+            KoohiiLegacy.DiffCalc stars2 = new KoohiiLegacy.DiffCalc().calc(map2, score.getEnabledMods());
+            KoohiiLegacy.PPv2Parameters p2 = new KoohiiLegacy.PPv2Parameters();
+            p2.beatmap = map2;
+            p2.aim_stars = stars2.aim;
+            p2.speed_stars = stars2.speed;
+            p2.mods = score.getEnabledMods();
+            p2.n300 = score.getCount300();
+            p2.n100 = score.getCount100();
+            p2.n50 = score.getCount50();
+            p2.nmiss = score.getCountMiss();
+            p2.combo = score.getMaxCombo();
+
+
+
+            KoohiiLegacy.MapStats mapstats2 = new KoohiiLegacy.MapStats();
+            mapstats2.ar = beatmap.getDiffApproach();
+            mapstats2.cs = beatmap.getDiffSize();
+            mapstats2.od = beatmap.getDiffOverall();
+            mapstats2.hp = beatmap.getDiffDrain();
+            mapstats2 = KoohiiLegacy.mods_apply(score.getEnabledMods(), mapstats2, 15);
             if (map.mode == 0) {
                 Koohii.PPv2 pp = new Koohii.PPv2(p);
+                KoohiiLegacy.PPv2 pp2 = new KoohiiLegacy.PPv2(p2);
                 return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
                         //Java实现如果出错会抛出异常，象征性给个0和null
                         0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
                         //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
                         mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
                         //scoreVersion只能是V1了，
-                        1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, pp.aim, pp.speed, pp.acc, pp.total, mapstats.speed);
+                        1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold,
+                        pp.aim, pp.speed, pp.acc, pp.total, pp2.total,mapstats.speed);
 
             } else {
                 return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
@@ -406,7 +434,7 @@ public class ScoreUtil {
                         //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
                         mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
                         //scoreVersion只能是V1了，非STD的计算应该是没有PP的，给四个0
-                        1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, 0, 0, 0, 0, mapstats.speed);
+                        1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, 0, 0,0, 0, 0, mapstats.speed);
 
             }
         } catch (Exception e) {

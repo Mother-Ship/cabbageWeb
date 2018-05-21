@@ -197,12 +197,14 @@ public class ApiManager {
     }
 
     private void fixRank(Userinfo userFromAPI) {
-        logger.info("开始修正玩家" + userFromAPI.getUserName() + "的SH XH数据");
-        List<Integer> list = webPageManager.getCorrectXAndSRank(userFromAPI.getMode(), userFromAPI.getUserId());
-        if (list != null) {
-            userFromAPI.setCountRankSs(list.get(0));
-            userFromAPI.setCountRankS(list.get(1));
-        }
+//        logger.info("开始修正玩家" + userFromAPI.getUserName() + "的SH XH数据");
+//        List<Integer> list = webPageManager.getCorrectXAndSRank(userFromAPI.getMode(), userFromAPI.getUserId());
+//        if (list != null) {
+//            userFromAPI.setCountRankSs(list.get(0));
+//            userFromAPI.setCountRankS(list.get(1));
+//        }
+        userFromAPI.setCountRankSs(userFromAPI.getCountRankSs()+userFromAPI.getCountRankSsh());
+            userFromAPI.setCountRankS(userFromAPI.getCountRankS()+userFromAPI.getCountRankSh());
     }
 
     private String accessAPI(String apiType, String uid, String uidType, String bid, String hash, Integer rank, String mid, Integer mode) {

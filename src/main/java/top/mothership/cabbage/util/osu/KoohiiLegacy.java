@@ -33,11 +33,11 @@ import java.util.Collections;
  *         new BufferedReader(new InputStreamReader(System.in)
  *     );
  *
- *     KoohiiLegacy.Map beatmap = new KoohiiLegacy.Parser().map(stdin);
- *     KoohiiLegacy.DiffCalc stars = new KoohiiLegacy.DiffCalc().calc(beatmap);
+ *     Koohii.Map beatmap = new Koohii.Parser().map(stdin);
+ *     Koohii.DiffCalc stars = new Koohii.DiffCalc().calc(beatmap);
  *     System.out.printf("%s stars\n", stars.total);
  *
- *     KoohiiLegacy.PPv2 pp = KoohiiLegacy.PPv2(
+ *     Koohii.PPv2 pp = Koohii.PPv2(
  *         stars.aim, stars.speed, beatmap
  *     );
  *
@@ -501,9 +501,9 @@ public static final int MODS_TOUCH_DEVICE = 1 << 2;
      * applies mods to mapstats.
      *
      * <p><blockquote><pre>
-     * KoohiiLegacy.MapStats mapstats = new KoohiiLegacy.MapStats();
+     * Koohii.MapStats mapstats = new Koohii.MapStats();
      * mapstats.ar = 9;
-     * KoohiiLegacy.mods_apply(KoohiiLegacy.MODS_DT, mapstats, KoohiiLegacy.APPLY_AR);
+     * Koohii.mods_apply(Koohii.MODS_DT, mapstats, Koohii.APPLY_AR);
      * // mapstats.ar is now 10.33, mapstats.speed is 1.5
      * </pre></blockquote></p>
      *
@@ -742,9 +742,9 @@ public static final int MODS_TOUCH_DEVICE = 1 << 2;
          * must be set or passed to calc() explicitly.
          * persists across calc() calls unless it's changed or explicity
          * passed to calc()
-         * @see KoohiiLegacy.DiffCalc#calc(KoohiiLegacy.Map, int, double)
-         * @see KoohiiLegacy.DiffCalc#calc(KoohiiLegacy.Map, int)
-         * @see KoohiiLegacy.DiffCalc#calc(KoohiiLegacy.Map)
+         * @see Koohii.DiffCalc#calc(Koohii.Map, int, double)
+         * @see Koohii.DiffCalc#calc(Koohii.Map, int)
+         * @see Koohii.DiffCalc#calc(Koohii.Map)
          */
         public Map beatmap = null;
 
@@ -1009,7 +1009,7 @@ public static final int MODS_TOUCH_DEVICE = 1 << 2;
 
         /**
          * calls Accuracy(-1, n100, n50, nmisses) .
-         * @see KoohiiLegacy.Accuracy#Koohii.Accuracy(int, int, int, int)
+         * @see Koohii.Accuracy#Koohii.Accuracy(int, int, int, int)
          */
         public Accuracy(int n100, int n50, int nmisses) {
             this(-1, n100, n50, nmisses);
@@ -1017,7 +1017,7 @@ public static final int MODS_TOUCH_DEVICE = 1 << 2;
 
         /**
          * calls Accuracy(-1, n100, n50, 0) .
-         * @see KoohiiLegacy.Accuracy#Koohii.Accuracy(int, int, int, int)
+         * @see Koohii.Accuracy#Koohii.Accuracy(int, int, int, int)
          */
         public Accuracy(int n100, int n50) {
             this(-1, n100, n50, 0);
@@ -1025,7 +1025,7 @@ public static final int MODS_TOUCH_DEVICE = 1 << 2;
 
         /**
          * calls Accuracy(-1, n100, 0, 0) .
-         * @see KoohiiLegacy.Accuracy#Koohii.Accuracy(int, int, int, int)
+         * @see Koohii.Accuracy#Koohii.Accuracy(int, int, int, int)
          */
         public Accuracy(int n100) {
             this(-1, n100, 0, 0);
@@ -1388,7 +1388,7 @@ public static final int MODS_TOUCH_DEVICE = 1 << 2;
      * parameters to be passed to PPv2.
      * aim_stars, speed_stars, max_combo, nsliders, ncircles, nobjects,
      * base_ar, base_od are required.
-     * @see KoohiiLegacy.PPv2#Koohii.PPv2(KoohiiLegacy.PPv2Parameters)
+     * @see Koohii.PPv2#Koohii.PPv2(Koohii.PPv2Parameters)
      */
     public static class PPv2Parameters
     {
@@ -1620,7 +1620,7 @@ public static final int MODS_TOUCH_DEVICE = 1 << 2;
 
         /**
          * simplest possible call, calculates ppv2 for SS scorev1.
-         * @see KoohiiLegacy.PPv2#Koohii.PPv2(KoohiiLegacy.PPv2Parameters)
+         * @see Koohii.PPv2#Koohii.PPv2(Koohii.PPv2Parameters)
          */
         public PPv2(double aim_stars, double speed_stars, Map b)
         {
@@ -1630,4 +1630,4 @@ public static final int MODS_TOUCH_DEVICE = 1 << 2;
         }
     }
 
-} /* public final class KoohiiLegacy */
+} /* public final class Koohii */
