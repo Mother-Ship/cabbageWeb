@@ -445,16 +445,22 @@ public class CqAdminServiceImpl {
             resp = "玩家" + userFromAPI.getUserName() + "没有使用过白菜，已完成注册";
             userUtil.registerUser(userFromAPI.getUserId(), 0, argument.getQq(), argument.getRole());
         } else {
-            resp = "更新前的QQ：" + user.getQq() + "，更新前的用户组：" + user.getRole();
-            user.setQq(argument.getQq());
-            user.setRole(argument.getRole());
-            if (argument.getQq() != null) {
-                resp += "\n更新后的QQ：" + argument.getQq();
+            user = userDAO.getUser(argument.getQq(), null);
+            if (user == null) {
+                resp = "更新前的QQ：" + user.getQq() + "，更新前的用户组：" + user.getRole();
+                user.setQq(argument.getQq());
+                user.setRole(argument.getRole());
+                if (argument.getQq() != null) {
+                    resp += "\n更新后的QQ：" + argument.getQq();
+                }
+                if (argument.getRole() != null) {
+                    resp += "\n更新后的用户组：" + argument.getRole();
+                }
+                userDAO.updateUser(user);
+            }else{
+                resp = "你钦点的QQ已经绑定了" + user.getCurrentUname()+",请先尝试解绑！";
             }
-            if (argument.getRole() != null) {
-                resp += "\n更新后的用户组：" + argument.getRole();
-            }
-            userDAO.updateUser(user);
+
         }
 
         cqMsg.setMessage(resp);

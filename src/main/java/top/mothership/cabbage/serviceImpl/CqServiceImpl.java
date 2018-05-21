@@ -403,7 +403,7 @@ public class CqServiceImpl {
                     }
             }
             if (todayBP.size() == 0) {
-                cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("wan_bu_liao_la.wav")) + "]");
+                cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("NI_QI_BU_QI.wav")) + "]");
                 cqManager.sendMsg(cqMsg);
                 cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
                 cqManager.sendMsg(cqMsg);
@@ -436,7 +436,7 @@ public class CqServiceImpl {
                 }
             }
             if (todayBP.size() == 0) {
-                cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("wan_bu_liao_la.wav")) + "]");
+                cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("NI_QI_BU_QI.wav")) + "]");
                 cqManager.sendMsg(cqMsg);
                 cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
                 cqManager.sendMsg(cqMsg);
@@ -444,7 +444,12 @@ public class CqServiceImpl {
             }
         }
 
-
+        for(Score s:todayBP){
+            if(s.getBpId()<=10){
+                cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("NEXT_LEVEL_PLAY.wav")) + "]");
+                cqManager.sendMsg(cqMsg);
+            }
+        }
         //如果是多模式的BP，mixedmode是true，getmode是null
         String result = imgUtil.drawUserBP(userFromAPI, todayBP, argument.getMode(), mixedMode);
         cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
@@ -1449,13 +1454,9 @@ public class CqServiceImpl {
         logger.info(localTime.getHour());
         cqMsg.setMessage("[CQ:record,file=base64://" +
                 Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("shigure" + localTime.getHour() + ".mp3")) + "]");
-        cqMsg.setUserId(735862173L);
-        cqManager.sendMsg(cqMsg);
         cqMsg.setUserId(770677061L);
         cqManager.sendMsg(cqMsg);
         cqMsg.setMessage(ShigureTiming.TIMING[localTime.getHour()]);
-        cqMsg.setUserId(735862173L);
-        cqManager.sendMsg(cqMsg);
         cqMsg.setUserId(770677061L);
         cqManager.sendMsg(cqMsg);
     }

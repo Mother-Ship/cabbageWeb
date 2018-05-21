@@ -61,7 +61,7 @@ public class ParameterVerifyAspect {
                     case "private":
                         Argument argument = new Argument();
                         String msg = cqMsg.getMessage();
-
+                        cqMsg.setArgument(argument);
                         if (cqMsg.getRequired() == null && cqMsg.getOptional() == null) {
                             //如果命令没有指定required和optional，直接让它执行
                             //2018-2-27 16:09:47漏掉了argument，在这里也需要一个argument（
@@ -516,7 +516,7 @@ public class ParameterVerifyAspect {
                                     break;
                             }
                         }
-                        cqMsg.setArgument(argument);
+
                         break;
 
                     default:

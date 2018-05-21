@@ -19,7 +19,6 @@ public class DayLilyManager {
     private Logger logger = LogManager.getLogger(this.getClass());
 
     public void sendMsg(CqMsg cqMsg) {
-        logger.info("开始转发消息到黄花菜：" + cqMsg.getMessage());
         HttpURLConnection httpConnection;
         try {
             httpConnection =

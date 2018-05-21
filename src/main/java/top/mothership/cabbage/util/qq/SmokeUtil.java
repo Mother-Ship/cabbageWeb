@@ -6,15 +6,13 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.RespData;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class SmokeUtil {
@@ -24,6 +22,7 @@ public class SmokeUtil {
     private Logger logger = LogManager.getLogger(this.getClass());
     private final CqManager cqManager;
     private final UserDAO userDAO;
+    private final ResDAO resDAO;
     public static Map<Long, MsgQueue> msgQueues = new HashMap<>();
     private static Map<Long, List<Long>> groupAdmins;
 
@@ -43,9 +42,10 @@ public class SmokeUtil {
     }
 
     @Autowired
-    public SmokeUtil(CqManager cqManager, UserDAO userDAO) {
+    public SmokeUtil(CqManager cqManager, UserDAO userDAO, ResDAO resDAO) {
         this.cqManager = cqManager;
         this.userDAO = userDAO;
+        this.resDAO = resDAO;
         loadGroupAdmins();
         //对所有群开启消息记录
         List<RespData> groups = cqManager.getGroups().getData();
@@ -85,6 +85,8 @@ public class SmokeUtil {
                     cqMsg.setDuration(600);
                     cqMsg.setMessageType("smoke");
                 }
+                cqManager.sendMsg(cqMsg);
+                cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("HU_LU_WA.wav")) + "]");
                 cqManager.sendMsg(cqMsg);
             }
             if (repeatRecordGroups.contains(String.valueOf(cqMsg.getGroupId()))) {

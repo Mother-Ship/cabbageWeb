@@ -57,7 +57,7 @@ public class WebPageManager {
     private final String getUserProfileURL = "https://osu.ppy.sh/pages/include/profile-general.php?u=";
     private final String getBGURL = "http://bloodcat.com/osu/i/";
     private final String getOsuURL = "https://osu.ppy.sh/osu/";
-    private final String osuSearchURL = "http://osusearch.com/query/";
+    private final String osuSearchURL = "https://osusearch.com/query/";
     private final String ppPlusURL = "https://syrin.me/pp+/u/";
     private final String osuProfileDetailURL = "https://osu.ppy.sh/pages/include/profile-general.php";
     private final ResDAO resDAO;
