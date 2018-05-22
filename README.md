@@ -1,35 +1,61 @@
 ## 白菜。
-基于Java Web的，osu!游戏数据查询机器人。
 
-## 运行环境
-OS: 
-目前使用：Ubuntu 17.04（理论上支持Docker的即可，甚至在Windows SubSystem Linux上测试通过）
+osu!游戏数据查询机器人。
 
-曾用：Win Server 2008/2012（由于酷Q原因不支持Win Server 2003）
+提供：
 
-MySQL 5.7（没有研究过MySQL的版本差异）
+查询本人游戏数据、与凌晨时对比游戏数据，
 
-JRE1.8（必须，使用了Lambda表达式/Try With Resource，不兼容1.8以下的Java版本。）
+查询最佳成绩、当日更新最佳成绩，
 
-Tomcat 7.0.75（理论上支持Java8以上的Web容器都可以）
-
-酷Q Pro最新版，以及HTTP API插件
-
-RAM：推荐为3G及以上（会缓存加入群的最近50条消息，用于防撤回功能；对于开启复读禁言的群会缓存100条，会占用1+GB 的Heap Space；会缓存数据库内所有图片素材，约200+MB 的Heap Space。）
+最近游戏记录，谱面搜索，指定谱面成绩等功能。
 
 
 ## 特性
-从osu!API和官网获取数据，并绘制图片以QQ消息的形式发送。
 
-对接了osu/酷Q提供的HTTP API，用到了正则表达式，以及Spring的AOP实现权限控制、性能统计、异常通知，mybatis则用到了结果集映射、动态SQL等基本技能。
+一个普通的使用三大框架的Java Web项目。
+
+从osu!api和官网获取数据，并绘制图片以QQ消息的形式发送。
+
+与osu! /酷Q /osusearch.com**提供的JSON API进行对接**；
+
+使用一些简单的**正则表达式**处理用户输入、网页内容等；
+
+**实现了一个循环队列**，存储最近的群消息，用于复现其他人撤回的消息；
+
+当日凌晨的数据（每次使用stat命令都要查询的热点数据）**使用Redis存储**，减轻数据库压力；
+
+对外提供**RESTful**接口，供其他Bot开发者使用，免去用户重复在多个Bot出设置自己的osu!游戏id；
+
+使用Spring框架相关功能，实现**权限控制、性能统计、异常通知、定时任务、邮件发送（已废弃）** 等。
+
 
 ## 鸣谢（不分先后）
-感谢[Imouto koko](https://osu.ppy.sh/u/7679162)提供的消息队列实现思路、参与名片/BP/#1等大量图片元素的设计、数不清的功能需求。
 
-感谢[Pata-Mon](https://osu.ppy.sh/u/6149313)的赞助，以及在发布前夕帮我指出了设计思路中的致命错误。
++ [Imouto koko](https://osu.ppy.sh/u/7679162)
 
-感谢[osu!mp乐园5号群](https://jq.qq.com/?_wv=1027&k=594UuXH)帮我找出bug的各位，也感谢mp5管理层提出的功能需求，没有你们提的需求就没有如今完善的玩家管理。
+提供了消息队列实现思路，名片/BP/#1等大量图片元素的设计，提出了一批奠定基础的功能需求。
 
-感谢[Koohii](https://github.com/Francesco149/koohii) 项目，尽管作者不喜欢Java，但是依然用Java实现了oppai的全部功能，帮我略去调用外部命令的麻烦。
++ [Pata-Mon](https://osu.ppy.sh/u/6149313)
 
-感谢[coolq-http-api](https://github.com/richardchien/coolq-http-api) 项目，作者提供了完善的文档、稳定的更新，实现了酷Q和其他语言的打通，如果没有本项目，很多群管理功能都无法实现。
+开发初期的赞助，发布前夕帮我指出设计思路中的致命错误。
+
++ osu!mp乐园5号群(群号：201872650)的各位群友以及管理层
+
+测试、帮忙发掘bug，提出玩家管理需求。
+
+广告：mp5群欢迎4000PP以下的osu!玩家加入，建议下限为2500PP（不严格）！
+
++ [Koohii](https://github.com/Francesco149/koohii) 项目
+
+尽管作者不喜欢Java，但是依然用Java实现了oppai的全部功能，免去在Java中调用外部命令的繁琐。
+
++ [coolq-http-api](https://github.com/richardchien/coolq-http-api)
+
+作者提供了完善的文档、稳定的更新，实现了酷Q和其他语言的打通，可以说是白菜依赖的核心。
+
++ [Sakura Miku](https://tieba.baidu.com/p/4399134680)皮肤，以及作者[鲤鱼](https://osu.ppy.sh/u/4642549)
+
+白菜在制作之初没有考虑到后续的规模，因此直接使用了本人自用的皮肤。后来经人提醒才发现此皮肤修改自Sakura Miku，现本人已经得到作者的正式授权。
+
+另：[自用魔改版皮肤](http://www.mothership.top/skin)
