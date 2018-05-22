@@ -77,6 +77,8 @@ public class SmokeUtil {
 
             if (repeatSmokeGroups.contains(String.valueOf(cqMsg.getGroupId())) && msgQueue.countRepeat() >= 6) {
                 logger.info("触发复读禁言，正在记录案发现场：" + new Gson().toJson(msgQueue.getRepeatList()));
+                cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("HU_LU_WA.wav")) + "]");
+                cqManager.sendMsg(cqMsg);
                 if (groupAdmins.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())) {
                     logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
                     cqMsg.setMessage("[CQ:at,qq=" + cqManager.getOwner(cqMsg.getGroupId()) + "] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
@@ -86,8 +88,7 @@ public class SmokeUtil {
                     cqMsg.setMessageType("smoke");
                 }
                 cqManager.sendMsg(cqMsg);
-                cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("HU_LU_WA.wav")) + "]");
-                cqManager.sendMsg(cqMsg);
+
             }
             if (repeatRecordGroups.contains(String.valueOf(cqMsg.getGroupId()))) {
                 User user = userDAO.getUser(cqMsg.getUserId(), null);

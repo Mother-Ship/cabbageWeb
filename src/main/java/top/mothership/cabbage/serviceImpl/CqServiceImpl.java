@@ -458,7 +458,7 @@ public class CqServiceImpl {
     }
 
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L,210342787})
     public void printSpecifiedBP(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         if ("白菜".equals(argument.getUsername())) {
@@ -675,7 +675,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 213078438L, 714925706L})
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 213078438L, 714925706L,210342787})
     public void myScore(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         SearchParam searchParam = argument.getSearchParam();
@@ -1067,8 +1067,7 @@ public class CqServiceImpl {
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
-
-    @GroupAuthorityControl(allBanned = true)
+    
     public void cost(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         User user = null;
@@ -1158,11 +1157,7 @@ public class CqServiceImpl {
 //                    + "\nAccuracy：" + map.get("Accuracy")
             String filename = imgUtil.drawRadarImage(map, userFromAPI);
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]\n"
-                    + "\n在**第二届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S2Cost)
-                    + "。\n"
-                    + "\n在**第四届某个连名字都不能提的比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS4Cost)
-                    + "。\n"
-                    + "\n在**第十届OCLB**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
+                    + "\n在**本届OCLA/OCLC**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
                     + "。");
             cqManager.sendMsg(cqMsg);
             return;
