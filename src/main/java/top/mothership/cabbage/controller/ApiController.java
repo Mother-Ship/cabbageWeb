@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import top.mothership.cabbage.consts.OverallConsts;
+import top.mothership.cabbage.controller.vo.ChartsVo;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.RedisDAO;
@@ -32,15 +33,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Base64;
+import java.util.*;
 import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1", produces = {"application/json;charset=UTF-8"})
 public class ApiController {
     private final UserServiceImpl userService;
-    private Logger logger = LogManager.getLogger(this.getClass());
     private final UserInfoDAO userInfoDAO;
     private final ApiManager apiManager;
     private final ImgUtil imgUtil;
@@ -48,6 +47,7 @@ public class ApiController {
     private final UserUtil userUtil;
     private final WebPageManager webPageManager;
     private final RedisDAO redisDAO;
+    private Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
     public ApiController(UserServiceImpl userService, UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, CqServiceImpl cqService, UserUtil userUtil, WebPageManager webPageManager, RedisDAO redisDAO) {
@@ -59,6 +59,19 @@ public class ApiController {
         this.userUtil = userUtil;
         this.webPageManager = webPageManager;
         this.redisDAO = redisDAO;
+    }
+
+
+    private static int[][] multiple(int[][] a) {
+        int[][] c = new int[1200][1200];
+        for (int i = 0; i < 1200; i++) {
+            for (int j = 0; j < 1200; j++) {
+                for (int k = 0; k < 1200; k++) {
+                    c[i][j] += a[i][k] * a[k][j];
+                }
+            }
+        }
+        return c;
     }
 
     @RequestMapping(value = "/code", method = RequestMethod.GET)
@@ -158,7 +171,7 @@ public class ApiController {
             List<String> list = userUtil.sortRoles(user.getRole());
             role = list.get(0);
             userInDB = redisDAO.get(uid, mode);
-            if(userInDB==null) {
+            if (userInDB == null) {
                 userInDB = userInfoDAO.getUserInfo(mode, userFromAPI.getUserId(), LocalDate.now().minusDays(day));
                 if (userInDB == null) {
                     userInDB = userInfoDAO.getNearestUserInfo(mode, userFromAPI.getUserId(), LocalDate.now().minusDays(day));
@@ -201,9 +214,9 @@ public class ApiController {
     @RequestMapping(value = "/userinfo/nearest/{uid}", method = RequestMethod.GET)
     @CrossOrigin(origins = "http://localhost")
     public String nearestUserInfo(@PathVariable Integer uid, @RequestParam(value = "mode", defaultValue = "0", required = false) Integer mode) {
-        Userinfo userInDB  = redisDAO.get(uid,mode);
+        Userinfo userInDB = redisDAO.get(uid, mode);
         if (userInDB == null) {
-           userInDB =  userInfoDAO.getNearestUserInfo(mode, uid, LocalDate.now().minusDays(1));
+            userInDB = userInfoDAO.getNearestUserInfo(mode, uid, LocalDate.now().minusDays(1));
             if (userInDB == null) {
                 userInDB = apiManager.getUser(mode, uid);
                 userUtil.registerUser(userInDB.getUserId(), mode, 0L, OverallConsts.DEFAULT_ROLE);
@@ -213,7 +226,173 @@ public class ApiController {
         return new Gson().toJson(new WebResponse<>(0, "ok", userInDB));
     }
 
+    /**
+     * 多音提的需求：绘制一个图表，给定某个PP段，横坐标是PP/TTH/RS/TTS在一个月的增长量，纵坐标是玩家人数
+     *
+     * @return 返回应该有两个数组
+     */
+    @RequestMapping(value = "/chart/{criteria}", method = RequestMethod.GET)
+    @CrossOrigin
+    public String domenCherry(@PathVariable String criteria,
+                              @RequestParam("ppMin") Integer ppMin,
+                              @RequestParam("ppMax") Integer ppMax,
+                              @RequestParam("start") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate start ) {
+        if (start.isAfter(LocalDate.now())) {
+            return new Gson().toJson(new WebResponse<>(4, "end date is too late", null));
+        }
+        ChartsVo vo = new ChartsVo();
 
+        List<Userinfo> userIdList = userDAO.getStdUserRegisteredInOneMonth(ppMin, ppMax,start);
+        //把每个用户信息的PC TTH RS设为他一个月内的差值
+        Map<Integer, Userinfo> offset = new HashMap<>(userIdList.size());
+        for (Userinfo i : userIdList) {
+            Userinfo userinfo = userInfoDAO.getUserInfo(0, i.getUserId(), start.minusDays(2));
+            userinfo.setPlayCount(userinfo.getPlayCount() - i.getPlayCount());
+            userinfo.setCount50(userinfo.getCount50() - i.getCount50());
+            userinfo.setCount100(userinfo.getCount100() -i.getCount100());
+            userinfo.setCount300(userinfo.getCount300() - i.getCount300());
+            userinfo.setRankedScore(userinfo.getRankedScore() - i.getRankedScore());
+            offset.put(i.getUserId(), userinfo);
+        }
+        List<Integer> xAxis = new ArrayList<>(500);
+
+        vo.setXAxis(xAxis);
+
+        //求出所有玩家中tth增量最大的和最小的
+        List<Userinfo> a = new ArrayList<>(offset.values());
+        //直接给a排序
+        quickSort(a, 0, a.size() - 1, criteria);
+        Userinfo max = a.get(a.size() - 1);
+        Userinfo min = a.get(0);
+        switch (criteria) {
+            case "tth":
+                //划下X轴
+                int maxtth = max.getCount100() + max.getCount300() + max.getCount50() - min.getCount50() - min.getCount300() - min.getCount100();
+                for (int i = 0; i <= maxtth; i += 10000) {
+                    xAxis.add(i);
+                }
+                Integer[] yAxisRaw = new Integer[xAxis.size()-1];
+                vo.setYAxis(Arrays.asList(yAxisRaw));
+//                划下Y轴
+                for (int i = 1; i < xAxis.size(); i++) {
+                    yAxisRaw[i - 1]=0;
+                    for (Userinfo userinfo : a) {
+                        int tth = userinfo.getCount100() + userinfo.getCount300() + userinfo.getCount50();
+                        if (tth >= xAxis.get(i - 1) && tth < xAxis.get(i)) {
+                                yAxisRaw[i - 1]++;
+                        }
+                    }
+                }
+                break;
+            case "pc":
+                int pc = max.getPlayCount()-min.getPlayCount();
+                for (int i = 0; i <= pc; i += 20) {
+                    xAxis.add(i);
+                }
+                yAxisRaw = new Integer[xAxis.size()-1];
+                vo.setYAxis(Arrays.asList(yAxisRaw));
+//                划下Y轴
+                for (int i = 1; i < xAxis.size(); i++) {
+                    yAxisRaw[i - 1]=0;
+                    for (Userinfo userinfo : a) {
+                        int tth = userinfo.getPlayCount();
+                        if (tth >= xAxis.get(i - 1) && tth < xAxis.get(i)) {
+                                yAxisRaw[i - 1]++;
+                        }
+                    }
+                }
+                break;
+            case "rs":
+                long rs = max.getRankedScore()-min.getRankedScore();
+                for (int i = 0; i < rs; i += 1000000) {
+                    xAxis.add(i);
+                }
+                yAxisRaw = new Integer[xAxis.size()-1];
+                vo.setYAxis(Arrays.asList(yAxisRaw));
+//                划下Y轴
+                for (int i = 1; i < xAxis.size(); i++) {
+                    yAxisRaw[i - 1]=0;
+                    for (Userinfo userinfo : a) {
+                        long tth = userinfo.getRankedScore();
+                        if (tth >= xAxis.get(i - 1) && tth < xAxis.get(i)) {
+                                yAxisRaw[i - 1]++;
+                        }
+                    }
+                }
+                break;
+        }
+        return new Gson().toJson(new WebResponse<>(0, "success", vo));
+    }
+
+    /**
+     * 盒子提的需求：PP曲线图
+     */
+    @RequestMapping(value = "/pp_chart.php", method = RequestMethod.GET)
+    @CrossOrigin
+    public String kongouHikari(@RequestParam("id") String id) {
+
+        return null;
+    }
+
+    public void quickSort(List<Userinfo> arr, int start, int end, String criteria) {
+        int i = start, j = end;//设置两头两个指针
+        Userinfo pivot = arr.get(start);//选第一个元素为基准
+
+        while (i <= j) {
+            switch (criteria) {
+                case "tth":
+                    while ((i < arr.size()) && (
+                            arr.get(i).getCount300() + arr.get(i).getCount50() + arr.get(i).getCount100()
+                                    < pivot.getCount300() + pivot.getCount100() + pivot.getCount50())) {
+                        i++;
+                    }
+                    while ((j > 0) && (arr.get(j).getCount300() + arr.get(j).getCount50() + arr.get(j).getCount100()
+                            > pivot.getCount300() + pivot.getCount100() + pivot.getCount50())) {
+                        j--;
+                    }
+
+                    break;
+                case "pc":
+                    while ((i < arr.size()) && (
+                            arr.get(i).getPlayCount()
+                                    < pivot.getPlayCount())) {
+                        i++;
+                    }
+                    while ((j > 0) && (arr.get(j).getPlayCount()
+                            > pivot.getPlayCount())) {
+                        j--;
+                    }
+                    break;
+                case "rs":
+                    while ((i < arr.size()) && (
+                            arr.get(i).getRankedScore()
+                                    < pivot.getRankedScore())) {
+                        i++;
+                    }
+                    while ((j > 0) && (arr.get(j).getCount300() + arr.get(j).getCount50() + arr.get(j).getCount100()
+                            > pivot.getCount300() + pivot.getCount100() + pivot.getCount50())) {
+                        j--;
+                    }
+                    break;
+            }
+            if (i <= j) {
+                swap(arr, i, j);
+                i++;
+                j--;
+            }
+        }
+        if (start < j)
+            quickSort(arr, start, j, criteria);
+        if (i < end)
+            quickSort(arr, i, end, criteria);
+    }
+
+    //交换两个元素
+    public void swap(List<Userinfo> arr, int i, int j) {
+        Userinfo temp = arr.get(i);
+        arr.set(i, arr.get(j));
+        arr.set(j, temp);
+    }
 //    @RequestMapping(value = "/upload",method = RequestMethod.POST)
 //    @CrossOrigin(origins = "http://localhost")
 //    public String upload(@RequestParam(value = "myfile") MultipartFile file) throws Exception {

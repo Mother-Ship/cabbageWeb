@@ -21,6 +21,8 @@ import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -30,6 +32,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
+
+import static top.mothership.cabbage.util.qq.CompressLevelEnum.*;
 
 
 /**
@@ -48,9 +52,9 @@ public class ImgUtil {
      * 2017-9-8 13:55:42我他妈是个智障……没初始化的map我在下面用
      */
     public static Map<String, BufferedImage> images;
+    private static Logger logger = LogManager.getLogger(ImgUtil.class);
     private WebPageManager webPageManager;
     private ScoreUtil scoreUtil;
-    private static Logger logger = LogManager.getLogger(ImgUtil.class);
 
     /**
      * Instantiates a new Img util.
@@ -322,7 +326,7 @@ public class ImgUtil {
             }
         }
         g2.dispose();
-        return drawImage(bg);
+        return drawImage(bg, USHORT_555_RGB_PNG);
     }
 
     /**
@@ -455,7 +459,7 @@ public class ImgUtil {
         }
         g.dispose();
         //不，文件名最好还是数字
-        return drawImage(result);
+        return drawImage(result, USHORT_555_RGB_PNG);
 
     }
 
@@ -871,7 +875,7 @@ public class ImgUtil {
 
         g2.dispose();
 
-        return drawImage(bg);
+        return drawImage(bg, USHORT_555_RGB_PNG);
     }
 
     /**
@@ -1104,7 +1108,7 @@ public class ImgUtil {
         //缩略图
         g2.drawImage(bg2, 762, 162, null);
         g2.dispose();
-        return drawImage(bg);
+        return drawImage(bg, 不压缩);
 
     }
 
@@ -1310,7 +1314,7 @@ public class ImgUtil {
         g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 273, 276);
         g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())), 371, 276);
         g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())), 469, 276);
-        return drawImage(bg);
+        return drawImage(bg, 不压缩);
 
     }
 
@@ -1333,37 +1337,105 @@ public class ImgUtil {
 //        return b;
     }
 
-    public String drawRadarImage(Map<String, Integer> ppPlus, Userinfo userinfo) {
+    public String drawRadarImage(Map<String, Double> ppPlus, Userinfo userinfo) {
 //                    + "\nJump：" + map.get("Jump")
 //                    + "\nFlow：" + map.get("Flow")
 //                    + "\nPrecision：" + map.get("Precision")
 //                    + "\nSpeed：" + map.get("Speed")
 //                    + "\nStamina：" + map.get("Stamina")
 //                    + "\nAccuracy：" + map.get("Accuracy")
+        Double jump = ppPlus.get("Jump");
+        Double flow = ppPlus.get("Flow");
+        Double prec = ppPlus.get("Precision");
+        Double speed = ppPlus.get("Speed");
+        Double stamina = ppPlus.get("Stamina");
+        Double acc = ppPlus.get("Accuracy");
+        //准备一份用于计算比例的数据
+        double jump2 = jump;
+        double flow2 = flow;
+        double prec2 = prec;
+        double speed2 = speed;
+        double stamina2 = stamina;
+        double acc2 = acc;
         BufferedImage bg = getCopyImage(images.get("costbg.png"));
         Graphics2D g2 = bg.createGraphics();
-        double threshold = 2000;
-        for (Integer i : ppPlus.values()) {
-            if (i > 2000) {
-                threshold = 5000;
-            }
-            if (i > 5000) {
-                threshold = 8000;
-            }
-        }
+        double x = userinfo.getPpRaw() / 1000d;
+        BigDecimal b = new BigDecimal(x);
+        //得出PP/1000的两位小数
+        x = b.setScale(2, RoundingMode.HALF_UP).doubleValue();
+        //少于2kPP的按2K算
+        if (x < 2) x = 2;
+        //根据PP值计算平均值应该在的百分比
+        double percent = (0.2785d * Math.log(x) + 0.0053d);
 
-        //坐标计算：横坐标为152-(PP+数值)/10000*80,纵坐标为131-(PP+数值)/10000*80*根号3 /2
-        int jumpX = (int) (152D - ppPlus.get("Jump") / threshold * 40D);
-        int jumpY = (int) (131D - ppPlus.get("Jump") / threshold * 40D * Math.sqrt(3));
-        int flowX = (int) (152D + ppPlus.get("Flow") / threshold * 40D);
-        int flowY = (int) (131D - ppPlus.get("Flow") / threshold * 40D * Math.sqrt(3));
-        int precisionX = (int) (152D - ppPlus.get("Precision") / threshold * 40D);
+        //计算每个象限的平均值 最大值
+        double jmpAva = (500d * x - 92d);
+        double jmpMax = jmpAva / percent;
+        //如果单项这个分段平均值超过2k，计算超出部分的值，然后用本人的能力值减去超出部分，平均值则按2k计算
+        if (jmpAva > 2000) {
+            double tmp = jmpAva - 2000;
+            jump2 -= tmp;
+            jmpMax = 2000/percent;
+        }
+        //控制不爆表
+        if (jmpMax < jump) jmpMax = jump;
+
+        double flowAva = (22.6d * Math.pow(x, 2) - 8.6d * x + 71.3d);
+        double flowMax = flowAva / percent;
+        if (flowAva > 2000) {
+            double tmp = flowAva - 2000;
+           flow2 -= tmp;
+            flowMax = 2000/percent;
+        }
+        if (flowMax < flow) flowMax = flow;
+
+        double precAva = (13.5d * Math.pow(x, 2) + 22.4d * x + 89.6d);
+        double precMax = precAva / percent;
+        if (precAva > 2000) {
+            double tmp = precAva - 2000;
+            prec2 -= tmp;
+            precMax = 2000/percent;
+        }
+        if (precMax < prec) precMax = prec;
+
+        double spdAva = (234d * x + 307d);
+        double spdMax = spdAva / percent;
+        if (spdAva > 2000) {
+            double tmp = spdAva - 2000;
+            speed2 -= tmp;
+            spdMax = 2000/percent;
+        }
+        if (spdMax < speed) spdMax = speed;
+
+        double staminaAva = (214.3 * x + 51.1d);
+        double staminaMax = staminaAva / percent;
+        if (staminaAva > 2000) {
+            double tmp = staminaAva - 2000;
+            stamina2 -= tmp;
+            staminaMax = 2000/percent;
+        }
+        if (staminaMax < stamina) staminaMax = stamina;
+
+        double accAva = (20.4d * Math.pow(x, 2) + 159.7d * x - 77.6d);
+        double accMax = accAva / percent;
+        if (accAva > 2000) {
+            double tmp = accAva - 2000;
+            acc2 -= tmp;
+            accMax = 2000/percent;
+        }
+        if (accMax < acc) accMax = acc;
+
+        int jumpX = (int) (152D - jump2 / jmpMax * 40D);
+        int jumpY = (int) (131D - jump2 / jmpMax * 40D * Math.sqrt(3));
+        int flowX = (int) (152D + flow2 / flowMax * 40D);
+        int flowY = (int) (131D - flow2/ flowMax * 40D * Math.sqrt(3));
+        int precisionX = (int) (152D - prec2 / precMax * 80D);
         int precisionY = 131;
-        int speedX = (int) (152D - ppPlus.get("Speed") / threshold * 40D);
-        int speedY = (int) (131D + ppPlus.get("Speed") / threshold * 40D * Math.sqrt(3));
-        int staminaX = (int) (152D + ppPlus.get("Stamina") / threshold * 40D);
-        int staminaY = (int) (131D + ppPlus.get("Stamina") / threshold * 40D * Math.sqrt(3));
-        int accuracyX = (int) (152D + ppPlus.get("Accuracy") / threshold * 40D);
+        int speedX = (int) (152D - speed2 / spdMax * 40D);
+        int speedY = (int) (131D + speed2 / spdMax * 40D * Math.sqrt(3));
+        int staminaX = (int) (152D + stamina2 / staminaMax * 40D);
+        int staminaY = (int) (131D + stamina2 / staminaMax * 40D * Math.sqrt(3));
+        int accuracyX = (int) (152D + acc2 / accMax * 80D);
         int accuracyY = 131;
         //构造多边形
         Polygon p = new Polygon();
@@ -1400,17 +1472,20 @@ public class ImgUtil {
         g2.fillRoundRect(staminaX + 10, staminaY, 36, 12, 4, 4);
         g2.fillRoundRect(accuracyX + 10, accuracyY, 36, 12, 4, 4);
         g2.fillRoundRect(flowX + 10, flowY, 36, 12, 4, 4);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Flow").toString(), flowX + 13, flowY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Stamina").toString(), staminaX + 13, staminaY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Accuracy").toString(), accuracyX + 13, accuracyY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Speed").toString(), speedX - 42, speedY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Precision").toString(), precisionX - 42, precisionY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, ppPlus.get("Jump").toString(), jumpX - 42, jumpY + 10);
+
+
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, flow.toString(), flowX + 13, flowY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, stamina.toString(), staminaX + 13, staminaY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, acc.toString(), accuracyX + 13, accuracyY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, speed.toString(), speedX - 42, speedY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, prec.toString(), precisionX - 42, precisionY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, jump.toString(), jumpX - 42, jumpY + 10);
         drawTextToImage(g2, "#f9f9f9", "Aller", 12, userinfo.getUserName(), 182, 245);
 
-        return drawImage(bg);
+        return drawImage(bg, 不压缩);
 
     }
+
     /**
      * 向图片上绘制字符串的方法……当时抽出来复用，但是方法名没取好
      * 2018-1-24 17:05:11去除配置文件的设定，反正以后要改也不可能去除旧命令。
@@ -1432,10 +1507,34 @@ public class ImgUtil {
      * @param img the img
      * @return the string
      */
-    public String drawImage(BufferedImage img) {
+    public String drawImage(BufferedImage img, CompressLevelEnum level) {
+        BufferedImage result = img;
+
+        switch (level) {
+            case 不压缩:
+                //什么也不做
+                break;
+            case JPG:
+                try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                    ImageIO.write(result, "jpg", out);
+                    byte[] imgBytes = out.toByteArray();
+                    return Base64.getEncoder().encodeToString(imgBytes);
+                } catch (IOException e) {
+                    logger.error(e.getMessage());
+                    return null;
+                }
+            case USHORT_555_RGB_PNG:
+                result = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_USHORT_555_RGB);
+                Graphics2D g3 = result.createGraphics();
+                g3.clearRect(0, 0, img.getWidth(), img.getHeight());
+                g3.drawImage(img.getScaledInstance(img.getWidth(), img.getHeight(), Image.SCALE_SMOOTH), 0, 0, null);
+                g3.dispose();
+                break;
+            default:
+                return null;
+        }
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            ImageIO.write(img, "png", out);
-            img.flush();
+            ImageIO.write(result, "png", out);
             byte[] imgBytes = out.toByteArray();
             return Base64.getEncoder().encodeToString(imgBytes);
         } catch (IOException e) {

@@ -26,6 +26,7 @@ import top.mothership.cabbage.pojo.osu.SearchParam;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
+import top.mothership.cabbage.util.qq.CompressLevelEnum;
 import top.mothership.cabbage.util.qq.ImgUtil;
 import top.mothership.cabbage.util.qq.MsgQueue;
 import top.mothership.cabbage.util.qq.SmokeUtil;
@@ -40,8 +41,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -53,13 +57,13 @@ import java.util.*;
 @UserAuthorityControl
 public class CqAdminServiceImpl {
     public static Map<CqMsg, String> request = new HashMap<>();
+    private static ResDAO resDAO;
     private final CqManager cqManager;
     private final ApiManager apiManager;
     private final UserDAO userDAO;
     private final UserInfoDAO userInfoDAO;
     private final WebPageManager webPageManager;
     private final ImgUtil imgUtil;
-    private static ResDAO resDAO;
     private final ScoreUtil scoreUtil;
     private final UserUtil userUtil;
     private Logger logger = LogManager.getLogger(this.getClass());
@@ -357,7 +361,7 @@ public class CqAdminServiceImpl {
                 cqManager.sendMsg(cqMsg);
                 logger.info(aList.getUserId() + "被" + operator + "禁言" + argument.getSecond() + "秒。");
             }
-            String img = imgUtil.drawImage(ImgUtil.images.get("smokeAll.png"));
+            String img = imgUtil.drawImage(ImgUtil.images.get("smokeAll.png"), CompressLevelEnum.不压缩);
             cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
             cqMsg.setMessageType("group");
             cqManager.sendMsg(cqMsg);
@@ -457,8 +461,8 @@ public class CqAdminServiceImpl {
                     resp += "\n更新后的用户组：" + argument.getRole();
                 }
                 userDAO.updateUser(user);
-            }else{
-                resp = "你钦点的QQ已经绑定了" + user.getCurrentUname()+",请先尝试解绑！";
+            } else {
+                resp = "你钦点的QQ已经绑定了" + user.getCurrentUname() + ",请先尝试解绑！";
             }
 
         }
@@ -515,6 +519,7 @@ public class CqAdminServiceImpl {
                 return;
             }
             ArrayList<CqMsg> msgs = msgQueue.getMsgsByQQ(QQ);
+            logger.info("记录ListMsg：" + msgs);
             CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(cqMsg.getGroupId(), QQ);
             if (cqResponse.getData() == null) {
                 resp = new StringBuilder("获取" + QQ + "的详细信息失败。请尝试再次使用命令。");
@@ -812,5 +817,31 @@ public class CqAdminServiceImpl {
         cqMsg.setMessage("[CQ:image,file=base64://" + image + "]");
         cqManager.sendMsg(cqMsg);
 
+    }
+
+    public void ping(CqMsg cqMsg) {
+        Long msgSendTime = cqMsg.getTime() * 1000L;
+        Long msgReceivedTime = System.currentTimeMillis();
+        Userinfo userinfo = null;
+        for (int i = 0; i < 10; i++) {
+            userinfo = apiManager.getUser(0, "Mother Ship");
+        }
+        Long afterQueryOsuApiFor10Times = System.currentTimeMillis();
+        imgUtil.drawUserInfo(userinfo, userinfo, "creep", 1, false, 1, 0);
+        Long afterDrawStat = System.currentTimeMillis();
+        for (int i = 0; i < 10; i++) {
+            webPageManager.getPPPlus(userinfo.getUserId());
+        }
+        Long afterQueryPPPlusFor10Times = System.currentTimeMillis();
+        cqMsg.setMessage("自检结束。" +
+                "\n从消息发送，到白菜收到消息，花费：" + (msgReceivedTime - msgSendTime) +
+                "ms。\n请求10次osu!接口，平均每次花费：" + (afterQueryOsuApiFor10Times - msgReceivedTime)/10 +
+                "ms。\n绘制一次Stat图片，花费：" + (afterDrawStat - afterQueryOsuApiFor10Times) +
+                "ms。\n请求10次PP+数据，平均每次花费：" + (afterQueryPPPlusFor10Times - afterDrawStat)/10 +
+                "ms。\n消息离开白菜的时间：" + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withLocale(Locale.CHINA)
+                .withZone(ZoneId.systemDefault()).format(Instant.now()) + "。\n接下来会发送一张图片，以测试图片发送是否出错：");
+        cqManager.sendMsg(cqMsg);
+        cqMsg.setMessage("[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"),CompressLevelEnum.不压缩) + "]");
+        cqManager.sendMsg(cqMsg);
     }
 }

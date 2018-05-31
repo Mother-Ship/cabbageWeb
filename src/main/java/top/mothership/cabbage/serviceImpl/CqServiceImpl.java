@@ -27,6 +27,7 @@ import top.mothership.cabbage.pojo.coolq.QQInfo;
 import top.mothership.cabbage.pojo.osu.*;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
+import top.mothership.cabbage.util.qq.CompressLevelEnum;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
 import java.io.IOException;
@@ -448,6 +449,7 @@ public class CqServiceImpl {
             if(s.getBpId()<=10){
                 cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("NEXT_LEVEL_PLAY.wav")) + "]");
                 cqManager.sendMsg(cqMsg);
+                break;
             }
         }
         //如果是多模式的BP，mixedmode是true，getmode是null
@@ -594,8 +596,12 @@ public class CqServiceImpl {
             }
         } else {
             //TODO 小号机制
-            userFromAPI = apiManager.getUser(0, user.getUserId());
-            cqMsg.setMessage("你的QQ已经绑定了玩家：" + userFromAPI.getUserName() + "，如果发生错误请联系妈妈船。");
+            if(user.isBanned()){
+                cqMsg.setMessage("你的QQ已经绑定了玩家：" + user.getCurrentUname() + "，并且该账号已经被ban；如果发生错误请联系妈妈船。");
+            }else {
+                userFromAPI = apiManager.getUser(0, user.getUserId());
+                cqMsg.setMessage("你的QQ已经绑定了玩家：" + userFromAPI.getUserName() + "，如果发生错误请联系妈妈船。");
+            }
         }
         cqManager.sendMsg(cqMsg);
 
@@ -654,10 +660,10 @@ public class CqServiceImpl {
     public void help(CqMsg cqMsg) {
         String img;
         if ((int) (Math.random() * 20) == 1) {
-            img = imgUtil.drawImage(ImgUtil.images.get("helpTrick.png"));
+            img = imgUtil.drawImage(ImgUtil.images.get("helpTrick.png"),CompressLevelEnum.不压缩);
             cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
         } else {
-            img = imgUtil.drawImage(ImgUtil.images.get("help.png"));
+            img = imgUtil.drawImage(ImgUtil.images.get("help.png"), CompressLevelEnum.不压缩);
         }
         cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
         cqManager.sendMsg(cqMsg);
@@ -763,7 +769,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L})
     public void search(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         SearchParam searchParam = argument.getSearchParam();
@@ -827,7 +833,8 @@ public class CqServiceImpl {
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
                     + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")"
                     + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId()
-                    + "\n" + "http://inso.link/yukiho/?m=" + beatmap.getBeatmapSetId());
+                    + "\n" + "http://inso.link/yukiho/?m=" + beatmap.getBeatmapSetId()
+                    + "\n" + "预览：https://bloodcat.com/osu/preview.html#" + beatmap.getBeatmapId());
         }
         cqManager.sendMsg(cqMsg);
 
@@ -1067,7 +1074,7 @@ public class CqServiceImpl {
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
-    
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 564679329L, 532783765L,210342787L, 201872650L})
     public void cost(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         User user = null;
@@ -1075,6 +1082,7 @@ public class CqServiceImpl {
 
         switch (argument.getSubCommandLowCase()) {
             case "costme":
+
             case "mycost":
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
@@ -1126,7 +1134,7 @@ public class CqServiceImpl {
                 break;
 
         }
-        Map<String, Integer> map = webPageManager.getPPPlus(user.getUserId());
+        Map<String, Double> map = webPageManager.getPPPlus(user.getUserId());
         //2018-3-29 09:52:16加入Map容量判断
         if (map != null && map.size() == 6) {
             double drugsS4Cost = Math.pow((map.get("Jump") / 3000F), 0.9F)
@@ -1157,7 +1165,7 @@ public class CqServiceImpl {
 //                    + "\nAccuracy：" + map.get("Accuracy")
             String filename = imgUtil.drawRadarImage(map, userFromAPI);
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]\n"
-                    + "\n在**本届OCLA/OCLC**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
+                    + "在**本届OCLA/OCLC**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
                     + "。");
             cqManager.sendMsg(cqMsg);
             return;

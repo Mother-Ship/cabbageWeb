@@ -204,6 +204,10 @@ public class CqController {
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME, ParameterEnum.BEATMAP_ID});
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
                                     cqAdminService.score(cqMsg);
+                                    break;
+                                case "ping":
+                                    cqAdminService.ping(cqMsg);
+                                    break;
                                 default:
                                     break;
                             }

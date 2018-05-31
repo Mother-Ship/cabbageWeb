@@ -20,4 +20,15 @@ public class SearchParam {
     private Integer count50;
     private Integer maxCombo;
     private Double acc;
+
+    @Override
+    public String toString() {
+        return "{" +
+                "艺术家='" + artist + '\'' +
+                ", 标题='" + title + '\'' +
+                ", 难度名='" + diffName + '\'' +
+                ", 作者='" + mapper + '\'' +
+                ", 谱面id=" + beatmapId +
+                '}';
+    }
 }

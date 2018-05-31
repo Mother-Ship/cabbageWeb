@@ -97,7 +97,10 @@ public class ParameterVerifyAspect {
 
 
                         Matcher m = RegularPattern.REG_CMD_REGEX.matcher(msg);
-                        m.find();
+                        if(!m.find()){
+                            //对BP命令做的一个Patch（那个命令分两层，第二层会重新进入该方法，此时会报不匹配错误）
+                            return null;
+                        }
                         //取出子命令
                         argument.setSubCommandLowCase(m.group(1).toLowerCase(Locale.CHINA));
                         if ("sudo".equals(argument.getSubCommandLowCase())) {

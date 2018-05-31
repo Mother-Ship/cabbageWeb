@@ -661,8 +661,8 @@ public class WebPageManager {
      * @param uid the uid
      * @return the pp plus
      */
-    public Map<String, Integer> getPPPlus(int uid) {
-        Map<String, Integer> map = new HashMap<>();
+    public Map<String, Double> getPPPlus(int uid) {
+        Map<String, Double> map = new HashMap<>();
         int retry = 0;
         Document doc = null;
         while (retry < 5) {
@@ -685,12 +685,12 @@ public class WebPageManager {
             return null;
         }
 
-        map.put("Jump", Integer.valueOf(link.get(2).children().get(1).text().replaceAll("[p,]", "")));
-        map.put("Flow", Integer.valueOf(link.get(3).children().get(1).text().replaceAll("[p,]", "")));
-        map.put("Precision", Integer.valueOf(link.get(4).children().get(1).text().replaceAll("[p,]", "")));
-        map.put("Speed", Integer.valueOf(link.get(5).children().get(1).text().replaceAll("[p,]", "")));
-        map.put("Stamina", Integer.valueOf(link.get(6).children().get(1).text().replaceAll("[p,]", "")));
-        map.put("Accuracy", Integer.valueOf(link.get(7).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Jump", Double.valueOf(link.get(2).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Flow", Double.valueOf(link.get(3).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Precision", Double.valueOf(link.get(4).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Speed", Double.valueOf(link.get(5).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Stamina", Double.valueOf(link.get(6).children().get(1).text().replaceAll("[p,]", "")));
+        map.put("Accuracy", Double.valueOf(link.get(7).children().get(1).text().replaceAll("[p,]", "")));
         return map;
     }
 

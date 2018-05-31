@@ -3,7 +3,9 @@ package top.mothership.cabbage.mapper;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 import top.mothership.cabbage.pojo.User;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -61,10 +63,11 @@ public interface UserDAO {
 
     /**
      * List user id by uname list.
-     *改为Gson序列化，只需考虑在中间的问题，同时加入分隔符
+     * 改为Gson序列化，只需考虑在中间的问题，同时加入分隔符
      * 2018-3-12 16:26:59改为模糊查询
      * 2018-3-16 13:29:44没必要用动态sql吧？试试改为多个字段查询
      * 2018-3-21 12:13:29直接用OR字段搜user_id=用户名时会返回几百个结果，搜索了一下改为现在的查询
+     *
      * @param keyword 搜索关键字
      * @return the list
      */
@@ -85,6 +88,7 @@ public interface UserDAO {
                     @Result(column = "is_banned", property = "banned")
             })
     List<User> listBannedUser();
+
     /**
      * Gets repeat star.
      * 去掉100%复读的
@@ -102,6 +106,7 @@ public interface UserDAO {
     /**
      * Update user integer.
      * 由于采用动态SQL，QQ只能是0不能是null
+     *
      * @param user the user
      * @return the integer
      */
@@ -130,5 +135,11 @@ public interface UserDAO {
             ",#{user.legacyUname},#{user.currentUname},#{user.banned},#{user.repeatCount},#{user.speakingCount},#{user.mode})")
     Integer addUser(@Param("user") User user);
 
+    @Select("SELECT * FROM userinfo WHERE queryDate = DATE_SUB(#{start}, INTERVAL 30 DAY) AND mode=0 " +
+            "AND user_id IN (" +
+            "(SELECT user_id FROM (SELECT user_id,pp_raw FROM userinfo WHERE queryDate = DATE_SUB(#{start}, INTERVAL 2 DAY) " +
+            "AND mode =0 AND pp_raw<#{ppMax} AND pp_raw>#{ppMin} ) AS u)" +
+            ");")
+    List<Userinfo> getStdUserRegisteredInOneMonth(@Param("ppMin") Integer ppMin, @Param("ppMax") Integer ppMax, @Param("start")LocalDate start);
 
 }

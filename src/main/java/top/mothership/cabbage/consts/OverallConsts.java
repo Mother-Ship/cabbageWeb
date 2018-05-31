@@ -25,5 +25,6 @@ public class OverallConsts {
             "*新增 给两个时雨厨加上时雨的报时。\n" +
             "*新增 !sudo score命令。\n" +
             "*恢复 黄花菜对接相关。\n";
+    public final static String LAST_MODIFIED  = "2018-5-22 21:41:31";
 }
 

@@ -21,9 +21,9 @@
         <property name="username" value="${jdbcUser}"/>
         <property name="password" value="${jdbcPwd}"/>
          <!--配置初始化大小、最小、最大 -->
-        <property name="initialSize" value="1" />
-        <property name="minIdle" value="1" />
-        <property name="maxActive" value="100" />
+        <property name="initialSize" value="10" />
+        <property name="minIdle" value="10" />
+        <property name="maxActive" value="1000" />
 
         <!-- 配置获取连接等待超时的时间 -->
         <property name="maxWait" value="10000" />
