@@ -34,6 +34,8 @@ public interface ResDAO {
     @Select("SELECT `name`,`data` FROM `resource`")
     List<Map<String, Object>> getImages();
 
+    @Select("SELECT `data` FROM `resource` WHERE `name` = #{name}")
+    Object getImage(@Param("name") String name);
     //使用MYSQL特有语法ON DUPLICATE KEY 节省代码量，name必须为unique索引
     //干掉报错，换成replace，同样name必须有unique索引
     @Insert("REPLACE INTO `resource` VALUES (null,#{name},#{data})")

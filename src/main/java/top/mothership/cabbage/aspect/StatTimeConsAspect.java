@@ -19,7 +19,7 @@ public class StatTimeConsAspect {
      * 打印方法执行耗费时间的日志工具
      */
     private Logger logger = LogManager.getLogger(this.getClass());
-    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.*.*(..))")
+    @Pointcut("execution(* top.mothership.cabbage.service.*.*(..))")
     private void aspectjMethod() {
     }
     @Around(value = "aspectjMethod()")

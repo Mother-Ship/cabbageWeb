@@ -23,10 +23,10 @@ import top.mothership.cabbage.pattern.RegularPattern;
 import top.mothership.cabbage.pattern.WebPagePattern;
 import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.mapper.ResDAO;
-import top.mothership.cabbage.pojo.osu.Beatmap;
-import top.mothership.cabbage.pojo.osu.OsuFile;
-import top.mothership.cabbage.pojo.osu.OsuSearchResp;
-import top.mothership.cabbage.pojo.osu.SearchParam;
+import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
+import top.mothership.cabbage.pojo.coolq.osu.OsuFile;
+import top.mothership.cabbage.pojo.coolq.osu.OsuSearchResp;
+import top.mothership.cabbage.pojo.coolq.osu.SearchParam;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

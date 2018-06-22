@@ -2,8 +2,8 @@ package top.mothership.cabbage.mapper;
 
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
-import top.mothership.cabbage.pojo.osu.Lobby;
-import top.mothership.cabbage.pojo.osu.MpBeatmap;
+import top.mothership.cabbage.pojo.coolq.osu.Lobby;
+import top.mothership.cabbage.pojo.coolq.osu.MpBeatmap;
 
 import java.util.List;
 

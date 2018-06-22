@@ -43,7 +43,7 @@ public class RoleControlAspect {
     /**
      * 拦截service层所有方法中带AllowedUser注解的方法
      */
-    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.*.*(top.mothership.cabbage.pojo.coolq.CqMsg,..))")
+    @Pointcut("execution(* top.mothership.cabbage.service.*.*(top.mothership.cabbage.pojo.coolq.CqMsg,..))")
     private void aspectjMethod() {
     }
 

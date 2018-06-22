@@ -74,7 +74,7 @@
     <!--<aop:aspect id="aspect" ref="logAspect">-->
     <!--&lt;!&ndash;对哪些方法进行日志记录 &ndash;&gt;-->
     <!--&lt;!&ndash;这里可以直接写接口，也可以写实现类。&ndash;&gt;-->
-    <!--<aop:pointcut id="logService" expression="execution(* top.mothership.cabbage.serviceImpl.*.*(..))"/>-->
+    <!--<aop:pointcut id="logService" expression="execution(* top.mothership.cabbage.service(..))"/>-->
     <!--<aop:before pointcut-ref="logService" method="doBefore"/>-->
     <!--<aop:after pointcut-ref="logService" method="doAfter"/>-->
     <!--<aop:around pointcut-ref="logService" method="doAround"/>-->
@@ -98,8 +98,8 @@
     <!--scope="prototype">-->
     <!--<property name="patterns">-->
     <!--<list>-->
-    <!--<value>top.mothership.cabbage.serviceImpl.CqServiceImpl</value>-->
-    <!--<value>top.mothership.cabbage.serviceImpl.CqAdminServiceImpl</value>-->
+    <!--<value>top.mothership.cabbage.serviceerviceImpl</value>-->
+    <!--<value>top.mothership.cabbage.servicedminServiceImpl</value>-->
     <!--</list>-->
     <!--</property>-->
     <!--</bean>-->

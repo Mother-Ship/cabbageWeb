@@ -17,9 +17,9 @@ import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.WebResponse;
-import top.mothership.cabbage.pojo.osu.Userinfo;
-import top.mothership.cabbage.serviceImpl.CqServiceImpl;
-import top.mothership.cabbage.serviceImpl.UserServiceImpl;
+import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
+import top.mothership.cabbage.service.CqServiceImpl;
+import top.mothership.cabbage.service.UserServiceImpl;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
@@ -236,86 +236,135 @@ public class ApiController {
     public String domenCherry(@PathVariable String criteria,
                               @RequestParam("ppMin") Integer ppMin,
                               @RequestParam("ppMax") Integer ppMax,
-                              @RequestParam("start") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate start ) {
-        if (start.isAfter(LocalDate.now())) {
+                              @RequestParam("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+                              @RequestParam(value = "start", defaultValue = "0", required = false) Integer start,
+                              @RequestParam(value = "end", defaultValue = "0", required = false) Integer end,
+                              @RequestParam(value = "grainSize", defaultValue = "0", required = false) Integer grainSize
+    ) {
+        if (startDate.isAfter(LocalDate.now())) {
             return new Gson().toJson(new WebResponse<>(4, "end date is too late", null));
         }
         ChartsVo vo = new ChartsVo();
 
-        List<Userinfo> userIdList = userDAO.getStdUserRegisteredInOneMonth(ppMin, ppMax,start);
+        List<Userinfo> a = userInfoDAO.getStdUserRegisteredInOneMonth(ppMin, ppMax, startDate);
+
+        List<Integer> uidList = new ArrayList<>(a.size());
+        for (Userinfo userinfo : a) {
+            uidList.add(userinfo.getUserId());
+        }
+        List<Userinfo> nowUserinfoList = userInfoDAO.batchGetNowUserinfo(uidList, startDate);
+        Map<Integer, Userinfo> map = new HashMap<>(uidList.size());
+        for (int k = 0; k < uidList.size(); k++) {
+            map.put(a.get(k).getUserId(), a.get(k));
+        }
         //把每个用户信息的PC TTH RS设为他一个月内的差值
-        Map<Integer, Userinfo> offset = new HashMap<>(userIdList.size());
-        for (Userinfo i : userIdList) {
-            Userinfo userinfo = userInfoDAO.getUserInfo(0, i.getUserId(), start.minusDays(2));
+        for (int k = 0; k < uidList.size(); k++) {
+            Userinfo userinfo = nowUserinfoList.get(k);
+            Userinfo i = map.get(userinfo.getUserId());
             userinfo.setPlayCount(userinfo.getPlayCount() - i.getPlayCount());
             userinfo.setCount50(userinfo.getCount50() - i.getCount50());
-            userinfo.setCount100(userinfo.getCount100() -i.getCount100());
+            userinfo.setCount100(userinfo.getCount100() - i.getCount100());
             userinfo.setCount300(userinfo.getCount300() - i.getCount300());
             userinfo.setRankedScore(userinfo.getRankedScore() - i.getRankedScore());
-            offset.put(i.getUserId(), userinfo);
         }
-        List<Integer> xAxis = new ArrayList<>(500);
+        List<Long> xAxis = new ArrayList<>(500);
 
         vo.setXAxis(xAxis);
 
-        //求出所有玩家中tth增量最大的和最小的
-        List<Userinfo> a = new ArrayList<>(offset.values());
         //直接给a排序
-        quickSort(a, 0, a.size() - 1, criteria);
-        Userinfo max = a.get(a.size() - 1);
-        Userinfo min = a.get(0);
+        quickSort(nowUserinfoList, 0, nowUserinfoList.size() - 1, criteria);
+        Userinfo max = nowUserinfoList.get(nowUserinfoList.size() - 1);
+        Userinfo min = nowUserinfoList.get(0);
+         long  maxValue ;
         switch (criteria) {
             case "tth":
                 //划下X轴
-                int maxtth = max.getCount100() + max.getCount300() + max.getCount50() - min.getCount50() - min.getCount300() - min.getCount100();
-                for (int i = 0; i <= maxtth; i += 10000) {
+                if(end.equals(0)) {
+                    maxValue = max.getCount100() + max.getCount300() + max.getCount50() - min.getCount50() - min.getCount300() - min.getCount100();
+                }else{
+                    maxValue = end;
+                }
+                if(grainSize.equals(0)) grainSize = 10000;
+                for (long i = start; i <= maxValue; i += grainSize) {
                     xAxis.add(i);
                 }
-                Integer[] yAxisRaw = new Integer[xAxis.size()-1];
+                Integer[] yAxisRaw = new Integer[xAxis.size() - 1];
                 vo.setYAxis(Arrays.asList(yAxisRaw));
 //                划下Y轴
                 for (int i = 1; i < xAxis.size(); i++) {
-                    yAxisRaw[i - 1]=0;
-                    for (Userinfo userinfo : a) {
+                    yAxisRaw[i - 1] = 0;
+                    for (Userinfo userinfo : nowUserinfoList) {
                         int tth = userinfo.getCount100() + userinfo.getCount300() + userinfo.getCount50();
                         if (tth >= xAxis.get(i - 1) && tth < xAxis.get(i)) {
-                                yAxisRaw[i - 1]++;
+                            yAxisRaw[i - 1]++;
                         }
                     }
                 }
                 break;
             case "pc":
-                int pc = max.getPlayCount()-min.getPlayCount();
-                for (int i = 0; i <= pc; i += 20) {
+                if(end.equals(0)){
+                    maxValue = max.getPlayCount() - min.getPlayCount();
+                }else{
+                    maxValue = end;
+                }
+                if(grainSize.equals(0)) grainSize = 20;
+                for (long i = start; i <= maxValue; i += grainSize) {
                     xAxis.add(i);
                 }
-                yAxisRaw = new Integer[xAxis.size()-1];
+                yAxisRaw = new Integer[xAxis.size() - 1];
                 vo.setYAxis(Arrays.asList(yAxisRaw));
 //                划下Y轴
                 for (int i = 1; i < xAxis.size(); i++) {
-                    yAxisRaw[i - 1]=0;
-                    for (Userinfo userinfo : a) {
+                    yAxisRaw[i - 1] = 0;
+                    for (Userinfo userinfo : nowUserinfoList) {
                         int tth = userinfo.getPlayCount();
                         if (tth >= xAxis.get(i - 1) && tth < xAxis.get(i)) {
-                                yAxisRaw[i - 1]++;
+                            yAxisRaw[i - 1]++;
                         }
                     }
                 }
                 break;
             case "rs":
-                long rs = max.getRankedScore()-min.getRankedScore();
-                for (int i = 0; i < rs; i += 1000000) {
+                if(end.equals(0)) {
+                    maxValue = max.getRankedScore() - min.getRankedScore();
+                }else{
+                    maxValue = end;
+                }
+                if(grainSize.equals(0)) grainSize = 1000000;
+                for (long i = start; i <  maxValue; i +=grainSize) {
                     xAxis.add(i);
                 }
-                yAxisRaw = new Integer[xAxis.size()-1];
+                yAxisRaw = new Integer[xAxis.size() - 1];
                 vo.setYAxis(Arrays.asList(yAxisRaw));
 //                划下Y轴
                 for (int i = 1; i < xAxis.size(); i++) {
-                    yAxisRaw[i - 1]=0;
-                    for (Userinfo userinfo : a) {
+                    yAxisRaw[i - 1] = 0;
+                    for (Userinfo userinfo : nowUserinfoList) {
                         long tth = userinfo.getRankedScore();
                         if (tth >= xAxis.get(i - 1) && tth < xAxis.get(i)) {
-                                yAxisRaw[i - 1]++;
+                            yAxisRaw[i - 1]++;
+                        }
+                    }
+                }
+            case "tts":
+                if(end.equals(0)) {
+                    maxValue = max.getTotalScore() - min.getTotalScore();
+                }else{
+                    maxValue = end;
+                }
+                if(grainSize.equals(0)) grainSize = 10000000;
+                for (long i = start; i <  maxValue; i += grainSize) {
+                    xAxis.add(i);
+                }
+                yAxisRaw = new Integer[xAxis.size() - 1];
+                vo.setYAxis(Arrays.asList(yAxisRaw));
+//                划下Y轴
+                for (int i = 1; i < xAxis.size(); i++) {
+                    yAxisRaw[i - 1] = 0;
+                    for (Userinfo userinfo : nowUserinfoList) {
+                        long tth = userinfo.getTotalScore();
+                        if (tth >= xAxis.get(i - 1) && tth < xAxis.get(i)) {
+                            yAxisRaw[i - 1]++;
                         }
                     }
                 }
@@ -369,8 +418,19 @@ public class ApiController {
                                     < pivot.getRankedScore())) {
                         i++;
                     }
-                    while ((j > 0) && (arr.get(j).getCount300() + arr.get(j).getCount50() + arr.get(j).getCount100()
-                            > pivot.getCount300() + pivot.getCount100() + pivot.getCount50())) {
+                    while ((j > 0) && (arr.get(i).getRankedScore()
+                            > pivot.getRankedScore())) {
+                        j--;
+                    }
+                    break;
+                case "tts":
+                    while ((i < arr.size()) && (
+                            arr.get(i).getTotalScore()
+                                    < pivot.getTotalScore())) {
+                        i++;
+                    }
+                    while ((j > 0) && (arr.get(i).getTotalScore()
+                            > pivot.getTotalScore())) {
                         j--;
                     }
                     break;

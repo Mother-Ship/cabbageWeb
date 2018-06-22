@@ -12,7 +12,7 @@ import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
-import top.mothership.cabbage.pojo.osu.Userinfo;
+import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

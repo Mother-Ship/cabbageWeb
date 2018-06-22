@@ -2,13 +2,14 @@ package top.mothership.cabbage.mapper;
 
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
-import top.mothership.cabbage.pojo.osu.Userinfo;
+import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
 
 import java.time.LocalDate;
 import java.util.List;
+
 @Mapper
 @Repository
-public interface UserInfoDAO{
+public interface UserInfoDAO {
 
     @Insert("INSERT INTO `userinfo` VALUES(null," +
             "#{userinfo.mode},#{userinfo.userId}," +
@@ -34,6 +35,24 @@ public interface UserInfoDAO{
 
     @Delete("DELETE FROM `userinfo` WHERE `queryDate` = #{queryDate}")
     void clearTodayInfo(@Param("queryDate") LocalDate queryDate);
+
+    @Select("<script>" +
+            "SELECT * FROM `userinfo` WHERE `user_id` in " +
+            "<foreach item=\"item\" index=\"index\" collection=\"list\"" +
+            "      open=\"(\" separator=\",\" close=\")\">" +
+            "        #{item}" +
+            "</foreach>" +
+            "AND `queryDate` = DATE_SUB(#{start}, INTERVAL 2 DAY) AND mode= 0" +
+            "</script>")
+    List<Userinfo> batchGetNowUserinfo(@Param("list")List<Integer> uidList,@Param("start")LocalDate start);
+
+    @Select("SELECT * FROM userinfo WHERE queryDate = DATE_SUB(#{start}, INTERVAL 30 DAY) AND mode=0 " +
+            "AND user_id IN (" +
+            "(SELECT user_id FROM (SELECT user_id,pp_raw FROM userinfo WHERE queryDate = DATE_SUB(#{start}, INTERVAL 2 DAY) " +
+            "AND mode =0 AND pp_raw<#{ppMax} AND pp_raw>#{ppMin} ) AS u)" +
+            ");")
+    List<Userinfo> getStdUserRegisteredInOneMonth(@Param("ppMin") Integer ppMin, @Param("ppMax") Integer ppMax, @Param("start")LocalDate start);
+
 }
 
 

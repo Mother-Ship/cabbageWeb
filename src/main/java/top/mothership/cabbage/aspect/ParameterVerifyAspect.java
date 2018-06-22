@@ -18,8 +18,8 @@ import top.mothership.cabbage.pattern.RegularPattern;
 import top.mothership.cabbage.pattern.SearchKeywordPattern;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
-import top.mothership.cabbage.pojo.osu.SearchParam;
-import top.mothership.cabbage.pojo.shadowsocks.ShadowSocksRequest;
+import top.mothership.cabbage.pojo.coolq.osu.SearchParam;
+import top.mothership.cabbage.pojo.coolq.shadowsocks.ShadowSocksRequest;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 
 import java.time.LocalDate;
@@ -44,7 +44,7 @@ public class ParameterVerifyAspect {
     }
 
     //当时为啥要指定CQ开头来着……
-    @Pointcut("execution(* top.mothership.cabbage.serviceImpl.*.*(top.mothership.cabbage.pojo.coolq.CqMsg,..))")
+    @Pointcut("execution(* top.mothership.cabbage.service.*.*(top.mothership.cabbage.pojo.coolq.CqMsg,..))")
     private void regularService() {
     }
 
@@ -333,6 +333,9 @@ public class ParameterVerifyAspect {
                                     break;
                                 case SEARCH_PARAM:
                                     SearchParam searchParam = genSearchParam(cqMsg);
+                                    if(searchParam ==null){
+                                        return null;
+                                    }
                                     argument.setSearchParam(searchParam);
                                     break;
                                 case SHADOWSOCKS_USER:

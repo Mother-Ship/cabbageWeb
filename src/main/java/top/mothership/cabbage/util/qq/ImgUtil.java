@@ -7,11 +7,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.manager.WebPageManager;
+import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pattern.RegularPattern;
-import top.mothership.cabbage.pojo.osu.Beatmap;
-import top.mothership.cabbage.pojo.osu.OppaiResult;
-import top.mothership.cabbage.pojo.osu.Score;
-import top.mothership.cabbage.pojo.osu.Userinfo;
+import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
+import top.mothership.cabbage.pojo.coolq.osu.OppaiResult;
+import top.mothership.cabbage.pojo.coolq.osu.Score;
+import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 
 import javax.imageio.ImageIO;
@@ -19,6 +20,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -55,20 +57,21 @@ public class ImgUtil {
     private static Logger logger = LogManager.getLogger(ImgUtil.class);
     private WebPageManager webPageManager;
     private ScoreUtil scoreUtil;
-
+    private ResDAO resDAO;
     /**
      * Instantiates a new Img util.
-     *
-     * @param webPageManager the web page manager
+     *  @param webPageManager the web page manager
      * @param scoreUtil      the score util
+     * @param resDAO
      */
     @Autowired
-    public ImgUtil(WebPageManager webPageManager, ScoreUtil scoreUtil) {
+    public ImgUtil(WebPageManager webPageManager, ScoreUtil scoreUtil, ResDAO resDAO) {
         this.webPageManager = webPageManager;
         this.scoreUtil = scoreUtil;
         //我明白了 loadcache不能放在这个类的构造函数里，因为每次要绘图都会实例化一个新的ImgUtil，然后这个静态的缓存都会被重新刷新一次
         //又因为我没考虑线程安全，所以才有几率出null
         //而且resDAO也不能在这个类里声明……反正是初始化顺序的原因
+        this.resDAO = resDAO;
     }
 
 
@@ -87,7 +90,7 @@ public class ImgUtil {
      */
     public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean approximate, int scoreRank, Integer mode) {
         BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId());
-        BufferedImage bg;
+        BufferedImage bg = null;
         BufferedImage layout = getCopyImage(images.get("layout.png"));
         BufferedImage scoreRankBG = getCopyImage(images.get("scorerank.png"));
         BufferedImage roleBg;
@@ -97,7 +100,14 @@ public class ImgUtil {
             roleBg = getCopyImage(images.get("role-creep.png"));
         }
 
-        bg = images.get(String.valueOf(userFromAPI.getUserId()) + ".png");
+        byte[] data= (byte[])resDAO.getImage(String.valueOf(userFromAPI.getUserId()) + ".png");
+        if(data!=null) {
+            try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
+                bg = ImageIO.read(in);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         if (bg != null) {
             bg = getCopyImage(bg);
         } else {
@@ -326,7 +336,7 @@ public class ImgUtil {
             }
         }
         g2.dispose();
-        return drawImage(bg, USHORT_555_RGB_PNG);
+        return drawImage(bg, 不压缩);
     }
 
     /**
@@ -1369,61 +1379,95 @@ public class ImgUtil {
         double percent = (0.2785d * Math.log(x) + 0.0053d);
 
         //计算每个象限的平均值 最大值
+        int max = 2000;
+        int min = 500;
         double jmpAva = (500d * x - 92d);
         double jmpMax = jmpAva / percent;
         //如果单项这个分段平均值超过2k，计算超出部分的值，然后用本人的能力值减去超出部分，平均值则按2k计算
-        if (jmpAva > 2000) {
-            double tmp = jmpAva - 2000;
+        if (jmpAva > max) {
+            double tmp = jmpAva - max;
             jump2 -= tmp;
-            jmpMax = 2000/percent;
+            jmpMax = max/percent;
         }
         //控制不爆表
-        if (jmpMax < jump) jmpMax = jump;
+        if (jmpMax < jump2) jmpMax = jump2;
+
+        if (jmpAva < min) {
+            double tmp = min - jmpAva;
+            jump2 += tmp;
+            jmpMax = min/percent;
+        }
 
         double flowAva = (22.6d * Math.pow(x, 2) - 8.6d * x + 71.3d);
         double flowMax = flowAva / percent;
-        if (flowAva > 2000) {
-            double tmp = flowAva - 2000;
+        if (flowAva > max) {
+            double tmp = flowAva - max;
            flow2 -= tmp;
-            flowMax = 2000/percent;
+            flowMax = max/percent;
         }
-        if (flowMax < flow) flowMax = flow;
+        if (flowMax < flow2) flowMax = flow2;
+        if (flowAva < min) {
+            double tmp = min - flowAva;
+            flow2 += tmp;
+            flowMax = min/percent;
+        }
 
         double precAva = (13.5d * Math.pow(x, 2) + 22.4d * x + 89.6d);
         double precMax = precAva / percent;
-        if (precAva > 2000) {
-            double tmp = precAva - 2000;
+        if (precAva > max) {
+            double tmp = precAva - max;
             prec2 -= tmp;
-            precMax = 2000/percent;
+            precMax = max/percent;
         }
-        if (precMax < prec) precMax = prec;
+        if (precMax < prec2) precMax = prec2;
+        if (precAva < min) {
+            double tmp = min - precAva;
+            prec2 += tmp;
+            precMax = min/percent;
+        }
 
         double spdAva = (234d * x + 307d);
         double spdMax = spdAva / percent;
-        if (spdAva > 2000) {
-            double tmp = spdAva - 2000;
+        if (spdAva > max) {
+            double tmp = spdAva - max;
             speed2 -= tmp;
-            spdMax = 2000/percent;
+            spdMax = max/percent;
         }
-        if (spdMax < speed) spdMax = speed;
+        if (spdMax < speed2) spdMax = speed2;
+        if (spdAva < min) {
+            double tmp = min - spdAva;
+            speed2 += tmp;
+            precMax = min/percent;
+        }
 
         double staminaAva = (214.3 * x + 51.1d);
         double staminaMax = staminaAva / percent;
-        if (staminaAva > 2000) {
-            double tmp = staminaAva - 2000;
+        if (staminaAva > max) {
+            double tmp = staminaAva - max;
             stamina2 -= tmp;
-            staminaMax = 2000/percent;
+            staminaMax = max/percent;
         }
-        if (staminaMax < stamina) staminaMax = stamina;
+        if (staminaMax < stamina2) staminaMax = stamina2;
+        if (staminaAva < min) {
+            double tmp = min - staminaAva;
+            stamina2 += tmp;
+            staminaMax = min/percent;
+        }
 
         double accAva = (20.4d * Math.pow(x, 2) + 159.7d * x - 77.6d);
+        if(accAva>3600) accAva = 3600;
         double accMax = accAva / percent;
-        if (accAva > 2000) {
-            double tmp = accAva - 2000;
+        if (accAva > max) {
+            double tmp = accAva - max;
             acc2 -= tmp;
-            accMax = 2000/percent;
+            accMax = max/percent;
         }
-        if (accMax < acc) accMax = acc;
+        if (accMax < acc2) accMax = acc2;
+        if (accAva < min) {
+            double tmp = min - accAva;
+            acc2 += tmp;
+            accMax = min/percent;
+        }
 
         int jumpX = (int) (152D - jump2 / jmpMax * 40D);
         int jumpY = (int) (131D - jump2 / jmpMax * 40D * Math.sqrt(3));
@@ -1472,15 +1516,14 @@ public class ImgUtil {
         g2.fillRoundRect(staminaX + 10, staminaY, 36, 12, 4, 4);
         g2.fillRoundRect(accuracyX + 10, accuracyY, 36, 12, 4, 4);
         g2.fillRoundRect(flowX + 10, flowY, 36, 12, 4, 4);
-
-
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, flow.toString(), flowX + 13, flowY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, stamina.toString(), staminaX + 13, staminaY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, acc.toString(), accuracyX + 13, accuracyY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, speed.toString(), speedX - 42, speedY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, prec.toString(), precisionX - 42, precisionY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12, jump.toString(), jumpX - 42, jumpY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, String.valueOf(flow.intValue()), flowX + 13, flowY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12,String.valueOf(stamina.intValue()), staminaX + 13, staminaY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, String.valueOf(acc.intValue()), accuracyX + 13, accuracyY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12,String.valueOf(speed.intValue()), speedX - 42, speedY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, String.valueOf(prec.intValue()), precisionX - 42, precisionY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, String.valueOf(jump.intValue()), jumpX - 42, jumpY + 10);
         drawTextToImage(g2, "#f9f9f9", "Aller", 12, userinfo.getUserName(), 182, 245);
+
 
         return drawImage(bg, 不压缩);
 

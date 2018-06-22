@@ -14,7 +14,7 @@ import top.mothership.cabbage.pattern.CQCodePattern;
 import top.mothership.cabbage.pattern.MpCommandPattern;
 import top.mothership.cabbage.pattern.RegularPattern;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
-import top.mothership.cabbage.serviceImpl.*;
+import top.mothership.cabbage.service.*;
 import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.annotation.PostConstruct;

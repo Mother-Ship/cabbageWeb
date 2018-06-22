@@ -5,8 +5,8 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.manager.ApiManager;
-import top.mothership.cabbage.pojo.osu.Beatmap;
-import top.mothership.cabbage.pojo.osu.Score;
+import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
+import top.mothership.cabbage.pojo.coolq.osu.Score;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

@@ -1,8 +1,8 @@
 package top.mothership.cabbage.pojo.coolq;
 
 import lombok.Data;
-import top.mothership.cabbage.pojo.osu.SearchParam;
-import top.mothership.cabbage.pojo.shadowsocks.ShadowSocksRequest;
+import top.mothership.cabbage.pojo.coolq.osu.SearchParam;
+import top.mothership.cabbage.pojo.coolq.shadowsocks.ShadowSocksRequest;
 
 import java.util.List;
 

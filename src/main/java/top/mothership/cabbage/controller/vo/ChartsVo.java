@@ -6,6 +6,6 @@ import java.util.List;
 
 @Data
 public class ChartsVo {
-    private List<Integer> xAxis;
+    private List<Long> xAxis;
     private List<Integer> yAxis;
 }
