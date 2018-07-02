@@ -272,6 +272,7 @@ public class CqController {
                                     cqService.statUserInfo(cqMsg);
                                     break;
                                 case "statme":
+                                case  "statsme":
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.DAY, ParameterEnum.MODE});
                                     cqService.statUserInfo(cqMsg);
                                     break;

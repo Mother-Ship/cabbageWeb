@@ -36,6 +36,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -445,13 +446,6 @@ public class CqServiceImpl {
             }
         }
 
-        for(Score s:todayBP){
-            if(s.getBpId()<=10){
-                cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("NEXT_LEVEL_PLAY.wav")) + "]");
-                cqManager.sendMsg(cqMsg);
-                break;
-            }
-        }
         //如果是多模式的BP，mixedmode是true，getmode是null
         String result = imgUtil.drawUserBP(userFromAPI, todayBP, argument.getMode(), mixedMode);
         cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
@@ -681,7 +675,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 213078438L, 714925706L,210342787})
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 213078438L, 714925706L,210342787,806345866,807757470})
     public void myScore(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         SearchParam searchParam = argument.getSearchParam();
@@ -769,7 +763,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L})
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L,806345866L,807757470L})
     public void search(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         SearchParam searchParam = argument.getSearchParam();
@@ -1018,10 +1012,10 @@ public class CqServiceImpl {
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第一届MP4杯赛群。\n本群作为历届mp4选手聚集地，之后比赛结束后会将赛群合并到本群。";
                 break;
             case "806345866":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第六届MP5杯赛群。\n请仔细阅读群文件中的比赛规程，以及给选手的建议。\n报名地址：https://www.wenjuan.com/s/MNFrQfh/ 。\n历届图池：https://pan.baidu.com/s/16hnop2YGU2ikefwVDbGFoA 。";
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第六届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。\n报名地址：https://www.wenjuan.com/s/MNFrQfh ";
                 break;
             case "807757470":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请仔细阅读群文件中的比赛规程，以及给选手的建议。\n报名地址：https://www.wenjuan.com/s/MNFrQfh/ 。\n历届图池：https://pan.baidu.com/s/16hnop2YGU2ikefwVDbGFoA 。";
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";
                 break;
             default:
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎加入本群。";
@@ -1077,7 +1071,7 @@ public class CqServiceImpl {
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 564679329L, 532783765L,210342787L, 201872650L})
+    @GroupAuthorityControl(banned = {112177148L, 234219559L, 564679329L, 532783765L,210342787L, 201872650L,806345866,807757470})
     public void cost(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         User user = null;
@@ -1138,8 +1132,9 @@ public class CqServiceImpl {
 
         }
         Map<String, Double> map = webPageManager.getPPPlus(user.getUserId());
+        Map<String,Integer> map2 = webPageManager.getOsuChanBestBpmAndLength(user.getUserId());
         //2018-3-29 09:52:16加入Map容量判断
-        if (map != null && map.size() == 6) {
+        if (map != null && map.size() == 6 &&map2!=null&&map2.size()==2) {
             double drugsS4Cost = Math.pow((map.get("Jump") / 3000F), 0.9F)
                     * Math.pow((map.get("Flow") / 1500F), 0.5F)
                     + Math.pow((map.get("Speed") / 2000F), 1.25F)
@@ -1157,6 +1152,13 @@ public class CqServiceImpl {
                     + Math.pow((map.get("Speed") / 2000F), 0.8F)
                     * Math.pow((map.get("Stamina") / 2000F), 0.5F)
                     + (map.get("Accuracy") / 2700F);
+            double yuTangCost = (Math.pow((map.get("Jump") / 3000F), 0.8F)
+                    * Math.pow((map.get("Flow") / 1500F), 0.6F)
+                    + Math.pow((map.get("Speed") / 2000F), 0.8F)
+                    * Math.pow((map.get("Stamina") / 2000F), 0.5F)
+                    + (map.get("Accuracy") / 3000F))
+                    *Math.min(1,Math.pow((map2.get("BPM")/190D),2))
+                    *Math.min(1,Math.pow((map2.get("Length")*(map2.get("BPM")/(190D*150D))),0.2D));
 //           mp4： Cost=((0.02*(10*SQRT((ATAN((2*B1-(2400+2135))/(2400-2135))+PI()/2+8)*(ATAN((2*B2-(720+418))/(720-418))+PI()/2+3))+7*(ATAN((2*B4-(1600+1324))/(1600-1324))+PI()/2)+3*(ATAN((2*B5-(1300+930))/(1300-930))+PI()/2)+1*(ATAN((2*B6-(1300+1000))/(1300-1000))+PI()/2)+5*(ATAN((2*B3-(700+450))/(700-450))+PI()/2)))-1)^2.5
 //           oclbs10： (\frac{\mbox{jump}}{3000})^{0.8}*(\frac{\mbox{flow}}{1500})^{0.6}+(\frac{\mbox{speed}}{2000})^{0.8}*(\frac{\mbox{stamina}}{2000})^{0.5}+\frac{\mbox{accuracy}}{2700}
 //            cqMsg.setMessage(user.getCurrentUname() + "的PP+ 六维数据："
@@ -1169,6 +1171,8 @@ public class CqServiceImpl {
             String filename = imgUtil.drawRadarImage(map, userFromAPI);
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]\n"
                     + "在**本届OCLA/OCLC**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
+                    + "。\n在**第三届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S2Cost)
+                    + "。\n在**第三届鱼塘杯**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(yuTangCost)
                     + "。");
             cqManager.sendMsg(cqMsg);
             return;

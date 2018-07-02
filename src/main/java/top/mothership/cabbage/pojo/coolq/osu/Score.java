@@ -39,6 +39,7 @@ private Integer countKatu;
 private Integer countGeki;
     private Integer perfect;
     private Integer enabledMods;
+    //更换为LocalDateTime会出反序列化异常
     private Date date;
     private String rank;
     //recent的API里压根没有这个字段

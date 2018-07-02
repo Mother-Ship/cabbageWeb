@@ -17,7 +17,7 @@ import java.util.*;
 @Component
 public class SmokeUtil {
 
-    private static List<String> repeatSmokeGroups = Arrays.asList("201872650,564679329,677545541,112177148,532783765,213078438,714925706".split(","));
+    private static List<String> repeatSmokeGroups = Arrays.asList("201872650,564679329,677545541,112177148,532783765,213078438,714925706,806345866,807757470".split(","));
     private static List<String> repeatRecordGroups = Arrays.asList("576214175,532783765".split(","));
     private Logger logger = LogManager.getLogger(this.getClass());
     private final CqManager cqManager;
@@ -77,8 +77,6 @@ public class SmokeUtil {
 
             if (repeatSmokeGroups.contains(String.valueOf(cqMsg.getGroupId())) && msgQueue.countRepeat() >= 6) {
                 logger.info("触发复读禁言，正在记录案发现场：" + new Gson().toJson(msgQueue.getRepeatList()));
-                cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("HU_LU_WA.wav")) + "]");
-                cqManager.sendMsg(cqMsg);
                 if (groupAdmins.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())) {
                     logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
                     cqMsg.setMessage("[CQ:at,qq=" + cqManager.getOwner(cqMsg.getGroupId()) + "] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");

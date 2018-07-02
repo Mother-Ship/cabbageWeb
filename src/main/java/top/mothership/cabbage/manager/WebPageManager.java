@@ -19,10 +19,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pattern.RegularPattern;
-import top.mothership.cabbage.pattern.WebPagePattern;
 import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.mapper.ResDAO;
+import top.mothership.cabbage.pattern.RegularPattern;
+import top.mothership.cabbage.pattern.WebPagePattern;
 import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
 import top.mothership.cabbage.pojo.coolq.osu.OsuFile;
 import top.mothership.cabbage.pojo.coolq.osu.OsuSearchResp;
@@ -60,6 +60,7 @@ public class WebPageManager {
     private final String osuSearchURL = "https://osusearch.com/query/";
     private final String ppPlusURL = "https://syrin.me/pp+/u/";
     private final String osuProfileDetailURL = "https://osu.ppy.sh/pages/include/profile-general.php";
+    private final String osuChanURL = "https://syrin.me/osuchan/u/";
     private final ResDAO resDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
     private HashMap<Integer, Document> map = new HashMap<>();
@@ -526,6 +527,7 @@ public class WebPageManager {
      * Prase osu file osu file.
      * 这个方法只能处理ranked/approved/qualified的.osu文件,在目前的业务逻辑里默认.osu文件是存在的。
      * 方法名大包大揽，其实我只能处理出BG名字（
+     *
      * @param beatmap the beatmap
      * @return the osu file
      */
@@ -767,6 +769,44 @@ public class WebPageManager {
         if (list.size() == 2) {
             return list;
         } else {
+            return null;
+        }
+    }
+
+    public Map<String, Integer> getOsuChanBestBpmAndLength(int uid) {
+        Map<String, Integer> map = new HashMap<>();
+        int retry = 0;
+        Document doc = null;
+        while (retry < 5) {
+            try {
+                logger.info("正在获取" + uid + "的osu! Chan数据");
+                doc = Jsoup.connect(osuChanURL + uid).timeout((int) Math.pow(2, retry + 1) * 1000).get();
+                break;
+            } catch (IOException e) {
+                logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
+                retry++;
+            }
+        }
+        if (retry == 5) {
+            logger.error("玩家" + uid + "访问osu! Chan失败五次");
+            return null;
+        }
+        Elements link = doc.select("span[title*=Best BPM weighted by pp]");
+        Elements link2 = doc.select("span[title*=Best length weighted by pp]");
+        if (link.size() == 0 || link2.size() == 0) {
+            logger.error("玩家" + uid + "访问osu! Chan失败五次");
+            return null;
+        }
+        String bestLengthRaw = link2.parents().get(0).text();
+        String[] tmp = bestLengthRaw.split(":");
+        try {
+            Integer bestBpm = Integer.valueOf(link.parents().get(0).text());
+            Integer bestLength =  Integer.valueOf(tmp[0]) *60 + Integer.valueOf(tmp[1]);
+            map.put("BPM",bestBpm);
+            map.put("Length",bestLength);
+            return map;
+        }catch (Exception e){
+            logger.error("玩家" + uid + "访问osu! Chan失败五次");
             return null;
         }
     }
