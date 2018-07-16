@@ -824,7 +824,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
 
     }
-
+    @UserAuthorityControl({1427922341})
     public void ping(CqMsg cqMsg) {
         Long msgSendTime = cqMsg.getTime() * 1000L;
         Long msgReceivedTime = System.currentTimeMillis();

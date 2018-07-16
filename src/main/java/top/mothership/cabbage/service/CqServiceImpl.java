@@ -454,7 +454,7 @@ public class CqServiceImpl {
     }
 
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L,210342787})
+    @GroupAuthorityControl(banned = {558518324L})
     public void printSpecifiedBP(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         if ("白菜".equals(argument.getUsername())) {
@@ -675,7 +675,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 213078438L, 714925706L,210342787,806345866,807757470})
+    @GroupAuthorityControl
     public void myScore(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         SearchParam searchParam = argument.getSearchParam();
@@ -763,7 +763,7 @@ public class CqServiceImpl {
     }
 
 
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L,806345866L,807757470L})
+    @GroupAuthorityControl
     public void search(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         SearchParam searchParam = argument.getSearchParam();
@@ -1071,7 +1071,8 @@ public class CqServiceImpl {
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 564679329L, 532783765L,210342787L, 201872650L,806345866,807757470})
+
+    @GroupAuthorityControl
     public void cost(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         User user = null;
@@ -1252,7 +1253,7 @@ public class CqServiceImpl {
 
     }
 
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L})
+    @GroupAuthorityControl
     public void getBonusPP(CqMsg cqMsg) {
         //为什么这个方法会被切面拦截两次。。
         //2018-2-28 17:25:09 卧槽 没写break 我是sb
@@ -1440,7 +1441,7 @@ public class CqServiceImpl {
 
     }
 
-    @GroupAuthorityControl(banned = {112177148L, 234219559L, 201872650L, 564679329L, 532783765L, 558518324L})
+    @GroupAuthorityControl
     public void roll(CqMsg cqMsg) {
         cqMsg.setMessage(String.valueOf(new Random().nextInt(100)));
         cqManager.sendMsg(cqMsg);

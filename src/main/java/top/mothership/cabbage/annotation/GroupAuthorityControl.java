@@ -7,6 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+
 /**
  * The interface Group role control.
  */
@@ -20,6 +21,26 @@ public @interface GroupAuthorityControl {
      * @return the long [ ]
      */
     long[] banned() default {0L};
+    //MP4后花园
+    //MP2
+    //MP4
+    //测试群
+    //MP3
+    //MP5
+    //MP5S6赛群
+    //MP4S3赛群
+    //FK群
+    long[] bannedDefault() default {
+            112177148L,
+            234219559L,
+            564679329L,
+            532783765L,
+            210342787L,
+            201872650L,
+            806345866L,
+            807757470L,
+            263668213L
+    };
 
     /**
      * 允许使用命令的群。

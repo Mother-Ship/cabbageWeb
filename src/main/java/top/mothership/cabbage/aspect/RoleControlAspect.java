@@ -114,6 +114,13 @@ public class RoleControlAspect {
                         return null;
                     }
                 }
+                for (long l : groupAuthorityControl.bannedDefault()) {
+                    if (cqMsg.getGroupId().equals(l)) {
+                        cqMsg.setMessage("该群已停用本命令。");
+                        cqManager.sendMsg(cqMsg);
+                        return null;
+                    }
+                }
                 return pjp.proceed();
             } else {
                 return pjp.proceed();

@@ -1,7 +1,7 @@
 import org.junit.Test;
 import top.mothership.cabbage.pojo.User;
 
-public class SimpleTest {
+public class 想SimpleTest {
     @Test
     public void Test() {
 //        String a = "123asd";
