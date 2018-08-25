@@ -91,6 +91,7 @@ private final CqManager cqManager;
             }
             CqMsg cqMsg = new CqMsg();
             cqMsg.setMessage(resp);
+            cqMsg.setSelfId(1335734629L);
             cqMsg.setUserId(1335734657L);
             cqMsg.setMessageType("private");
             cqManager.sendMsg(cqMsg);

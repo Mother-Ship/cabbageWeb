@@ -1509,7 +1509,7 @@ public class CqServiceImpl {
             }
         }
         CqMsg cqMsg = new CqMsg();
-
+        cqMsg.setSelfId(1335734629L);
         cqMsg.setMessageType("private");
         cqMsg.setUserId(1335734657L);
         cqMsg.setMessage("录入完成，共录入条目数：" + successCount + "，以下玩家本次被标明已封禁：" + bannedList);
@@ -1551,6 +1551,8 @@ public class CqServiceImpl {
         List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
         if (roles.contains("mp4")) {
             CqMsg cqMsg = new CqMsg();
+            //写死老白菜
+            cqMsg.setSelfId(1335734629L);
             cqMsg.setMessageType("group");
             cqMsg.setGroupId(564679329L);
             //并且刷超了
@@ -1618,6 +1620,7 @@ public class CqServiceImpl {
         if (roles.contains("mp5")) {
             CqMsg cqMsg = new CqMsg();
             cqMsg.setMessageType("group");
+            cqMsg.setSelfId(1335734629L);
             cqMsg.setGroupId(201872650L);
             CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
             if (cqResponse != null) {

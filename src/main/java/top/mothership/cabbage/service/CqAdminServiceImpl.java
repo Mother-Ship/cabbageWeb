@@ -414,6 +414,8 @@ public class CqAdminServiceImpl {
         newMsg.setApprove(true);
         newMsg.setType("invite");
         newMsg.setMessageType("handleInvite");
+        newMsg.setSelfId(cqMsg.getSelfId());
+        //邀请谁的只能在谁那边回消息通过
         CqResponse cqResponse = cqManager.sendMsg(newMsg);
         if (cqResponse.getRetCode() == 0) {
             for (CqMsg aList : request.keySet()) {
@@ -426,6 +428,7 @@ public class CqAdminServiceImpl {
             CqMsg cqMsg1 = new CqMsg();
             cqMsg1.setMessage("Flag为：" + argument.getFlag() + "的邀请被" + cqMsg.getUserId() + "通过");
             cqMsg1.setMessageType("private");
+            cqMsg1.setSelfId(cqMsg.getSelfId());
             for (long l : OverallConsts.ADMIN_LIST) {
                 cqMsg1.setUserId(l);
                 cqManager.sendMsg(cqMsg1);
@@ -721,6 +724,7 @@ public class CqAdminServiceImpl {
         cqMsg1.setMessage("有新的拉群邀请，请注意查收：" + "Flag：" + cqMsg.getFlag() + "，群号：" + cqMsg.getGroupId()
                 + "，邀请人：" + cqMsg.getUserId() + "，根据邀请人QQ在白菜数据库中的查询结果：" + user);
         cqMsg1.setMessageType("private");
+        cqMsg1.setSelfId(cqMsg.getSelfId());
         for (long i : OverallConsts.ADMIN_LIST) {
             //debug 这里设置的user id 应该是cqMsg1的，之前漏了个1
             cqMsg1.setUserId(i);
