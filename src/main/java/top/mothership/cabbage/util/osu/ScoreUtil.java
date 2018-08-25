@@ -351,7 +351,7 @@ public class ScoreUtil {
             resp += "，" + String.valueOf(Math.round(oppaiResult.getPp())) + "PP(Now)";
             resp += "，" + String.valueOf(Math.round(oppaiResult.getPpLegacy())) + "PP(Legacy)\n";
         }
-        resp += "Played by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(score.getDate().toInstant());
+        resp += "Played by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC")).format(score.getDate().toInstant());
         return resp;
     }
 

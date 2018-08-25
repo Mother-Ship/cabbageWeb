@@ -48,8 +48,12 @@ public class SmokeUtil {
         this.resDAO = resDAO;
         loadGroupAdmins();
         //对所有群开启消息记录
-        List<RespData> groups = cqManager.getGroups().getData();
+        List<RespData> groups = cqManager.getGroups(1335734629L).getData();
+        List<RespData> groups2 = cqManager.getGroups(1020640876L).getData();
+        groups.addAll(groups2);
+        //懒得去重了 反正Map会自动去
         for (RespData respData : groups) {
+            logger.info("开始为群{}创建消息队列",respData.getGroupId());
             if(!repeatRecordGroups.contains(String.valueOf(respData.getGroupId()))
                     &&!repeatSmokeGroups.contains(String.valueOf(respData.getGroupId()))) {
                 msgQueues.put(respData.getGroupId(), new MsgQueue());

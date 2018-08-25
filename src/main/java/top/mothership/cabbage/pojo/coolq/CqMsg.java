@@ -43,6 +43,8 @@ public class CqMsg  {
     private String reason;
     private Boolean enable;
     private Long time;
+    @SerializedName("self_id")
+    private Long selfId;
 
 
 }

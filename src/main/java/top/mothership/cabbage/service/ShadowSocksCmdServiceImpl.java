@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import top.mothership.cabbage.annotation.UserAuthorityControl;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 
@@ -16,6 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 @Service
+@UserAuthorityControl({1335734657L})
 public class ShadowSocksCmdServiceImpl {
     private final String baseURL = "https://cmd.gogosu.moe/api/";
     private final CqManager cqManager;

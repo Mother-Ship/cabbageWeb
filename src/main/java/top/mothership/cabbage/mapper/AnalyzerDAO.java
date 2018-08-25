@@ -12,13 +12,30 @@ import java.util.List;
 @Mapper
 @Repository
 public interface AnalyzerDAO {
-    @Insert("REPLACE INTO `score` VALUES (null,#{score.beatmapId},#{score.mode},#{score.scoreVersion}" +
-            ",#{score.mapMd5},#{score.repMd5},#{score.size}" +
-            ",#{score.score},#{score.maxCombo},#{score.count50}" +
-            ",#{score.count100},#{score.count300},#{score.countMiss}" +
-            ",#{score.countKatu},#{score.countGeki},#{score.perfect}" +
-            ",#{score.enabledMods},#{score.date},#{score.rank}" +
-            ",#{score.pp},#{score.userId},#{score.userName},#{score.onlineId})")
+    @Insert("REPLACE INTO `score` VALUES (" +
+            "null," +
+            "#{score.beatmapId}," +
+            "#{score.mode}," +
+            "#{score.scoreVersion}," +
+            "#{score.mapMd5}," +
+            "#{score.repMd5}," +
+            "#{score.size}," +
+            "#{score.score}," +
+            "#{score.maxCombo}," +
+            "#{score.count50}," +
+            "#{score.count100}," +
+            "#{score.count300}," +
+            "#{score.countMiss}" +
+            ",#{score.countKatu}," +
+            "#{score.countGeki}," +
+            "#{score.perfect}," +
+            "#{score.enabledMods}," +
+            "#{score.date}," +
+            "#{score.rank}," +
+            "#{score.pp}," +
+            "#{score.userId}," +
+            "#{score.userName}," +
+            "#{score.onlineId})")
     Integer addScore(@Param("score") Score score);
 
     @Select("SELECT * FROM `score` WHERE `user_id` = #{userId} ")

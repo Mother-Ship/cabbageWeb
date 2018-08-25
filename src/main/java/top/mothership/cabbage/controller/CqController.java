@@ -510,6 +510,7 @@ public class CqController {
         CqMsg cqMsg = new CqMsg();
         cqMsg.setMessageType("private");
         cqMsg.setUserId(1335734657L);
+        cqMsg.setSelfId(1335734629L);
         cqMsg.setMessage("初始化完成，欢迎使用");
         cqManager.sendMsg(cqMsg);
     }
