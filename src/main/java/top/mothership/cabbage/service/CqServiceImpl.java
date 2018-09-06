@@ -1551,8 +1551,7 @@ public class CqServiceImpl {
         List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
         if (roles.contains("mp4")) {
             CqMsg cqMsg = new CqMsg();
-            //写死老白菜
-            cqMsg.setSelfId(1335734629L);
+            cqMsg.setSelfId(1020640876L);
             cqMsg.setMessageType("group");
             cqMsg.setGroupId(564679329L);
             //并且刷超了
@@ -1620,7 +1619,7 @@ public class CqServiceImpl {
         if (roles.contains("mp5")) {
             CqMsg cqMsg = new CqMsg();
             cqMsg.setMessageType("group");
-            cqMsg.setSelfId(1335734629L);
+            cqMsg.setSelfId(1020640876L);
             cqMsg.setGroupId(201872650L);
             CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
             if (cqResponse != null) {

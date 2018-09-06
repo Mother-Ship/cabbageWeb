@@ -480,16 +480,16 @@ public class CqController {
 
                 }
                 break;
-            case "event":
-                if ("group_increase".equals(cqMsg.getEvent())) {
+            case "notice":
+                if ("group_increase".equals(cqMsg.getNoticeType())) {
                     //新增人口
                     cqService.welcomeNewsPaper(cqMsg);
                 }
-                if ("group_decrease".equals(cqMsg.getEvent())) {
+                if ("group_decrease".equals(cqMsg.getNoticeType())) {
                     //有人退群
                     cqService.seeYouNextTime(cqMsg);
                 }
-                if ("group_admin".equals(cqMsg.getEvent())) {
+                if ("group_admin".equals(cqMsg.getNoticeType())) {
                     //群管变动
                     smokeUtil.loadGroupAdmins();
                 }

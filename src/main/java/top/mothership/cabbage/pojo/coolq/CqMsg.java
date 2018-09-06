@@ -20,7 +20,8 @@ public class CqMsg  {
     private ParameterEnum[] optional;
     @SerializedName("post_type")
     private String postType;
-    private String event;
+    @SerializedName("notice_type")
+    private String noticeType;
     @SerializedName("request_type")
     private String requestType;
     @SerializedName("message_type")
@@ -45,6 +46,6 @@ public class CqMsg  {
     private Long time;
     @SerializedName("self_id")
     private Long selfId;
-
+    private String comment;
 
 }
