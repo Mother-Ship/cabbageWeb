@@ -34,6 +34,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -1460,18 +1461,19 @@ public class CqServiceImpl {
 
     @GroupAuthorityControl(allowed = {308419061,793260840})
     public void time(CqMsg cqMsg) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime NY = LocalDateTime.now(ZoneId.of("America/New_York"));
+        LocalDateTime UTC = LocalDateTime.now(ZoneId.of("UTC"));
 
-        LocalDateTime now = LocalDateTime.now();
-
-        cqMsg.setMessage("当前美国东部时间（America/NewYork）为："
-                + ZonedDateTime.of(now, ZoneId.of("America/New_York"))
+        cqMsg.setMessage("当前美国东部时间（America/NewYork）为：\n"
+                + formatter.format(NY)
                 + "\n当前UTC时间为："
-                + ZonedDateTime.of(now, ZoneId.of("UTC")));
+                + formatter.format(UTC));
         cqManager.sendMsg(cqMsg);
     }
 
 
-    @Scheduled(cron = "0 0 6 * * ?")
+    @Scheduled(cron = "0 0 4 * * ?")
     public void importUserInfo() {
         //似乎每分钟并发也就600+，不需要加延迟……
         java.util.Date start = Calendar.getInstance().getTime();
