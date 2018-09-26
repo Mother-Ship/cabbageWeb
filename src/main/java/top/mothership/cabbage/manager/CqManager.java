@@ -90,7 +90,7 @@ public class CqManager {
     }
 
     public CqResponse<List<QQInfo>> getGroupMembers(Long groupId) {
-        String URL = "http://localhost:5700/get_group_member_info";
+        String URL = "http://localhost:5700/get_group_member_list";
         HttpURLConnection httpConnection;
         try {
             CqMsg cqMsg = new CqMsg();
@@ -117,7 +117,7 @@ public class CqManager {
             CqResponse<List<QQInfo>> response = new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<QQInfo>>>() {
             }.getType());
             if (response.getRetCode() != 0) {
-                URL = "http://localhost:5702/get_group_member_info";
+                URL = "http://localhost:5702/get_group_member_list";
                 httpConnection =
                         (HttpURLConnection) new URL(URL).openConnection();
                 httpConnection.setRequestMethod("POST");

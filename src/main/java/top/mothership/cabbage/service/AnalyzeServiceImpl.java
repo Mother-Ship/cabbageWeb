@@ -178,7 +178,7 @@ public class AnalyzeServiceImpl {
                         //将代码重复一遍，避免无谓的数据库读写
                         Beatmap beatmap = apiManager.getBeatmap(bList);
                         String username = userDAO.getUser(null, aList).getCurrentUname();
-                        cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, username));
+                        cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, username,null));
                         cqManager.sendMsg(cqMsg);
                         score.setBeatmapId(bList);
                         analyzerDAO.addScore(score);
@@ -188,7 +188,7 @@ public class AnalyzeServiceImpl {
                         if (tmp.get(i).getDate().getTime() != (lastTmp.get(i).getDate().getTime())) {
                             Beatmap beatmap = apiManager.getBeatmap(bList);
                             String username = userDAO.getUser(null, aList).getCurrentUname();
-                            cqMsg.setMessage(scoreUtil.genScoreString(tmp.get(i), beatmap, username));
+                            cqMsg.setMessage(scoreUtil.genScoreString(tmp.get(i), beatmap, username,null));
                             cqManager.sendMsg(cqMsg);
                             tmp.get(i).setBeatmapId(bList);
                             analyzerDAO.addScore(tmp.get(i));

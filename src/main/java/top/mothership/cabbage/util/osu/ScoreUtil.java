@@ -335,7 +335,7 @@ public class ScoreUtil {
      * @param username the username
      * @return the string
      */
-    public String genScoreString(Score score, Beatmap beatmap, String username) {
+    public String genScoreString(Score score, Beatmap beatmap, String username,Integer count) {
         OppaiResult oppaiResult = calcPP(score, beatmap);
         String resp = "官网链接：https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
                 + "血猫链接：（不保证有效）http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId() + "\n"
@@ -351,7 +351,10 @@ public class ScoreUtil {
             resp += "，" + String.valueOf(Math.round(oppaiResult.getPp())) + "PP(Now)";
             resp += "，" + String.valueOf(Math.round(oppaiResult.getPpLegacy())) + "PP(Legacy)\n";
         }
-        resp += "Played by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC")).format(score.getDate().toInstant());
+        if(count !=null){
+            resp+="\n在该玩家24小时内游戏记录中，该谱面出现了"+count+"次。";
+        }
+        resp += "\nPlayed by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC")).format(score.getDate().toInstant());
         return resp;
     }
 

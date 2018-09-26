@@ -33,9 +33,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -534,7 +532,7 @@ public class CqServiceImpl {
                 Score score = bpList.get(argument.getNum() - 1);
                 logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + argument.getMode() + "的第" + argument.getNum() + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
                 Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
-                cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName()));
+                cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(),null));
                 cqManager.sendMsg(cqMsg);
             } else {
                 //list基于0，得-1
@@ -632,6 +630,14 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
+        List<Score> scores = apiManager.getRecents(argument.getMode(),userFromAPI.getUserId());
+        Integer count = 0;
+        for (Score score1 : scores) {
+            if(score.getBeatmapId().equals(score1.getBeatmapId())){
+                count++;
+            }
+        }
+
         Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
         if (beatmap == null) {
             cqMsg.setMessage(String.format(TipConsts.BEATMAP_GET_FAILED, score.getBeatmapId()));
@@ -639,7 +645,7 @@ public class CqServiceImpl {
             return;
         }
         if (argument.isText()) {
-            String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName());
+            String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(),count);
             cqMsg.setMessage(resp);
             cqManager.sendMsg(cqMsg);
         } else {
@@ -1223,10 +1229,17 @@ public class CqServiceImpl {
                 break;
             }
         }
+
         if (score == null) {
             cqMsg.setMessage(String.format(TipConsts.NO_RECENT_RECORD_PASSED, userFromAPI.getUserName(), scoreUtil.convertGameModeToString(argument.getMode())));
             cqManager.sendMsg(cqMsg);
             return;
+        }
+        Integer count = 0;
+        for (Score score1 : scores) {
+            if(score.getBeatmapId().equals(score1.getBeatmapId())){
+                count++;
+            }
         }
         Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
         if (beatmap == null) {
@@ -1236,7 +1249,7 @@ public class CqServiceImpl {
         }
         switch (argument.getSubCommandLowCase()) {
             case "prs":
-                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName());
+                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(),count);
                 cqMsg.setMessage(resp);
                 cqManager.sendMsg(cqMsg);
                 break;
@@ -1445,17 +1458,20 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @GroupAuthorityControl(allowed = {308419061})
+    @GroupAuthorityControl(allowed = {308419061,793260840})
     public void time(CqMsg cqMsg) {
-        LocalTime localTime = LocalTime.now();
-        cqMsg.setMessage("当前美国东部时间（UTC-5）为："
-                + localTime.minusHours(13)
-                + "\n当前UTC时间为：" + localTime.minusHours(8));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        cqMsg.setMessage("当前美国东部时间（America/NewYork）为："
+                + ZonedDateTime.of(now, ZoneId.of("America/New_York"))
+                + "\n当前UTC时间为："
+                + ZonedDateTime.of(now, ZoneId.of("UTC")));
         cqManager.sendMsg(cqMsg);
     }
 
 
-    @Scheduled(cron = "0 0 4 * * ?")
+    @Scheduled(cron = "0 0 6 * * ?")
     public void importUserInfo() {
         //似乎每分钟并发也就600+，不需要加延迟……
         java.util.Date start = Calendar.getInstance().getTime();
@@ -1687,7 +1703,7 @@ public class CqServiceImpl {
     /**
      * 清理每天生成的临时文件。
      */
-    @Scheduled(cron = "0 0 4 * * ?")
+    @Scheduled(cron = "0 0 6 * * ?")
     public void clearTodayImages() {
         final Path path = Paths.get("/root/coolq/data/image");
         SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {

@@ -310,7 +310,7 @@ public class CqAdminServiceImpl {
         }
         switch (argument.getSubCommandLowCase()) {
             case "rs":
-                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName());
+                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(),null);
                 cqMsg.setMessage(resp);
                 cqManager.sendMsg(cqMsg);
                 break;
@@ -458,8 +458,9 @@ public class CqAdminServiceImpl {
             resp = "玩家" + userFromAPI.getUserName() + "没有使用过白菜，已完成注册";
             userUtil.registerUser(userFromAPI.getUserId(), 0, argument.getQq(), argument.getRole());
         } else {
-            user = userDAO.getUser(argument.getQq(), null);
-            if (user == null) {
+           User user2 = userDAO.getUser(argument.getQq(), null);
+            if (user2 == null) {
+                //这个QQ没有绑定过玩家
                 resp = "更新前的QQ：" + user.getQq() + "，更新前的用户组：" + user.getRole();
                 user.setQq(argument.getQq());
                 user.setRole(argument.getRole());
