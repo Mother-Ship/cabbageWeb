@@ -1723,10 +1723,30 @@ public class CqServiceImpl {
                 return super.visitFile(file, attrs);
             }
         };
-        try {
+        final Path path3 = Paths.get("/root/coolq2/data/image");
+        SimpleFileVisitor<Path> finder3 = new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                System.out.println("正在删除" + file.toString());
+                Files.delete(file);
+                return super.visitFile(file, attrs);
+            }
+        };
+        final Path path4 = Paths.get("/root/coolq2/data/record");
+        SimpleFileVisitor<Path> finder4 = new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                System.out.println("正在删除" + file.toString());
+                Files.delete(file);
+                return super.visitFile(file, attrs);
+            }
+        };
 
+        try {
             Files.walkFileTree(path, finder);
             Files.walkFileTree(path2, finder2);
+            Files.walkFileTree(path3, finder3);
+            Files.walkFileTree(path4, finder4);
         } catch (IOException e) {
             logger.error("清空临时文件时出现异常，" + e.getMessage());
         }
