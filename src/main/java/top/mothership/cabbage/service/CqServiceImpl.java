@@ -1158,6 +1158,11 @@ public class CqServiceImpl {
                     + Math.pow((map.get("Speed") / 2000F), 0.8F)
                     * Math.pow((map.get("Stamina") / 2000F), 0.5F)
                     + (map.get("Accuracy") / 2700F);
+            double oclrCost = Math.pow((map.get("Jump") / 3000F), 0.8F)
+                    * Math.pow((map.get("Flow") / 1500F), 0.5F)
+                    + Math.pow((map.get("Speed") / 2000F), 0.8F)
+                    * Math.pow((map.get("Stamina") / 2000F), 0.5F)
+                    + (map.get("Accuracy") / 2700F);
             double yuTangCost = (Math.pow((map.get("Jump") / 3000F), 0.8F)
                     * Math.pow((map.get("Flow") / 1500F), 0.6F)
                     + Math.pow((map.get("Speed") / 2000F), 0.8F)
@@ -1165,20 +1170,13 @@ public class CqServiceImpl {
                     + (map.get("Accuracy") / 3000F))
                     *Math.min(1,Math.pow((map2.get("BPM")/190D),2))
                     *Math.min(1,Math.pow((map2.get("Length")*(map2.get("BPM")/(190D*150D))),0.2D));
-//           mp4： Cost=((0.02*(10*SQRT((ATAN((2*B1-(2400+2135))/(2400-2135))+PI()/2+8)*(ATAN((2*B2-(720+418))/(720-418))+PI()/2+3))+7*(ATAN((2*B4-(1600+1324))/(1600-1324))+PI()/2)+3*(ATAN((2*B5-(1300+930))/(1300-930))+PI()/2)+1*(ATAN((2*B6-(1300+1000))/(1300-1000))+PI()/2)+5*(ATAN((2*B3-(700+450))/(700-450))+PI()/2)))-1)^2.5
-//           oclbs10： (\frac{\mbox{jump}}{3000})^{0.8}*(\frac{\mbox{flow}}{1500})^{0.6}+(\frac{\mbox{speed}}{2000})^{0.8}*(\frac{\mbox{stamina}}{2000})^{0.5}+\frac{\mbox{accuracy}}{2700}
-//            cqMsg.setMessage(user.getCurrentUname() + "的PP+ 六维数据："
-//                    + "\nJump：" + map.get("Jump")
-//                    + "\nFlow：" + map.get("Flow")
-//                    + "\nPrecision：" + map.get("Precision")
-//                    + "\nSpeed：" + map.get("Speed")
-//                    + "\nStamina：" + map.get("Stamina")
-//                    + "\nAccuracy：" + map.get("Accuracy")
             String filename = imgUtil.drawRadarImage(map, userFromAPI);
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]\n"
-                    + "在**本届OCLA/OCLC**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
-                    + "。\n在**第三届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S2Cost)
-                    + "。\n在**第三届鱼塘杯**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(yuTangCost)
+                    + "在**OCL系列比赛(A/B/C)**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
+                    + "。\n在**OCL系列比赛(新秀组)**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclrCost)
+                    + "。\n在**第五届某个不能提起名字的比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS4Cost)
+//                    + "。\n在**第三届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S2Cost)
+//                    + "。\n在**第三届鱼塘杯**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(yuTangCost)
                     + "。");
             cqManager.sendMsg(cqMsg);
             return;

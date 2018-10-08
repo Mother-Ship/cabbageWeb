@@ -10,6 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.controller.vo.ChartsVo;
+import top.mothership.cabbage.controller.vo.PPChartVo;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.RedisDAO;
@@ -32,6 +33,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DateFormat;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
@@ -378,9 +380,21 @@ public class ApiController {
      */
     @RequestMapping(value = "/pp_chart.php", method = RequestMethod.GET)
     @CrossOrigin
-    public String kongouHikari(@RequestParam("id") String id) {
+    public String kongouHikari(@RequestParam("id") String id,@RequestParam("mode") Integer mode) {
+        Userinfo userinfo = apiManager.getUser(0,id);
+        List<Userinfo> list = userInfoDAO.listUserInfoByUserIdAndMode(userinfo.getUserId(),mode);
+        PPChartVo vo = new PPChartVo();
+        List<String> xAxis = new ArrayList<>(list.size());
+        List<Float> yAxis = new ArrayList<>(list.size());
 
-        return null;
+
+        for (Userinfo userinfo1 : list) {
+            xAxis.add(userinfo1.getQueryDate().toString());
+            yAxis.add(userinfo1.getPpRaw());
+        }
+        vo.setXAxis(xAxis);
+        vo.setYAxis(yAxis);
+        return new Gson().toJson(new WebResponse<>(0, "success", vo));
     }
 
     public void quickSort(List<Userinfo> arr, int start, int end, String criteria) {

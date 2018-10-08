@@ -615,6 +615,10 @@ public class CqAdminServiceImpl {
         } else {
             cqResponse = cqManager.getGroupMembers(argument.getGroupId());
         }
+
+        cqMsg.setMessage(cqResponse.toString());
+        cqManager.sendMsg(cqMsg);
+
         for (QQInfo qqInfo : cqResponse.getData()) {
             //根据QQ获取user和群名片
             user = userDAO.getUser(qqInfo.getUserId(), null);

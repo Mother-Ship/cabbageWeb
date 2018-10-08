@@ -135,6 +135,8 @@ public class CqManager {
                 while ((tmp3 = responseBuffer.readLine()) != null) {
                     tmp2.append(tmp3);
                 }
+                return  new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<QQInfo>>>() {
+                }.getType());
             }
             return response;
         } catch (IOException e) {
