@@ -1007,7 +1007,6 @@ public class CqServiceImpl {
                 break;
             case "537646635":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp乐园主群。请修改一下你的群名片(包含完整osu! id)，以下为mp乐园系列分群介绍：\n" +
-                        "osu! MP乐园高rank部 592339532\n" +
                         "OSU! MP乐园2号群 (MP2) *(5500-7000pp):234219559\n" +
                         "OSU! MP乐园3号群 (MP3) *(4700-5800pp):210342787\n" +
                         "OSU! MP乐园4号群 (MP4) *(3600-5100pp):564679329\n" +
@@ -1016,8 +1015,8 @@ public class CqServiceImpl {
             case "112177148":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第一届MP4杯赛群。\n本群作为历届mp4选手聚集地，之后比赛结束后会将赛群合并到本群。";
                 break;
-            case "806345866":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第六届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。\n报名地址：https://www.wenjuan.com/s/MNFrQfh ";
+            case "772918786":
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第七届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。\n报名地址：https://www.wenjuan.com/s/uEvquqW/";
                 break;
             case "807757470":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";

@@ -27,7 +27,7 @@ public @interface GroupAuthorityControl {
     //测试群
     //MP3
     //MP5
-    //MP5S6赛群
+    //MP5S7赛群
     //MP4S3赛群
     //FK群
     long[] bannedDefault() default {
@@ -37,9 +37,9 @@ public @interface GroupAuthorityControl {
             532783765L,
             210342787L,
             201872650L,
-            806345866L,
+            772918786,
             807757470L,
-            263668213L
+            263668213L,
     };
 
     /**
