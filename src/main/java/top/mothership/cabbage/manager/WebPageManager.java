@@ -2,15 +2,9 @@ package top.mothership.cabbage.manager;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+import okhttp3.*;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,6 +58,9 @@ public class WebPageManager {
     private final ResDAO resDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
     private HashMap<Integer, Document> map = new HashMap<>();
+    private static final OkHttpClient CLIENT = new OkHttpClient();
+    private static final MediaType JSON
+            = MediaType.parse("application/json; charset=utf-8");
 
     /**
      * Instantiates a new Web page manager.
@@ -74,6 +71,9 @@ public class WebPageManager {
     public WebPageManager(ResDAO resDAO) {
         this.resDAO = resDAO;
     }
+
+    @Autowired
+    private CqManager cqManager;
 
     /**
      * Gets avatar.
@@ -89,7 +89,6 @@ public class WebPageManager {
         try {
             avaurl = new URL(getAvaURL + uid + "?.png");
             ava = ImageIO.read(avaurl);
-
             if (ava != null) {
                 //进行缩放
                 if (ava.getHeight() > 128 || ava.getWidth() > 128) {
@@ -120,8 +119,7 @@ public class WebPageManager {
             }
 
         } catch (IOException e) {
-            logger.error("从官网获取头像失败");
-            logger.error(e.getMessage());
+            cqManager.warn("获取UID为" + uid + "玩家的头像失败！", e);
             return null;
         }
 
@@ -134,58 +132,41 @@ public class WebPageManager {
      * @return the bg backup
      */
     public BufferedImage getBGBackup(Beatmap beatmap) {
-        logger.info("开始从官网获取谱面" + beatmap.getBeatmapId() + "的背景");
-        DefaultHttpClient client = new DefaultHttpClient();
-        HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
-        //添加请求头
-        java.util.List<NameValuePair> urlParameters = new ArrayList<>();
-
-        urlParameters.add(new BasicNameValuePair("autologin", "on"));
-        urlParameters.add(new BasicNameValuePair("login", "login"));
-        urlParameters.add(new BasicNameValuePair("username", OverallConsts.CABBAGE_CONFIG.getString("accountForDL")));
-        urlParameters.add(new BasicNameValuePair("password", OverallConsts.CABBAGE_CONFIG.getString("accountForDLPwd")));
-        try {
-            logger.info("开始登录");
-            post.setEntity(new UrlEncodedFormEntity(urlParameters));
-            client.execute(post);
+        RequestBody formBody = new FormBody.Builder()
+                .add("autologin", "on")
+                .add("login", "login")
+                .add("username", OverallConsts.CABBAGE_CONFIG.getString("accountForDL"))
+                .add("password", OverallConsts.CABBAGE_CONFIG.getString("accountForDLPwd"))
+                .build();
+        Request request = new Request.Builder()
+                .url("https://osu.ppy.sh/forum/ucp.php?mode=login")
+                .post(formBody)
+                .build();
+        StringBuilder cookie = new StringBuilder();
+        try (Response response = CLIENT.newCall(request).execute()) {
+            List<Cookie> cookies = Cookie.parseAll(request.url(), response.headers());
+            for (Cookie c : cookies) {
+                cookie.append(c.name()).append("=").append(c.value()).append(";");
+            }
         } catch (Exception e) {
-            logger.warn("登录官网失败。" + e.getMessage());
+            cqManager.warn("登录官网失败", e);
             return null;
         }
-        List<Cookie> cookies = client.getCookieStore().getCookies();
-        String CookieNames = "";
-        for (Cookie c : cookies) {
-            CookieNames = CookieNames.concat(c.getName());
-        }
-        post.releaseConnection();
-        if (CookieNames.contains("phpbb3_2cjk5_sid")) {
+
+        if (cookie.toString().contains("phpbb3_2cjk5_sid")) {
             //登录成功
-            DefaultHttpClient httpclient2 = new DefaultHttpClient();
             OsuFile osuFile = parseOsuFile(beatmap);
             if (osuFile == null) {
-                logger.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+                cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
                 return null;
             }
-            httpclient2.setCookieStore(client.getCookieStore());
-            HttpGet httpGet = new HttpGet("https://osu.ppy.sh/d/" + beatmap.getBeatmapSetId());
-            HttpResponse httpResponse;
-            InputStream is;
-            try {
-                httpResponse = httpclient2.execute(httpGet);
-                HttpEntity entity = httpResponse.getEntity();
-                is = entity.getContent();
-            } catch (IOException e) {
-                logger.error("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，" + e.getMessage());
-                e.printStackTrace();
-                return null;
-            }
-            // 获取响应消息实体
-
-            //直接包装为ZipInputStream
-            ZipInputStream zis = new ZipInputStream(new CheckedInputStream(is, new CRC32()));
-            ZipEntry entry;
-            try {
-                logger.info("开始下载并解析谱面压缩包");
+            request = new Request.Builder()
+                    .url("https://osu.ppy.sh/d/" + beatmap.getBeatmapSetId())
+                    .header("Cookie", cookie.toString())
+                    .build();
+            try (Response response = CLIENT.newCall(request).execute();
+                 ZipInputStream zis = new ZipInputStream(new CheckedInputStream(response.body().byteStream(), new CRC32()))) {
+                ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
                     logger.info("当前文件名为：" + entry.getName());
                     byte data[] = new byte[(int) entry.getSize()];
@@ -222,29 +203,22 @@ public class WebPageManager {
                                 ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
                                 resizedBG.flush();
                                 byte[] imgBytes = out.toByteArray();
-                                resDAO.addBG(Integer.valueOf(beatmap.getBeatmapSetId()), osuFile.getBgName(), imgBytes);
+                                resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), imgBytes);
                             } catch (IOException e) {
                                 e.getMessage();
                                 return null;
                             }
                         }
-                        httpGet.releaseConnection();
                         in.close();
-                        zis.close();
-                        is.close();
                         return resizedBG;
                     }
                 }
-                httpGet.releaseConnection();
-                zis.close();
-                is.close();
-                return null;
-            } catch (IOException e) {
-                logger.error("解析谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，" + e.getMessage());
+            } catch (Exception e) {
+                cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
                 return null;
             }
         }
-        logger.warn("登录官网失败。");
+        cqManager.warn("登录官网失败,Cookie:" + cookie);
         return null;
 
     }
@@ -256,7 +230,7 @@ public class WebPageManager {
      * @return the bg
      * @throws NullPointerException the null pointer exception
      */
-    public BufferedImage getBG(Beatmap beatmap) throws NullPointerException {
+    public BufferedImage getBG(Beatmap beatmap) {
         logger.info("开始获取谱面" + beatmap.getBeatmapId() + "的背景");
         HttpURLConnection httpConnection;
         int retry = 0;
@@ -306,7 +280,7 @@ public class WebPageManager {
                         ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
                         resizedBG.flush();
                         img = out.toByteArray();
-                        resDAO.addBG(Integer.valueOf(beatmap.getBeatmapSetId()), osuFile.getBgName(), img);
+                        resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), img);
                     } catch (IOException e) {
                         logger.error("写入图片时出现IO异常：" + e.getMessage());
                         return null;
@@ -323,7 +297,7 @@ public class WebPageManager {
         }
         if (retry == 5) {
             logger.error("获取" + beatmap.getBeatmapId() + "的背景图，失败五次");
-            throw new NullPointerException();
+            return null;
         }
         return resizedBG;
 
@@ -561,6 +535,7 @@ public class WebPageManager {
             HttpURLConnection httpConnection;
             try {
                 String url = osuSearchURL;
+
                 List<NameValuePair> params = new LinkedList<>();
                 if (!"".equals(searchParam.getTitle())) {
                     params.add(new BasicNameValuePair("title", searchParam.getTitle()));
@@ -801,11 +776,11 @@ public class WebPageManager {
         String[] tmp = bestLengthRaw.split(":");
         try {
             Integer bestBpm = Integer.valueOf(link.parents().get(0).text());
-            Integer bestLength =  Integer.valueOf(tmp[0]) *60 + Integer.valueOf(tmp[1]);
-            map.put("BPM",bestBpm);
-            map.put("Length",bestLength);
+            Integer bestLength = Integer.valueOf(tmp[0]) * 60 + Integer.valueOf(tmp[1]);
+            map.put("BPM", bestBpm);
+            map.put("Length", bestLength);
             return map;
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error("玩家" + uid + "访问osu! Chan失败五次");
             return null;
         }

@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.annotation.UserAuthorityControl;
 import top.mothership.cabbage.consts.OverallConsts;
@@ -38,6 +39,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.Date;
@@ -666,6 +668,7 @@ public class CqAdminServiceImpl {
 
         }
         cqMsg.setMessage(resp);
+        logger.info(resp);
         cqManager.sendMsg(cqMsg);
     }
 
@@ -749,7 +752,7 @@ public class CqAdminServiceImpl {
             cqManager.sendMsg(cqMsg);
         }
     }
-
+    @UserAuthorityControl({496802290})
     public void roleInfo(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
 
@@ -770,17 +773,24 @@ public class CqAdminServiceImpl {
         }
         resp = argument.getRole() + "用户组中所有人的信息：";
         for (Integer i : list) {
-            //此处刷新被ban状态
             user = userDAO.getUser(null, i);
             Userinfo userinfo = apiManager.getUser(argument.getMode(), i);
+            Userinfo userinfo1 = userInfoDAO.getUserInfo(argument.getMode(),i,LocalDate.now().minusDays(30));
+            Userinfo userinfo2 = userInfoDAO.getUserInfo(argument.getMode(),i,LocalDate.now().minusDays(90));
             if (userinfo != null) {
                 resp += "\nuid：" + user.getUserId()
                         + "，现用名：" + user.getCurrentUname()
                         + "，曾用名：" + user.getLegacyUname()
                         + "，绑定的QQ：" + user.getQq()
                         + "，PP：" + userinfo.getPpRaw();
+                if(userinfo1!=null & userinfo2!=null){
+                    float day30 = userinfo.getPpRaw()-userinfo1.getPpRaw();
+                    float day90 = userinfo.getPpRaw()-userinfo2.getPpRaw();
+                    if((day30-day90)/day30<3f){
+                        resp += "90天内活跃和30天内活跃度不符！";
+                    }
+                }
             } else {
-
                 if (user.isBanned()) {
                     resp += "\nuid：" + user.getUserId()
                             + "，现用名：" + user.getCurrentUname()
@@ -795,8 +805,6 @@ public class CqAdminServiceImpl {
                             + "\n从osu!api获取该玩家信息失败。";
                 }
             }
-
-
         }
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
@@ -857,6 +865,39 @@ public class CqAdminServiceImpl {
                 .withZone(ZoneId.systemDefault()).format(Instant.now()) + "。\n接下来会发送一张图片，以测试图片发送是否出错：");
         cqManager.sendMsg(cqMsg);
         cqMsg.setMessage("[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"), CompressLevelEnum.不压缩) + "]");
+        cqManager.sendMsg(cqMsg);
+    }
+
+    @Scheduled(cron = "0 0 * * * ?")
+    public void watch(){
+        CqMsg cqMsg = new CqMsg();
+        cqMsg.setMessageType("group");
+        cqMsg.setGroupId(693299572L);
+        cqMsg.setSelfId(1335734629L);
+        String msg = "";
+        long time= System.currentTimeMillis();
+        for (int i = 0; i < 10; i++) {
+            apiManager.getUser(0, "Mother Ship");
+        }
+        Long afterQueryOsuApiFor10Times = System.currentTimeMillis();
+        if((afterQueryOsuApiFor10Times - time) / 10>1000){
+            msg += "osu! API访问缓慢，此时10次平均访问时间为："+(afterQueryOsuApiFor10Times - time) / 10;
+        }
+        Long afterDrawStat = System.currentTimeMillis();
+        for (int i = 0; i < 10; i++) {
+            webPageManager.getPPPlus(2545898);
+        }
+        Long afterQueryPPPlusFor10Times = System.currentTimeMillis();
+        if((afterQueryPPPlusFor10Times - afterDrawStat) / 10>5000){
+            msg += "PP+访问缓慢，此时10次平均访问时间为："+(afterQueryOsuApiFor10Times - time) / 10;
+        }
+        msg += "[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"), CompressLevelEnum.不压缩) + "]";
+        cqMsg.setMessage(msg);
+        cqManager.sendMsg(cqMsg);
+
+        cqMsg.setSelfId(1020640876L);
+        msg = "[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"), CompressLevelEnum.不压缩) + "]";
+        cqMsg.setMessage(msg);
         cqManager.sendMsg(cqMsg);
     }
 }

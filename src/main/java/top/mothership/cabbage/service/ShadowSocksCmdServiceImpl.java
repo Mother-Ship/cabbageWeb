@@ -17,7 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 @Service
-@UserAuthorityControl({1335734657L})
+@UserAuthorityControl({1335734657L,450463033L})
 public class ShadowSocksCmdServiceImpl {
     private final String baseURL = "https://cmd.gogosu.moe/api/";
     private final CqManager cqManager;

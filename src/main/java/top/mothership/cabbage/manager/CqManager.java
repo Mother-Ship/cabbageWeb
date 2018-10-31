@@ -21,7 +21,22 @@ import java.util.List;
 //将CQ的HTTP API封装为接口，并托管到Spring
 @Component
 public class CqManager {
-
+    public CqResponse warn(String msg){
+        CqMsg cqMsg = new CqMsg();
+        cqMsg.setMessageType("private");
+        cqMsg.setUserId(1335734657L);
+        cqMsg.setSelfId(1335734629L);
+        cqMsg.setMessage(msg);
+        return sendMsg(cqMsg);
+    }
+    public CqResponse warn(String msg,Exception e){
+        CqMsg cqMsg = new CqMsg();
+        cqMsg.setMessageType("private");
+        cqMsg.setUserId(1335734657L);
+        cqMsg.setSelfId(1335734629L);
+        cqMsg.setMessage(msg+" "+e.getMessage());
+        return sendMsg(cqMsg);
+    }
     public CqResponse sendMsg(CqMsg cqMsg) {
         String baseURL = null;
         switch (cqMsg.getSelfId().toString()) {

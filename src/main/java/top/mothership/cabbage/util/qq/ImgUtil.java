@@ -58,9 +58,11 @@ public class ImgUtil {
     private WebPageManager webPageManager;
     private ScoreUtil scoreUtil;
     private ResDAO resDAO;
+
     /**
      * Instantiates a new Img util.
-     *  @param webPageManager the web page manager
+     *
+     * @param webPageManager the web page manager
      * @param scoreUtil      the score util
      * @param resDAO
      */
@@ -100,8 +102,8 @@ public class ImgUtil {
             roleBg = getCopyImage(images.get("role-creep.png"));
         }
 
-        byte[] data= (byte[])resDAO.getImage(String.valueOf(userFromAPI.getUserId()) + ".png");
-        if(data!=null) {
+        byte[] data = (byte[]) resDAO.getImage(String.valueOf(userFromAPI.getUserId()) + ".png");
+        if (data != null) {
             try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
                 bg = ImageIO.read(in);
             } catch (IOException e) {
@@ -485,7 +487,6 @@ public class ImgUtil {
     public String drawResult(Userinfo userFromAPI, Score score, Beatmap beatmap, int mode) {
         String accS = scoreUtil.genAccString(score, mode);
         float acc = Float.valueOf(accS);
-        BufferedImage bg;
         Map<String, String> mods = scoreUtil.convertModToHashMap(score.getEnabledMods());
         //这个none是为了BP节省代码，在这里移除掉
         mods.remove("None");
@@ -497,17 +498,11 @@ public class ImgUtil {
             //如果acc过低或者不是std
         }
 
-        try {
-            bg = webPageManager.getBG(beatmap);
-        } catch (NullPointerException e) {
-            bg = webPageManager.getBGBackup(beatmap);
-        }
+        BufferedImage bg = webPageManager.getBG(beatmap);
         if (bg == null) {
             bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
-                //随机抽取一个bg
-                String randomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
-                bg = getCopyImage(images.get(randomBG));
+                bg = getRandomBg();
             }
         }
         //2017-11-3 17:51:47这里有莫名的空指针，比较迷，在webPageManager.getBG里加一个判断为空则抛出空指针看看
@@ -899,21 +894,17 @@ public class ImgUtil {
      * @return the string
      */
     public String drawFirstRank(Beatmap beatmap, Score score, Userinfo userFromAPI, Long xE, int mode) {
-        BufferedImage bg;
         Image bg2;
         boolean unicode = false;
         //头像
         BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId());
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
 
-        bg = webPageManager.getBG(beatmap);
-
+        BufferedImage bg = webPageManager.getBG(beatmap);
         if (bg == null) {
             bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
-                //随机抽取一个bg
-                String randomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
-                bg = getCopyImage(images.get(randomBG));
+                bg = getRandomBg();
             }
         }
         //缩略图
@@ -1132,7 +1123,6 @@ public class ImgUtil {
      */
     public String drawBeatmap(Beatmap beatmap, Integer mods, OppaiResult oppaiResult, int mode) {
         boolean unicode = false;
-        BufferedImage bg;
         Image bg2;
 
         beatmap.setTotalLength((int) (beatmap.getTotalLength() / oppaiResult.getSpeedMultiplier()));
@@ -1140,17 +1130,11 @@ public class ImgUtil {
         Map<String, String> modsMap = scoreUtil.convertModToHashMap(mods);
         //这个none是为了BP节省代码，在这里移除掉
         modsMap.remove("None");
-        try {
-            bg = webPageManager.getBG(beatmap);
-        } catch (NullPointerException e) {
-            bg = webPageManager.getBGBackup(beatmap);
-        }
+        BufferedImage bg = webPageManager.getBG(beatmap);
         if (bg == null) {
             bg = webPageManager.getBGBackup(beatmap);
             if (bg == null) {
-                //随机抽取一个bg
-                String randomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
-                bg = getCopyImage(images.get(randomBG));
+                bg = getRandomBg();
             }
         }
         //缩略图
@@ -1273,7 +1257,6 @@ public class ImgUtil {
                 + " HP:" + (double) Math.round(oppaiResult.getHp() * 100) / 100
                 + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(oppaiResult.getStars())), 7, 125);
 
-
         //谱面的Rank状态
         g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
         //右侧title
@@ -1348,12 +1331,7 @@ public class ImgUtil {
     }
 
     public String drawRadarImage(Map<String, Double> ppPlus, Userinfo userinfo) {
-//                    + "\nJump：" + map.get("Jump")
-//                    + "\nFlow：" + map.get("Flow")
-//                    + "\nPrecision：" + map.get("Precision")
-//                    + "\nSpeed：" + map.get("Speed")
-//                    + "\nStamina：" + map.get("Stamina")
-//                    + "\nAccuracy：" + map.get("Accuracy")
+
         Double jump = ppPlus.get("Jump");
         Double flow = ppPlus.get("Flow");
         Double prec = ppPlus.get("Precision");
@@ -1387,92 +1365,96 @@ public class ImgUtil {
         if (jmpAva > max) {
             double tmp = jmpAva - max;
             jump2 -= tmp;
-            jmpMax = max/percent;
+            jmpMax = max / percent;
         }
         //控制不爆表
-        if (jmpMax < jump2) jmpMax = jump2;
-
         if (jmpAva < min) {
             double tmp = min - jmpAva;
             jump2 += tmp;
-            jmpMax = min/percent;
+            jmpMax = min / percent;
         }
+        if (jmpMax < jump2) jmpMax = jump2;
 
         double flowAva = (22.6d * Math.pow(x, 2) - 8.6d * x + 71.3d);
         double flowMax = flowAva / percent;
         if (flowAva > max) {
             double tmp = flowAva - max;
-           flow2 -= tmp;
-            flowMax = max/percent;
+            flow2 -= tmp;
+            flowMax = max / percent;
         }
-        if (flowMax < flow2) flowMax = flow2;
+
         if (flowAva < min) {
             double tmp = min - flowAva;
             flow2 += tmp;
-            flowMax = min/percent;
+            flowMax = min / percent;
         }
+        if (flowMax < flow2) flowMax = flow2;
 
         double precAva = (13.5d * Math.pow(x, 2) + 22.4d * x + 89.6d);
         double precMax = precAva / percent;
         if (precAva > max) {
             double tmp = precAva - max;
             prec2 -= tmp;
-            precMax = max/percent;
+            precMax = max / percent;
         }
-        if (precMax < prec2) precMax = prec2;
+
         if (precAva < min) {
             double tmp = min - precAva;
             prec2 += tmp;
-            precMax = min/percent;
+            precMax = min / percent;
         }
+        if (precMax < prec2) precMax = prec2;
 
         double spdAva = (234d * x + 307d);
         double spdMax = spdAva / percent;
         if (spdAva > max) {
             double tmp = spdAva - max;
             speed2 -= tmp;
-            spdMax = max/percent;
+            spdMax = max / percent;
         }
-        if (spdMax < speed2) spdMax = speed2;
+
         if (spdAva < min) {
             double tmp = min - spdAva;
             speed2 += tmp;
-            precMax = min/percent;
+            spdMax = min / percent;
         }
+        if (spdMax < speed2) spdMax = speed2;
 
         double staminaAva = (214.3 * x + 51.1d);
         double staminaMax = staminaAva / percent;
         if (staminaAva > max) {
             double tmp = staminaAva - max;
             stamina2 -= tmp;
-            staminaMax = max/percent;
+            staminaMax = max / percent;
         }
-        if (staminaMax < stamina2) staminaMax = stamina2;
+
         if (staminaAva < min) {
             double tmp = min - staminaAva;
             stamina2 += tmp;
-            staminaMax = min/percent;
+            staminaMax = min / percent;
         }
+        if (staminaMax < stamina2) staminaMax = stamina2;
 
         double accAva = (20.4d * Math.pow(x, 2) + 159.7d * x - 77.6d);
-        if(accAva>3600) accAva = 3600;
+        if (accAva > 3600) accAva = 3600;
         double accMax = accAva / percent;
         if (accAva > max) {
             double tmp = accAva - max;
             acc2 -= tmp;
-            accMax = max/percent;
+            accMax = max / percent;
         }
-        if (accMax < acc2) accMax = acc2;
+
         if (accAva < min) {
             double tmp = min - accAva;
             acc2 += tmp;
-            accMax = min/percent;
+            accMax = min / percent;
         }
+        if (accMax < acc2) accMax = acc2;
 
         int jumpX = (int) (152D - jump2 / jmpMax * 40D);
         int jumpY = (int) (131D - jump2 / jmpMax * 40D * Math.sqrt(3));
         int flowX = (int) (152D + flow2 / flowMax * 40D);
-        int flowY = (int) (131D - flow2/ flowMax * 40D * Math.sqrt(3));
+        int flowY = (int) (131D - flow2 / flowMax * 40D * Math.sqrt(3));
         int precisionX = (int) (152D - prec2 / precMax * 80D);
         int precisionY = 131;
         int speedX = (int) (152D - speed2 / spdMax * 40D);
@@ -1517,9 +1499,9 @@ public class ImgUtil {
         g2.fillRoundRect(accuracyX + 10, accuracyY, 36, 12, 4, 4);
         g2.fillRoundRect(flowX + 10, flowY, 36, 12, 4, 4);
         drawTextToImage(g2, "#f9f9f9", "Aller", 12, String.valueOf(flow.intValue()), flowX + 13, flowY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12,String.valueOf(stamina.intValue()), staminaX + 13, staminaY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, String.valueOf(stamina.intValue()), staminaX + 13, staminaY + 10);
         drawTextToImage(g2, "#f9f9f9", "Aller", 12, String.valueOf(acc.intValue()), accuracyX + 13, accuracyY + 10);
-        drawTextToImage(g2, "#f9f9f9", "Aller", 12,String.valueOf(speed.intValue()), speedX - 42, speedY + 10);
+        drawTextToImage(g2, "#f9f9f9", "Aller", 12, String.valueOf(speed.intValue()), speedX - 42, speedY + 10);
         drawTextToImage(g2, "#f9f9f9", "Aller", 12, String.valueOf(prec.intValue()), precisionX - 42, precisionY + 10);
         drawTextToImage(g2, "#f9f9f9", "Aller", 12, String.valueOf(jump.intValue()), jumpX - 42, jumpY + 10);
         drawTextToImage(g2, "#f9f9f9", "Aller", 12, userinfo.getUserName(), 182, 245);
@@ -1596,5 +1578,8 @@ public class ImgUtil {
         return str;
     }
 
-
+    private BufferedImage getRandomBg() {
+        String randomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
+        return getCopyImage(images.get(randomBG));
+    }
 }
