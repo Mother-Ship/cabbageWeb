@@ -58,7 +58,6 @@ public class WebPageManager {
     private final ResDAO resDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
     private HashMap<Integer, Document> map = new HashMap<>();
-    private static final OkHttpClient CLIENT = new OkHttpClient();
     private static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
 
@@ -132,6 +131,7 @@ public class WebPageManager {
      * @return the bg backup
      */
     public BufferedImage getBGBackup(Beatmap beatmap) {
+        OkHttpClient CLIENT = new OkHttpClient();
         RequestBody formBody = new FormBody.Builder()
                 .add("autologin", "on")
                 .add("login", "login")

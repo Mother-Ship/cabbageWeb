@@ -617,10 +617,6 @@ public class CqAdminServiceImpl {
         } else {
             cqResponse = cqManager.getGroupMembers(argument.getGroupId());
         }
-
-        cqMsg.setMessage(cqResponse.toString());
-        cqManager.sendMsg(cqMsg);
-
         for (QQInfo qqInfo : cqResponse.getData()) {
             //根据QQ获取user和群名片
             user = userDAO.getUser(qqInfo.getUserId(), null);
@@ -784,10 +780,10 @@ public class CqAdminServiceImpl {
                         + "，绑定的QQ：" + user.getQq()
                         + "，PP：" + userinfo.getPpRaw();
                 if(userinfo1!=null & userinfo2!=null){
-                    float day30 = userinfo.getPpRaw()-userinfo1.getPpRaw();
-                    float day90 = userinfo.getPpRaw()-userinfo2.getPpRaw();
-                    if((day30-day90)/day30<3f){
-                        resp += "90天内活跃和30天内活跃度不符！";
+                    int day30 = userinfo.getPlayCount()-userinfo1.getPlayCount();
+                    int day90 = userinfo.getPlayCount()-userinfo2.getPlayCount();
+                    if((day30-day90)<3*day30){
+                        resp += "，90天前PC差："+day90+"和30天内PC差"+day30+"相差过大，有小号嫌疑！";
                     }
                 }
             } else {
@@ -889,7 +885,7 @@ public class CqAdminServiceImpl {
         }
         Long afterQueryPPPlusFor10Times = System.currentTimeMillis();
         if((afterQueryPPPlusFor10Times - afterDrawStat) / 10>5000){
-            msg += "PP+访问缓慢，此时10次平均访问时间为："+(afterQueryOsuApiFor10Times - time) / 10;
+            msg += "\nPP+访问缓慢，此时10次平均访问时间为："+(afterQueryOsuApiFor10Times - time) / 10;
         }
         msg += "[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"), CompressLevelEnum.不压缩) + "]";
         cqMsg.setMessage(msg);

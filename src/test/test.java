@@ -383,10 +383,10 @@ public class test {
 //        System.out.println(doc.outerHtml());
 //        Matcher m = RegularPattern.REG_CMD_REGEX_COLON_NUM_PARAM.matcher("！bpme：2");
 //        System.out.println(m.find());
-        String a = "a";
-        String[] args = a.split("#|:");
-        System.out.println(args.length);
-        System.out.println(Arrays.toString(args));
+//        String a = "a";
+//        String[] args = a.split("#|:");
+//        System.out.println(args.length);
+//        System.out.println(Arrays.toString(args));
 
     }
 
