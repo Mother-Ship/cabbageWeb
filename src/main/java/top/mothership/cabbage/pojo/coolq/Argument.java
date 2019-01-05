@@ -31,4 +31,5 @@ public class Argument {
     private Integer second;
     private ShadowSocksRequest ssr;
     private Integer beatmapId;
+    private String remark;
 }

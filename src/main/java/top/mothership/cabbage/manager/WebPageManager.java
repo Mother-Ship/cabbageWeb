@@ -118,7 +118,7 @@ public class WebPageManager {
             }
 
         } catch (IOException e) {
-            cqManager.warn("获取UID为" + uid + "玩家的头像失败！", e);
+           //存在没设置头像的情况 不做提醒
             return null;
         }
 
@@ -153,70 +153,72 @@ public class WebPageManager {
             return null;
         }
 
-        if (cookie.toString().contains("phpbb3_2cjk5_sid")) {
-            //登录成功
-            OsuFile osuFile = parseOsuFile(beatmap);
-            if (osuFile == null) {
-                cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
-                return null;
-            }
-            request = new Request.Builder()
-                    .url("https://osu.ppy.sh/d/" + beatmap.getBeatmapSetId())
-                    .header("Cookie", cookie.toString())
-                    .build();
-            try (Response response = CLIENT.newCall(request).execute();
-                 ZipInputStream zis = new ZipInputStream(new CheckedInputStream(response.body().byteStream(), new CRC32()))) {
-                ZipEntry entry;
-                while ((entry = zis.getNextEntry()) != null) {
-                    logger.info("当前文件名为：" + entry.getName());
-                    byte data[] = new byte[(int) entry.getSize()];
-                    int start = 0, end = 0, flag = 0;
-                    while (entry.getSize() - start > 0) {
-                        end = zis.read(data, start, (int) entry.getSize() - start);
-                        if (end <= 0) {
-                            logger.info("正在读取" + 100 + "%");
-                            break;
-                        }
-                        start += end;
-                        //每20%输出一次，如果为100则为1%
-                        if ((start - flag) > (int) entry.getSize() / 5) {
-                            flag = start;
-                            logger.info("正在读取" + (float) start / entry.getSize() * 100 + "%");
-                        }
+        if (!cookie.toString().contains("phpbb3_2cjk5_sid")) {
+            cqManager.warn("登录官网失败，Cookie已改动！");
+            return null;
+        }
+        //登录成功
+        OsuFile osuFile = parseOsuFile(beatmap);
+        if (osuFile == null) {
+            cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+            return null;
+        }
+        request = new Request.Builder()
+                .url("https://osu.ppy.sh/d/" + beatmap.getBeatmapSetId())
+                .header("Cookie", cookie.toString())
+                .build();
+        try (Response response = CLIENT.newCall(request).execute();
+             ZipInputStream zis = new ZipInputStream(new CheckedInputStream(response.body().byteStream(), new CRC32()))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                logger.info("当前文件名为：" + entry.getName());
+                byte data[] = new byte[(int) entry.getSize()];
+                int start = 0, end = 0, flag = 0;
+                while (entry.getSize() - start > 0) {
+                    end = zis.read(data, start, (int) entry.getSize() - start);
+                    if (end <= 0) {
+                        logger.info("正在读取" + 100 + "%");
+                        break;
+                    }
+                    start += end;
+                    //每20%输出一次，如果为100则为1%
+                    if ((start - flag) > (int) entry.getSize() / 5) {
+                        flag = start;
+                        logger.info("正在读取" + (float) start / entry.getSize() * 100 + "%");
+                    }
 
-                    }
-                    String filename = entry.getName();
-                    if (filename.contains("/")) {
-                        filename = filename.substring(filename.indexOf("/") + 1);
-                    }
-                    if (osuFile.getBgName().equals(filename)) {
-                        ByteArrayInputStream in = new ByteArrayInputStream(data);
-                        BufferedImage bg = ImageIO.read(in);
-                        //懒得重构成方法了_(:з」∠)_
-                        //我错了 我不偷懒了_(:з」∠)_
-                        BufferedImage resizedBG = resizeImg(bg, 1366, 768);
-                        //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
-                        //在谱面rank状态是Ranked或者Approved时，写入硬盘
-                        if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
-                            //扩展名直接从文件里取
-                            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                                ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
-                                resizedBG.flush();
-                                byte[] imgBytes = out.toByteArray();
-                                resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), imgBytes);
-                            } catch (IOException e) {
-                                e.getMessage();
-                                return null;
-                            }
-                        }
-                        in.close();
-                        return resizedBG;
-                    }
                 }
-            } catch (Exception e) {
-                cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
-                return null;
+                String filename = entry.getName();
+                if (filename.contains("/")) {
+                    filename = filename.substring(filename.indexOf("/") + 1);
+                }
+                if (osuFile.getBgName().equals(filename)) {
+                    ByteArrayInputStream in = new ByteArrayInputStream(data);
+                    BufferedImage bg = ImageIO.read(in);
+                    //懒得重构成方法了_(:з」∠)_
+                    //我错了 我不偷懒了_(:з」∠)_
+                    BufferedImage resizedBG = resizeImg(bg, 1366, 768);
+                    //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
+                    //在谱面rank状态是Ranked或者Approved时，写入硬盘
+                    if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
+                        //扩展名直接从文件里取
+                        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                            ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
+                            resizedBG.flush();
+                            byte[] imgBytes = out.toByteArray();
+                            resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), imgBytes);
+                        } catch (IOException e) {
+                            cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
+                            return null;
+                        }
+                    }
+                    in.close();
+                    return resizedBG;
+                }
             }
+        } catch (Exception e) {
+            cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
+            return null;
         }
         cqManager.warn("登录官网失败,Cookie:" + cookie);
         return null;
@@ -240,7 +242,7 @@ public class WebPageManager {
 
         if (osuFile == null) {
             //08年老图是没有BG的……
-            logger.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+            cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
             return null;
         }
         //这里dao层需要使用object，然后再这里转换为数组，于是判断非空就得用null而不是.length。
@@ -249,7 +251,7 @@ public class WebPageManager {
             try (ByteArrayInputStream in = new ByteArrayInputStream(img)) {
                 return ImageIO.read(in);
             } catch (IOException e) {
-                e.printStackTrace();
+                cqManager.warn("数据库中" + beatmap.getBeatmapId() + "的背景损坏。");
             }
         }
         while (retry < 5) {

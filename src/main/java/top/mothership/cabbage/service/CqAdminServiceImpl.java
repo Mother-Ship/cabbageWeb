@@ -590,10 +590,7 @@ public class CqAdminServiceImpl {
                 }
                 resp += "\n被Ban状态：" + user.isBanned()
                         + "\nQQ：" + user.getQq()
-                        + "\n主玩模式：" + scoreUtil.convertGameModeToString(user.getMode())
-                        + "\n在OCLC赛群中："
-                        + "总复读次数：" + user.getRepeatCount()
-                        + "，总发言次数：" + user.getSpeakingCount();
+                        + "\n主玩模式：" + scoreUtil.convertGameModeToString(user.getMode());
                 if (list.size() > 1) {
                     resp += "\n";
                 }
@@ -779,10 +776,10 @@ public class CqAdminServiceImpl {
                         + "，曾用名：" + user.getLegacyUname()
                         + "，绑定的QQ：" + user.getQq()
                         + "，PP：" + userinfo.getPpRaw();
-                if(userinfo1!=null & userinfo2!=null){
+                if(userinfo1!=null && userinfo2!=null){
                     int day30 = userinfo.getPlayCount()-userinfo1.getPlayCount();
                     int day90 = userinfo.getPlayCount()-userinfo2.getPlayCount();
-                    if((day30-day90)<3*day30){
+                    if(day90<3*day30){
                         resp += "，90天前PC差："+day90+"和30天内PC差"+day30+"相差过大，有小号嫌疑！";
                     }
                 }

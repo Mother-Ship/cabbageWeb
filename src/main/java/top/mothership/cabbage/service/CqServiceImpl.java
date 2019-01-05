@@ -1016,7 +1016,7 @@ public class CqServiceImpl {
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第一届MP4杯赛群。\n本群作为历届mp4选手聚集地，之后比赛结束后会将赛群合并到本群。";
                 break;
             case "772918786":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第七届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。\n报名地址：https://www.wenjuan.com/s/uEvquqW/";
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯新后花园。\n本群作为第七届及以后的历届mp5选手聚集地，之后比赛结束后会将赛群合并到本群。";
                 break;
             case "807757470":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";
@@ -1283,7 +1283,7 @@ public class CqServiceImpl {
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiManager.getUser(0, username);
+                userFromAPI = apiManager.getUser(argument.getMode(), username);
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, argument.getUsername()));
                     cqManager.sendMsg(cqMsg);
@@ -1319,7 +1319,7 @@ public class CqServiceImpl {
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
-                userFromAPI = apiManager.getUser(0, user.getUserId());
+                userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
                     cqManager.sendMsg(cqMsg);
@@ -1470,287 +1470,9 @@ public class CqServiceImpl {
     }
 
 
-    @Scheduled(cron = "0 0 4 * * ?")
-    public void importUserInfo() {
-        //似乎每分钟并发也就600+，不需要加延迟……
-        java.util.Date start = Calendar.getInstance().getTime();
-        //清掉前一天全部信息
-        redisDAO.flushDb();
-        userInfoDAO.clearTodayInfo(LocalDate.now().minusDays(1));
-        logger.info("开始进行每日登记");
-        List<String> bannedList = new ArrayList<>();
-        Integer successCount = 0;
-        List<Integer> list = userDAO.listUserIdByRole(null, false);
-        for (Integer aList : list) {
-            User user = userDAO.getUser(null, aList);
-            //这里四个模式都要更新，但是只有主模式的才判断PP超限
-            for (int i = 0; i < 4; i++) {
-                Userinfo userinfo = apiManager.getUser(i, aList);
-                if (userinfo != null) {
-                    //将日期改为一天前写入
-                    userinfo.setQueryDate(LocalDate.now().minusDays(1));
-                    userInfoDAO.addUserInfo(userinfo);
-                    //2018-3-16 17:47:51实验性特性：加入redis缓存
-                    redisDAO.add(aList, userinfo);
-                    redisDAO.expire(aList, 1, TimeUnit.DAYS);
-                    logger.info("将" + userinfo.getUserName() + "在模式" + scoreUtil.convertGameModeToString(i) + "的数据录入成功");
-                    if (!userinfo.getUserName().equals(user.getCurrentUname())) {
-                        //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
-                        user = userUtil.renameUser(user, userinfo.getUserName());
-                        userDAO.updateUser(user);
-                    }
-                    if (i == 0) {
-                        handlePPOverflow(user, userinfo);
-                        //借着这个if，每个玩家只计算一次模式
-                        successCount++;
-                    }
-                    //如果能获取到userinfo，就把banned设置为0
-//                    if(user.isBanned()) {
-                    user.setBanned(false);
-                    userDAO.updateUser(user);
-//                    }
-                } else {
-                    //将null的用户直接设为banned
-                    if (!user.isBanned()) {
-                        user.setBanned(true);
-                        logger.info("检测到玩家" + user.getUserId() + "被Ban，已登记");
-                        userDAO.updateUser(user);
-                    }
-                    if (!bannedList.contains(user.getCurrentUname())) {
-                        //避免重复添加
-                        bannedList.add(user.getCurrentUname());
-                    }
-                }
-            }
-        }
-        CqMsg cqMsg = new CqMsg();
-        cqMsg.setSelfId(1335734629L);
-        cqMsg.setMessageType("private");
-        cqMsg.setUserId(1335734657L);
-        cqMsg.setMessage("录入完成，共录入条目数：" + successCount + "，以下玩家本次被标明已封禁：" + bannedList);
-        cqManager.sendMsg(cqMsg);
-    }
 
-    @Scheduled(cron = "0 0 * * * ?")
-    public void refreshBannedStatus() {
-        List<User> list = userDAO.listBannedUser();
-        for (User user : list) {
-            Userinfo userinfo = apiManager.getUser(0, user.getUserId());
-            if (userinfo != null) {
-                //将日期改为一天前写入
-                userinfo.setQueryDate(LocalDate.now().minusDays(1));
-                userInfoDAO.addUserInfo(userinfo);
-                logger.info("将" + userinfo.getUserName() + "的数据补录成功");
-                if (!userinfo.getUserName().equals(user.getCurrentUname())) {
-                    //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
-                    List<String> legacyUname = new GsonBuilder().create().fromJson(user.getLegacyUname(), new TypeToken<List<String>>() {
-                    }.getType());
-                    if (user.getCurrentUname() != null) {
-                        legacyUname.add(user.getCurrentUname());
-                    }
-                    user.setLegacyUname(new Gson().toJson(legacyUname));
-                    user.setCurrentUname(userinfo.getUserName());
-                    logger.info("检测到玩家" + userinfo.getUserName() + "改名，已登记");
-                }
-                //如果能获取到userinfo，就把banned设置为0
-                user.setBanned(false);
-                userDAO.updateUser(user);
-            }
 
-        }
 
-    }
-
-    private void handlePPOverflow(User user, Userinfo userinfo) {
-        //如果用户在mp4组
-        List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
-        if (roles.contains("mp4")) {
-            CqMsg cqMsg = new CqMsg();
-            cqMsg.setSelfId(1020640876L);
-            cqMsg.setMessageType("group");
-            cqMsg.setGroupId(564679329L);
-            //并且刷超了
-            CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
-            if (cqResponse != null) {
-                if (cqResponse.getData() != null) {
-                    if (!cqResponse.getData().getCard().toLowerCase(Locale.CHINA).replace("_", " ")
-                            .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
-                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的群名片没有包含完整id。请修改名片。");
-                        cqManager.sendMsg(cqMsg);
-                    }
-                }
-            }
-            if (userinfo.getPpRaw() > 5100 + 0.49) {
-                //回溯昨天这时候检查到的pp
-                Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(2));
-                //如果昨天这时候的PP存在，并且也超了
-                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 5100 + 0.49) {
-                    //继续回溯前天这时候的PP
-                    lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(3));
-                    //如果前天这时候的PP存在，并且也超了
-                    if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 5100 + 0.49) {
-                        //回溯大前天的PP
-                        lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(4));
-                        //如果大前天这个时候也超了，就飞了
-                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 5100 + 0.49) {
-                            if (!user.getQq().equals(0L)) {
-                                //2018-3-16 13:13:53似乎现在白菜踢人不会自动删组？在这里补上试试
-                                user = userUtil.delRole("mp4", user);
-                                userDAO.updateUser(user);
-                                cqMsg.setUserId(user.getQq());
-                                cqMsg.setMessageType("kick");
-                                cqManager.sendMsg(cqMsg);
-                                cqMsg.setMessageType("private");
-                                cqMsg.setMessage("由于PP超限，已将你移出MP4群。请考虑加入mp3群：210342787。");
-                                cqManager.sendMsg(cqMsg);
-                                //2018-1-29 12:01:06 现在飞的时候会自动清理用户组
-                            }
-                        } else {
-                            //大前天没超
-                            if (!user.getQq().equals(0L)) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp3群：210342787。");
-                                cqManager.sendMsg(cqMsg);
-                            }
-                        }
-                    } else {
-                        //前天没超
-                        if (!user.getQq().equals(0L)) {
-                            cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp3群：210342787。");
-                            cqManager.sendMsg(cqMsg);
-                        }
-                    }
-                } else {
-                    //昨天没超
-                    if (!user.getQq().equals(0L)) {
-                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp3群：210342787。");
-                        cqManager.sendMsg(cqMsg);
-                    }
-
-                }
-            }
-
-        }
-
-        if (roles.contains("mp5")) {
-            CqMsg cqMsg = new CqMsg();
-            cqMsg.setMessageType("group");
-            cqMsg.setSelfId(1020640876L);
-            cqMsg.setGroupId(201872650L);
-            CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
-            if (cqResponse != null) {
-                if (cqResponse.getData() != null) {
-                    if (!cqResponse.getData().getCard().toLowerCase(Locale.CHINA).replace("_", " ")
-                            .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
-                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的群名片没有包含完整id。请修改名片。");
-                        cqManager.sendMsg(cqMsg);
-                    }
-                }
-            }
-            //并且刷超了
-            if (userinfo.getPpRaw() > 4000 + 0.49) {
-
-                //回溯昨天这时候检查到的pp
-                Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(2));
-                //如果昨天这时候的PP存在，并且也超了
-                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4000 + 0.49) {
-                    //继续回溯前天这时候的PP
-                    lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(3));
-                    //如果前天这时候的PP存在，并且也超了
-                    if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4000 + 0.49) {
-                        //回溯大前天的PP
-                        lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(4));
-                        //如果大前天这个时候也超了，就飞了
-                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4000 + 0.49) {
-                            if (!user.getQq().equals(0L)) {
-                                //2018-3-16 13:13:53似乎现在白菜踢人不会自动删组？在这里补上试试
-                                user = userUtil.delRole("mp5", user);
-                                userDAO.updateUser(user);
-                                cqMsg.setUserId(user.getQq());
-                                cqMsg.setMessageType("kick");
-                                cqManager.sendMsg(cqMsg);
-                                cqMsg.setMessageType("private");
-                                cqMsg.setMessage("由于PP超限，已将你移出MP5群。请考虑加入mp4群：564679329。");
-                                cqManager.sendMsg(cqMsg);
-                            }
-                        } else {
-                            //大前天没超
-                            if (!user.getQq().equals(0L)) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp4群：564679329。");
-                                cqManager.sendMsg(cqMsg);
-                            }
-                        }
-                    } else {
-                        //前天没超
-                        if (!user.getQq().equals(0L)) {
-                            cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp4群：564679329。");
-                            cqManager.sendMsg(cqMsg);
-                        }
-                    }
-                } else {
-                    //昨天没超
-                    if (!user.getQq().equals(0L)) {
-                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp4群：564679329。");
-                        cqManager.sendMsg(cqMsg);
-                    }
-
-                }
-            }
-
-        }
-    }
-
-    /**
-     * 清理每天生成的临时文件。
-     */
-    @Scheduled(cron = "0 0 6 * * ?")
-    public void clearTodayImages() {
-        final Path path = Paths.get("/root/coolq/data/image");
-        SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                System.out.println("正在删除" + file.toString());
-                Files.delete(file);
-                return super.visitFile(file, attrs);
-            }
-        };
-        final Path path2 = Paths.get("/root/coolq/data/record");
-        SimpleFileVisitor<Path> finder2 = new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                System.out.println("正在删除" + file.toString());
-                Files.delete(file);
-                return super.visitFile(file, attrs);
-            }
-        };
-        final Path path3 = Paths.get("/root/coolq2/data/image");
-        SimpleFileVisitor<Path> finder3 = new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                System.out.println("正在删除" + file.toString());
-                Files.delete(file);
-                return super.visitFile(file, attrs);
-            }
-        };
-        final Path path4 = Paths.get("/root/coolq2/data/record");
-        SimpleFileVisitor<Path> finder4 = new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                System.out.println("正在删除" + file.toString());
-                Files.delete(file);
-                return super.visitFile(file, attrs);
-            }
-        };
-
-        try {
-            Files.walkFileTree(path, finder);
-            Files.walkFileTree(path2, finder2);
-            Files.walkFileTree(path3, finder3);
-            Files.walkFileTree(path4, finder4);
-        } catch (IOException e) {
-            logger.error("清空临时文件时出现异常，" + e.getMessage());
-        }
-
-    }
 
     public void pretreatmentParameterForBPCommand(CqMsg cqMsg) {
 

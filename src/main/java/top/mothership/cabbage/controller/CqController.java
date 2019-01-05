@@ -33,7 +33,6 @@ public class CqController {
     private final CqServiceImpl cqService;
     private final SmokeUtil smokeUtil;
     private final CqAdminServiceImpl cqAdminService;
-    private final MpServiceImpl mpService;
     private final CqManager cqManager;
     private final AnalyzeServiceImpl analyzeService;
     private final DayLilyManager dayLilyManager;
@@ -46,18 +45,16 @@ public class CqController {
      *  @param cqService      Service层
      * @param smokeUtil      负责禁言的工具类
      * @param cqAdminService
-     * @param mpService
      * @param cqManager
      * @param analyzeService
      * @param dayLilyManager
      * @param shadowSocksCmdService
      */
     @Autowired
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, MpServiceImpl mpService, CqManager cqManager, AnalyzeServiceImpl analyzeService, DayLilyManager dayLilyManager, ShadowSocksCmdServiceImpl shadowSocksCmdService) {
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, CqManager cqManager, AnalyzeServiceImpl analyzeService, DayLilyManager dayLilyManager, ShadowSocksCmdServiceImpl shadowSocksCmdService) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
         this.cqAdminService = cqAdminService;
-        this.mpService = mpService;
         this.cqManager = cqManager;
         this.analyzeService = analyzeService;
         this.dayLilyManager = dayLilyManager;
@@ -208,48 +205,6 @@ public class CqController {
                                 case "ping":
                                     cqAdminService.ping(cqMsg);
                                     break;
-                                default:
-                                    break;
-                            }
-                            break;
-                        case "mp":
-                            cmdMatcher = MpCommandPattern.MP_CMD_REGEX.matcher(msg);
-                            cmdMatcher.find();
-                            switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
-                                case "rs":
-                                    //rs命令必须指定开始时间
-                                    if ("".equals(cmdMatcher.group(2))) {
-                                        return;
-                                    }
-                                case "make":
-                                    mpService.reserveLobby(cqMsg);
-                                    break;
-                                case "invite":
-                                    if ("".equals(cmdMatcher.group(2))) {
-                                        return;
-                                    }
-                                    mpService.invitePlayer(cqMsg);
-                                    break;
-                                case "list":
-                                    mpService.listLobby(cqMsg);
-                                    break;
-                                case "abort":
-                                    mpService.abortReserve(cqMsg);
-                                    break;
-                                case "join":
-                                    mpService.joinLobby(cqMsg);
-                                    break;
-                                case "add":
-                                    mpService.addMap(cqMsg);
-                                    break;
-                                case "del":
-                                    mpService.delMap(cqMsg);
-                                    break;
-                                case "listmap":
-                                    mpService.listMap(cqMsg);
-                                    break;
-                                case "help":
-                                    mpService.help(cqMsg);
                                 default:
                                     break;
                             }

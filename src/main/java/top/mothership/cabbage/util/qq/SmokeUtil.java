@@ -17,7 +17,7 @@ import java.util.*;
 @Component
 public class SmokeUtil {
 
-    private static List<String> repeatSmokeGroups = Arrays.asList("201872650,564679329,677545541,112177148,532783765,213078438,714925706,806345866,807757470,772918786".split(","));
+    private static List<String> repeatSmokeGroups = Arrays.asList("201872650,564679329,677545541,112177148,532783765,213078438,714925706,806345866,807757470".split(","));
     private static List<String> repeatRecordGroups = Arrays.asList("576214175,532783765".split(","));
     private Logger logger = LogManager.getLogger(this.getClass());
     private final CqManager cqManager;
@@ -27,7 +27,8 @@ public class SmokeUtil {
     private static Map<Long, List<Long>> groupAdmins;
 
 
-    /*而读取管理员则独立成为方法，方便刷新
+    /*
+    而读取管理员则独立成为方法，方便刷新
     现在的问题是这个静态方法会在cqManager之前初始化，而且cqManager不是静态的，所以在这个方法里没法用cqManager
     不使用静态方法，调用这个方法放在构造函数里，而Controller里正好由Spring托管了一个
     */

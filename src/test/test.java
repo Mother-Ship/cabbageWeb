@@ -4,7 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import top.mothership.cabbage.manager.ApiManager;
+import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.UserDAO;
+import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -19,10 +21,15 @@ public class test {
     private UserDAO userDAO;
         @Autowired
     private ApiManager apiManager;
+    @Autowired
+    private WebPageManager webPageManager;
 //    @Autowired
 //    private ScoreUtil scoreUtil;
     @Test
     public void Test() throws IOException {
+        Beatmap beatmap = apiManager.getBeatmap(53554);
+            webPageManager.getBGBackup(beatmap);
+        System.out.println("");
 //        Object o =resDAO.getBGBySidAndName(485056, "cherry_blossoms_kantoku_artist_Wallpaper HD_2560x1440_www.paperhi.com.jpg");
 //        byte[] img = (byte[]) o;
 //

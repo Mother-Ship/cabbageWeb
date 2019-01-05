@@ -76,18 +76,17 @@ private final CqManager cqManager;
             }
             StackTraceElement[] stackTrace = e.getStackTrace();
             for (StackTraceElement stackTraceElement : stackTrace) {
-                if(stackTraceElement.getClassName().contains("top.mothership")) {
+//                if(stackTraceElement.getClassName().contains("top.mothership")) {
                     resp = resp.concat("\n    at " + stackTraceElement);
-                }else if(stackTraceElement.getClassName().contains("java.")){
-                    resp = resp.concat("\n    at " + stackTraceElement);
-                } else if(stackTraceElement.getClassName().contains("javax.")){
-                    resp = resp.concat("\n    at " + stackTraceElement);
-                }else{
-                    if(!resp.endsWith("\n    ……")) {
-                        resp = resp.concat("\n    ……");
-                    }
-                }
-
+//                }else if(stackTraceElement.getClassName().contains("java.")){
+//                    resp = resp.concat("\n    at " + stackTraceElement);
+//                } else if(stackTraceElement.getClassName().contains("javax.")){
+//                    resp = resp.concat("\n    at " + stackTraceElement);
+//                }else{
+//                    if(!resp.endsWith("\n    ……")) {
+//                        resp = resp.concat("\n    ……");
+//                    }
+//                }
             }
             CqMsg cqMsg = new CqMsg();
             cqMsg.setMessage(resp);

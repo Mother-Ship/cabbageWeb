@@ -348,13 +348,13 @@ public class ScoreUtil {
                 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)";
         if (oppaiResult != null) {
-            resp += "，" + String.valueOf(Math.round(oppaiResult.getPp())) + "PP(Now)";
-            resp += "，" + String.valueOf(Math.round(oppaiResult.getPpLegacy())) + "PP(Legacy)\n";
+            resp += "，" + String.valueOf(Math.round(oppaiResult.getPp())) + "PP";
+
         }
         if(count !=null){
             resp+="\n在该玩家24小时内游戏记录中，该谱面出现了"+count+"次。";
         }
-        resp += "\nPlayed by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC")).format(score.getDate().toInstant());
+        resp += "\nPlayed by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC+8")).format(score.getDate().toInstant());
         return resp;
     }
 

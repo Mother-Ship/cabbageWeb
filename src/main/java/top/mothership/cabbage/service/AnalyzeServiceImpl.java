@@ -39,7 +39,7 @@ public class AnalyzeServiceImpl {
         this.cqManager = cqManager;
         cqMsg.setMessageType("private");
         cqMsg.setUserId(1335734657L);
-        cqMsg.setSelfId(1335734629L);
+        cqMsg.setSelfId(1020640876L);
     }
 
     public void addTargetMap(CqMsg cqMsg) {
