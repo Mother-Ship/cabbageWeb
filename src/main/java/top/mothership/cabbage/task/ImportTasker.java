@@ -80,6 +80,7 @@ public class ImportTasker {
         logger.info("开始进行每日登记");
         List<String> bannedList = new ArrayList<>();
         Integer successCount = 0;
+        Integer bindedCount = 0;
         List<Integer> list = userDAO.listUserIdByRole(null, false);
         for (Integer aList : list) {
             User user = userDAO.getUser(null, aList);
@@ -103,6 +104,9 @@ public class ImportTasker {
                         handlePPOverflow(user, userinfo);
                         //借着这个if，每个玩家只计算一次模式
                         successCount++;
+                        if(!user.getQq().equals(0L)){
+                            bindedCount++;
+                        }
                     }
                     //如果能获取到userinfo，就把banned设置为0
 //                    if(user.isBanned()) {
@@ -127,7 +131,7 @@ public class ImportTasker {
         cqMsg.setSelfId(1335734629L);
         cqMsg.setMessageType("private");
         cqMsg.setUserId(1335734657L);
-        cqMsg.setMessage("录入完成，共录入条目数：" + successCount + "，以下玩家本次被标明已封禁：" + bannedList);
+        cqMsg.setMessage("录入完成，录入的玩家数量：" + successCount + "，以下玩家本次被标明已封禁：" + bannedList+"，绑定QQ的玩家数量："+bindedCount);
         cqManager.sendMsg(cqMsg);
     }
     private void handlePPOverflow(User user, Userinfo userinfo) {
