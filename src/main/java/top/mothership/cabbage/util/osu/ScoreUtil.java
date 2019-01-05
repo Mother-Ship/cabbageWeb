@@ -354,7 +354,9 @@ public class ScoreUtil {
         if(count !=null){
             resp+="\n在该玩家24小时内游戏记录中，该谱面出现了"+count+"次。";
         }
-        resp += "\nPlayed by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC+8")).format(score.getDate().toInstant());
+        //由于比较分数等涉及到其他时区问题，懒得重构
+        //将成绩的时间使用小技巧显示成UTC+8
+        resp += "\nPlayed by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC-8")).format(score.getDate().toInstant());
         return resp;
     }
 

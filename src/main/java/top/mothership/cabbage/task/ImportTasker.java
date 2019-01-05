@@ -70,7 +70,7 @@ public class ImportTasker {
     }
 
 
-    @Scheduled(cron = "0 0 4 * * ?")
+    @Scheduled(cron = "0 10 4 * * ?")
     public void importUserInfo() {
         //似乎每分钟并发也就600+，不需要加延迟……
         java.util.Date start = Calendar.getInstance().getTime();

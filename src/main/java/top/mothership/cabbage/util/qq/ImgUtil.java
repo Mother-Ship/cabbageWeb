@@ -876,7 +876,7 @@ public class ImgUtil {
         g2.drawString(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]", 7, 26);
         g2.setFont(new Font("Aller", 0, 21));
         g2.drawString("Beatmap by " + beatmap.getCreator(), 7, 52);
-        g2.drawString("Played by " + userFromAPI.getUserName() + " on " + DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").withZone(ZoneId.of("UTC+8")).format(score.getDate().toInstant()) + ".", 7, 74);
+        g2.drawString("Played by " + userFromAPI.getUserName() + " on " + DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").withZone(ZoneId.of("UTC-8")).format(score.getDate().toInstant()) + ".", 7, 74);
 
 
         g2.dispose();
