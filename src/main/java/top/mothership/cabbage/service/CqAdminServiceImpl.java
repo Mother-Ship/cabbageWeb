@@ -39,7 +39,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.Date;
@@ -424,7 +423,7 @@ public class CqAdminServiceImpl {
                 if (aList.getFlag().equals(argument.getFlag())) {
                     request.replace(aList, "是");
                     //通过新群邀请时，向消息队列Map中添加一个消息队列对象
-                    SmokeUtil.msgQueues.put(aList.getGroupId(), new MsgQueue());
+                    SmokeUtil.MSG_QUEUE_MAP.put(aList.getGroupId(), new MsgQueue());
                 }
             }
             CqMsg cqMsg1 = new CqMsg();
@@ -523,7 +522,7 @@ public class CqAdminServiceImpl {
         if ("All".equals(QQ)) {
             resp = new StringBuilder("啥玩意啊 咋回事啊");
         } else {
-            MsgQueue msgQueue = SmokeUtil.msgQueues.get(cqMsg.getGroupId());
+            MsgQueue msgQueue = SmokeUtil.MSG_QUEUE_MAP.get(cqMsg.getGroupId());
             if (msgQueue == null) {
                 resp = new StringBuilder("获取群" + cqMsg.getGroupId() + "的消息列表失败；请重启Tomcat");
                 cqMsg.setMessage(resp.toString());

@@ -70,14 +70,14 @@ public class ImportTasker {
     }
 
 
-    @Scheduled(cron = "0 10 4 * * ?")
+    @Scheduled(cron = "0 0 4 * * ?")
     public void importUserInfo() {
         //似乎每分钟并发也就600+，不需要加延迟……
         java.util.Date start = Calendar.getInstance().getTime();
         //清掉前一天全部信息
         redisDAO.flushDb();
         userInfoDAO.clearTodayInfo(LocalDate.now().minusDays(1));
-        logger.info("开始进行每日登记");
+        cqManager.warn("开始进行每日登记");
         List<String> bannedList = new ArrayList<>();
         Integer successCount = 0;
         Integer bindedCount = 0;

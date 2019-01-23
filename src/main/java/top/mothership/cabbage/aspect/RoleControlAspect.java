@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static top.mothership.cabbage.consts.OverallConsts.ADMIN_LIST;
+
 @Component
 @Aspect
 /**
@@ -51,7 +53,12 @@ public class RoleControlAspect {
     public Object roleControl(ProceedingJoinPoint pjp, CqMsg cqMsg) throws Throwable {
         //取出Class上的注解
         UserAuthorityControl userAuthorityControl = null;
+
         List<Long> allowedUser = new ArrayList<>();
+        //统一管理管理员
+        for (long l : ADMIN_LIST) {
+            allowedUser.add(l);
+        }
         Annotation[] a = pjp.getTarget().getClass().getAnnotations();
         for (Annotation aList : a) {
             if (aList.annotationType().equals(UserAuthorityControl.class)) {

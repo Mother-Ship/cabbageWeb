@@ -156,12 +156,12 @@ public class WebPageManager {
             return null;
         }
         List<org.apache.http.cookie.Cookie> cookies = client.getCookieStore().getCookies();
-        String cookie = "";
+        StringBuilder cookie = new StringBuilder();
         for (Cookie c : cookies) {
-            cookie = cookie.concat(c.getName());
+            cookie.append(c.getName()).append(": ").append(c.getValue()).append("\n");
         }
         post.releaseConnection();
-        if (cookie.contains("phpbb3_2cjk5_sid")) {
+        if (cookie.toString().contains("phpbb3_2cjk5_sid")) {
             //登录成功
             DefaultHttpClient httpclient2 = new DefaultHttpClient();
             OsuFile osuFile = parseOsuFile(beatmap);
@@ -240,7 +240,7 @@ public class WebPageManager {
                 return null;
             }
         }
-            cqManager.warn("登录官网失败,Cookie:" + cookie);
+            cqManager.warn("登录官网失败,Cookie:\n" + cookie);
             return null;
 
         }
