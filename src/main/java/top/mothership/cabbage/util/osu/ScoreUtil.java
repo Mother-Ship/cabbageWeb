@@ -356,7 +356,7 @@ public class ScoreUtil {
         }
         //由于比较分数等涉及到其他时区问题，懒得重构
         //将成绩的时间使用小技巧显示成UTC+8
-        resp += "\nPlayed by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC-8")).format(score.getDate().toInstant());
+        resp += "\nPlayed by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC-8")).format(score.getDate().toInstant().plusSeconds(86400));
         return resp;
     }
 

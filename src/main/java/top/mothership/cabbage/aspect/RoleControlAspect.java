@@ -55,10 +55,7 @@ public class RoleControlAspect {
         UserAuthorityControl userAuthorityControl = null;
 
         List<Long> allowedUser = new ArrayList<>();
-        //统一管理管理员
-        for (long l : ADMIN_LIST) {
-            allowedUser.add(l);
-        }
+
         Annotation[] a = pjp.getTarget().getClass().getAnnotations();
         for (Annotation aList : a) {
             if (aList.annotationType().equals(UserAuthorityControl.class)) {
@@ -67,6 +64,12 @@ public class RoleControlAspect {
         }
         //如果Class上的注解不是null
         if (userAuthorityControl != null) {
+            //处理没有特别指定用户的情况（手动实现默认值）
+            if(userAuthorityControl.value().length == 0){
+                for (long l : ADMIN_LIST) {
+                    allowedUser.add(l);
+                }
+            }
             for (long l : userAuthorityControl.value()) {
                 allowedUser.add(l);
             }
@@ -77,6 +80,11 @@ public class RoleControlAspect {
                 ((MethodSignature) pjp.getSignature()).getParameterTypes()
         ).getAnnotation(UserAuthorityControl.class);
         if (userAuthorityControl != null) {
+            if(userAuthorityControl.value().length == 0){
+                for (long l : ADMIN_LIST) {
+                    allowedUser.add(l);
+                }
+            }
             for (long l : userAuthorityControl.value()) {
                 allowedUser.add(l);
             }

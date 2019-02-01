@@ -32,6 +32,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -876,7 +878,7 @@ public class ImgUtil {
         g2.drawString(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]", 7, 26);
         g2.setFont(new Font("Aller", 0, 21));
         g2.drawString("Beatmap by " + beatmap.getCreator(), 7, 52);
-        g2.drawString("Played by " + userFromAPI.getUserName() + " on " + DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").withZone(ZoneId.of("UTC-8")).format(score.getDate().toInstant()) + ".", 7, 74);
+        g2.drawString("Played by " + userFromAPI.getUserName() + " on " + DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").withZone(ZoneId.of("UTC-8")).format(score.getDate().toInstant().plusSeconds(86400)) + ".", 7, 74);
 
 
         g2.dispose();
