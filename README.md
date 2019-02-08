@@ -44,7 +44,7 @@ osu!游戏数据查询机器人。
 
 测试、帮忙发掘bug，提出玩家管理需求。
 
-广告：mp5群欢迎4000PP以下的osu!玩家加入，建议下限为2500PP（不严格）！
+广告：mp5群欢迎4500PP以下的osu!玩家加入，建议下限为2500PP（不严格）！
 
 + [Koohii](https://github.com/Francesco149/koohii) 项目
 

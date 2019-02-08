@@ -153,19 +153,19 @@ public class ImportTasker {
                     }
                 }
             }
-            if (userinfo.getPpRaw() > 5100 + 0.49) {
+            if (userinfo.getPpRaw() > 6000 + 0.49) {
                 //回溯昨天这时候检查到的pp
                 Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(2));
                 //如果昨天这时候的PP存在，并且也超了
-                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 5100 + 0.49) {
+                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 6000 + 0.49) {
                     //继续回溯前天这时候的PP
                     lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(3));
                     //如果前天这时候的PP存在，并且也超了
-                    if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 5100 + 0.49) {
+                    if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 6000 + 0.49) {
                         //回溯大前天的PP
                         lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(4));
                         //如果大前天这个时候也超了，就飞了
-                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 5100 + 0.49) {
+                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 6000 + 0.49) {
                             if (!user.getQq().equals(0L)) {
                                 //2018-3-16 13:13:53似乎现在白菜踢人不会自动删组？在这里补上试试
                                 user = userUtil.delRole("mp4", user);
@@ -220,20 +220,20 @@ public class ImportTasker {
                 }
             }
             //并且刷超了
-            if (userinfo.getPpRaw() > 4000 + 0.49) {
+            if (userinfo.getPpRaw() > 4500 + 0.49) {
 
                 //回溯昨天这时候检查到的pp
                 Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(2));
                 //如果昨天这时候的PP存在，并且也超了
-                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4000 + 0.49) {
+                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4500 + 0.49) {
                     //继续回溯前天这时候的PP
                     lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(3));
                     //如果前天这时候的PP存在，并且也超了
-                    if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4000 + 0.49) {
+                    if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4500 + 0.49) {
                         //回溯大前天的PP
                         lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(4));
                         //如果大前天这个时候也超了，就飞了
-                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4000 + 0.49) {
+                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 4500 + 0.49) {
                             if (!user.getQq().equals(0L)) {
                                 //2018-3-16 13:13:53似乎现在白菜踢人不会自动删组？在这里补上试试
                                 user = userUtil.delRole("mp5", user);
