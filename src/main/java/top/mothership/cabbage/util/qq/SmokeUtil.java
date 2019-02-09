@@ -17,7 +17,15 @@ import java.util.*;
 @Component
 public class SmokeUtil {
 
-    private final static List<String> REPEAT_SMOKE_GROUP = Arrays.asList("201872650,564679329,677545541,112177148,532783765,213078438,714925706,806345866,807757470,521774765".split(","));
+    private final static List<String> REPEAT_SMOKE_GROUP = Arrays.asList((
+            "201872650," +//MP5
+            "564679329," +//MP4
+            "112177148," +//MP4后花园
+            "532783765," +//测试群
+            "791827355," +//MP5S8赛群
+            "801588216," +//MP4S4赛群
+            "521774765"//ODNL S3
+    ).split(","));
     private final static List<String> REPEAT_RECORD_GROUP = Arrays.asList("576214175,532783765".split(","));
     private Logger logger = LogManager.getLogger(this.getClass());
     private final CqManager cqManager;
