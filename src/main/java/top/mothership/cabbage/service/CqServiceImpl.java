@@ -1024,7 +1024,7 @@ public class CqServiceImpl {
             case "801588216":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第四届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：https://goo.gl/forms/QG98HWWc5ANQtZey1 ";
                 break;
-            case "806345866":
+            case "791827355":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第八届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：https://www.wenjuan.com/s/BbYZvi/ ";
                 break;
                 //备用
