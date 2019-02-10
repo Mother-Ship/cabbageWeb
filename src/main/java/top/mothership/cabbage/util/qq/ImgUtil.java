@@ -1258,8 +1258,9 @@ public class ImgUtil {
                 + " OD:" + (double) Math.round(oppaiResult.getOd() * 100) / 100
                 + "(" + od300ms + "/" + od100ms + "/" + od50ms + ")"
                 + " HP:" + (double) Math.round(oppaiResult.getHp() * 100) / 100
-                + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(oppaiResult.getStars())), 7, 125);
-
+                + " Stars:" + new DecimalFormat("###.00").format(Double.valueOf(oppaiResult.getStars()))
+                + " Stars(Old):" + new DecimalFormat("###.00").format(Double.valueOf(oppaiResult.getStarsLegacy())),
+                7, 125);
         //谱面的Rank状态
         g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
         //右侧title

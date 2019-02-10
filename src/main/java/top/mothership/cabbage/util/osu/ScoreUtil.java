@@ -335,7 +335,7 @@ public class ScoreUtil {
      * @param username the username
      * @return the string
      */
-    public String genScoreString(Score score, Beatmap beatmap, String username,Integer count) {
+    public String genScoreString(Score score, Beatmap beatmap, String username, Integer count) {
         OppaiResult oppaiResult = calcPP(score, beatmap);
         String resp = "官网链接：https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
                 + "血猫链接：（不保证有效）http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId() + "\n"
@@ -348,11 +348,11 @@ public class ScoreUtil {
                 100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)";
         if (oppaiResult != null) {
-            resp += "，" + String.valueOf(Math.round(oppaiResult.getPp())) + "PP";
-
+            resp += "，" + Math.round(oppaiResult.getPp()) + "PP";
+            resp += "，" + Math.round(oppaiResult.getPpLegacy()) + "PP(2019-02-07前)";
         }
-        if(count !=null){
-            resp+="\n在该玩家24小时内游戏记录中，该谱面出现了"+count+"次。";
+        if (count != null) {
+            resp += "\n在该玩家24小时内游戏记录中，该谱面出现了" + count + "次。";
         }
         //由于比较分数等涉及到其他时区问题，懒得重构
         //将成绩的时间使用小技巧显示成UTC+8
@@ -373,7 +373,7 @@ public class ScoreUtil {
         String osuFile = webPageManager.getOsuFile(beatmap);
         try (BufferedReader in = new BufferedReader(new StringReader(osuFile));
              //似乎oppai会自动关闭流？用同一个流会出现第二个PP计算为0的情况
-        BufferedReader in2 = new BufferedReader(new StringReader(osuFile))) {
+             BufferedReader in2 = new BufferedReader(new StringReader(osuFile))) {
             //日后再说，暂时不去按自己的想法改造它……万一作者日后放出更新呢..
             //把这种充满静态内部类，PPv2Params没有有参构造、成员变量给包访问权限、没有get/set的危险东西局限在这个方法里，不要在外面用就是了……%
             Koohii.Map map = new Koohii.Parser().map(in);
@@ -397,40 +397,36 @@ public class ScoreUtil {
             //APPLY_AR OD CS HP是1 2 4 8，把flag改成15好像就会 四维都进行计算？
             mapstats = Koohii.mods_apply(score.getEnabledMods(), mapstats, 15);
 
+            //削HD之前的PP可以彻底砍了，现在的Legacy就是2019.2这次重做之前的PP
+            KoohiiLegacy.Map mapLegacy = new KoohiiLegacy.Parser().map(in2);
+            mapLegacy.mode = beatmap.getMode();
+            KoohiiLegacy.DiffCalc starsLegacy = new KoohiiLegacy.DiffCalc().calc(mapLegacy, score.getEnabledMods());
+            KoohiiLegacy.PPv2Parameters paramLegacy = new KoohiiLegacy.PPv2Parameters();
+            paramLegacy.beatmap = mapLegacy;
+            paramLegacy.aim_stars = starsLegacy.aim;
+            paramLegacy.speed_stars = starsLegacy.speed;
+            paramLegacy.mods = score.getEnabledMods();
+            paramLegacy.n300 = score.getCount300();
+            paramLegacy.n100 = score.getCount100();
+            paramLegacy.n50 = score.getCount50();
+            paramLegacy.nmiss = score.getCountMiss();
+            paramLegacy.combo = score.getMaxCombo();
 
-            KoohiiLegacy.Map map2 = new KoohiiLegacy.Parser().map(in2);
-            map2.mode = beatmap.getMode();
-            KoohiiLegacy.DiffCalc stars2 = new KoohiiLegacy.DiffCalc().calc(map2, score.getEnabledMods());
-            KoohiiLegacy.PPv2Parameters p2 = new KoohiiLegacy.PPv2Parameters();
-            p2.beatmap = map2;
-            p2.aim_stars = stars2.aim;
-            p2.speed_stars = stars2.speed;
-            p2.mods = score.getEnabledMods();
-            p2.n300 = score.getCount300();
-            p2.n100 = score.getCount100();
-            p2.n50 = score.getCount50();
-            p2.nmiss = score.getCountMiss();
-            p2.combo = score.getMaxCombo();
 
-
-
-            KoohiiLegacy.MapStats mapstats2 = new KoohiiLegacy.MapStats();
-            mapstats2.ar = beatmap.getDiffApproach();
-            mapstats2.cs = beatmap.getDiffSize();
-            mapstats2.od = beatmap.getDiffOverall();
-            mapstats2.hp = beatmap.getDiffDrain();
-            mapstats2 = KoohiiLegacy.mods_apply(score.getEnabledMods(), mapstats2, 15);
             if (map.mode == 0) {
                 Koohii.PPv2 pp = new Koohii.PPv2(p);
-                KoohiiLegacy.PPv2 pp2 = new KoohiiLegacy.PPv2(p2);
+                KoohiiLegacy.PPv2 ppLegacy = new KoohiiLegacy.PPv2(paramLegacy);
+                //尝试手动修正错误……
+                pp.total *=1.02f;
+
                 return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
                         //Java实现如果出错会抛出异常，象征性给个0和null
                         0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
                         //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
                         mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
                         //scoreVersion只能是V1了，
-                        1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold,
-                        pp.aim, pp.speed, pp.acc, pp.total, pp2.total,mapstats.speed);
+                        1, stars.total, starsLegacy.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold,
+                        pp.aim, pp.speed, pp.acc, pp.total, ppLegacy.total, mapstats.speed);
 
             } else {
                 return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
@@ -439,7 +435,7 @@ public class ScoreUtil {
                         //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
                         mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
                         //scoreVersion只能是V1了，非STD的计算应该是没有PP的，给四个0
-                        1, stars.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, 0, 0,0, 0, 0, mapstats.speed);
+                        1, stars.total,starsLegacy.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, 0, 0, 0, 0, 0, mapstats.speed);
 
             }
         } catch (Exception e) {

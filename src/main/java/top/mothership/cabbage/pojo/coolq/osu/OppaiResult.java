@@ -32,6 +32,7 @@ public class OppaiResult {
     private int misses;
     private int scoreVersion;
     private double stars;
+    private double starsLegacy;
     private double speedStars;
     private double aimStars;
     private int nsingles;
