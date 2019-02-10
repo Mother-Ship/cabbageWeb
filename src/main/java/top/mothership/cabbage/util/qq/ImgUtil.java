@@ -641,10 +641,20 @@ public class ImgUtil {
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setPaint(Color.decode("#ff66a9"));
                     g2.setFont(new Font("Gayatri", 0, 60));
-                    if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
-                        g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 616, 753);
-                    } else {
-                        g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 601, 753);
+                    //临时修正，BP命令总PP使用官网爬到的
+                    if(score.getPp() !=null){
+                        if (String.valueOf(Math.round(score.getPp())).contains("1")) {
+                            g2.drawString(String.valueOf(Math.round(score.getPp())), 616, 753);
+                        } else {
+                            g2.drawString(String.valueOf(Math.round(score.getPp())), 601, 753);
+                        }
+                    }else {
+
+                        if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
+                            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 616, 753);
+                        } else {
+                            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 601, 753);
+                        }
                     }
                     g2.setFont(new Font("Gayatri", 0, 48));
                     g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 834, 758);

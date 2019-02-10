@@ -416,9 +416,6 @@ public class ScoreUtil {
             if (map.mode == 0) {
                 Koohii.PPv2 pp = new Koohii.PPv2(p);
                 KoohiiLegacy.PPv2 ppLegacy = new KoohiiLegacy.PPv2(paramLegacy);
-                //尝试手动修正错误……
-                pp.total *=1.02f;
-
                 return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
                         //Java实现如果出错会抛出异常，象征性给个0和null
                         0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
