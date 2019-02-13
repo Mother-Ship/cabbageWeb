@@ -57,13 +57,13 @@ import java.io.IOException;
 *
 * @author Franc[e]sco (lolisamurai@tfwno.gf)
 */
-public final class Koohii {
+public final class KoohiiLegacy {
 
-private Koohii() {}
+private KoohiiLegacy() {}
 
 public static final int VERSION_MAJOR = 1;
-public static final int VERSION_MINOR = 2;
-public static final int VERSION_PATCH = 0;
+public static final int VERSION_MINOR = 0;
+public static final int VERSION_PATCH = 15;
 
 /** prints a message to stderr. */
 public static
@@ -109,9 +109,6 @@ public static class Vector2
 
     /** length (magnitude) of the vector. */
     public double len() { return Math.sqrt(x * x + y * y); }
-
-    /** dot product between two vectors, correlates with the angle */
-    public double dot(Vector2 other) { return x * other.x + y * other.y; }
 }
 
 /* ------------------------------------------------------------- */
@@ -163,11 +160,8 @@ public static class HitObject
     /** an instance of Circle or Slider or null. */
     public Object data = null;
     public Vector2 normpos =  new Vector2();
-    public double angle = 0.0;
     public final double[] strains = new double[] { 0.0, 0.0 };
     public boolean is_single = false;
-    public double delta_time = 0.0;
-    public double d_distance = 0.0;
 
     /** string representation of the type bitmask. */
     public String typestr()
@@ -764,8 +758,8 @@ public static class MapStats
     float speed;
 }
 
-private static final double OD0_MS = 80;
-private static final double OD10_MS = 20;
+private static final double OD0_MS = 79.5;
+private static final double OD10_MS = 19.5;
 private static final double AR0_MS = 1800.0;
 private static final double AR5_MS = 1200.0;
 private static final double AR10_MS = 450.0;
@@ -878,11 +872,15 @@ MapStats mods_apply(int mods, MapStats mapstats, int flags)
 /* ------------------------------------------------------------- */
 /* difficulty calculator                                         */
 
+/** almost the normalized circle diameter. */
+private final static double ALMOST_DIAMETER = 90.0;
+
 /**
 * arbitrary thresholds to determine when a stream is spaced
 * enough that it becomes hard to alternate.
 */
-private final static double SINGLE_SPACING = 125.0;
+private final static double STREAM_SPACING = 110.0,
+                            SINGLE_SPACING = 125.0;
 
 /** strain decay per interval. */
 private final static double[] DECAY_BASE = { 0.3, 0.15 };
@@ -923,71 +921,39 @@ private final static Vector2 PLAYFIELD_CENTER = new Vector2(
 */
 private final static double EXTREME_SCALING_FACTOR = 0.5;
 
-private final static double MIN_SPEED_BONUS = 75.0;
-private final static double MAX_SPEED_BONUS = 45.0;
-private final static double ANGLE_BONUS_SCALE = 90.0;
-private final static double AIM_TIMING_THRESHOLD = 107;
-private final static double SPEED_ANGLE_BONUS_BEGIN = 5 * Math.PI / 6;
-private final static double AIM_ANGLE_BONUS_BEGIN = Math.PI / 3;
-
 private static
-double d_spacing_weight(int type, double distance, double delta_time,
-    double prev_distance, double prev_delta_time, double angle)
+double d_spacing_weight(int type, double distance)
 {
-    double strain_time = Math.max(delta_time, 50.0);
-    double prev_strain_time = Math.max(prev_delta_time, 50.0);
-    double angle_bonus;
     switch (type)
     {
-      case DIFF_AIM: {
-          double result = 0.0;
-          if (!Double.isNaN(angle) && angle > AIM_ANGLE_BONUS_BEGIN) {
-              angle_bonus = Math.sqrt(
-                  Math.max(prev_distance - ANGLE_BONUS_SCALE, 0.0) *
-                  Math.pow(Math.sin(angle - AIM_ANGLE_BONUS_BEGIN), 2.0) *
-                  Math.max(distance - ANGLE_BONUS_SCALE, 0.0)
-              );
-              result = (
-                  1.5 * Math.pow(Math.max(0.0, angle_bonus), 0.99) /
-                  Math.max(AIM_TIMING_THRESHOLD, prev_strain_time)
-              );
-          }
-          double weighted_distance = Math.pow(distance, 0.99);
-          return Math.max(result +
-              weighted_distance /
-              Math.max(AIM_TIMING_THRESHOLD, strain_time),
-              weighted_distance / strain_time);
-      }
+    case DIFF_AIM:
+        return Math.pow(distance, 0.99);
 
-      case DIFF_SPEED: {
-          distance = Math.min(distance, SINGLE_SPACING);
-          delta_time = Math.max(delta_time, MAX_SPEED_BONUS);
-          double speed_bonus = 1.0;
-          if (delta_time < MIN_SPEED_BONUS) {
-              speed_bonus +=
-                Math.pow((MIN_SPEED_BONUS - delta_time) / 40.0, 2);
-          }
-          angle_bonus = 1.0;
-          if (!Double.isNaN(angle) && angle < SPEED_ANGLE_BONUS_BEGIN) {
-              double s = Math.sin(1.5 * (SPEED_ANGLE_BONUS_BEGIN - angle));
-              angle_bonus += Math.pow(s, 2) / 3.57;
-              if (angle < Math.PI / 2.0) {
-                  angle_bonus = 1.28;
-                  if (distance < ANGLE_BONUS_SCALE && angle < Math.PI / 4.0) {
-                      angle_bonus += (1.0 - angle_bonus) *
-                          Math.min((ANGLE_BONUS_SCALE - distance) / 10.0, 1.0);
-                  }
-              } else if (distance < ANGLE_BONUS_SCALE) {
-                  angle_bonus += (1.0 - angle_bonus) *
-                      Math.min((ANGLE_BONUS_SCALE - distance) / 10.0, 1.0) *
-                      Math.sin((Math.PI / 2.0 - angle) * 4.0 / Math.PI);
-              }
-          }
-          return (
-              (1 + (speed_bonus - 1) * 0.75) * angle_bonus *
-              (0.95 + speed_bonus * Math.pow(distance / SINGLE_SPACING, 3.5))
-          ) / strain_time;
-      }
+    case DIFF_SPEED:
+        if (distance > SINGLE_SPACING) {
+            return 2.5;
+        }
+
+        else if (distance > STREAM_SPACING)
+        {
+            return 1.6 + 0.9 * (distance - STREAM_SPACING) /
+                (SINGLE_SPACING - STREAM_SPACING);
+        }
+
+        else if (distance > ALMOST_DIAMETER)
+        {
+            return 1.2 + 0.4 * (distance - ALMOST_DIAMETER) /
+                (STREAM_SPACING - ALMOST_DIAMETER);
+        }
+
+        else if (distance > ALMOST_DIAMETER / 2.0)
+        {
+            return 0.95 + 0.25 *
+                (distance - ALMOST_DIAMETER / 2.0) /
+                (ALMOST_DIAMETER / 2.0);
+        }
+
+        return 0.95;
     }
 
     throw new UnsupportedOperationException(
@@ -1009,24 +975,21 @@ void d_strain(int type, HitObject obj, HitObject prev,
     double decay =
         Math.pow(DECAY_BASE[type], time_elapsed / 1000.0);
 
-    obj.delta_time = time_elapsed;
-
     /* this implementation doesn't account for sliders */
     if ((obj.type & (OBJ_SLIDER | OBJ_CIRCLE)) != 0)
     {
         double distance =
             new Vector2(obj.normpos).sub(prev.normpos).len();
-        obj.d_distance = distance;
 
         if (type == DIFF_SPEED) {
             obj.is_single = distance > SINGLE_SPACING;
         }
 
-        value = d_spacing_weight(type, distance, time_elapsed,
-            prev.d_distance, prev.delta_time, obj.angle);
+        value = d_spacing_weight(type, distance);
         value *= WEIGHT_SCALING[type];
     }
 
+    value /= Math.max(time_elapsed, 50.0);
     obj.strains[type] = prev.strains[type] * decay + value;
 }
 
@@ -1041,20 +1004,8 @@ public static class DiffCalc
     /** aim stars. */
     public double aim;
 
-    /** aim difficulty (used to calc length bonus) */
-    public double aim_difficulty;
-
-    /** aim length bonus (unused at the moment) */
-    public double aim_length_bonus;
-
     /** speed stars. */
     public double speed;
-
-    /** speed difficulty (used to calc length bonus) */
-    public double speed_difficulty;
-
-    /** speed length bonus (unused at the moment) */
-    public double speed_length_bonus;
 
     /**
     * number of notes that are considered singletaps by the
@@ -1099,24 +1050,7 @@ public static class DiffCalc
             total, aim, speed);
     }
 
-    private static double length_bonus(double stars, double difficulty) {
-        return (
-            0.32 + 0.5 *
-            (Math.log10(difficulty + stars) - Math.log10(stars))
-        );
-    }
-
-    private class DiffValues
-    {
-        public double difficulty, total;
-
-        public DiffValues(double difficulty, double total) {
-          this.difficulty = difficulty;
-          this.total = total;
-        }
-    };
-
-    private DiffValues calc_individual(int type)
+    private double calc_individual(int type)
     {
         strains.clear();
 
@@ -1161,19 +1095,17 @@ public static class DiffCalc
 
         /* weigh the top strains sorted from highest to lowest */
         double weight = 1.0;
-        double total = 0.0;
         double difficulty = 0.0;
 
         Collections.sort(strains, Collections.reverseOrder());
 
         for (Double strain : strains)
         {
-            total += Math.pow(strain, 1.2);
             difficulty += strain * weight;
             weight *= DECAY_WEIGHT;
         }
 
-        return new DiffValues(difficulty, total);
+        return difficulty;
     }
 
     /**
@@ -1209,15 +1141,12 @@ public static class DiffCalc
         if (radius < CIRCLESIZE_BUFF_THRESHOLD)
         {
             scaling_factor *= 1.0 +
-                Math.min(CIRCLESIZE_BUFF_THRESHOLD - radius, 5.0) / 50.0;
+                Math.min(CIRCLESIZE_BUFF_THRESHOLD - radius, 5.0)
+                / 50.0;
         }
 
         Vector2 normalized_center =
             new Vector2(PLAYFIELD_CENTER).mul(scaling_factor);
-
-        HitObject prev1 = null;
-        HitObject prev2 = null;
-        int i = 0;
 
         /* calculate normalized positions */
         for (HitObject obj : beatmap.objects)
@@ -1249,36 +1178,14 @@ public static class DiffCalc
 
                 obj.normpos = new Vector2(pos).mul(scaling_factor);
             }
-
-            if (i >= 2) {
-                Vector2 v1 = new Vector2(prev2.normpos).sub(prev1.normpos);
-                Vector2 v2 = new Vector2(obj.normpos).sub(prev1.normpos);
-                double dot = v1.dot(v2);
-                double det = v1.x * v2.y - v1.y * v2.x;
-                obj.angle = Math.abs(Math.atan2(det, dot));
-            } else {
-                obj.angle = Double.NaN;
-            }
-
-            prev2 = prev1;
-            prev1 = obj;
-            ++i;
         }
 
         /* speed and aim stars */
+        speed = calc_individual(DIFF_SPEED);
+        aim = calc_individual(DIFF_AIM);
 
-        DiffValues aimvals = calc_individual(DIFF_AIM);
-        aim = aimvals.difficulty;
-        aim_difficulty = aimvals.total;
-        aim_length_bonus = length_bonus(aim, aim_difficulty);
-
-        DiffValues speedvals = calc_individual(DIFF_SPEED);
-        speed = speedvals.difficulty;
-        speed_difficulty = speedvals.total;
-        speed_length_bonus = length_bonus(speed, speed_difficulty);
-
-        aim = Math.sqrt(aim) * STAR_SCALING_FACTOR;
         speed = Math.sqrt(speed) * STAR_SCALING_FACTOR;
+        aim = Math.sqrt(aim) * STAR_SCALING_FACTOR;
         if ((mods & MODS_TOUCH_DEVICE) != 0) {
             aim = Math.pow(aim, 0.8);
         }
@@ -1288,7 +1195,7 @@ public static class DiffCalc
             Math.abs(speed - aim) * EXTREME_SCALING_FACTOR;
 
         /* singletap stats */
-        for (i = 1; i < beatmap.objects.size(); ++i)
+        for (int i = 1; i < beatmap.objects.size(); ++i)
         {
             HitObject prev = beatmap.objects.get(i - 1);
             HitObject obj = beatmap.objects.get(i);
@@ -1648,11 +1555,18 @@ public static class PPv2
         double ar_bonus = 1.0;
 
         if (mapstats.ar > 10.33) {
-            ar_bonus += 0.3 * (mapstats.ar - 10.33);
+            ar_bonus += 0.45 * (mapstats.ar - 10.33);
         }
 
-        else if (mapstats.ar < 8.0) {
-            ar_bonus +=  0.01 * (8.0 - mapstats.ar);
+        else if (mapstats.ar < 8.0)
+        {
+            double low_ar_bonus = 0.01 * (8.0 - mapstats.ar);
+
+            if ((mods & MODS_HD) != 0) {
+                low_ar_bonus *= 2.0;
+            }
+
+            ar_bonus += low_ar_bonus;
         }
 
         /* aim pp ---------------------------------------------- */
@@ -1662,26 +1576,17 @@ public static class PPv2
         aim *= combo_break;
         aim *= ar_bonus;
 
-        double hd_bonus = 1.0;
         if ((mods & MODS_HD) != 0) {
-            hd_bonus *= 1.0 + 0.04 * (12.0 - mapstats.ar);
+            aim *= 1.02 + (11 - mapstats.ar) / 50;
         }
-        aim *= hd_bonus;
 
         if ((mods & MODS_FL) != 0) {
-            double fl_bonus = 1.0 + 0.35 * Math.min(1.0, nobjects / 200.0);
-            if (nobjects > 200) {
-                fl_bonus += 0.3 * Math.min(1.0, (nobjects - 200) / 300.0);
-            }
-            if (nobjects > 500) {
-                fl_bonus += (nobjects - 500) / 1200.0;
-            }
-            aim *= fl_bonus;
+            aim *= 1.45 * length_bonus;
         }
 
         double acc_bonus = 0.5 + accuracy / 2.0;
-        double od_squared = mapstats.od * mapstats.od;
-        double od_bonus = 0.98 + od_squared / 2500.0;
+        double od_bonus =
+            0.98 + (mapstats.od * mapstats.od) / 2500.0;
 
         aim *= acc_bonus;
         aim *= od_bonus;
@@ -1691,14 +1596,12 @@ public static class PPv2
         speed *= length_bonus;
         speed *= miss_penality;
         speed *= combo_break;
-        if (mapstats.ar > 10.33) {
-            speed *= ar_bonus;
-        }
-        speed *= hd_bonus;
+        speed *= acc_bonus;
+        speed *= od_bonus;
 
-        /* similar to aim acc and od bonus */
-        speed *= 0.02 + accuracy;
-        speed *= 0.96 + od_squared / 1600.0;
+        if ((mods & MODS_HD) != 0) {
+            speed *= 1.18;
+        }
 
         /* acc pp ---------------------------------------------- */
         acc = Math.pow(1.52163, mapstats.od) *
@@ -1707,7 +1610,7 @@ public static class PPv2
         acc *= Math.min(1.15, Math.pow(ncircles / 1000.0, 0.3));
 
         if ((mods & MODS_HD) != 0) {
-            acc *= 1.08;
+            acc *= 1.02;
         }
 
         if ((mods & MODS_FL) != 0) {

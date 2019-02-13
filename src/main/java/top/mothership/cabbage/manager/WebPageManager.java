@@ -24,10 +24,7 @@ import top.mothership.cabbage.consts.OverallConsts;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.pattern.RegularPattern;
 import top.mothership.cabbage.pattern.WebPagePattern;
-import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
-import top.mothership.cabbage.pojo.coolq.osu.OsuFile;
-import top.mothership.cabbage.pojo.coolq.osu.OsuSearchResp;
-import top.mothership.cabbage.pojo.coolq.osu.SearchParam;
+import top.mothership.cabbage.pojo.coolq.osu.*;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -807,7 +804,9 @@ public class WebPageManager {
                 return null;
             }
         }
-
+        public List<ClientFile> getOsuClientInfo(){
+            return null;
+        }
         private byte[] readInputStream (InputStream inputStream) throws IOException {
             byte[] buffer = new byte[1024];
             int len = 0;
