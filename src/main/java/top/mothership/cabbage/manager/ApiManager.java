@@ -36,13 +36,8 @@ public class ApiManager {
 
     private final String key = OverallConsts.CABBAGE_CONFIG.getString("apikey");
     private Logger logger = LogManager.getLogger(this.getClass());
-
-    private final WebPageManager webPageManager;
-
     @Autowired
-    public ApiManager(WebPageManager webPageManager) {
-        this.webPageManager = webPageManager;
-    }
+private CqManager cqManager;
 
     public Userinfo getUser(Integer mode, String username) {
         String result = accessAPI("user", username, "string", null, null, null, null, mode);
@@ -71,6 +66,12 @@ public class ApiManager {
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Beatmap.class);
     }
 
+    public List<Beatmap> getBeatmaps(Integer sid) {
+        String result = accessAPI("beatmaps", null, null, String.valueOf(sid), null, null, null, null);
+        result = "[" + result + "]";
+        return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, new TypeToken<List<Beatmap>>() {}.getType());
+    }
+
     public Beatmap getBeatmap(String hash) {
         String result = accessAPI("beatmapHash", null, null, null, String.valueOf(hash), null, null, null);
         return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Beatmap.class);
@@ -81,8 +82,7 @@ public class ApiManager {
         //由于这里用到List，手动补上双括号
         result = "[" + result + "]";
         List<Score> list = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").create()
-                .fromJson(result, new TypeToken<List<Score>>() {
-                }.getType());
+                .fromJson(result, new TypeToken<List<Score>>() {}.getType());
         for (Score s : list) {
             //2018-2-28 15:54:11哪怕是返回单模式的bp也设置模式，避免计算acc时候判断是单模式还是多模式
             s.setMode(mode.byteValue());
@@ -197,14 +197,8 @@ public class ApiManager {
     }
 
     private void fixRank(Userinfo userFromAPI) {
-//        logger.info("开始修正玩家" + userFromAPI.getUserName() + "的SH XH数据");
-//        List<Integer> list = webPageManager.getCorrectXAndSRank(userFromAPI.getMode(), userFromAPI.getUserId());
-//        if (list != null) {
-//            userFromAPI.setCountRankSs(list.get(0));
-//            userFromAPI.setCountRankS(list.get(1));
-//        }
-        userFromAPI.setCountRankSs(userFromAPI.getCountRankSs()+userFromAPI.getCountRankSsh());
-            userFromAPI.setCountRankS(userFromAPI.getCountRankS()+userFromAPI.getCountRankSh());
+        userFromAPI.setCountRankSs(userFromAPI.getCountRankSs() + userFromAPI.getCountRankSsh());
+        userFromAPI.setCountRankS(userFromAPI.getCountRankS() + userFromAPI.getCountRankSh());
     }
 
     private String accessAPI(String apiType, String uid, String uidType, String bid, String hash, Integer rank, String mid, Integer mode) {
@@ -225,6 +219,10 @@ public class ApiManager {
                 break;
             case "beatmap":
                 URL = getMapURL + "?k=" + key + "&b=" + bid;
+                failLog = "谱面" + bid + "请求API：get_beatmaps失败五次";
+                break;
+                case "beatmaps":
+                URL = getMapURL + "?k=" + key + "&s=" + bid;
                 failLog = "谱面" + bid + "请求API：get_beatmaps失败五次";
                 break;
             case "beatmapHash":

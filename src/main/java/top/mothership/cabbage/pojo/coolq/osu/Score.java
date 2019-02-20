@@ -26,18 +26,19 @@ public class Score {
     //用于存储BP的位数
     private Integer bpId;
     private Long score;
-@SerializedName("maxcombo")
-private Integer maxCombo;
+    @SerializedName("maxcombo")
+    private Integer maxCombo;
     private Integer count50;
     private Integer count100;
     private Integer count300;
-@SerializedName("countmiss")
-private Integer countMiss;
-@SerializedName("countkatu")
-private Integer countKatu;
-@SerializedName("countgeki")
-private Integer countGeki;
+    @SerializedName("countmiss")
+    private Integer countMiss;
+    @SerializedName("countkatu")
+    private Integer countKatu;
+    @SerializedName("countgeki")
+    private Integer countGeki;
     private Integer perfect;
+    @SerializedName("enabled_mods")
     private Integer enabledMods;
     //更换为LocalDateTime会出反序列化异常
     private Date date;

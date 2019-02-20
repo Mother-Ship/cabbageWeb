@@ -1,5 +1,6 @@
 package top.mothership.cabbage.service;
 
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,9 @@ import top.mothership.cabbage.pojo.coolq.osu.Score;
 import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 
@@ -121,7 +124,7 @@ public class AnalyzeServiceImpl {
 
     public void listTargetUser(CqMsg cqMsg) {
         List<Integer> list = analyzerDAO.listTargetUser();
-        StringBuilder resp ;
+        StringBuilder resp;
         if (list.size() > 0) {
             resp = new StringBuilder("目标玩家：\n");
             for (Integer i : list) {
@@ -132,7 +135,7 @@ public class AnalyzeServiceImpl {
                     resp.append("没有从osu!api获取到uid为").append(i).append("的玩家信息。");
                 }
             }
-        }else{
+        } else {
             resp = new StringBuilder("没有任何目标玩家。");
         }
 
@@ -156,45 +159,27 @@ public class AnalyzeServiceImpl {
                 List<Score> tmp = apiManager.getScore(0, bList, aList);
                 List<Score> lastTmp = analyzerDAO.getLastScoreByUidAndBid(aList, bList);
 
+                Map<Integer, Score> lastTmpMap = new HashMap<>();
                 if (tmp.size() == 0) {
                     continue;
                 }
-
-                if (tmp.size() != lastTmp.size()) {
-                    for (int i = 0; i < tmp.size(); i++) {
-                        //在原有成绩的范畴内
-                        Score score;
-                        if (i <= lastTmp.size() - 1) {
-                            //如果取到的成绩相同，跳出本次循环
-                            if (tmp.get(i).getDate().getTime() == (lastTmp.get(i).getDate().getTime())) {
-                                continue;
-                            }
-                            //否则取到成绩
-                            score = tmp.get(i);
-                        } else {
-                            //在原有成绩的范畴外，直接取成绩
-                            score = tmp.get(i);
-                        }
-                        //将代码重复一遍，避免无谓的数据库读写
+                for (Score score : lastTmp) {
+                    lastTmpMap.put(score.getEnabledMods(), score);
+                }
+                for (Score score : tmp) {
+                    if (lastTmpMap.get(score.getEnabledMods()) == null
+                            || lastTmpMap.get(score.getEnabledMods()).getDate().getTime() != (score.getDate().getTime())) {
+                        cqManager.warn(new Gson().toJson(lastTmp));
+                        cqManager.warn(new Gson().toJson(tmp));
                         Beatmap beatmap = apiManager.getBeatmap(bList);
                         String username = userDAO.getUser(null, aList).getCurrentUname();
-                        cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, username,null));
+                        cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, username, null));
                         cqManager.sendMsg(cqMsg);
                         score.setBeatmapId(bList);
                         analyzerDAO.addScore(score);
                     }
-                } else {
-                    for (int i = 0; i < lastTmp.size(); i++) {
-                        if (tmp.get(i).getDate().getTime() != (lastTmp.get(i).getDate().getTime())) {
-                            Beatmap beatmap = apiManager.getBeatmap(bList);
-                            String username = userDAO.getUser(null, aList).getCurrentUname();
-                            cqMsg.setMessage(scoreUtil.genScoreString(tmp.get(i), beatmap, username,null));
-                            cqManager.sendMsg(cqMsg);
-                            tmp.get(i).setBeatmapId(bList);
-                            analyzerDAO.addScore(tmp.get(i));
-                        }
-                    }
                 }
+
 
             }
 

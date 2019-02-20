@@ -7,6 +7,7 @@ import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
+import top.mothership.cabbage.task.UpdateOsuClientTasker;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -27,6 +28,7 @@ public class test {
 //    private ScoreUtil scoreUtil;
     @Test
     public void Test() throws IOException {
+
 //        Beatmap beatmap = apiManager.getBeatmap(53554);
 //            webPageManager.getBGBackup(beatmap);
 //        System.out.println("");

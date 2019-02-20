@@ -10,17 +10,17 @@ public class Beatmap {
     //提供兼容osu search的API
     @SerializedName("beatmapset_id")
     private Integer beatmapSetId;
-
+    @SerializedName("beatmap_id")
     private Integer beatmapId;
     @SerializedName(value = "beatmap_status", alternate = {"approved"})
     private Integer approved;
-
+    @SerializedName("total_length")
     private Integer totalLength;
     @SerializedName(value = "play_length", alternate = {"hit_length"})
     private Integer hitLength;
     @SerializedName(value = "difficulty_name", alternate = {"version"})
     private String version;
-
+    @SerializedName("file_md5")
     private String fileMd5;
     @SerializedName(value = "difficulty_cs", alternate = {"diff_size"})
     private Float diffSize;
@@ -34,7 +34,7 @@ public class Beatmap {
     private Integer mode;
     @SerializedName(value = "date", alternate = {"approved_date"})
     private Date approvedDate;
-
+    @SerializedName("last_update")
     private Date lastUpdate;
 
     private String artist;
@@ -58,7 +58,7 @@ public class Beatmap {
     private Long playCount;
     @SerializedName("passcount")
     private Long passCount;
-
+    @SerializedName("max_combo")
     private Integer maxCombo;
     @SerializedName(value = "difficultyrating", alternate = {"difficulty"})
     private Double difficultyRating;

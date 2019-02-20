@@ -1,5 +1,6 @@
 package top.mothership.cabbage.service;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -783,9 +784,7 @@ public class CqServiceImpl {
             beatmap = webPageManager.searchBeatmap(searchParam, argument.getMode());
         } else {
             beatmap = apiManager.getBeatmap(searchParam.getBeatmapId());
-
         }
-
         logger.info("开始处理" + cqMsg.getUserId() + "进行的谱面搜索，关键词为：" + searchParam);
 
         if (beatmap == null) {
