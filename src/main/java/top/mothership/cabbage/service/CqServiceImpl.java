@@ -1,13 +1,11 @@
 package top.mothership.cabbage.service;
 
-import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.annotation.GroupAuthorityControl;
 import top.mothership.cabbage.consts.OverallConsts;
@@ -22,7 +20,6 @@ import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
-import top.mothership.cabbage.pojo.coolq.CqResponse;
 import top.mothership.cabbage.pojo.coolq.QQInfo;
 import top.mothership.cabbage.pojo.coolq.osu.*;
 import top.mothership.cabbage.util.osu.ScoreUtil;
@@ -30,11 +27,11 @@ import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.CompressLevelEnum;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
-import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -534,7 +531,7 @@ public class CqServiceImpl {
                 Score score = bpList.get(argument.getNum() - 1);
                 logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + argument.getMode() + "的第" + argument.getNum() + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
                 Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
-                cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(),null));
+                cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), null));
                 cqManager.sendMsg(cqMsg);
             } else {
                 //list基于0，得-1
@@ -588,9 +585,9 @@ public class CqServiceImpl {
             }
         } else {
             //TODO 小号机制
-            if(user.isBanned()){
+            if (user.isBanned()) {
                 cqMsg.setMessage("你的QQ已经绑定了玩家：" + user.getCurrentUname() + "，并且该账号已经被ban；如果发生错误请联系妈妈船。");
-            }else {
+            } else {
                 userFromAPI = apiManager.getUser(0, user.getUserId());
                 cqMsg.setMessage("你的QQ已经绑定了玩家：" + userFromAPI.getUserName() + "，如果发生错误请联系妈妈船。");
             }
@@ -632,10 +629,10 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-        List<Score> scores = apiManager.getRecents(argument.getMode(),userFromAPI.getUserId());
+        List<Score> scores = apiManager.getRecents(argument.getMode(), userFromAPI.getUserId());
         Integer count = 0;
         for (Score score1 : scores) {
-            if(score.getBeatmapId().equals(score1.getBeatmapId())){
+            if (score.getBeatmapId().equals(score1.getBeatmapId())) {
                 count++;
             }
         }
@@ -647,7 +644,7 @@ public class CqServiceImpl {
             return;
         }
         if (argument.isText()) {
-            String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(),count);
+            String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
             cqMsg.setMessage(resp);
             cqManager.sendMsg(cqMsg);
         } else {
@@ -660,7 +657,7 @@ public class CqServiceImpl {
     public void help(CqMsg cqMsg) {
         String img;
         if ((int) (Math.random() * 20) == 1) {
-            img = imgUtil.drawImage(ImgUtil.images.get("helpTrick.png"),CompressLevelEnum.不压缩);
+            img = imgUtil.drawImage(ImgUtil.images.get("helpTrick.png"), CompressLevelEnum.不压缩);
             cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
         } else {
             img = imgUtil.drawImage(ImgUtil.images.get("help.png"), CompressLevelEnum.不压缩);
@@ -1026,7 +1023,7 @@ public class CqServiceImpl {
             case "791827355":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第八届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：https://www.wenjuan.com/s/BbYZvi/ ";
                 break;
-                //备用
+            //备用
 //            case "806345866":
 //                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第八届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，群文件中的比赛规程，以及给选手的建议。\n报名地址：https://www.wenjuan.com/s/BbYZvi/ ";
 //                break;
@@ -1146,13 +1143,13 @@ public class CqServiceImpl {
 
         }
         Map<String, Double> map = webPageManager.getPPPlus(user.getUserId());
-        Map<String,Integer> map2 = webPageManager.getOsuChanBestBpmAndLength(user.getUserId());
+        Map<String, Integer> map2 = webPageManager.getOsuChanBestBpmAndLength(user.getUserId());
         //2018-3-29 09:52:16加入Map容量判断
-        if (map != null && map.size() == 6 &&map2!=null&&map2.size()==2) {
-            double drugsS4Cost = Math.pow((map.get("Jump") / 3000F), 0.9F)
-                    * Math.pow((map.get("Flow") / 1500F), 0.5F)
-                    + Math.pow((map.get("Speed") / 2000F), 1.25F)
-                    + (map.get("Accuracy") / 2700F);
+        if (map != null && map.size() == 6 && map2 != null && map2.size() == 2) {
+            double drugsS6Cost = Math.pow((map.get("Jump") / 3000F), 0.85F)
+                    * Math.pow((map.get("Flow") / 1500F), 0.45F)
+                    + Math.atan((map.get("Speed") / 2000F))*1.3F
+                    + (map.get("Accuracy") / 4000F);
             double mp4S4Cost = Math.pow(
                     ((0.02D * (10D * Math.sqrt((Math.atan((2 * map.get("Jump") - (2636D + 2273D)) / (2636D - 2273D)) + Math.PI / 2D + 9D)
                             * (Math.atan((2D * map.get("Flow") - (711D + 540D)) / (711D - 540D)) + Math.PI / 2D + 4D))
@@ -1176,13 +1173,13 @@ public class CqServiceImpl {
                     + Math.pow((map.get("Speed") / 2000F), 0.8F)
                     * Math.pow((map.get("Stamina") / 2000F), 0.5F)
                     + (map.get("Accuracy") / 3000F))
-                    *Math.min(1,Math.pow((map2.get("BPM")/190D),2))
-                    *Math.min(1,Math.pow((map2.get("Length")*(map2.get("BPM")/(190D*150D))),0.2D));
+                    * Math.min(1, Math.pow((map2.get("BPM") / 190D), 2))
+                    * Math.min(1, Math.pow((map2.get("Length") * (map2.get("BPM") / (190D * 150D))), 0.2D));
             String filename = imgUtil.drawRadarImage(map, userFromAPI);
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]\n"
                     + "在**OCL系列比赛(A/B/C)**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
                     + "。\n在**OCL系列比赛(新秀组)**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclrCost)
-                    + "。\n在**第五届某个不能提起名字的比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS4Cost)
+                    + "。\n在**第六届某个不能提起名字的比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS6Cost)
                     + "。\n在**第四届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S4Cost)
 //                    + "。\n在**第三届鱼塘杯**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(yuTangCost)
                     + "。");
@@ -1244,7 +1241,7 @@ public class CqServiceImpl {
         }
         Integer count = 0;
         for (Score score1 : scores) {
-            if(score.getBeatmapId().equals(score1.getBeatmapId())){
+            if (score.getBeatmapId().equals(score1.getBeatmapId())) {
                 count++;
             }
         }
@@ -1256,7 +1253,7 @@ public class CqServiceImpl {
         }
         switch (argument.getSubCommandLowCase()) {
             case "prs":
-                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(),count);
+                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
                 cqMsg.setMessage(resp);
                 cqManager.sendMsg(cqMsg);
                 break;
@@ -1465,7 +1462,7 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @GroupAuthorityControl(allowed = {308419061,793260840})
+    @GroupAuthorityControl(allowed = {308419061, 793260840})
     public void time(CqMsg cqMsg) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime NY = LocalDateTime.now(ZoneId.of("America/New_York"));
@@ -1477,11 +1474,6 @@ public class CqServiceImpl {
                 + formatter.format(UTC));
         cqManager.sendMsg(cqMsg);
     }
-
-
-
-
-
 
     public void pretreatmentParameterForBPCommand(CqMsg cqMsg) {
 
