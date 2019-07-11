@@ -1020,8 +1020,8 @@ public class CqServiceImpl {
             case "801588216":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第四届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：https://goo.gl/forms/QG98HWWc5ANQtZey1 ";
                 break;
-            case "791827355":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第八届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：https://www.wenjuan.com/s/BbYZvi/ ";
+            case "885493699":
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第九届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：https://www.mpmatch.cn/5/reg.html\n比赛信息： https://www.mpmatch.cn/5/info.html\n选手列表：https://www.mpmatch.cn/5/roster.html";
                 break;
             //备用
 //            case "806345866":
@@ -1464,6 +1464,28 @@ public class CqServiceImpl {
 
     @GroupAuthorityControl(allowed = {308419061, 793260840})
     public void time(CqMsg cqMsg) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime NY = LocalDateTime.now(ZoneId.of("America/New_York"));
+        LocalDateTime UTC = LocalDateTime.now(ZoneId.of("UTC"));
+
+        cqMsg.setMessage("当前美国东部时间（America/NewYork）为：\n"
+                + formatter.format(NY)
+                + "\n当前UTC时间为："
+                + formatter.format(UTC));
+        cqManager.sendMsg(cqMsg);
+    }
+    public void setRole(CqMsg cqMsg) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime NY = LocalDateTime.now(ZoneId.of("America/New_York"));
+        LocalDateTime UTC = LocalDateTime.now(ZoneId.of("UTC"));
+
+        cqMsg.setMessage("当前美国东部时间（America/NewYork）为：\n"
+                + formatter.format(NY)
+                + "\n当前UTC时间为："
+                + formatter.format(UTC));
+        cqManager.sendMsg(cqMsg);
+    }
+    public void myRole(CqMsg cqMsg) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime NY = LocalDateTime.now(ZoneId.of("America/New_York"));
         LocalDateTime UTC = LocalDateTime.now(ZoneId.of("UTC"));

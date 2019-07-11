@@ -164,7 +164,7 @@ public class MpServiceImpl {
                 targetUser = userDAO.getUser(null, userFromAPI.getUserId());
                 //录入
                 if (targetUser == null) {
-                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
+                    user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0,  0L, 0L,"creep");
                     userDAO.addUser(user);
                     if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
                         userFromAPI.setQueryDate(LocalDate.now());

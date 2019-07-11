@@ -132,7 +132,7 @@ public class CqAdminServiceImpl {
                     //如果userRole库中没有这个用户
                     //构造User对象写入数据库
                     logger.info("开始将用户" + userFromAPI.getUserName() + "添加到数据库。");
-                    User user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, null, null, 0L, 0L);
+                    User user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0,  0L, 0L,"creep");
                     userDAO.addUser(user);
 
                     if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {

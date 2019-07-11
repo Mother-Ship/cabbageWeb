@@ -2,7 +2,6 @@ package top.mothership.cabbage.pojo.coolq;
 
 import lombok.Data;
 import top.mothership.cabbage.pojo.coolq.osu.SearchParam;
-import top.mothership.cabbage.pojo.coolq.shadowsocks.ShadowSocksRequest;
 
 import java.util.List;
 
@@ -29,7 +28,6 @@ public class Argument {
     private String fileName;
     private String url;
     private Integer second;
-    private ShadowSocksRequest ssr;
     private Integer beatmapId;
     private String remark;
 }

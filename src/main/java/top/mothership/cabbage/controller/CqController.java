@@ -375,6 +375,12 @@ public class CqController {
                                 case "roll":
                                     cqService.roll(cqMsg);
                                     break;
+                                case "myrole":
+                                    cqService.myRole(cqMsg);
+                                    break;
+                                case "setRole":
+                                    cqService.time(cqMsg);
+                                    break;
                                 case "time":
                                     cqService.time(cqMsg);
                                     break;
@@ -414,19 +420,7 @@ public class CqController {
                                     break;
                                 default:
                                     // 转交给黄花菜
-//                                    boolean hasDayLily = false;
-//                                    if ("group".equals(cqMsg.getMessageType())) {
-//                                        CqResponse<List<QQInfo>> cqResponse;
-//                                        cqResponse = cqManager.getGroupMembers(cqMsg.getGroupId());
-//                                        for (QQInfo qqInfo : cqResponse.getData()) {
-//                                            if (Long.valueOf(2181697779L).equals(qqInfo.getUserId())) {
-//                                                hasDayLily = true;
-//                                            }
-//                                        }
-//                                    }
-//                                    if (!hasDayLily) {
                                     dayLilyManager.sendMsg(cqMsg);
-//                                    }
                                     break;
 
                             }

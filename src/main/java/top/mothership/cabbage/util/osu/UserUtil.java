@@ -52,7 +52,7 @@ public class UserUtil {
             redisDAO.add(userId, userFromAPI);
             userInfoDAO.addUserInfo(userFromAPI);
         }
-        User user = new User(userId, role, QQ, "[]", userFromAPI.getUserName(), false, mode, null, null, 0L, 0L);
+        User user = new User(userId, role, QQ, "[]", userFromAPI.getUserName(), false, mode, 0L, 0L,"creep");
         userDAO.addUser(user);
         return user;
     }

@@ -130,7 +130,7 @@ public interface UserDAO {
      * @return the integer
      */
     @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.qq}" +
-            ",#{user.legacyUname},#{user.currentUname},#{user.banned},#{user.repeatCount},#{user.speakingCount},#{user.mode})")
+            ",#{user.legacyUname},#{user.currentUname},#{user.banned},#{user.repeatCount},#{user.speakingCount},#{user.mode},#{user.mainRole})")
     Integer addUser(@Param("user") User user);
 
 
