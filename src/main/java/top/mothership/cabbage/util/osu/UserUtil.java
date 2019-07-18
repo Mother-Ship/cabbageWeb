@@ -127,8 +127,12 @@ public class UserUtil {
         if (roles.contains(role)) {
             roles.remove(role);
         }
+        if(user.getMainRole().equals(role)){
+            user.setMainRole("creep");
+        }
         if ("All".equals(role) || roles.size() == 0) {
             newRole = "creep";
+            user.setMainRole("creep");
         } else {
             //转换为字符串，此处得去除空格（懒得遍历+拼接了）
             newRole = roles.toString().replace(" ", "").

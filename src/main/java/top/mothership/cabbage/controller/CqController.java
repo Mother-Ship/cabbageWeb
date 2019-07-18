@@ -36,7 +36,6 @@ public class CqController {
     private final CqManager cqManager;
     private final AnalyzeServiceImpl analyzeService;
     private final DayLilyManager dayLilyManager;
-    private final ShadowSocksCmdServiceImpl shadowSocksCmdService;
 
     private Logger logger = LogManager.getLogger(this.getClass());
 
@@ -48,17 +47,15 @@ public class CqController {
      * @param cqManager
      * @param analyzeService
      * @param dayLilyManager
-     * @param shadowSocksCmdService
      */
     @Autowired
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, CqManager cqManager, AnalyzeServiceImpl analyzeService, DayLilyManager dayLilyManager, ShadowSocksCmdServiceImpl shadowSocksCmdService) {
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, CqManager cqManager, AnalyzeServiceImpl analyzeService, DayLilyManager dayLilyManager) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
         this.cqAdminService = cqAdminService;
         this.cqManager = cqManager;
         this.analyzeService = analyzeService;
         this.dayLilyManager = dayLilyManager;
-        this.shadowSocksCmdService = shadowSocksCmdService;
     }
 
     /**
@@ -378,8 +375,9 @@ public class CqController {
                                 case "myrole":
                                     cqService.myRole(cqMsg);
                                     break;
-                                case "setRole":
-                                    cqService.time(cqMsg);
+                                case "setrole":
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.ROLE});
+                                    cqService.setRole(cqMsg);
                                     break;
                                 case "time":
                                     cqService.time(cqMsg);
@@ -408,19 +406,7 @@ public class CqController {
                                 case "listuser":
                                     analyzeService.listTargetUser(cqMsg);
                                     break;
-                                case "upduser":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_USER, ParameterEnum.SHADOWSOCKS_NUMBER});
-                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_CONFIRM});
-                                    shadowSocksCmdService.service(cqMsg);
-                                    break;
-                                case "getcode":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_NUMBER});
-                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.SHADOWSOCKS_COUNT});
-                                    shadowSocksCmdService.service(cqMsg);
-                                    break;
                                 default:
-                                    // 转交给黄花菜
-                                    dayLilyManager.sendMsg(cqMsg);
                                     break;
 
                             }

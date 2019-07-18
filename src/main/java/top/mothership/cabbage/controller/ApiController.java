@@ -41,7 +41,6 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/api/v1", produces = {"application/json;charset=UTF-8"})
 public class ApiController {
-    private final UserServiceImpl userService;
     private final UserInfoDAO userInfoDAO;
     private final ApiManager apiManager;
     private final ImgUtil imgUtil;
@@ -52,8 +51,7 @@ public class ApiController {
     private Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
-    public ApiController(UserServiceImpl userService, UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, CqServiceImpl cqService, UserUtil userUtil, WebPageManager webPageManager, RedisDAO redisDAO) {
-        this.userService = userService;
+    public ApiController( UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, UserUtil userUtil, WebPageManager webPageManager, RedisDAO redisDAO) {
         this.userInfoDAO = userInfoDAO;
         this.apiManager = apiManager;
         this.imgUtil = imgUtil;
@@ -167,8 +165,10 @@ public class ApiController {
                     userFromAPI.setUserName(String.valueOf(user.getUserId()));
                 }
             }
-            role = user.getRole();
+            List<String> list = userUtil.sortRoles(user.getRole());
+            role = list.get(0);
             day = 0;
+            mode = user.getMode();
         } else {
             List<String> list = userUtil.sortRoles(user.getRole());
             role = list.get(0);
@@ -180,25 +180,13 @@ public class ApiController {
                     near = true;
                 }
             }
+            mode = user.getMode();
         }
 
 
         //获取score rank
-        //gust？
-        if (userFromAPI.getUserId() == 1244312
-                //怕他
-                || userFromAPI.getUserId() == 6149313
-                //小飞菜
-                || userFromAPI.getUserId() == 3995056
-                //苏娜小苏娜
-                || userFromAPI.getUserId() == 3213720
-                //MFA
-                || userFromAPI.getUserId() == 6854920) {
-            scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 10000);
-        } else {
-            scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
-        }
-        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, role, day, near, scoreRank, user.getMode());
+        scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
+        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, role, day, near, scoreRank, mode);
         byte[] bytes = Base64.getDecoder().decode(result);
         response.setContentType("image/png");
         try (InputStream in = new ByteArrayInputStream(bytes);

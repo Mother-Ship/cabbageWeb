@@ -30,4 +30,5 @@ public class Argument {
     private Integer second;
     private Integer beatmapId;
     private String remark;
+
 }

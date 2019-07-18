@@ -19,7 +19,6 @@ import top.mothership.cabbage.pattern.SearchKeywordPattern;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.osu.SearchParam;
-import top.mothership.cabbage.pojo.coolq.shadowsocks.ShadowSocksRequest;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 
 import java.time.LocalDate;
@@ -338,31 +337,6 @@ public class ParameterVerifyAspect {
                                     }
                                     argument.setSearchParam(searchParam);
                                     break;
-                                case SHADOWSOCKS_USER:
-                                    ShadowSocksRequest ssr = new ShadowSocksRequest();
-                                    ssr.setUser(firstParam);
-                                    argument.setSsr(ssr);
-                                    break;
-                                case SHADOWSOCKS_NUMBER:
-                                    ssr = argument.getSsr();
-                                    if (ssr == null) {
-                                        //getCode命令兼容
-                                        ssr = new ShadowSocksRequest();
-                                    }
-                                    ssr.setNumber(Integer.valueOf(secondParam.replaceAll("[gm]", "")));
-                                    switch (secondParam.substring(secondParam.length() - 1)) {
-                                        case "m":
-                                            ssr.setType("time");
-                                            ssr.setMonthly(1);
-                                            break;
-                                        case "g":
-                                            ssr.setType("traffic");
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                    argument.setSsr(ssr);
-                                    break;
                                 case BEATMAP_ID:
                                     argument.setBeatmapId(Integer.valueOf(secondParam));
                                     break;
@@ -503,20 +477,6 @@ public class ParameterVerifyAspect {
                                     }
 
 
-                                    break;
-                                case SHADOWSOCKS_CONFIRM:
-                                    if (thirdParam != null) {
-                                        ShadowSocksRequest ssr = argument.getSsr();
-                                        ssr.setConfirm(Integer.valueOf(thirdParam));
-                                        argument.setSsr(ssr);
-                                    }
-                                    break;
-                                case SHADOWSOCKS_COUNT:
-                                    if (thirdParam != null) {
-                                        ShadowSocksRequest ssr = argument.getSsr();
-                                        ssr.setCount(Integer.valueOf(thirdParam));
-                                        argument.setSsr(ssr);
-                                    }
                                     break;
                                 default:
                                     break;

@@ -119,6 +119,7 @@ public interface UserDAO {
             + "<if test=\"user.repeatCount != null\">repeat_count=#{user.repeatCount},</if>"
             + "<if test=\"user.speakingCount != null\">speaking_count=#{user.speakingCount},</if>"
             + "<if test=\"user.mode != null\">mode=#{user.mode},</if>"
+            + "<if test=\"user.mainRole != null\">main_role=#{user.mainRole},</if>"
             + "</set>"
             + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);

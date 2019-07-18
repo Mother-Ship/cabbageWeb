@@ -276,7 +276,6 @@ public class CqServiceImpl {
                     if (argument.getDay() > 0) {
                         if (argument.getDay().equals(1)) {
                             //加一个从redis取数据的设定
-                            //TODO 开debug测试一下这个特性
                             userInDB = redisDAO.get(userFromAPI.getUserId(), argument.getMode());
                         }
                         if (userInDB == null) {
@@ -294,26 +293,17 @@ public class CqServiceImpl {
 
         }
         roles = userUtil.sortRoles(role);
-
+        if(user.getMainRole().equals("creep")){
+            role = roles.get(0);
+        }else{
+            role = user.getMainRole();
+        }
         if (argument.getMode().equals(0)) {
             //主模式才获取score rank
-            //gust？
-            if (userFromAPI.getUserId() == 1244312
-                    //怕他
-                    || userFromAPI.getUserId() == 6149313
-                    //小飞菜
-                    || userFromAPI.getUserId() == 3995056
-                    //苏娜小苏娜
-                    || userFromAPI.getUserId() == 3213720
-                    //MFA
-                    || userFromAPI.getUserId() == 6854920) {
-                scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 10000);
-            } else {
-                scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
-            }
-            //调用绘图类绘图(2017-10-19 14:09:04 roles改为List，排好序后直接取第一个)
+            //2019-7-18 看样子四个人是全够2k名了，没必要特殊处理了
+            scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
         }
-        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, roles.get(0), argument.getDay(), approximate, scoreRank, argument.getMode());
+        String result = imgUtil.drawUserInfo(userFromAPI, userInDB, role, argument.getDay(), approximate, scoreRank, argument.getMode());
         cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
         cqManager.sendMsg(cqMsg);
     }
@@ -1148,7 +1138,7 @@ public class CqServiceImpl {
         if (map != null && map.size() == 6 && map2 != null && map2.size() == 2) {
             double drugsS6Cost = Math.pow((map.get("Jump") / 3000F), 0.85F)
                     * Math.pow((map.get("Flow") / 1500F), 0.45F)
-                    + Math.atan((map.get("Speed") / 2000F))*1.3F
+                    + Math.atan((map.get("Speed") / 2000F)) * 1.3F
                     + (map.get("Accuracy") / 4000F);
             double mp4S4Cost = Math.pow(
                     ((0.02D * (10D * Math.sqrt((Math.atan((2 * map.get("Jump") - (2636D + 2273D)) / (2636D - 2273D)) + Math.PI / 2D + 9D)
@@ -1474,27 +1464,44 @@ public class CqServiceImpl {
                 + formatter.format(UTC));
         cqManager.sendMsg(cqMsg);
     }
-    public void setRole(CqMsg cqMsg) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime NY = LocalDateTime.now(ZoneId.of("America/New_York"));
-        LocalDateTime UTC = LocalDateTime.now(ZoneId.of("UTC"));
 
-        cqMsg.setMessage("当前美国东部时间（America/NewYork）为：\n"
-                + formatter.format(NY)
-                + "\n当前UTC时间为："
-                + formatter.format(UTC));
+    public void setRole(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
+        String username;
+        Userinfo userFromAPI = null;
+        User user;
+        //只有这个QQ对应的id是null
+        user = userDAO.getUser(cqMsg.getUserId(), null);
+        if (user == null) {
+            cqMsg.setMessage(TipConsts.USER_NOT_BIND);
+        } else {
+            List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
+            if (roles.contains(argument.getRole())) {
+                user.setMainRole(argument.getRole());
+                userDAO.updateUser(user);
+                cqMsg.setMessage("更新成功：你的主显用户组已修改为" + argument.getRole());
+            } else {
+                cqMsg.setMessage("你当前不在请求的用户组"+argument.getRole()+"中。当前所在用户组为：" + user.getRole());
+            }
+
+        }
         cqManager.sendMsg(cqMsg);
     }
-    public void myRole(CqMsg cqMsg) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime NY = LocalDateTime.now(ZoneId.of("America/New_York"));
-        LocalDateTime UTC = LocalDateTime.now(ZoneId.of("UTC"));
 
-        cqMsg.setMessage("当前美国东部时间（America/NewYork）为：\n"
-                + formatter.format(NY)
-                + "\n当前UTC时间为："
-                + formatter.format(UTC));
+    public void myRole(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
+        String username;
+        Userinfo userFromAPI = null;
+        User user;
+        user = userDAO.getUser(cqMsg.getUserId(), null);
+        if (user == null) {
+            cqMsg.setMessage(TipConsts.USER_NOT_BIND);
+        } else {
+            cqMsg.setMessage("你的当前用户组有：" + user.getRole() + "，主显用户组为：" + user.getMainRole());
+        }
         cqManager.sendMsg(cqMsg);
+        return;
+
     }
 
     public void pretreatmentParameterForBPCommand(CqMsg cqMsg) {

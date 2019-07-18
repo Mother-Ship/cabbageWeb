@@ -839,7 +839,7 @@ public class CqAdminServiceImpl {
         Long msgReceivedTime = System.currentTimeMillis();
         Userinfo userinfo = null;
         for (int i = 0; i < 10; i++) {
-            userinfo = apiManager.getUser(0, "Mother Ship");
+            userinfo = apiManager.getUser(0, "peppy");
         }
         Long afterQueryOsuApiFor10Times = System.currentTimeMillis();
         imgUtil.drawUserInfo(userinfo, userinfo, "creep", 1, false, 1, 0);
