@@ -657,7 +657,7 @@ public class ImgUtil {
 //                    @活泼花猫
 
                     if (oppaiResult.getPp() > 1000) {
-                        g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 581, 753);
+                        g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 591, 753);
                     } else {
                         if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
                             g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 616, 753);
