@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="war" name="cabbageWeb:war">
-    <output-path>$PROJECT_DIR$/target</output-path>
-    <root id="archive" name="cabbageWeb.war">
-      <element id="artifact" artifact-name="cabbageWeb:war exploded" />
-    </root>
-  </artifact>
-</component>
