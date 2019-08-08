@@ -8,15 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.annotation.UserAuthorityControl;
-import top.mothership.cabbage.consts.OverallConsts;
-import top.mothership.cabbage.consts.TipConsts;
+import top.mothership.cabbage.constant.Overall;
+import top.mothership.cabbage.constant.Tip;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
-import top.mothership.cabbage.pattern.RegularPattern;
+import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
@@ -28,7 +28,7 @@ import top.mothership.cabbage.pojo.coolq.osu.SearchParam;
 import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
-import top.mothership.cabbage.util.qq.CompressLevelEnum;
+import top.mothership.cabbage.enums.CompressLevelEnum;
 import top.mothership.cabbage.util.qq.ImgUtil;
 import top.mothership.cabbage.util.qq.MsgQueue;
 import top.mothership.cabbage.util.qq.SmokeUtil;
@@ -132,7 +132,7 @@ public class CqAdminServiceImpl {
                     //如果userRole库中没有这个用户
                     //构造User对象写入数据库
                     logger.info("开始将用户" + userFromAPI.getUserName() + "添加到数据库。");
-                    User user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0,  0L, 0L,"creep");
+                    User user = new User(userFromAPI.getUserId(), "creep", 0L, "[]", userFromAPI.getUserName(), false, 0, 0L, 0L, "creep");
                     userDAO.addUser(user);
 
                     if (LocalTime.now().isAfter(LocalTime.of(4, 0))) {
@@ -291,7 +291,7 @@ public class CqAdminServiceImpl {
         }
         Userinfo userFromAPI = apiManager.getUser(0, argument.getUsername());
         if (userFromAPI == null) {
-            cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, argument.getUsername()));
+            cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -299,19 +299,19 @@ public class CqAdminServiceImpl {
         logger.info("检测到对" + userFromAPI.getUserName() + "的最近游戏记录查询");
         Score score = apiManager.getRecent(argument.getMode(), userFromAPI.getUserId());
         if (score == null) {
-            cqMsg.setMessage(String.format(TipConsts.NO_RECENT_RECORD, userFromAPI.getUserName(), scoreUtil.convertGameModeToString(argument.getMode())));
+            cqMsg.setMessage(String.format(Tip.NO_RECENT_RECORD, userFromAPI.getUserName(), scoreUtil.convertGameModeToString(argument.getMode())));
             cqManager.sendMsg(cqMsg);
             return;
         }
         Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
         if (beatmap == null) {
-            cqMsg.setMessage(String.format(TipConsts.BEATMAP_GET_FAILED, score.getBeatmapId()));
+            cqMsg.setMessage(String.format(Tip.BEATMAP_GET_FAILED, score.getBeatmapId()));
             cqManager.sendMsg(cqMsg);
             return;
         }
         switch (argument.getSubCommandLowCase()) {
             case "rs":
-                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(),null);
+                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), null);
                 cqMsg.setMessage(resp);
                 cqManager.sendMsg(cqMsg);
                 break;
@@ -430,7 +430,7 @@ public class CqAdminServiceImpl {
             cqMsg1.setMessage("Flag为：" + argument.getFlag() + "的邀请被" + cqMsg.getUserId() + "通过");
             cqMsg1.setMessageType("private");
             cqMsg1.setSelfId(cqMsg.getSelfId());
-            for (long l : OverallConsts.ADMIN_LIST) {
+            for (long l : Overall.ADMIN_LIST) {
                 cqMsg1.setUserId(l);
                 cqManager.sendMsg(cqMsg1);
             }
@@ -450,7 +450,7 @@ public class CqAdminServiceImpl {
         String resp;
         Userinfo userFromAPI = apiManager.getUser(0, argument.getUsername());
         if (userFromAPI == null) {
-            cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, argument.getUsername()));
+            cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -459,7 +459,7 @@ public class CqAdminServiceImpl {
             resp = "玩家" + userFromAPI.getUserName() + "没有使用过白菜，已完成注册";
             userUtil.registerUser(userFromAPI.getUserId(), 0, argument.getQq(), argument.getRole());
         } else {
-           User user2 = userDAO.getUser(argument.getQq(), null);
+            User user2 = userDAO.getUser(argument.getQq(), null);
             if (user2 == null) {
                 //这个QQ没有绑定过玩家
                 resp = "更新前的QQ：" + user.getQq() + "，更新前的用户组：" + user.getRole();
@@ -516,6 +516,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
+    @UserAuthorityControl({934697463L})
     public void listMsg(CqMsg cqMsg) {
         Long QQ = cqMsg.getArgument().getQq();
         StringBuilder resp = new StringBuilder();
@@ -725,7 +726,7 @@ public class CqAdminServiceImpl {
                 + "，邀请人：" + cqMsg.getUserId() + "，根据邀请人QQ在白菜数据库中的查询结果：" + user);
         cqMsg1.setMessageType("private");
         cqMsg1.setSelfId(cqMsg.getSelfId());
-        for (long i : OverallConsts.ADMIN_LIST) {
+        for (long i : Overall.ADMIN_LIST) {
             //debug 这里设置的user id 应该是cqMsg1的，之前漏了个1
             cqMsg1.setUserId(i);
             cqManager.sendMsg(cqMsg1);
@@ -744,6 +745,7 @@ public class CqAdminServiceImpl {
             cqManager.sendMsg(cqMsg);
         }
     }
+
     @UserAuthorityControl({496802290})
     public void roleInfo(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
@@ -767,19 +769,19 @@ public class CqAdminServiceImpl {
         for (Integer i : list) {
             user = userDAO.getUser(null, i);
             Userinfo userinfo = apiManager.getUser(argument.getMode(), i);
-            Userinfo userinfo1 = userInfoDAO.getUserInfo(argument.getMode(),i,LocalDate.now().minusDays(30));
-            Userinfo userinfo2 = userInfoDAO.getUserInfo(argument.getMode(),i,LocalDate.now().minusDays(90));
+            Userinfo userinfo1 = userInfoDAO.getUserInfo(argument.getMode(), i, LocalDate.now().minusDays(30));
+            Userinfo userinfo2 = userInfoDAO.getUserInfo(argument.getMode(), i, LocalDate.now().minusDays(90));
             if (userinfo != null) {
                 resp += "\nuid：" + user.getUserId()
                         + "，现用名：" + user.getCurrentUname()
                         + "，曾用名：" + user.getLegacyUname()
                         + "，绑定的QQ：" + user.getQq()
                         + "，PP：" + userinfo.getPpRaw();
-                if(userinfo1!=null && userinfo2!=null){
-                    int day30 = userinfo.getPlayCount()-userinfo1.getPlayCount();
-                    int day90 = userinfo.getPlayCount()-userinfo2.getPlayCount();
-                    if(day90<3*day30){
-                        resp += "，90天前PC差："+day90+"和30天内PC差"+day30+"相差过大，有小号嫌疑！";
+                if (userinfo1 != null && userinfo2 != null) {
+                    int day30 = userinfo.getPlayCount() - userinfo1.getPlayCount();
+                    int day90 = userinfo.getPlayCount() - userinfo2.getPlayCount();
+                    if (day90 < 3 * day30) {
+                        resp += "，90天前PC差：" + day90 + "和30天内PC差" + day30 + "相差过大，有小号嫌疑！";
                     }
                 }
             } else {
@@ -812,19 +814,19 @@ public class CqAdminServiceImpl {
 
         Userinfo userinfo = apiManager.getUser(argument.getMode(), argument.getUsername());
         if (userinfo == null) {
-            cqMsg.setMessage(String.format(TipConsts.USERNAME_GET_FAILED, argument.getUsername()));
+            cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
             cqManager.sendMsg(cqMsg);
             return;
         }
         Beatmap beatmap = apiManager.getBeatmap(argument.getBeatmapId());
         if (beatmap == null) {
-            cqMsg.setMessage(String.format(TipConsts.BEATMAP_GET_FAILED, argument.getBeatmapId()));
+            cqMsg.setMessage(String.format(Tip.BEATMAP_GET_FAILED, argument.getBeatmapId()));
             cqManager.sendMsg(cqMsg);
             return;
         }
         List<Score> scores = apiManager.getScore(argument.getMode(), beatmap.getBeatmapId(), userinfo.getUserId());
         if (scores.size() == 0) {
-            cqMsg.setMessage(String.format(TipConsts.THIS_USER_BEATMAP_NO_SCORE, argument.getUsername(), beatmap.getBeatmapId(), scoreUtil.convertGameModeToString(argument.getMode())));
+            cqMsg.setMessage(String.format(Tip.THIS_USER_BEATMAP_NO_SCORE, argument.getUsername(), beatmap.getBeatmapId(), scoreUtil.convertGameModeToString(argument.getMode())));
             cqManager.sendMsg(cqMsg);
             return;
         }
@@ -833,6 +835,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
 
     }
+
     @UserAuthorityControl({1427922341})
     public void ping(CqMsg cqMsg) {
         Long msgSendTime = cqMsg.getTime() * 1000L;
@@ -861,27 +864,27 @@ public class CqAdminServiceImpl {
     }
 
     @Scheduled(cron = "0 0 * * * ?")
-    public void watch(){
+    public void watch() {
         CqMsg cqMsg = new CqMsg();
         cqMsg.setMessageType("group");
         cqMsg.setGroupId(693299572L);
         cqMsg.setSelfId(1335734629L);
         String msg = "";
-        long time= System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         for (int i = 0; i < 10; i++) {
             apiManager.getUser(0, "Mother Ship");
         }
         Long afterQueryOsuApiFor10Times = System.currentTimeMillis();
-        if((afterQueryOsuApiFor10Times - time) / 10>1000){
-            msg += "osu! API访问缓慢，此时10次平均访问时间为："+(afterQueryOsuApiFor10Times - time) / 10;
+        if ((afterQueryOsuApiFor10Times - time) / 10 > 1000) {
+            msg += "osu! API访问缓慢，此时10次平均访问时间为：" + (afterQueryOsuApiFor10Times - time) / 10;
         }
         Long afterDrawStat = System.currentTimeMillis();
         for (int i = 0; i < 10; i++) {
             webPageManager.getPPPlus(2545898);
         }
         Long afterQueryPPPlusFor10Times = System.currentTimeMillis();
-        if((afterQueryPPPlusFor10Times - afterDrawStat) / 10>5000){
-            msg += "\nPP+访问缓慢，此时10次平均访问时间为："+(afterQueryOsuApiFor10Times - time) / 10;
+        if ((afterQueryPPPlusFor10Times - afterDrawStat) / 10 > 5000) {
+            msg += "\nPP+访问缓慢，此时10次平均访问时间为：" + (afterQueryOsuApiFor10Times - time) / 10;
         }
         msg += "[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"), CompressLevelEnum.不压缩) + "]";
         cqMsg.setMessage(msg);

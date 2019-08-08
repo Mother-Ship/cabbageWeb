@@ -5,8 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.ibatis.annotations.Arg;
-import top.mothership.cabbage.consts.ParameterEnum;
+import top.mothership.cabbage.enums.ParameterEnum;
 
 //酷Q收到消息之后通过HTTPAPI给白菜的POST请求体
 //public class CqMsg implements Comparable<CqMsg> {

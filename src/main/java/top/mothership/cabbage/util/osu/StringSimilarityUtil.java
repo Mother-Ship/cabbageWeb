@@ -1,4 +1,4 @@
-package top.mothership.cabbage.util;
+package top.mothership.cabbage.util.osu;
 
 public class StringSimilarityUtil {
 

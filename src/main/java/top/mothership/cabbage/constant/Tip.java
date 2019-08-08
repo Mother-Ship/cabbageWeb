@@ -1,6 +1,6 @@
-package top.mothership.cabbage.consts;
+package top.mothership.cabbage.constant;
 
-public class TipConsts {
+public class Tip {
     public static final String USER_NOT_BIND = "你没有绑定osu!id。请使用!setid 你的osuid 命令。";
     public static final String USER_IS_BANNED = "……期待你回来的那一天。";
     public static final String USER_GET_FAILED = "没有从osu!api获取到QQ为%d的用户绑定的uid为%d的玩家信息。";

@@ -22,12 +22,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.consts.OverallConsts;
+import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.mapper.ResDAO;
-import top.mothership.cabbage.pattern.RegularPattern;
-import top.mothership.cabbage.pattern.WebPagePattern;
+import top.mothership.cabbage.constant.pattern.RegularPattern;
+import top.mothership.cabbage.constant.pattern.WebPagePattern;
 import top.mothership.cabbage.pojo.coolq.osu.*;
-import top.mothership.cabbage.util.StringSimilarityUtil;
+import top.mothership.cabbage.util.osu.StringSimilarityUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -140,8 +140,8 @@ public class WebPageManager {
 
         urlParameters.add(new BasicNameValuePair("autologin", "on"));
         urlParameters.add(new BasicNameValuePair("login", "login"));
-        urlParameters.add(new BasicNameValuePair("username", OverallConsts.CABBAGE_CONFIG.getString("accountForDL")));
-        urlParameters.add(new BasicNameValuePair("password", OverallConsts.CABBAGE_CONFIG.getString("accountForDLPwd")));
+        urlParameters.add(new BasicNameValuePair("username", Overall.CABBAGE_CONFIG.getString("accountForDL")));
+        urlParameters.add(new BasicNameValuePair("password", Overall.CABBAGE_CONFIG.getString("accountForDLPwd")));
         try {
             logger.info("开始登录");
             post.setEntity(new UrlEncodedFormEntity(urlParameters));

@@ -1,32 +1,6 @@
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import okhttp3.*;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
 import org.junit.Test;
-import top.mothership.cabbage.consts.OverallConsts;
-import top.mothership.cabbage.manager.ApiManager;
-import top.mothership.cabbage.manager.WebPageManager;
-import top.mothership.cabbage.mapper.ResDAO;
-import top.mothership.cabbage.pojo.User;
-import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
-import top.mothership.cabbage.pojo.coolq.osu.Game;
-import top.mothership.cabbage.pojo.coolq.osu.Lobby;
-import top.mothership.cabbage.pojo.coolq.osu.Score;
-import top.mothership.cabbage.task.UpdateOsuClientTasker;
-import top.mothership.cabbage.util.StringSimilarityUtil;
 
-import javax.xml.soap.SAAJResult;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SimpleTest {
     @Test
@@ -283,8 +257,8 @@ public class SimpleTest {
 //        java.util.List<NameValuePair> urlParameters = new ArrayList<>();
 //        urlParameters.add(new BasicNameValuePair("autologin", "on"));
 //        urlParameters.add(new BasicNameValuePair("login", "login"));
-//        urlParameters.add(new BasicNameValuePair("username", OverallConsts.CABBAGE_CONFIG.getString("accountForDL")));
-//        urlParameters.add(new BasicNameValuePair("password", OverallConsts.CABBAGE_CONFIG.getString("accountForDLPwd")));
+//        urlParameters.add(new BasicNameValuePair("username", Overall.CABBAGE_CONFIG.getString("accountForDL")));
+//        urlParameters.add(new BasicNameValuePair("password", Overall.CABBAGE_CONFIG.getString("accountForDLPwd")));
 //        try {
 //            post.setEntity(new UrlEncodedFormEntity(urlParameters));
 //            client.execute(post);
@@ -303,8 +277,8 @@ public class SimpleTest {
 //        RequestBody formBody = new FormBody.Builder()
 //                .add("autologin", "on")
 //                .add("login", "login")
-//                .add("username", OverallConsts.CABBAGE_CONFIG.getString("accountForDL"))
-//                .add("password", OverallConsts.CABBAGE_CONFIG.getString("accountForDLPwd"))
+//                .add("username", Overall.CABBAGE_CONFIG.getString("accountForDL"))
+//                .add("password", Overall.CABBAGE_CONFIG.getString("accountForDLPwd"))
 //                .build();
 //        Request request = new Request.Builder()
 //                .url("https://osu.ppy.sh/forum/ucp.php?mode=login")

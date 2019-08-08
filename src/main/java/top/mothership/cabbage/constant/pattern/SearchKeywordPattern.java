@@ -1,4 +1,4 @@
-package top.mothership.cabbage.pattern;
+package top.mothership.cabbage.constant.pattern;
 
 import java.util.regex.Pattern;
 

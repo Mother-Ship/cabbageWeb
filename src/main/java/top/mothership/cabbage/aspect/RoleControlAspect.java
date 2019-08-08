@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static top.mothership.cabbage.consts.OverallConsts.ADMIN_LIST;
+import static top.mothership.cabbage.constant.Overall.ADMIN_LIST;
 
 @Component
 @Aspect

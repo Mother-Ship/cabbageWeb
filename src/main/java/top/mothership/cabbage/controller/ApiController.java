@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import top.mothership.cabbage.consts.OverallConsts;
+import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.controller.vo.ChartsVo;
 import top.mothership.cabbage.controller.vo.PPChartVo;
 import top.mothership.cabbage.manager.ApiManager;
@@ -19,8 +19,6 @@ import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.WebResponse;
 import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
-import top.mothership.cabbage.service.CqServiceImpl;
-import top.mothership.cabbage.service.UserServiceImpl;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
@@ -33,7 +31,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DateFormat;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
@@ -146,7 +143,7 @@ public class ApiController {
                 return;
             } else {
                 logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-                userUtil.registerUser(userFromAPI.getUserId(), mode, 0L, OverallConsts.DEFAULT_ROLE);
+                userUtil.registerUser(userFromAPI.getUserId(), mode, 0L, Overall.DEFAULT_ROLE);
                 userInDB = userFromAPI;
             }
             role = "creep";
@@ -209,7 +206,7 @@ public class ApiController {
             userInDB = userInfoDAO.getNearestUserInfo(mode, uid, LocalDate.now().minusDays(1));
             if (userInDB == null) {
                 userInDB = apiManager.getUser(mode, uid);
-                userUtil.registerUser(userInDB.getUserId(), mode, 0L, OverallConsts.DEFAULT_ROLE);
+                userUtil.registerUser(userInDB.getUserId(), mode, 0L, Overall.DEFAULT_ROLE);
                 return new Gson().toJson(new WebResponse<>(1, "user not registered", null));
             }
         }

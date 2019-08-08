@@ -1,4 +1,6 @@
-package top.mothership.cabbage.consts;
+package top.mothership.cabbage.constant;
+
+import top.mothership.cabbage.enums.ParameterEnum;
 
 import java.util.ResourceBundle;
 
@@ -7,7 +9,7 @@ import java.util.ResourceBundle;
  *
  * @author QHS
  */
-public class OverallConsts {
+public class Overall {
     /**
      * 指定配置文件
      */

@@ -1,7 +1,6 @@
 package top.mothership.cabbage.manager;
 
 import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.apache.http.NameValuePair;
@@ -9,9 +8,8 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.consts.OverallConsts;
+import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.pojo.coolq.osu.*;
 
 import java.io.BufferedReader;
@@ -32,7 +30,7 @@ public class ApiManager {
     private final String getScoreURL = "https://osu.ppy.sh/api/get_scores";
     private final String getMatchURL = "https://osu.ppy.sh/api/get_match";
 
-    private final String key = OverallConsts.CABBAGE_CONFIG.getString("apikey");
+    private final String key = Overall.CABBAGE_CONFIG.getString("apikey");
     private Logger logger = LogManager.getLogger(this.getClass());
 
 

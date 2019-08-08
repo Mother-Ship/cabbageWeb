@@ -5,12 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.annotation.UserAuthorityControl;
-import top.mothership.cabbage.consts.TipConsts;
+import top.mothership.cabbage.constant.Tip;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.AnalyzerDAO;
 import top.mothership.cabbage.mapper.UserDAO;
-import top.mothership.cabbage.pattern.RegularPattern;
+import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
 import top.mothership.cabbage.pojo.coolq.osu.Score;
@@ -104,7 +104,7 @@ public class AnalyzeServiceImpl {
             analyzerDAO.addTargetUser(userinfo.getUserId());
             cqMsg.setMessage("增加成功：" + userinfo.getUserName());
         } else {
-            cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, m.group(2)));
+            cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, m.group(2)));
         }
         cqManager.sendMsg(cqMsg);
     }
@@ -117,7 +117,7 @@ public class AnalyzeServiceImpl {
             analyzerDAO.delTargetUser(userinfo.getUserId());
             cqMsg.setMessage("删除成功：" + userinfo.getUserName());
         } else {
-            cqMsg.setMessage(String.format(TipConsts.USER_GET_FAILED, m.group(2)));
+            cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, m.group(2)));
         }
         cqManager.sendMsg(cqMsg);
     }

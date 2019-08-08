@@ -8,14 +8,14 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.consts.OverallConsts;
-import top.mothership.cabbage.consts.ParameterEnum;
-import top.mothership.cabbage.consts.TipConsts;
+import top.mothership.cabbage.constant.Overall;
+import top.mothership.cabbage.enums.ParameterEnum;
+import top.mothership.cabbage.constant.Tip;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.ResDAO;
-import top.mothership.cabbage.pattern.CQCodePattern;
-import top.mothership.cabbage.pattern.RegularPattern;
-import top.mothership.cabbage.pattern.SearchKeywordPattern;
+import top.mothership.cabbage.constant.pattern.CQCodePattern;
+import top.mothership.cabbage.constant.pattern.RegularPattern;
+import top.mothership.cabbage.constant.pattern.SearchKeywordPattern;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.osu.SearchParam;
@@ -78,10 +78,10 @@ public class ParameterVerifyAspect {
                             return pjp.proceed(new Object[]{cqMsg});
                         }
                         if (cqMsg.getRequired() == null) {
-                            cqMsg.setRequired(OverallConsts.EMPTY_PARAMETER_LIST);
+                            cqMsg.setRequired(Overall.EMPTY_PARAMETER_LIST);
                         }
                         if (cqMsg.getOptional() == null) {
-                            cqMsg.setOptional(OverallConsts.EMPTY_PARAMETER_LIST);
+                            cqMsg.setOptional(Overall.EMPTY_PARAMETER_LIST);
                         }
                         int argumentCount = 0;
                         String firstParam = null;
@@ -179,7 +179,7 @@ public class ParameterVerifyAspect {
                         }
                         //确保实参数目不小于最小形参数目，也不大于最大形参数目
                         if (argumentCount < cqMsg.getRequired().length) {
-                            cqMsg.setMessage(String.format(TipConsts.ARGUMENTS_LESS_THAN_PARAMETERS, Arrays.toString(cqMsg.getRequired()), argumentCount));
+                            cqMsg.setMessage(String.format(Tip.ARGUMENTS_LESS_THAN_PARAMETERS, Arrays.toString(cqMsg.getRequired()), argumentCount));
                             cqManager.sendMsg(cqMsg);
                             return null;
                         }
@@ -189,7 +189,7 @@ public class ParameterVerifyAspect {
                             maxArgumentCount++;
                         }
                         if (argumentCount > maxArgumentCount) {
-                            cqMsg.setMessage(String.format(TipConsts.ARGUMENTS_MORE_THAN_PARAMETERS, Arrays.toString(cqMsg.getRequired()), Arrays.toString(cqMsg.getOptional()), argumentCount));
+                            cqMsg.setMessage(String.format(Tip.ARGUMENTS_MORE_THAN_PARAMETERS, Arrays.toString(cqMsg.getRequired()), Arrays.toString(cqMsg.getOptional()), argumentCount));
                             cqManager.sendMsg(cqMsg);
                             return null;
                         }
@@ -215,7 +215,7 @@ public class ParameterVerifyAspect {
                                     if (legalParamMatcher.find()) {
                                         argument.setQq(Long.valueOf(qqRaw));
                                     } else {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, qqRaw, "QQ号"));
+                                        cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, qqRaw, "QQ号"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
@@ -225,12 +225,12 @@ public class ParameterVerifyAspect {
                                     if (legalParamMatcher.find()) {
                                         argument.setUserId(Integer.valueOf(firstParam));
                                     } else {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, firstParam, "osu!uid"));
+                                        cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, firstParam, "osu!uid"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     if (argument.getUserId() == 3) {
-                                        cqMsg.setMessage(TipConsts.QUERY_BANCHO_BOT);
+                                        cqMsg.setMessage(Tip.QUERY_BANCHO_BOT);
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
@@ -241,12 +241,12 @@ public class ParameterVerifyAspect {
                                         //2018-2-27 09:40:11这里把彩蛋放过去，在各个命令的方法里具体处理
                                         argument.setUsername(firstParam);
                                     } else {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, firstParam, "osu!用户名"));
+                                        cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, firstParam, "osu!用户名"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     if (argument.getUsername().toLowerCase().equals("banchobot")) {
-                                        cqMsg.setMessage(TipConsts.QUERY_BANCHO_BOT);
+                                        cqMsg.setMessage(Tip.QUERY_BANCHO_BOT);
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
@@ -265,7 +265,7 @@ public class ParameterVerifyAspect {
                                         }
                                     }
                                     if (mode == null) {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, firstParam, "osu!游戏模式"));
+                                        cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, firstParam, "osu!游戏模式"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
@@ -282,7 +282,7 @@ public class ParameterVerifyAspect {
                                     if (urlMatcher.find()) {
                                         argument.setUrl(url);
                                     } else {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, url, "URL"));
+                                        cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, url, "URL"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
@@ -320,7 +320,7 @@ public class ParameterVerifyAspect {
                                         if (qqMatcher.find()) {
                                             argument.setQq(Long.valueOf(firstParam));
                                         } else {
-                                            cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, firstParam, "QQ号"));
+                                            cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, firstParam, "QQ号"));
                                             cqManager.sendMsg(cqMsg);
                                             return null;
                                         }
@@ -434,7 +434,7 @@ public class ParameterVerifyAspect {
                                     if (thirdParam != null) {
                                         mode = convertModeStrToInteger(thirdParam);
                                         if (mode == null) {
-                                            cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, thirdParam, "osu!游戏模式"));
+                                            cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, thirdParam, "osu!游戏模式"));
                                             cqManager.sendMsg(cqMsg);
                                             return null;
                                         }
@@ -460,7 +460,7 @@ public class ParameterVerifyAspect {
                                     if (legalParamMatcher.find()) {
                                         argument.setGroupId(Long.valueOf(firstParam));
                                     } else {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, firstParam, "群号"));
+                                        cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, firstParam, "群号"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
@@ -471,7 +471,7 @@ public class ParameterVerifyAspect {
                                     if (legalParamMatcher.find() || "0".equals(secondParam)) {
                                         argument.setQq(Long.valueOf(secondParam));
                                     } else {
-                                        cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, secondParam, "QQ号"));
+                                        cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, secondParam, "QQ号"));
                                         cqManager.sendMsg(cqMsg);
                                         return null;
                                     }
@@ -577,7 +577,7 @@ public class ParameterVerifyAspect {
             mode = convertModeStrToInteger(getKeyWordAndMod.group(3));
             if (mode == null) {
                 logger.debug(getKeyWordAndMod.group(3));
-                cqMsg.setMessage(String.format(TipConsts.FORMAT_ERROR, getKeyWordAndMod.group(3), "osu!游戏模式"));
+                cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, getKeyWordAndMod.group(3), "osu!游戏模式"));
                 cqManager.sendMsg(cqMsg);
                 return null;
             }

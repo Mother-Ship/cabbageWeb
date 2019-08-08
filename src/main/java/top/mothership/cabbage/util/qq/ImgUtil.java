@@ -6,9 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
+import top.mothership.cabbage.enums.CompressLevelEnum;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.ResDAO;
-import top.mothership.cabbage.pattern.RegularPattern;
+import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
 import top.mothership.cabbage.pojo.coolq.osu.OppaiResult;
 import top.mothership.cabbage.pojo.coolq.osu.Score;
@@ -36,8 +37,8 @@ import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
 
-import static top.mothership.cabbage.util.qq.CompressLevelEnum.USHORT_555_RGB_PNG;
-import static top.mothership.cabbage.util.qq.CompressLevelEnum.不压缩;
+import static top.mothership.cabbage.enums.CompressLevelEnum.USHORT_555_RGB_PNG;
+import static top.mothership.cabbage.enums.CompressLevelEnum.不压缩;
 
 
 /**
