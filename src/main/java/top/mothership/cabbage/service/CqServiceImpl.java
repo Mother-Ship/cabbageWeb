@@ -291,7 +291,7 @@ public class CqServiceImpl {
 
         }
         roles = userUtil.sortRoles(role);
-        if(user.getMainRole().equals("creep")){
+        if(user.getMainRole().equals(Overall.DEFAULT_ROLE)){
             role = roles.get(0);
         }else{
             role = user.getMainRole();
