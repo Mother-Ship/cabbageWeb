@@ -1138,13 +1138,13 @@ public class CqServiceImpl {
                     * Math.pow((map.get("Flow") / 1500F), 0.45F)
                     + Math.atan((map.get("Speed") / 2000F)) * 1.3F
                     + (map.get("Accuracy") / 4000F);
-            double mp4S4Cost = Math.pow(
-                    ((0.02D * (10D * Math.sqrt((Math.atan((2 * map.get("Jump") - (2636D + 2273D)) / (2636D - 2273D)) + Math.PI / 2D + 9D)
-                            * (Math.atan((2D * map.get("Flow") - (711D + 540D)) / (711D - 540D)) + Math.PI / 2D + 4D))
-                            + 6D * (Math.atan((2D * map.get("Speed") - (1589D + 1372D)) / (1589D - 1372D)) + Math.PI / 2D)
-                            + 3D * (Math.atan((2D * map.get("Stamina") - (1240D + 1047D)) / (1240D - 1047D)) + Math.PI / 2D)
-                            + 3D * (Math.atan((2D * map.get("Accuracy") - (1455D + 1202D)) / (1455D - 1202D)) + Math.PI / 2D)
-                            + 3D * (Math.atan((2D * map.get("Precision") - (604D + 488D)) / (604D - 488D)) + Math.PI / 2D))) - 1D)
+            double mp4S5Cost = Math.pow(
+                    ((0.02D * (10D * Math.sqrt((Math.atan((2 * map.get("Jump") - (2648D + 2191D)) / (2648D - 2191D)) + Math.PI / 2D + 8D)
+                            * (Math.atan((2D * map.get("Flow") - (715D + 496D)) / (715D - 496D)) + Math.PI / 2D + 3D))
+                            + 7D * (Math.atan((2D * map.get("Speed") - (1626D + 1356D)) / (1626D - 1356D)) + Math.PI / 2D)
+                            + 3D * (Math.atan((2D * map.get("Stamina") - (1271D + 1020D)) / (1271D - 1020D)) + Math.PI / 2D)
+                            + 5D * (Math.atan((2D * map.get("Accuracy") - (1425D + 1101D)) / (1425D - 1101D)) + Math.PI / 2D)
+                            + 5D * (Math.atan((2D * map.get("Precision") - (597D + 466D)) / (597D - 466D)) + Math.PI / 2D))) - 1D)
                     , 2.5D);
             double oclbS10Cost = Math.pow((map.get("Jump") / 3000F), 0.8F)
                     * Math.pow((map.get("Flow") / 1500F), 0.6F)
@@ -1168,7 +1168,7 @@ public class CqServiceImpl {
                     + "在**OCL系列比赛(A/B/C)**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
                     + "。\n在**OCL系列比赛(新秀组)**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclrCost)
                     + "。\n在**第六届某个不能提起名字的比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS6Cost)
-//                    + "。\n在**第四届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S4Cost)
+                    + "。\n在**第四届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S5Cost)
 //                    + "。\n在**第三届鱼塘杯**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(yuTangCost)
                     + "。");
             cqManager.sendMsg(cqMsg);
