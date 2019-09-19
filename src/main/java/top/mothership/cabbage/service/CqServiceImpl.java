@@ -256,7 +256,7 @@ public class CqServiceImpl {
                     if (argument.getMode() == null) {
                         argument.setMode(0);
                     }
-                    userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), 0L, Overall.DEFAULT_ROLE);
+                    user = userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), 0L, Overall.DEFAULT_ROLE);
                     userInDB = userFromAPI;
                     role = Overall.DEFAULT_ROLE;
                     //初次使用，数据库肯定没有指定天数的数据，直接标为近似数据
