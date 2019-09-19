@@ -59,7 +59,7 @@ public class ExceptionNoticeAspect {
             result = pjp.proceed();
 
         } catch (Throwable e) {
-            logger.error(e);
+            logger.error("",e);
             String resp = formatter.format(LocalDateTime.now()) +
                     "\n异常类型：" + e.toString() + "\n方法：" + pjp.getTarget().getClass() + "."
                     + pjp.getSignature().getName() + "()\n方法入参：";
