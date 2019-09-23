@@ -642,13 +642,18 @@ public class ImgUtil {
                     g2.setPaint(Color.decode("#ff66a9"));
                     g2.setFont(new Font("Gayatri", 0, 60));
                     //临时修正，BP命令总PP使用官网爬到的
-//                    if(score.getPp() !=null){
-//                        if (String.valueOf(Math.round(score.getPp())).contains("1")) {
-//                            g2.drawString(String.valueOf(Math.round(score.getPp())), 616, 753);
-//                        } else {
-//                            g2.drawString(String.valueOf(Math.round(score.getPp())), 601, 753);
-//                        }
-//                    }else {
+                    if(score.getPp() !=null){
+                        if (oppaiResult.getPp() > 1000) {
+                            g2.drawString(String.valueOf(score.getPp()), 591, 753);
+                        } else {
+                            if (String.valueOf(Math.round(score.getPp())).contains("1")) {
+                                g2.drawString(String.valueOf(Math.round(score.getPp())), 616, 753);
+                            } else {
+                                g2.drawString(String.valueOf(Math.round(score.getPp())), 601, 753);
+                            }
+
+                        }
+                    }else {
 
 
 //                    2019-7-24
@@ -667,7 +672,7 @@ public class ImgUtil {
                         }
                     }
 
-//                    }
+                    }
                     g2.setFont(new Font("Gayatri", 0, 48));
                     g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 834, 758);
                     g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())), 932, 758);
