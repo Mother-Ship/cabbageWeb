@@ -1477,6 +1477,14 @@ public class ImgUtil {
         }
         if (accMax < acc2) accMax = acc2;
 
+        //兜底
+        if(jump2<0)jump2=0;
+        if(flow2<0)flow2=0;
+        if(prec2<0)prec2=0;
+        if(speed2<0)speed2=0;
+        if(stamina2<0)stamina2=0;
+        if(acc2<0)acc2=0;
+
         int jumpX = (int) (152D - jump2 / jmpMax * 40D);
         int jumpY = (int) (131D - jump2 / jmpMax * 40D * Math.sqrt(3));
         int flowX = (int) (152D + flow2 / flowMax * 40D);
