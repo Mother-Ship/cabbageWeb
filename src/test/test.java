@@ -4,13 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import top.mothership.cabbage.manager.ApiManager;
-import top.mothership.cabbage.manager.WebPageManager;
-import top.mothership.cabbage.mapper.UserDAO;
-import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
-import top.mothership.cabbage.task.UpdateOsuClientTasker;
+import top.mothership.cabbage.pojo.coolq.osu.Score;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 //
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -20,15 +19,23 @@ public class test {
 //    private ScoresDAO scoresDAO;
 //    @Autowired
 //    private UserDAO userDAO;
-//        @Autowired
-//    private ApiManager apiManager;
+        @Autowired
+    private ApiManager apiManager;
 //    @Autowired
 //    private WebPageManager webPageManager;
 //    @Autowired
 //    private ScoreUtil scoreUtil;
     @Test
     public void Test() throws IOException {
-
+        List<List<Score>> bpListMixedMode = apiManager.getBP(15067840);
+        System.out.println(Instant.now().minus(1, ChronoUnit.DAYS));
+        for (int i = 0; i < bpListMixedMode.size(); i++) {
+            //双重for
+            for (int j = 0; j < bpListMixedMode.get(i).size(); j++) {
+                 System.out.print(bpListMixedMode.get(i).get(j).getDate().toInstant());
+                 System.out.println(bpListMixedMode.get(i).get(j).getDate().toInstant().isAfter(Instant.now().minus(1, ChronoUnit.DAYS)));
+            }
+        }
 //        Beatmap beatmap = apiManager.getBeatmap(53554);
 //            webPageManager.getBGBackup(beatmap);
 //        System.out.println("");

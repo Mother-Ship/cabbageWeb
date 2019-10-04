@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import top.mothership.cabbage.annotation.GroupAuthorityControl;
 import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.constant.Tip;
+import top.mothership.cabbage.enums.CompressLevelEnum;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.manager.WebPageManager;
@@ -23,7 +24,6 @@ import top.mothership.cabbage.pojo.coolq.QQInfo;
 import top.mothership.cabbage.pojo.coolq.osu.*;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
-import top.mothership.cabbage.enums.CompressLevelEnum;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
 import java.text.DecimalFormat;
@@ -291,9 +291,9 @@ public class CqServiceImpl {
 
         }
         roles = userUtil.sortRoles(role);
-        if(user.getMainRole().equals(Overall.DEFAULT_ROLE)){
+        if (user.getMainRole().equals(Overall.DEFAULT_ROLE)) {
             role = roles.get(0);
-        }else{
+        } else {
             role = user.getMainRole();
         }
         if (argument.getMode().equals(0)) {
@@ -378,14 +378,15 @@ public class CqServiceImpl {
             bpListMixedMode = apiManager.getBP(userFromAPI.getUserId());
             for (int i = 0; i < bpListMixedMode.size(); i++) {
                 //双重for
-                for (int j = 0; j < bpListMixedMode.get(i).size(); j++)
-                    if (bpListMixedMode.get(i).get(j).getDate().after(Date.from(Instant.now().minus(1, ChronoUnit.DAYS)))) {
+                for (int j = 0; j < bpListMixedMode.get(i).size(); j++) {
+                    if (bpListMixedMode.get(i).get(j).getDate().toInstant().isAfter(Instant.now().minus(1, ChronoUnit.DAYS))) {
                         bpListMixedMode.get(i).get(j).setBpId(j);
                         //对BP进行遍历，请求API将名称写入
                         Beatmap map = apiManager.getBeatmap(bpListMixedMode.get(i).get(j).getBeatmapId());
                         bpListMixedMode.get(i).get(j).setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
                         todayBP.add(bpListMixedMode.get(i).get(j));
                     }
+                }
             }
             if (todayBP.size() == 0) {
                 cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("NI_QI_BU_QI.wav")) + "]");
@@ -533,57 +534,6 @@ public class CqServiceImpl {
         }
     }
 
-
-    public void setId(CqMsg cqMsg) {
-        Argument argument = cqMsg.getArgument();
-        String username;
-        Userinfo userFromAPI = null;
-        User user;
-
-        userFromAPI = apiManager.getUser(0, argument.getUsername());
-        if (userFromAPI == null) {
-            cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-            cqManager.sendMsg(cqMsg);
-            return;
-        }
-        logger.info("尝试将" + userFromAPI.getUserName() + "绑定到QQ：" + cqMsg.getUserId() + "上，指定的模式是" + argument.getMode());
-
-        //只有这个QQ对应的id是null
-        user = userDAO.getUser(cqMsg.getUserId(), null);
-        if (user == null) {
-            //只有这个id对应的QQ是null
-            user = userDAO.getUser(null, userFromAPI.getUserId());
-            if (user == null) {
-                if (argument.getMode() == null) {
-                    argument.setMode(0);
-                }
-                userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), cqMsg.getUserId(), Overall.DEFAULT_ROLE);
-
-                cqMsg.setMessage("将" + userFromAPI.getUserName() + "绑定到" + cqMsg.getUserId() + "成功。");
-            } else {
-                if (user.getQq() == 0) {
-                    //由于reg方法中已经进行过登记了,所以这用的应该是update操作
-                    user.setUserId(userFromAPI.getUserId());
-                    user.setQq(cqMsg.getUserId());
-                    userDAO.updateUser(user);
-                    cqMsg.setMessage("将" + userFromAPI.getUserName() + "绑定到" + cqMsg.getUserId() + "成功。");
-                } else {
-                    cqMsg.setMessage("你的osu!账号已经绑定了QQ：" + user.getQq() + "，如果发生错误请联系妈妈船。");
-                }
-            }
-        } else {
-            //TODO 小号机制
-            if (user.isBanned()) {
-                cqMsg.setMessage("你的QQ已经绑定了玩家：" + user.getCurrentUname() + "，并且该账号已经被ban；如果发生错误请联系妈妈船。");
-            } else {
-                userFromAPI = apiManager.getUser(0, user.getUserId());
-                cqMsg.setMessage("你的QQ已经绑定了玩家：" + userFromAPI.getUserName() + "，如果发生错误请联系妈妈船。");
-            }
-        }
-        cqManager.sendMsg(cqMsg);
-
-    }
-
     public void recent(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         Userinfo userFromAPI = null;
@@ -664,7 +614,6 @@ public class CqServiceImpl {
         cqMsg.setDuration((int) (argument.getHour() * 3600));
         cqManager.sendMsg(cqMsg);
     }
-
 
     @GroupAuthorityControl
     public void myScore(CqMsg cqMsg) {
@@ -752,7 +701,6 @@ public class CqServiceImpl {
 
 
     }
-
 
     @GroupAuthorityControl
     public void search(CqMsg cqMsg) {
@@ -1342,6 +1290,45 @@ public class CqServiceImpl {
         return;
     }
 
+    @GroupAuthorityControl
+    public void roll(CqMsg cqMsg) {
+        cqMsg.setMessage(String.valueOf(new Random().nextInt(100)));
+        cqManager.sendMsg(cqMsg);
+    }
+
+    @GroupAuthorityControl(allowed = {308419061, 793260840})
+    public void time(CqMsg cqMsg) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime NY = LocalDateTime.now(ZoneId.of("America/New_York"));
+        LocalDateTime UTC = LocalDateTime.now(ZoneId.of("UTC"));
+
+        cqMsg.setMessage("当前美国东部时间（America/NewYork）为：\n"
+                + formatter.format(NY)
+                + "\n当前UTC时间为："
+                + formatter.format(UTC));
+        cqManager.sendMsg(cqMsg);
+    }
+
+    public void myRole(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
+        String username;
+        Userinfo userFromAPI = null;
+        User user;
+        user = userDAO.getUser(cqMsg.getUserId(), null);
+        if (user == null) {
+            cqMsg.setMessage(Tip.USER_NOT_BIND);
+        } else {
+            cqMsg.setMessage("你的当前用户组有：" + user.getRole() + "，主显用户组为：" + user.getMainRole());
+        }
+        cqManager.sendMsg(cqMsg);
+        return;
+
+    }
+
+    public void pretreatmentParameterForBPCommand(CqMsg cqMsg) {
+
+    }
+
     /**
      * 尝试计算非Bonus PP
      *
@@ -1415,6 +1402,56 @@ public class CqServiceImpl {
         return new double[]{avgY - (Oxy / Ox2) * avgX, Oxy / Ox2};
     }
 
+    public void setId(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
+        String username;
+        Userinfo userFromAPI = null;
+        User user;
+
+        userFromAPI = apiManager.getUser(0, argument.getUsername());
+        if (userFromAPI == null) {
+            cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        logger.info("尝试将" + userFromAPI.getUserName() + "绑定到QQ：" + cqMsg.getUserId() + "上，指定的模式是" + argument.getMode());
+
+        //只有这个QQ对应的id是null
+        user = userDAO.getUser(cqMsg.getUserId(), null);
+        if (user == null) {
+            //只有这个id对应的QQ是null
+            user = userDAO.getUser(null, userFromAPI.getUserId());
+            if (user == null) {
+                if (argument.getMode() == null) {
+                    argument.setMode(0);
+                }
+                userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), cqMsg.getUserId(), Overall.DEFAULT_ROLE);
+
+                cqMsg.setMessage("将" + userFromAPI.getUserName() + "绑定到" + cqMsg.getUserId() + "成功。");
+            } else {
+                if (user.getQq() == 0) {
+                    //由于reg方法中已经进行过登记了,所以这用的应该是update操作
+                    user.setUserId(userFromAPI.getUserId());
+                    user.setQq(cqMsg.getUserId());
+                    userDAO.updateUser(user);
+                    cqMsg.setMessage("将" + userFromAPI.getUserName() + "绑定到" + cqMsg.getUserId() + "成功。");
+                } else {
+                    cqMsg.setMessage("你的osu!账号已经绑定了QQ：" + user.getQq() + "，如果发生错误请联系妈妈船。");
+                }
+            }
+        } else {
+            //TODO 小号机制
+            if (user.isBanned()) {
+                cqMsg.setMessage("你的QQ已经绑定了玩家：" + user.getCurrentUname() + "，并且该账号已经被ban；如果发生错误请联系妈妈船。");
+            } else {
+                userFromAPI = apiManager.getUser(0, user.getUserId());
+                cqMsg.setMessage("你的QQ已经绑定了玩家：" + userFromAPI.getUserName() + "，如果发生错误请联系妈妈船。");
+            }
+        }
+        cqManager.sendMsg(cqMsg);
+
+    }
+
     public void setMode(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         String username;
@@ -1444,25 +1481,6 @@ public class CqServiceImpl {
 
     }
 
-    @GroupAuthorityControl
-    public void roll(CqMsg cqMsg) {
-        cqMsg.setMessage(String.valueOf(new Random().nextInt(100)));
-        cqManager.sendMsg(cqMsg);
-    }
-
-    @GroupAuthorityControl(allowed = {308419061, 793260840})
-    public void time(CqMsg cqMsg) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime NY = LocalDateTime.now(ZoneId.of("America/New_York"));
-        LocalDateTime UTC = LocalDateTime.now(ZoneId.of("UTC"));
-
-        cqMsg.setMessage("当前美国东部时间（America/NewYork）为：\n"
-                + formatter.format(NY)
-                + "\n当前UTC时间为："
-                + formatter.format(UTC));
-        cqManager.sendMsg(cqMsg);
-    }
-
     public void setRole(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         String username;
@@ -1479,31 +1497,11 @@ public class CqServiceImpl {
                 userDAO.updateUser(user);
                 cqMsg.setMessage("更新成功：你的主显用户组已修改为" + argument.getRole());
             } else {
-                cqMsg.setMessage("你当前不在请求的用户组"+argument.getRole()+"中。当前所在用户组为：" + user.getRole());
+                cqMsg.setMessage("你当前不在请求的用户组" + argument.getRole() + "中。当前所在用户组为：" + user.getRole());
             }
 
         }
         cqManager.sendMsg(cqMsg);
-    }
-
-    public void myRole(CqMsg cqMsg) {
-        Argument argument = cqMsg.getArgument();
-        String username;
-        Userinfo userFromAPI = null;
-        User user;
-        user = userDAO.getUser(cqMsg.getUserId(), null);
-        if (user == null) {
-            cqMsg.setMessage(Tip.USER_NOT_BIND);
-        } else {
-            cqMsg.setMessage("你的当前用户组有：" + user.getRole() + "，主显用户组为：" + user.getMainRole());
-        }
-        cqManager.sendMsg(cqMsg);
-        return;
-
-    }
-
-    public void pretreatmentParameterForBPCommand(CqMsg cqMsg) {
-
     }
 
 

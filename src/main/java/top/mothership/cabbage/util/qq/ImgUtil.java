@@ -412,7 +412,7 @@ public class ImgUtil {
                     g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     //绘制日期(给的就是北京时间，不转)
                     drawTextToImage(g3, "#696969", "Tahoma", 14,
-                            new SimpleDateFormat("MM-dd HH:mm").format(aList.getDate().getTime()), 31, 34);
+                            DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.of("UTC-8")).format(aList.getDate().toInstant().plusSeconds(86400)) , 31, 34);
                     //绘制Num和Weight
                     drawTextToImage(g3, "#a12e1e", "Ubuntu Medium", 13,
                             String.valueOf(aList.getBpId() + 1), 136, 34);
@@ -643,8 +643,8 @@ public class ImgUtil {
                     g2.setFont(new Font("Gayatri", 0, 60));
                     //临时修正，BP命令总PP使用官网爬到的
                     if(score.getPp() !=null){
-                        if (oppaiResult.getPp() > 1000) {
-                            g2.drawString(String.valueOf(score.getPp()), 591, 753);
+                        if (score.getPp() > 1000) {
+                            g2.drawString(String.valueOf(Math.round(score.getPp())), 591, 753);
                         } else {
                             if (String.valueOf(Math.round(score.getPp())).contains("1")) {
                                 g2.drawString(String.valueOf(Math.round(score.getPp())), 616, 753);
