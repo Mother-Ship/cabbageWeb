@@ -23,12 +23,10 @@ public @interface GroupAuthorityControl {
     long[] banned() default {0L};
     //MP4后花园
     //MP2
-    //MP4
     //测试群
     //MP3
     //MP5
-//    MP5S8赛群
-//    MP4S4赛群
+//    MP5赛群
     //FK群
     long[] bannedDefault() default {
             112177148L,
@@ -36,8 +34,7 @@ public @interface GroupAuthorityControl {
             532783765L,
             210342787L,
             201872650L,
-            791827355L,
-            801588216L,
+            833099094L,
             263668213L,
     };
 
