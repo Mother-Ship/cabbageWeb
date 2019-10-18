@@ -19,7 +19,6 @@ public class SmokeUtil {
 
     private final static List<String> REPEAT_SMOKE_GROUP = Arrays.asList((
             "201872650," +//MP5
-            "564679329," +//MP4
             "112177148," +//MP4后花园
             "532783765," +//测试群
             "791827355," +//MP5S8赛群

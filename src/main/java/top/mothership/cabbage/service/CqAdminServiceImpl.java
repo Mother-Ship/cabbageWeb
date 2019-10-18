@@ -628,11 +628,6 @@ public class CqAdminServiceImpl {
                             resp += "QQ： " + qqInfo.getUserId() + " 绑定的id不在mp5用户组，osu! id：" + user.getCurrentUname() + "，用户组：" + user.getRole() + "。\n";
                         }
                         break;
-                    case "564679329":
-                        if (!roles.contains("mp4") && !roles.contains("mp4chart")) {
-                            resp += "QQ： " + qqInfo.getUserId() + " 绑定的id不在mp4用户组，osu! id：" + user.getCurrentUname() + "，用户组：" + user.getRole() + "。\n";
-                        }
-                        break;
                     default:
                         break;
                 }

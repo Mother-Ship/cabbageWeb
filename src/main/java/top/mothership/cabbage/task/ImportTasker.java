@@ -137,73 +137,6 @@ public class ImportTasker {
     private void handlePPOverflow(User user, Userinfo userinfo) {
         //如果用户在mp4组
         List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
-        if (roles.contains("mp4")) {
-            CqMsg cqMsg = new CqMsg();
-            cqMsg.setSelfId(1020640876L);
-            cqMsg.setMessageType("group");
-            cqMsg.setGroupId(564679329L);
-            //并且刷超了
-            CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
-            if (cqResponse != null) {
-                if (cqResponse.getData() != null) {
-                    if (!cqResponse.getData().getCard().toLowerCase(Locale.CHINA).replace("_", " ")
-                            .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
-                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的群名片没有包含完整id。请修改名片。");
-                        cqManager.sendMsg(cqMsg);
-                    }
-                }
-            }
-            if (userinfo.getPpRaw() > 6000 + 0.49) {
-                //回溯昨天这时候检查到的pp
-                Userinfo lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(2));
-                //如果昨天这时候的PP存在，并且也超了
-                if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 6000 + 0.49) {
-                    //继续回溯前天这时候的PP
-                    lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(3));
-                    //如果前天这时候的PP存在，并且也超了
-                    if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 6000 + 0.49) {
-                        //回溯大前天的PP
-                        lastDayUserinfo = userInfoDAO.getUserInfo(0, userinfo.getUserId(), LocalDate.now().minusDays(4));
-                        //如果大前天这个时候也超了，就飞了
-                        if (lastDayUserinfo != null && lastDayUserinfo.getPpRaw() > 6000 + 0.49) {
-                            if (!user.getQq().equals(0L)) {
-                                //2018-3-16 13:13:53似乎现在白菜踢人不会自动删组？在这里补上试试
-                                user = userUtil.delRole("mp4", user);
-                                userDAO.updateUser(user);
-                                cqMsg.setUserId(user.getQq());
-                                cqMsg.setMessageType("kick");
-                                cqManager.sendMsg(cqMsg);
-                                cqMsg.setMessageType("private");
-                                cqMsg.setMessage("由于PP超限，已将你移出MP4群。请考虑加入mp3群：210342787。");
-                                cqManager.sendMsg(cqMsg);
-                                //2018-1-29 12:01:06 现在飞的时候会自动清理用户组
-                            }
-                        } else {
-                            //大前天没超
-                            if (!user.getQq().equals(0L)) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp3群：210342787。");
-                                cqManager.sendMsg(cqMsg);
-                            }
-                        }
-                    } else {
-                        //前天没超
-                        if (!user.getQq().equals(0L)) {
-                            cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp3群：210342787。");
-                            cqManager.sendMsg(cqMsg);
-                        }
-                    }
-                } else {
-                    //昨天没超
-                    if (!user.getQq().equals(0L)) {
-                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp3群：210342787。");
-                        cqManager.sendMsg(cqMsg);
-                    }
-
-                }
-            }
-
-        }
-
         if (roles.contains("mp5")) {
             CqMsg cqMsg = new CqMsg();
             cqMsg.setMessageType("group");
@@ -242,27 +175,27 @@ public class ImportTasker {
                                 cqMsg.setMessageType("kick");
                                 cqManager.sendMsg(cqMsg);
                                 cqMsg.setMessageType("private");
-                                cqMsg.setMessage("由于PP超限，已将你移出MP5群。请考虑加入mp4群：564679329。");
+                                cqMsg.setMessage("由于PP超限，已将你移出MP5群。");
                                 cqManager.sendMsg(cqMsg);
                             }
                         } else {
                             //大前天没超
                             if (!user.getQq().equals(0L)) {
-                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。请考虑加入mp4群：564679329。");
+                                cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。");
                                 cqManager.sendMsg(cqMsg);
                             }
                         }
                     } else {
                         //前天没超
                         if (!user.getQq().equals(0L)) {
-                            cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。请考虑加入mp4群：564679329。");
+                            cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。");
                             cqManager.sendMsg(cqMsg);
                         }
                     }
                 } else {
                     //昨天没超
                     if (!user.getQq().equals(0L)) {
-                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。请考虑加入mp4群：564679329。");
+                        cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。");
                         cqManager.sendMsg(cqMsg);
                     }
 

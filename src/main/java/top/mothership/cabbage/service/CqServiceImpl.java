@@ -803,17 +803,13 @@ public class CqServiceImpl {
         }
         user = userDAO.getUser(null, userFromAPI.getUserId());
         switch (String.valueOf(cqMsg.getGroupId())) {
-            case "564679329":
-            case "517183331":
-                role = "mp4";
-                break;
             case "201872650":
             case "635731109":
                 //MP5
                 role = "mp5";
                 break;
             default:
-                cqMsg.setMessage("请不要在mp4/5/chart群之外的地方使用。");
+                cqMsg.setMessage("请不要在mp5/chart群之外的地方使用。");
                 cqManager.sendMsg(cqMsg);
                 return;
         }
@@ -878,7 +874,6 @@ public class CqServiceImpl {
         String resp = null;
         switch (String.valueOf(cqMsg.getGroupId())) {
             case "201872650":
-            case "564679329":
                 String role = null;
                 Long chartGroupId = null;
                 switch (String.valueOf(cqMsg.getGroupId())) {
@@ -886,11 +881,6 @@ public class CqServiceImpl {
                         role = "mp5";
                         chartGroupId = 635731109L;
                         resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp5。请修改一下你的群名片(包含完整osu! id)，并读一下置顶的群规。另外欢迎参加mp群系列活动Chart(详见公告)，成绩高者可以赢取奖励。";
-                        break;
-                    case "564679329":
-                        role = "mp4";
-                        chartGroupId = 517183331L;
-                        resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp4。请修改一下你的群名片(包含完整osu! id)，并读一下置顶的群规。另外欢迎参加mp群系列活动Chart(详见公告)，成绩高者可以赢取奖励。";
                         break;
                 }
                 User user = userDAO.getUser(cqMsg.getUserId(), null);
@@ -953,16 +943,9 @@ public class CqServiceImpl {
             case "807757470":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";
                 break;
-            case "801588216":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第四届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：https://goo.gl/forms/QG98HWWc5ANQtZey1 ";
+            case "833099094":
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第10届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：https://www.mpmatch.cn/5/reg.html\n比赛信息： https://www.mpmatch.cn/5/info.html\n选手列表：https://www.mpmatch.cn/5/roster.html";
                 break;
-            case "885493699":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第九届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：https://www.mpmatch.cn/5/reg.html\n比赛信息： https://www.mpmatch.cn/5/info.html\n选手列表：https://www.mpmatch.cn/5/roster.html";
-                break;
-            //备用
-//            case "806345866":
-//                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第八届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，群文件中的比赛规程，以及给选手的建议。\n报名地址：https://www.wenjuan.com/s/BbYZvi/ ";
-//                break;
             default:
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎加入本群。";
                 break;
@@ -987,12 +970,8 @@ public class CqServiceImpl {
                 role = "mp5";
                 chartGroupId = 635731109L;
                 break;
-            case "564679329":
-                role = "mp4";
-                chartGroupId = 517183331L;
-                break;
             default:
-                //只处理mp4 5的褪裙
+                //只处理mp5的褪裙
                 return;
         }
         switch (cqMsg.getSubType()) {

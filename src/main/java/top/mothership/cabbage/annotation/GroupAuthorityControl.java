@@ -33,7 +33,6 @@ public @interface GroupAuthorityControl {
     long[] bannedDefault() default {
             112177148L,
             234219559L,
-            564679329L,
             532783765L,
             210342787L,
             201872650L,
