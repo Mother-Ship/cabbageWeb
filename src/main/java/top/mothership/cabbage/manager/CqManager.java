@@ -41,10 +41,10 @@ public class CqManager {
         String baseURL = null;
         switch (cqMsg.getSelfId().toString()) {
             case "1020640876":
-                baseURL = "http://localhost:5702";
+                baseURL = "http://ss.mothership.top:5702";
                 break;
             case "1335734629":
-                baseURL = "http://localhost:5700";
+                baseURL = "http://ss.mothership.top:5700";
                 break;
         }
         String URL;

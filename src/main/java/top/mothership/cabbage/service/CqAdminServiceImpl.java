@@ -867,7 +867,7 @@ public class CqAdminServiceImpl {
         String msg = "";
         long time = System.currentTimeMillis();
         for (int i = 0; i < 10; i++) {
-            apiManager.getUser(0, "Mother Ship");
+            apiManager.getUser(0, "peppy");
         }
         Long afterQueryOsuApiFor10Times = System.currentTimeMillis();
         if ((afterQueryOsuApiFor10Times - time) / 10 > 1000) {
@@ -879,7 +879,7 @@ public class CqAdminServiceImpl {
         }
         Long afterQueryPPPlusFor10Times = System.currentTimeMillis();
         if ((afterQueryPPPlusFor10Times - afterDrawStat) / 10 > 5000) {
-            msg += "\nPP+访问缓慢，此时10次平均访问时间为：" + (afterQueryOsuApiFor10Times - time) / 10;
+            msg += "\nPP+访问缓慢，此时10次平均访问时间为：" + (afterQueryPPPlusFor10Times - time) / 10;
         }
         msg += "[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"), CompressLevelEnum.不压缩) + "]";
         cqMsg.setMessage(msg);
