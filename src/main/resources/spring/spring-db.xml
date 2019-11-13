@@ -92,8 +92,6 @@
     <bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">
         <property name="maxIdle" value="${redis.maxIdle}"/>
         <property name="maxTotal" value="${redis.maxTotal}"/>
-        <property name="maxWaitMillis" value="${redis.maxWaitTime}"/>
-        <property name="testOnBorrow" value="${redis.testOnBorrow}"/>
     </bean>
     <!-- redis服务器中心 -->
     <bean id="connectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
