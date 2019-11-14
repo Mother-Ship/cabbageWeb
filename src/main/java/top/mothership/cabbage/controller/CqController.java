@@ -380,6 +380,14 @@ public class CqController {
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.ROLE});
                                     cqService.setRole(cqMsg);
                                     break;
+                                case "elo":
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME});
+                                    cqService.getElo(cqMsg);
+                                    break;
+                                case "myelo":
+                                case "elome":
+                                    cqService.getElo(cqMsg);
+                                    break;
                                 case "time":
                                     cqService.time(cqMsg);
                                     break;
@@ -407,6 +415,7 @@ public class CqController {
                                 case "listuser":
                                     analyzeService.listTargetUser(cqMsg);
                                     break;
+
                                 default:
                                     break;
 

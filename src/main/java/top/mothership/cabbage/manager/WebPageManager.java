@@ -23,10 +23,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.constant.pattern.WebPagePattern;
+import top.mothership.cabbage.pojo.Elo;
 import top.mothership.cabbage.pojo.coolq.osu.*;
 import top.mothership.cabbage.util.osu.StringSimilarityUtil;
 
@@ -658,7 +660,15 @@ public class WebPageManager {
         }
         return null;
     }
+    public Elo getElo(int uid){
+        Elo[] result =  new RestTemplate().postForObject("http://api.osuwiki.cn:5005/api/users/ranking_by_user_id/"+uid,null,Elo[].class);
+        if (result.length == 0){
+            return null;
+        }else{
+            return result[0];
+        }
 
+    }
     /**
      * Gets pp plus.
      *

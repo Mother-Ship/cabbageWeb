@@ -17,6 +17,7 @@ import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
+import top.mothership.cabbage.pojo.Elo;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
@@ -1264,6 +1265,88 @@ public class CqServiceImpl {
                 + "\n总PP为：" + new DecimalFormat("#0.00").format(userFromAPI.getPpRaw())
                 + "\n计算出的总成绩数为：" + scoreCountS
                 + "\n改造自https://github.com/RoanH/osu-BonusPP项目。";
+        cqMsg.setMessage(resp);
+        cqManager.sendMsg(cqMsg);
+        return;
+    }
+
+    @GroupAuthorityControl
+    public void getElo(CqMsg cqMsg) {
+        Userinfo userFromAPI = null;
+        User user;
+        int num = 0;
+        boolean text = true;
+        Argument argument = cqMsg.getArgument();
+        if (argument.getMode() == null) {
+            argument.setMode(0);
+        }
+        switch (argument.getSubCommandLowCase()) {
+            case "elo":
+                String username = argument.getUsername();
+                //处理彩蛋
+                if ("白菜".equals(username)) {
+                    cqMsg.setMessage("你以为会有彩蛋吗x");
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                userFromAPI = apiManager.getUser(argument.getMode(), username);
+                if (userFromAPI == null) {
+                    cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                if (userFromAPI.getUserId() == 3) {
+                    cqMsg.setMessage(Tip.QUERY_BANCHO_BOT);
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                user = userDAO.getUser(null, userFromAPI.getUserId());
+                if (user == null) {
+                    logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
+                    user = userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), 0L, Overall.DEFAULT_ROLE);
+                }
+                if (user.isBanned()) {
+                    cqMsg.setMessage(Tip.USER_IS_BANNED);
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+
+                break;
+            case "myelo":
+            case "elome":
+                user = userDAO.getUser(cqMsg.getUserId(), null);
+                if (user == null) {
+                    cqMsg.setMessage(Tip.USER_NOT_BIND);
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                if (user.isBanned()) {
+                    cqMsg.setMessage(Tip.USER_IS_BANNED);
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
+                if (userFromAPI == null) {
+                    cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
+                    cqManager.sendMsg(cqMsg);
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
+        //获取页面：getuser
+        Elo elo = webPageManager.getElo(userFromAPI.getUserId());
+        String resp;
+        if(elo == null){
+            resp = "没有找到你的ELO信息";
+
+        }else{
+            resp = "玩家" + userFromAPI.getUserName() + "的ELO为：" + elo.getElo()
+                    + "\n由PP计算的初始ELO为：" + elo.getInit_elo()
+                    + "\n排名为：" + elo.getRank();
+        }
+
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
         return;
