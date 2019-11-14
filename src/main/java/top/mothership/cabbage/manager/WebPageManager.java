@@ -13,6 +13,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
@@ -134,12 +135,10 @@ public class WebPageManager {
      */
     public BufferedImage getBGBackup(Beatmap beatmap) {
         DefaultHttpClient client = new DefaultHttpClient();
-        HttpPost post = new HttpPost("https://osu.ppy.sh/forum/ucp.php?mode=login");
+        HttpPost post = new HttpPost("https://osu.ppy.sh/session");
         //添加请求头
         java.util.List<NameValuePair> urlParameters = new ArrayList<>();
 
-        urlParameters.add(new BasicNameValuePair("autologin", "on"));
-        urlParameters.add(new BasicNameValuePair("login", "login"));
         urlParameters.add(new BasicNameValuePair("username", Overall.CABBAGE_CONFIG.getString("accountForDL")));
         urlParameters.add(new BasicNameValuePair("password", Overall.CABBAGE_CONFIG.getString("accountForDLPwd")));
         try {
@@ -156,7 +155,7 @@ public class WebPageManager {
             cookie.append(c.getName()).append(": ").append(c.getValue()).append("\n");
         }
         post.releaseConnection();
-        if (cookie.toString().contains("phpbb3_2cjk5_sid")) {
+        if (cookie.toString().contains("osu_session")) {
             //登录成功
             DefaultHttpClient httpclient2 = new DefaultHttpClient();
             OsuFile osuFile = parseOsuFile(beatmap);
@@ -165,7 +164,7 @@ public class WebPageManager {
                 return null;
             }
             httpclient2.setCookieStore(client.getCookieStore());
-            HttpGet httpGet = new HttpGet("https://osu.ppy.sh/d/" + beatmap.getBeatmapSetId());
+            HttpGet httpGet = new HttpGet("https://osu.ppy.sh/beatmapsets/" + beatmap.getBeatmapSetId()+"/download");
             HttpResponse httpResponse;
             InputStream is;
             try {
@@ -184,7 +183,7 @@ public class WebPageManager {
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
                     logger.info("当前文件名为：" + entry.getName());
-                    byte data[] = new byte[(int) entry.getSize()];
+                    byte[] data = new byte[(int) entry.getSize()];
                     int start = 0, end = 0, flag = 0;
                     while (entry.getSize() - start > 0) {
                         end = zis.read(data, start, (int) entry.getSize() - start);

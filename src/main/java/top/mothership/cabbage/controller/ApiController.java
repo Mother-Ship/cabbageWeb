@@ -37,6 +37,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1", produces = {"application/json;charset=UTF-8"})
+@CrossOrigin
 public class ApiController {
     private final UserInfoDAO userInfoDAO;
     private final ApiManager apiManager;
@@ -72,7 +73,7 @@ public class ApiController {
     }
 
     @RequestMapping(value = "/code", method = RequestMethod.GET)
-    @CrossOrigin(origins = "http://localhost")
+
     public String getCode() {
         return null;
     }
@@ -116,7 +117,7 @@ public class ApiController {
     }
 
     @RequestMapping(value = "/user/qq/{qq}", method = RequestMethod.GET)
-    @CrossOrigin(origins = "http://localhost")
+
     public String userRole(@PathVariable Long qq) {
         User user = userDAO.getUser(qq, null);
         if (user == null) {
@@ -129,7 +130,6 @@ public class ApiController {
     }
 
     @RequestMapping(value = "/stat/{uid}", method = RequestMethod.GET)
-    @CrossOrigin(origins = "http://localhost")
     public void getStat(HttpServletResponse response, @PathVariable Integer uid, @RequestParam(value = "mode", defaultValue = "0", required = false) Integer mode) {
         String role;
         Integer scoreRank;
@@ -199,7 +199,6 @@ public class ApiController {
     }
 
     @RequestMapping(value = "/userinfo/nearest/{uid}", method = RequestMethod.GET)
-    @CrossOrigin(origins = "http://localhost")
     public String nearestUserInfo(@PathVariable Integer uid, @RequestParam(value = "mode", defaultValue = "0", required = false) Integer mode) {
         Userinfo userInDB = redisDAO.get(uid, mode);
         if (userInDB == null) {
@@ -219,7 +218,6 @@ public class ApiController {
      * @return 返回应该有两个数组
      */
     @RequestMapping(value = "/chart/{criteria}", method = RequestMethod.GET)
-    @CrossOrigin
     public String domenCherry(@PathVariable String criteria,
                               @RequestParam("ppMin") Integer ppMin,
                               @RequestParam("ppMax") Integer ppMax,
