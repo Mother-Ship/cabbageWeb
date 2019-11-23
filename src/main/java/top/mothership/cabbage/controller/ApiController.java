@@ -12,6 +12,7 @@ import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.controller.vo.ChartsVo;
 import top.mothership.cabbage.controller.vo.PPChartVo;
 import top.mothership.cabbage.manager.ApiManager;
+import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.UserDAO;
@@ -47,6 +48,12 @@ public class ApiController {
     private final WebPageManager webPageManager;
     private final RedisDAO redisDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
+    private CqManager cqManager;
+
+    @Autowired
+    public void setCqManager(CqManager cqManager){
+        this.cqManager = cqManager;
+    }
 
     @Autowired
     public ApiController( UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, UserUtil userUtil, WebPageManager webPageManager, RedisDAO redisDAO) {
@@ -117,7 +124,6 @@ public class ApiController {
     }
 
     @RequestMapping(value = "/user/qq/{qq}", method = RequestMethod.GET)
-
     public String userRole(@PathVariable Long qq) {
         User user = userDAO.getUser(qq, null);
         if (user == null) {
@@ -127,6 +133,18 @@ public class ApiController {
         } else {
             return new Gson().toJson(new WebResponse<>(0, "success", user));
         }
+    }
+
+    @RequestMapping(value = "/user", method = RequestMethod.GET)
+    public String user() {
+        List<Integer> list = userDAO.listUserIdByRole(null, false);
+        return new Gson().toJson(list);
+    }
+    @RequestMapping(value = "/import", method = RequestMethod.POST)
+    public String addTodayUserinfo(@RequestBody List<Userinfo> list){
+        cqManager.warn("收到了批量导入的用户数据共"+list.size()+"条");
+
+        return "OK";
     }
 
     @RequestMapping(value = "/stat/{uid}", method = RequestMethod.GET)

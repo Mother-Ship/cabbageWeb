@@ -26,7 +26,8 @@ public class StatTimeConsAspect {
     public Object statTimeCons(ProceedingJoinPoint pjp) throws Throwable {
         Instant s = Instant.now();
         pjp.proceed();
-        logger.info("处理完毕，共耗费" + Duration.between(s, Instant.now()).toMillis() + "ms。");
+        logger.info(pjp.getTarget().getClass() + "."
+                + pjp.getSignature().getName()+"处理完毕，共耗费" + Duration.between(s, Instant.now()).toMillis() + "ms。");
         return null;
     }
 }

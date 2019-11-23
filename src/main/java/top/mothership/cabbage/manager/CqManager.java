@@ -3,6 +3,7 @@ package top.mothership.cabbage.manager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.CqResponse;
@@ -15,13 +16,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 //将CQ的HTTP API封装为接口，并托管到Spring
 @Component
 public class CqManager {
-    public CqResponse warn(String msg){
+    public CqResponse warn(String msg) {
         CqMsg cqMsg = new CqMsg();
         cqMsg.setMessageType("private");
         cqMsg.setUserId(1335734657L);
@@ -29,22 +31,27 @@ public class CqManager {
         cqMsg.setMessage(msg);
         return sendMsg(cqMsg);
     }
-    public CqResponse warn(String msg,Exception e){
+
+    public CqResponse warn(String msg, Exception e) {
         CqMsg cqMsg = new CqMsg();
         cqMsg.setMessageType("private");
         cqMsg.setUserId(1335734657L);
         cqMsg.setSelfId(1335734629L);
-        cqMsg.setMessage(msg+" "+e.getMessage());
+        cqMsg.setMessage(msg + " " + e.getMessage());
         return sendMsg(cqMsg);
     }
+
     public CqResponse sendMsg(CqMsg cqMsg) {
         String baseURL = null;
         switch (cqMsg.getSelfId().toString()) {
             case "1020640876":
-                baseURL = "http://cq.mothership.top:5702";
+                baseURL = "http://cq.mothership.top:5701";
                 break;
             case "1335734629":
                 baseURL = "http://cq.mothership.top:5700";
+                break;
+            case "2758858579":
+                baseURL = "http://cq.mothership.top:5702";
                 break;
         }
         String URL;
@@ -81,11 +88,83 @@ public class CqManager {
             httpConnection.setRequestProperty("Accept", "application/json");
             httpConnection.setRequestProperty("Content-Type", "application/json");
             httpConnection.setDoOutput(true);
-
             OutputStream os = httpConnection.getOutputStream();
             //防止转义
             //折腾了半天最后是少了UTF-8………………我tm想给自己一巴掌
-            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes("UTF-8"));
+            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
+            os.flush();
+            os.close();
+            BufferedReader responseBuffer =
+                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream())));
+            StringBuilder tmp2 = new StringBuilder();
+            String tmp;
+            while ((tmp = responseBuffer.readLine()) != null) {
+                tmp2.append(tmp);
+            }
+            //这里不用用到下划线转驼峰
+            CqResponse response = new Gson().fromJson(tmp2.toString(), CqResponse.class);
+            if(response.getRetCode()!=0 && cqMsg.getMessage().contains("base64")){
+                sendMsg2(cqMsg);
+            }
+            return response;
+        } catch (IOException e) {
+
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+    public CqResponse sendMsg2(CqMsg cqMsg) {
+        String baseURL = null;
+        switch (cqMsg.getSelfId().toString()) {
+            case "1020640876":
+                baseURL = "http://cq.mothership.top:5701";
+                break;
+            case "1335734629":
+                baseURL = "http://cq.mothership.top:5700";
+                break;
+            case "2758858579":
+                baseURL = "http://cq.mothership.top:5702";
+                break;
+        }
+        String URL;
+        switch (cqMsg.getMessageType()) {
+            case "group":
+                URL = baseURL + "/send_group_msg";
+                break;
+            case "discuss":
+                URL = baseURL + "/send_discuss_msg";
+                break;
+            case "private":
+                URL = baseURL + "/send_private_msg";
+                break;
+            case "smoke":
+                URL = baseURL + "/set_group_ban";
+                break;
+            case "smokeAll":
+                URL = baseURL + "/set_group_whole_ban";
+                break;
+            case "handleInvite":
+                URL = baseURL + "/set_group_add_request";
+                break;
+            case "kick":
+                URL = baseURL + "/set_group_kick";
+                break;
+            default:
+                return null;
+        }
+        HttpURLConnection httpConnection;
+        try {
+            httpConnection =
+                    (HttpURLConnection) new URL(URL).openConnection();
+            httpConnection.setRequestMethod("POST");
+            httpConnection.setRequestProperty("Accept", "application/json");
+            httpConnection.setRequestProperty("Content-Type", "application/json");
+            httpConnection.setDoOutput(true);
+            OutputStream os = httpConnection.getOutputStream();
+            //防止转义
+            //折腾了半天最后是少了UTF-8………………我tm想给自己一巴掌
+            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
             os.flush();
             os.close();
             BufferedReader responseBuffer =
@@ -103,7 +182,6 @@ public class CqManager {
         }
 
     }
-
     public CqResponse<List<QQInfo>> getGroupMembers(Long groupId) {
         String URL = "http://cq.mothership.top:5700/get_group_member_list";
         HttpURLConnection httpConnection;
@@ -118,11 +196,11 @@ public class CqManager {
             httpConnection.setDoOutput(true);
 
             OutputStream os = httpConnection.getOutputStream();
-            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes("UTF-8"));
+            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
             os.flush();
             os.close();
             BufferedReader responseBuffer =
-                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), "UTF-8"));
+                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
             StringBuilder tmp2 = new StringBuilder();
             String tmp;
             while ((tmp = responseBuffer.readLine()) != null) {
@@ -132,7 +210,7 @@ public class CqManager {
             CqResponse<List<QQInfo>> response = new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<QQInfo>>>() {
             }.getType());
             if (response.getRetCode() != 0) {
-                URL = "http://cq.mothership.top:5702/get_group_member_list";
+                URL = "http://cq.mothership.top:5701/get_group_member_list";
                 httpConnection =
                         (HttpURLConnection) new URL(URL).openConnection();
                 httpConnection.setRequestMethod("POST");
@@ -141,16 +219,16 @@ public class CqManager {
                 httpConnection.setDoOutput(true);
 
                 os = httpConnection.getOutputStream();
-                os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes("UTF-8"));
+                os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
                 os.flush();
                 os.close();
-                responseBuffer = new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), "UTF-8"));
+                responseBuffer = new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
                 tmp2 = new StringBuilder();
                 String tmp3;
                 while ((tmp3 = responseBuffer.readLine()) != null) {
                     tmp2.append(tmp3);
                 }
-                return  new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<QQInfo>>>() {
+                return new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<QQInfo>>>() {
                 }.getType());
             }
             return response;
@@ -166,7 +244,7 @@ public class CqManager {
         String baseURL = null;
         switch (selfId.toString()) {
             case "1020640876":
-                baseURL = "http://cq.mothership.top:5702";
+                baseURL = "http://cq.mothership.top:5701";
                 break;
             case "1335734629":
                 baseURL = "http://cq.mothership.top:5700";
@@ -184,11 +262,11 @@ public class CqManager {
             httpConnection.setDoOutput(true);
 
             OutputStream os = httpConnection.getOutputStream();
-            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes("UTF-8"));
+            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
             os.flush();
             os.close();
             BufferedReader responseBuffer =
-                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), "UTF-8"));
+                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
             StringBuilder tmp2 = new StringBuilder();
             String tmp;
             while ((tmp = responseBuffer.readLine()) != null) {
@@ -242,11 +320,11 @@ public class CqManager {
             httpConnection.setDoOutput(true);
 
             OutputStream os = httpConnection.getOutputStream();
-            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes("UTF-8"));
+            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
             os.flush();
             os.close();
             BufferedReader responseBuffer =
-                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), "UTF-8"));
+                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
             StringBuilder tmp2 = new StringBuilder();
             String tmp;
             while ((tmp = responseBuffer.readLine()) != null) {
@@ -256,7 +334,7 @@ public class CqManager {
             CqResponse<QQInfo> response = new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<QQInfo>>() {
             }.getType());
             if (response.getRetCode() != 0) {
-                URL = "http://cq.mothership.top:5702/get_group_member_info";
+                URL = "http://cq.mothership.top:5701/get_group_member_info";
                 httpConnection =
                         (HttpURLConnection) new URL(URL).openConnection();
                 httpConnection.setRequestMethod("POST");
@@ -265,10 +343,10 @@ public class CqManager {
                 httpConnection.setDoOutput(true);
 
                 os = httpConnection.getOutputStream();
-                os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes("UTF-8"));
+                os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
                 os.flush();
                 os.close();
-                responseBuffer = new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), "UTF-8"));
+                responseBuffer = new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
                 tmp2 = new StringBuilder();
                 String tmp3;
                 while ((tmp3 = responseBuffer.readLine()) != null) {

@@ -110,8 +110,7 @@ public class CqController {
                         default:
                             break;
                     }
-                    logger.info(log);
-
+                    boolean doLog = true;
                     switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                         //处理命令
                         case "sudo":
@@ -204,8 +203,10 @@ public class CqController {
                                     cqAdminService.ping(cqMsg);
                                     break;
                                 default:
+                                    doLog = false;
                                     break;
                             }
+
                             break;
                         default:
                             Matcher recentQianeseMatcher = RegularPattern.QIANESE_RECENT.matcher(cmdMatcher.group(1).toLowerCase(Locale.CHINA));
@@ -417,13 +418,17 @@ public class CqController {
                                     break;
 
                                 default:
+                                    doLog = false;
                                     break;
 
                             }
                             break;
                     }
-
+                    if (doLog){
+                        logger.info(log);
+                    }
                 }
+
                 break;
             case "notice":
                 if ("group_increase".equals(cqMsg.getNoticeType())) {
@@ -448,6 +453,7 @@ public class CqController {
             default:
                 logger.error("传入无法识别的Request，可能是HTTP API插件已经更新");
         }
+
     }
 
     @PostConstruct

@@ -29,6 +29,7 @@ import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.constant.pattern.WebPagePattern;
 import top.mothership.cabbage.pojo.Elo;
+import top.mothership.cabbage.pojo.EloChange;
 import top.mothership.cabbage.pojo.coolq.osu.*;
 import top.mothership.cabbage.util.osu.StringSimilarityUtil;
 
@@ -661,13 +662,20 @@ public class WebPageManager {
         return null;
     }
     public Elo getElo(int uid){
-        Elo[] result =  new RestTemplate().postForObject("http://api.osuwiki.cn:5005/api/users/ranking_by_user_id/"+uid,null,Elo[].class);
+        Elo[] result =  new RestTemplate().getForObject("http://api.osuwiki.cn:5005/api/users/ranking_by_user_id/"+uid,Elo[].class);
         if (result.length == 0){
             return null;
         }else{
             return result[0];
         }
-
+    }
+    public EloChange getEloChange(int uid){
+        EloChange[] result =  new RestTemplate().getForObject("http://api.osuwiki.cn:5005/api/users/elo_change_30days/"+uid,EloChange[].class);
+        if (result.length == 0){
+            return null;
+        }else{
+            return result[0];
+        }
     }
     /**
      * Gets pp plus.
@@ -682,7 +690,7 @@ public class WebPageManager {
         while (retry < 5) {
             try {
                 logger.info("正在获取" + uid + "的PP+数据");
-                doc = Jsoup.connect(PP_PLUS_URL + uid).timeout((int) Math.pow(2, retry + 1) * 1000).get();
+                doc = Jsoup.connect(PP_PLUS_URL + uid).timeout((int) Math.pow(2, retry + 1) * 5000).get();
                 break;
             } catch (IOException e) {
                 logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
