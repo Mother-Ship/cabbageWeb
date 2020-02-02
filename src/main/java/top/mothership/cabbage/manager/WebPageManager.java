@@ -13,7 +13,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.cookie.Cookie;
-import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
@@ -28,9 +27,9 @@ import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.constant.pattern.WebPagePattern;
-import top.mothership.cabbage.pojo.Elo;
-import top.mothership.cabbage.pojo.EloChange;
-import top.mothership.cabbage.pojo.coolq.osu.*;
+import top.mothership.cabbage.pojo.elo.Elo;
+import top.mothership.cabbage.pojo.elo.EloChange;
+import top.mothership.cabbage.pojo.osu.*;
 import top.mothership.cabbage.util.osu.StringSimilarityUtil;
 
 import javax.imageio.ImageIO;
@@ -662,20 +661,10 @@ public class WebPageManager {
         return null;
     }
     public Elo getElo(int uid){
-        Elo[] result =  new RestTemplate().getForObject("http://api.osuwiki.cn:5005/api/users/ranking_by_user_id/"+uid,Elo[].class);
-        if (result.length == 0){
-            return null;
-        }else{
-            return result[0];
-        }
+        return new RestTemplate().getForObject("http://api.osuwiki.cn:5005/api/users/elo/"+uid,Elo.class);
     }
     public EloChange getEloChange(int uid){
-        EloChange[] result =  new RestTemplate().getForObject("http://api.osuwiki.cn:5005/api/users/elo_change_30days/"+uid,EloChange[].class);
-        if (result.length == 0){
-            return null;
-        }else{
-            return result[0];
-        }
+       return  new RestTemplate().getForObject("http://api.osuwiki.cn:5005/api/users/recentPlay/"+uid,EloChange.class);
     }
     /**
      * Gets pp plus.

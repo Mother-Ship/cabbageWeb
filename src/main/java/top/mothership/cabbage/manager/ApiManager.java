@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.constant.Overall;
-import top.mothership.cabbage.pojo.coolq.osu.*;
+import top.mothership.cabbage.pojo.osu.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;

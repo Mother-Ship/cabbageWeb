@@ -12,8 +12,8 @@ import top.mothership.cabbage.constant.pattern.CQCodePattern;
 import top.mothership.cabbage.constant.pattern.MpCommandPattern;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
-import top.mothership.cabbage.pojo.coolq.osu.Lobby;
-import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
+import top.mothership.cabbage.pojo.osu.Lobby;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

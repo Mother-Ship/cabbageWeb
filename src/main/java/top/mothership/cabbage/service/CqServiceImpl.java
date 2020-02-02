@@ -17,13 +17,13 @@ import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
-import top.mothership.cabbage.pojo.Elo;
-import top.mothership.cabbage.pojo.EloChange;
+import top.mothership.cabbage.pojo.elo.Elo;
+import top.mothership.cabbage.pojo.elo.EloChange;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.QQInfo;
-import top.mothership.cabbage.pojo.coolq.osu.*;
+import top.mothership.cabbage.pojo.osu.*;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
@@ -1347,13 +1347,15 @@ public class CqServiceImpl {
             resp = "玩家" + userFromAPI.getUserName() + "的ELO为：" + elo.getElo()
                     + "\n由PP计算的初始ELO为：" + elo.getInit_elo()
                     + "\n排名为：" + elo.getRank();
+            if(Objects.equals(elo.getCode(),40004)){
+                resp+="\n您的初始elo仅供参考，请尽快参加比赛获得真实elo数据";
+            }
         }
         if (eloChange!=null){
-            resp+= "\n最近一次ELO更改：在"+eloChange.getTime()+"的"+eloChange.getTourney_name()+"中 "+eloChange.getLast_elo();
-            resp+= "\nMP Link：https://osu.ppy.sh/community/matches/"+eloChange.getMatch_id();
-            resp+= "\n最近一个月ELO变动："+eloChange.getSum_elo();
+            resp+= "\n最近一次ELO更改："+eloChange.getElo_change();
+            resp+= "\nMP Link：https://otsu.fun/matches/"+eloChange.getMatch_id();
         }else{
-            resp+= "\n最近一个月没有ELO变动。";
+            resp+= "\n最近没有ELO变动。";
         }
 
         cqMsg.setMessage(resp);

@@ -18,7 +18,7 @@ import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.constant.pattern.SearchKeywordPattern;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
-import top.mothership.cabbage.pojo.coolq.osu.SearchParam;
+import top.mothership.cabbage.pojo.osu.SearchParam;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 
 import java.time.LocalDate;

@@ -1,4 +1,4 @@
-package top.mothership.cabbage.pojo.coolq.osu;
+package top.mothership.cabbage.pojo.osu;
 
 import lombok.Data;
 

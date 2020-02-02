@@ -1,7 +1,7 @@
 package top.mothership.cabbage.pojo.coolq;
 
 import lombok.Data;
-import top.mothership.cabbage.pojo.coolq.osu.SearchParam;
+import top.mothership.cabbage.pojo.osu.SearchParam;
 
 import java.util.List;
 

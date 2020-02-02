@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 
 import java.util.concurrent.TimeUnit;
 

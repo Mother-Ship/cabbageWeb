@@ -10,10 +10,10 @@ import top.mothership.cabbage.enums.CompressLevelEnum;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
-import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
-import top.mothership.cabbage.pojo.coolq.osu.OppaiResult;
-import top.mothership.cabbage.pojo.coolq.osu.Score;
-import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
+import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.OppaiResult;
+import top.mothership.cabbage.pojo.osu.Score;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 
 import javax.imageio.ImageIO;

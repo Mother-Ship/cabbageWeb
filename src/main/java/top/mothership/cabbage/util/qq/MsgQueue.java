@@ -5,6 +5,7 @@ import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 
 /**

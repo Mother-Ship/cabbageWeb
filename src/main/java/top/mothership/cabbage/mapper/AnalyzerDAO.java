@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Repository;
-import top.mothership.cabbage.pojo.coolq.osu.Score;
+import top.mothership.cabbage.pojo.osu.Score;
 
 import java.util.List;
 

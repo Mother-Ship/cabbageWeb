@@ -14,7 +14,7 @@ import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.CqResponse;
 import top.mothership.cabbage.pojo.coolq.QQInfo;
-import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
 

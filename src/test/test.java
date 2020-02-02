@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import top.mothership.cabbage.manager.ApiManager;
-import top.mothership.cabbage.pojo.coolq.osu.Score;
+import top.mothership.cabbage.pojo.osu.Score;
 
 import java.io.IOException;
 import java.time.Instant;

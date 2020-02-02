@@ -12,9 +12,9 @@ import top.mothership.cabbage.mapper.AnalyzerDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
-import top.mothership.cabbage.pojo.coolq.osu.Beatmap;
-import top.mothership.cabbage.pojo.coolq.osu.Score;
-import top.mothership.cabbage.pojo.coolq.osu.Userinfo;
+import top.mothership.cabbage.pojo.osu.Beatmap;
+import top.mothership.cabbage.pojo.osu.Score;
+import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 
 import java.util.HashMap;
