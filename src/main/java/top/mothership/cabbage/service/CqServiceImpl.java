@@ -1350,7 +1350,7 @@ public class CqServiceImpl {
                 resp+= "\n排名为：" + elo.getRank();
             }
             if (Objects.equals(elo.getCode(), 40004)) {
-                resp += "\n您的初始elo仅供参考，请尽快参加比赛获得真实elo数据" +
+                resp += "\n您的初始ELO仅供参考，请尽快参加比赛获得真实ELO数据！" +
                         "\nELO周赛火热进行中，QQ群：738401694";
             }
         }
@@ -1384,7 +1384,7 @@ public class CqServiceImpl {
                 + formatter.format(UTC));
         cqManager.sendMsg(cqMsg);
     }
-
+    @GroupAuthorityControl
     public void myRole(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         String username;
@@ -1556,7 +1556,7 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
 
     }
-
+    @GroupAuthorityControl
     public void setRole(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         String username;
@@ -1579,7 +1579,7 @@ public class CqServiceImpl {
         }
         cqManager.sendMsg(cqMsg);
     }
-
+    @GroupAuthorityControl
     public void switchBorder(CqMsg cqMsg) {
         User user;
         user = userDAO.getUser(cqMsg.getUserId(), null);
