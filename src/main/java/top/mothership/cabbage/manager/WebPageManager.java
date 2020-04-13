@@ -62,7 +62,7 @@ public class WebPageManager {
     private static final String BLOODCAT_BG_URL = "http://bloodcat.com/osu/i/";
     private static final String OSU_FILE_URL = "https://osu.ppy.sh/osu/";
     private static final String OSUSEARCH_URL = "https://osusearch.com/query/";
-    private static final String PP_PLUS_URL = "https://syrin.me/pp+/u/";
+    private static final String PP_PLUS_URL = "http://syrin.me/pp+/u/";
     private static final String OSU_PROFILE_DETAIL_URL = "https://osu.ppy.sh/pages/include/profile-general.php";
     private static final String OSU_CHAN_URL = "https://syrin.me/osuchan/u/";
     private static final String OSU_UPDATE_INFO_URL = "https://osu.ppy.sh/web/check-updates.php?action=check&stream=stable40";

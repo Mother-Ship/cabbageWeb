@@ -740,6 +740,28 @@ public class CqAdminServiceImpl {
             cqManager.sendMsg(cqMsg);
         }
     }
+    public void listUserPP(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
+
+        if (argument.getRole() == null) {
+            argument.setRole("mp5");
+        }
+        List<Integer> list = userDAO.listUserIdByRole(argument.getRole(), true);
+        String resp;
+        if (list.size() > 0) {
+            resp = argument.getRole() + "用户组中所有人的PP和Rank：";
+            for (Integer aList : list) {
+                Userinfo userinfo = apiManager.getUser(null, aList);
+                if (userinfo != null) {
+                    resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw()+"\t" + userinfo.getPpRank());
+                }
+            }
+        } else {
+            resp = "用户组没有成员。";
+        }
+        cqMsg.setMessage(resp);
+        cqManager.sendMsg(cqMsg);
+    }
 
     @UserAuthorityControl({496802290})
     public void roleInfo(CqMsg cqMsg) {
@@ -771,12 +793,13 @@ public class CqAdminServiceImpl {
                         + "，现用名：" + user.getCurrentUname()
                         + "，曾用名：" + user.getLegacyUname()
                         + "，绑定的QQ：" + user.getQq()
+                        + "，当前rank：" + userinfo.getPpRank()
                         + "，PP：" + userinfo.getPpRaw();
                 if (userinfo1 != null && userinfo2 != null) {
                     int day30 = userinfo.getPlayCount() - userinfo1.getPlayCount();
                     int day90 = userinfo.getPlayCount() - userinfo2.getPlayCount();
                     if (day90 < 3 * day30) {
-                        resp += "，90天前PC差：" + day90 + "和30天内PC差" + day30 + "相差过大，有小号嫌疑！";
+                        resp += "\n↑90天内PC：" + day90 + " 小于30天内PC" + day30 + " 的三倍，有小号嫌疑！";
                     }
                 }
             } else {
@@ -795,7 +818,11 @@ public class CqAdminServiceImpl {
                 }
             }
         }
-        cqMsg.setMessage(resp);
+        final int mid = resp.length() / 2;
+        String[] parts = {resp.substring(0, mid),resp.substring(mid)};
+        cqMsg.setMessage(parts[0]);
+        cqManager.sendMsg(cqMsg);
+        cqMsg.setMessage(parts[1]);
         cqManager.sendMsg(cqMsg);
 
 
@@ -875,7 +902,7 @@ public class CqAdminServiceImpl {
         }
         Long afterDrawStat = System.currentTimeMillis();
         for (int i = 0; i < 10; i++) {
-            webPageManager.getPPPlus(2545898);
+            webPageManager.getPPPlus(2);
         }
         Long afterQueryPPPlusFor10Times = System.currentTimeMillis();
         if ((afterQueryPPPlusFor10Times - afterDrawStat) / 10 > 5000) {

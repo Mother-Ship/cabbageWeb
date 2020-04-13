@@ -190,6 +190,10 @@ public class CqController {
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.ROLE});
                                     cqAdminService.roleInfo(cqMsg);
                                     break;
+                                case "pp":
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.ROLE});
+                                    cqAdminService.listUserPP(cqMsg);
+                                    break;
                                 case "unbind":
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.QQ});
                                     cqAdminService.unbind(cqMsg);

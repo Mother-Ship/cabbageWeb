@@ -149,7 +149,7 @@ public class AnalyzeServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @Scheduled(cron = "0 * * * * ? ")
+
     public void analyze() {
         List<Integer> targetUser = analyzerDAO.listTargetUser();
         List<Integer> targetMap = analyzerDAO.listTargetMap();

@@ -766,7 +766,7 @@ public class CqServiceImpl {
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
                     + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")"
                     + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId()
-                    + "\n" + "http://inso.link/yukiho/?m=" + beatmap.getBeatmapSetId()
+                    + "\n" + "在线试玩：http://osugame.online/search.html?q=" + beatmap.getBeatmapSetId()
                     + "\n" + "预览：https://bloodcat.com/osu/preview.html#" + beatmap.getBeatmapId());
         }
         cqManager.sendMsg(cqMsg);
@@ -945,8 +945,8 @@ public class CqServiceImpl {
             case "807757470":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";
                 break;
-            case "833099094":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第10届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：https://www.mpmatch.cn/5/reg.html\n比赛信息： https://www.mpmatch.cn/5/info.html\n选手列表：https://www.mpmatch.cn/5/roster.html";
+            case "915580939":
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第11届MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：http://www.mpmatch.cn/5/reg.html\n比赛信息： http://www.mpmatch.cn/5/info.html\n选手列表：http://www.mpmatch.cn/5/roster.html";
                 break;
             default:
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎加入本群。";
@@ -1353,7 +1353,7 @@ public class CqServiceImpl {
         }
         if (eloChange!=null){
             resp+= "\n最近一次ELO更改："+eloChange.getElo_change();
-            resp+= "\nMP Link：https://otsu.fun/matches/"+eloChange.getMatch_id();
+            resp+= "\nMP Link：http://otsu.fun/matches/"+eloChange.getMatch_id();
         }else{
             resp+= "\n最近没有ELO变动。";
         }
