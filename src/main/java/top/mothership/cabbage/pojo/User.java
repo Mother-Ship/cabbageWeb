@@ -18,4 +18,5 @@ public class User {
     private Long repeatCount;
     private Long speakingCount;
     private String mainRole;
+    private Boolean useEloBorder;
 }

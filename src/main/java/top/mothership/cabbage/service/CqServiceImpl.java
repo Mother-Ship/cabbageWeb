@@ -61,13 +61,13 @@ public class CqServiceImpl {
      * Instantiates a new Cq service.
      *
      * @param
-     * @param apiManager      the api manager
-     * @param cqManager       the cq manager
-     * @param webPageManager  网页相关抓取工具
-     * @param userDAO         the user dao
-     * @param userInfoDAO     the user info dao
-     * @param imgUtil         the img util
-     * @param scoreUtil       the score util
+     * @param apiManager     the api manager
+     * @param cqManager      the cq manager
+     * @param webPageManager 网页相关抓取工具
+     * @param userDAO        the user dao
+     * @param userInfoDAO    the user info dao
+     * @param imgUtil        the img util
+     * @param scoreUtil      the score util
      * @param userUtil
      * @param resDAO
      * @param redisDAO
@@ -1334,28 +1334,31 @@ public class CqServiceImpl {
                 }
                 break;
             default:
-                return ;
+                return;
         }
         //获取页面：getuser
         Elo elo = webPageManager.getElo(userFromAPI.getUserId());
         EloChange eloChange = webPageManager.getEloChange(userFromAPI.getUserId());
         String resp;
-        if(elo == null){
+        if (elo == null) {
             resp = "没有找到你的ELO信息。";
 
-        }else{
+        } else {
             resp = "玩家" + userFromAPI.getUserName() + "的ELO为：" + elo.getElo()
-                    + "\n由PP计算的初始ELO为：" + elo.getInit_elo()
-                    + "\n排名为：" + elo.getRank();
-            if(Objects.equals(elo.getCode(),40004)){
-                resp+="\n您的初始elo仅供参考，请尽快参加比赛获得真实elo数据";
+                    + "\n由PP计算的初始ELO为：" + elo.getInit_elo();
+            if (elo.getRank()!=null){
+                resp+= "\n排名为：" + elo.getRank();
+            }
+            if (Objects.equals(elo.getCode(), 40004)) {
+                resp += "\n您的初始elo仅供参考，请尽快参加比赛获得真实elo数据" +
+                        "\nELO周赛火热进行中，QQ群：738401694";
             }
         }
-        if (eloChange!=null){
-            resp+= "\n最近一次ELO更改："+eloChange.getElo_change();
-            resp+= "\nMP Link：http://otsu.fun/matches/"+eloChange.getMatch_id();
-        }else{
-            resp+= "\n最近没有ELO变动。";
+        if (eloChange.getElo_change() != null) {
+            resp += "\n最近一次ELO更改：" + eloChange.getElo_change();
+            resp += "\nMP Link：http://otsu.fun/matches/" + eloChange.getMatch_id();
+        } else {
+            resp += "\n最近没有ELO变动。";
         }
 
         cqMsg.setMessage(resp);
@@ -1577,5 +1580,23 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
+    public void switchBorder(CqMsg cqMsg) {
+        User user;
+        user = userDAO.getUser(cqMsg.getUserId(), null);
+        if (user == null) {
+            cqMsg.setMessage(Tip.USER_NOT_BIND);
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
+        if (user.isBanned()) {
+            cqMsg.setMessage(Tip.USER_IS_BANNED);
+            cqManager.sendMsg(cqMsg);
+            return;
+        }
 
+        user.setUseEloBorder(!user.getUseEloBorder());
+        userDAO.updateUser(user);
+        cqMsg.setMessage("更新成功：你已修改为" + (user.getUseEloBorder() ? "" : "不") + "使用ELO边框");
+        cqManager.sendMsg(cqMsg);
+    }
 }

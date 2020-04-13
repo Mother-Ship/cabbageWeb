@@ -120,6 +120,7 @@ public interface UserDAO {
             + "<if test=\"user.speakingCount != null\">speaking_count=#{user.speakingCount},</if>"
             + "<if test=\"user.mode != null\">mode=#{user.mode},</if>"
             + "<if test=\"user.mainRole != null\">main_role=#{user.mainRole},</if>"
+            + "<if test=\"user.useEloBorder != null\">use_elo_border=#{user.useEloBorder},</if>"
             + "</set>"
             + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);
@@ -131,7 +132,7 @@ public interface UserDAO {
      * @return the integer
      */
     @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.qq}" +
-            ",#{user.legacyUname},#{user.currentUname},#{user.banned},#{user.repeatCount},#{user.speakingCount},#{user.mode},#{user.mainRole})")
+            ",#{user.legacyUname},#{user.currentUname},#{user.banned},#{user.repeatCount},#{user.speakingCount},#{user.mode},#{user.mainRole},#{user.useEloBorder})")
     Integer addUser(@Param("user") User user);
 
 

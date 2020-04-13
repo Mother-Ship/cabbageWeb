@@ -396,6 +396,9 @@ public class CqController {
                                 case "time":
                                     cqService.time(cqMsg);
                                     break;
+                                case "switchborder":
+                                    cqService.switchBorder(cqMsg);
+                                    break;
                                 case "addmap":
                                     analyzeService.addTargetMap(cqMsg);
                                     break;
