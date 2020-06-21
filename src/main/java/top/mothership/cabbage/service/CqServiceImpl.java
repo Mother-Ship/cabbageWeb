@@ -1568,7 +1568,7 @@ public class CqServiceImpl {
             cqMsg.setMessage(Tip.USER_NOT_BIND);
         } else {
             List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
-            if (roles.contains(argument.getRole())) {
+            if (roles.contains(argument.getRole()) || Objects.equals("creep",argument.getRole())) {
                 user.setMainRole(argument.getRole());
                 userDAO.updateUser(user);
                 cqMsg.setMessage("更新成功：你的主显用户组已修改为" + argument.getRole());

@@ -22,6 +22,7 @@ import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.CqResponse;
 import top.mothership.cabbage.pojo.coolq.QQInfo;
+import top.mothership.cabbage.pojo.elo.Elo;
 import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.SearchParam;
@@ -749,11 +750,16 @@ public class CqAdminServiceImpl {
         List<Integer> list = userDAO.listUserIdByRole(argument.getRole(), true);
         String resp;
         if (list.size() > 0) {
-            resp = argument.getRole() + "用户组中所有人的PP和Rank：";
+            resp = argument.getRole() + "用户组中所有人的PP,Rank和Elo：";
             for (Integer aList : list) {
-                Userinfo userinfo = apiManager.getUser(null, aList);
+                Userinfo userinfo = apiManager.getUser(0, aList);
+                Elo elo = webPageManager.getElo(aList);
                 if (userinfo != null) {
-                    resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw()+"\t" + userinfo.getPpRank());
+                    if (elo !=null && !Objects.equals(elo.getCode(), 40004)) {
+                        resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw()+"\t" + userinfo.getPpRank()+"\t" + elo.getElo());
+                    }else {
+                        resp = resp.concat("\n" + userinfo.getUserName() + "\t" + userinfo.getPpRaw() + "\t" + userinfo.getPpRank());
+                    }
                 }
             }
         } else {
