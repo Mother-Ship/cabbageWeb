@@ -1075,19 +1075,12 @@ public class CqServiceImpl {
                             + 5D * (Math.atan((2D * map.get("Accuracy") - (1425D + 1101D)) / (1425D - 1101D)) + Math.PI / 2D)
                             + 5D * (Math.atan((2D * map.get("Precision") - (597D + 466D)) / (597D - 466D)) + Math.PI / 2D))) - 1D)
                     , 2.5D);
-
             double acc=Math.max(map.get("Accuracy"),500F);
             double cost1 = (Math.sqrt(map.get("Jump") / 3000) + Math.sqrt(map.get("Flow") / 1500)) * (Math.sqrt(map.get("Jump") / 3000) + Math.sqrt(map.get("Flow") / 1500)) / 4;
             cost1 = cost1 * (1+ map.get("Precision") /5000)/1.2;
             double cost2 = Math.pow((acc - 500) / 2000, 0.6)*0.8;
             double cost3 = Math.pow(integral(1, 1 + map.get("Speed") / 1000) / 2, 0.8) * Math.pow(integral( 1, 1 + map.get("Stamina") / 1000) / 2, 0.5);
             double oclbS10Cost = cost1 + cost2 + cost3;
-
-            double oclrCost = Math.pow((map.get("Jump") / 3000F), 0.8F)
-                    * Math.pow((map.get("Flow") / 1500F), 0.5F)
-                    + Math.pow((map.get("Speed") / 2000F), 0.8F)
-                    * Math.pow((map.get("Stamina") / 2000F), 0.5F)
-                    + (map.get("Accuracy") / 2700F);
             double yuTangCost = (Math.pow((map.get("Jump") / 3000F), 0.8F)
                     * Math.pow((map.get("Flow") / 1500F), 0.6F)
                     + Math.pow((map.get("Speed") / 2000F), 0.8F)
@@ -1097,8 +1090,7 @@ public class CqServiceImpl {
                     * Math.min(1, Math.pow((map2.get("Length") * (map2.get("BPM") / (190D * 150D))), 0.2D));
             String filename = imgUtil.drawRadarImage(map, userFromAPI);
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]\n"
-                    + "在**OCL系列比赛(A/B/C)**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
-                    + "。\n在**OCL系列比赛(新秀组)**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclrCost)
+                    + "在**OCL系列比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
                     + "。\n在**第六届某个不能提起名字的比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS6Cost)
                     + "。\n在**第五届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S5Cost)
 //                    + "。\n在**第三届鱼塘杯**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(yuTangCost)
