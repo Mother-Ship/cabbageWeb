@@ -1075,11 +1075,14 @@ public class CqServiceImpl {
                             + 5D * (Math.atan((2D * map.get("Accuracy") - (1425D + 1101D)) / (1425D - 1101D)) + Math.PI / 2D)
                             + 5D * (Math.atan((2D * map.get("Precision") - (597D + 466D)) / (597D - 466D)) + Math.PI / 2D))) - 1D)
                     , 2.5D);
-            double oclbS10Cost = Math.pow((map.get("Jump") / 3000F), 0.8F)
-                    * Math.pow((map.get("Flow") / 1500F), 0.6F)
-                    + Math.pow((map.get("Speed") / 2000F), 0.8F)
-                    * Math.pow((map.get("Stamina") / 2000F), 0.5F)
-                    + (map.get("Accuracy") / 2700F);
+
+            double acc=Math.max(map.get("Accuracy"),500F);
+            double cost1 = (Math.sqrt(map.get("Jump") / 3000) + Math.sqrt(map.get("Flow") / 1500)) * (Math.sqrt(map.get("Jump") / 3000) + Math.sqrt(map.get("Flow") / 1500)) / 4;
+            cost1 = cost1 * (1+ map.get("Precision") /5000)/1.2;
+            double cost2 = Math.pow((acc - 500) / 2000, 0.6)*0.8;
+            double cost3 = Math.pow(integral(1, 1 + map.get("Speed") / 1000) / 2, 0.8) * Math.pow(integral( 1, 1 + map.get("Stamina") / 1000) / 2, 0.5);
+            double oclbS10Cost = cost1 + cost2 + cost3;
+
             double oclrCost = Math.pow((map.get("Jump") / 3000F), 0.8F)
                     * Math.pow((map.get("Flow") / 1500F), 0.5F)
                     + Math.pow((map.get("Speed") / 2000F), 0.8F)
@@ -1107,7 +1110,20 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
         return;
     }
-
+    double integral(double min, double max)
+    {
+        double result = 0;
+        double delta = (max - min) / 100000;
+        for (int i = 0; i < 100000; i++)
+        {
+            result += f1(min + (i+0.5) * delta)*delta;
+        }
+        return result;
+    }
+    double f1(double x)
+    {
+        return Math.pow(x, 1 / x - 1);
+    }
     public void recentPassed(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
 
@@ -1366,7 +1382,7 @@ public class CqServiceImpl {
         return;
     }
 
-    @GroupAuthorityControl
+    @GroupAuthorityControl(allowed = {793981222L})
     public void roll(CqMsg cqMsg) {
         cqMsg.setMessage(String.valueOf(new Random().nextInt(100)));
         cqManager.sendMsg(cqMsg);
