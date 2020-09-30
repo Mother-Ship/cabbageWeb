@@ -72,9 +72,9 @@ public class CqController {
             case "message":
                 //转义
                 String msg = cqMsg.getMessage();
-                msg = msg.replaceAll("&#91;", "[");
-                msg = msg.replaceAll("&#93;", "]");
-                msg = msg.replaceAll("&#44;", ",");
+                msg = msg.replaceAll("&amp;#91;", "[");
+                msg = msg.replaceAll("&amp;#93;", "]");
+                msg = msg.replaceAll("&amp;#44;", ",");
                 cqMsg.setMessage(msg);
                 String msgWithoutImage;
                 Matcher imageMatcher = CQCodePattern.SINGLE_IMG.matcher(msg);
@@ -399,6 +399,9 @@ public class CqController {
                                 case "switchborder":
                                     cqService.switchBorder(cqMsg);
                                     break;
+                                case "save":
+                                    cqService.save(cqMsg);
+                                    break;
                                 case "addmap":
                                     analyzeService.addTargetMap(cqMsg);
                                     break;
@@ -458,7 +461,7 @@ public class CqController {
                 }
                 break;
             default:
-                logger.error("传入无法识别的Request，可能是HTTP API插件已经更新");
+                logger.error("传入无法识别的Request："+cqMsg.getPostType()+"，可能是HTTP API插件已经更新");
         }
 
     }

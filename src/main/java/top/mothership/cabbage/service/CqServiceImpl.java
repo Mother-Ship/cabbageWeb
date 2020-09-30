@@ -36,6 +36,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 普通命令进行业务处理的类
@@ -115,6 +116,8 @@ public class CqServiceImpl {
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
+                user.setLastActiveDate(LocalDate.now());
+                userDAO.updateUser(user);
                 if (argument.getMode() == null) {
                     //如果查询没有指定mode，用用户预设的mode覆盖
                     argument.setMode(user.getMode());
@@ -358,6 +361,8 @@ public class CqServiceImpl {
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
+                user.setLastActiveDate(LocalDate.now());
+                userDAO.updateUser(user);
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
                     cqManager.sendMsg(cqMsg);
@@ -482,6 +487,8 @@ public class CqServiceImpl {
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
+                user.setLastActiveDate(LocalDate.now());
+                userDAO.updateUser(user);
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
                     cqManager.sendMsg(cqMsg);
@@ -546,6 +553,8 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
+        user.setLastActiveDate(LocalDate.now());
+        userDAO.updateUser(user);
         if (user.isBanned()) {
             cqMsg.setMessage(Tip.USER_IS_BANNED);
             cqManager.sendMsg(cqMsg);
@@ -630,6 +639,8 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
+        user.setLastActiveDate(LocalDate.now());
+        userDAO.updateUser(user);
         userFromAPI = apiManager.getUser(0, user.getUserId());
         if (userFromAPI == null) {
             cqMsg.setMessage("没有获取到QQ：" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "玩家的信息。");
@@ -906,7 +917,7 @@ public class CqServiceImpl {
                     }
                     resp += "，修改后的用户组为：" + newRole;
                     user.setRole(newRole);
-
+                    user.setLastActiveDate(LocalDate.now());
                     Userinfo userFromAPI = apiManager.getUser(0, user.getUserId());
                     if (userFromAPI == null) {
                         resp += "\n警告：从API获取绑定的玩家信息失败，已将被ban状态设为True；如果出现错误，请提醒我手动修改！";
@@ -1015,6 +1026,8 @@ public class CqServiceImpl {
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
+                user.setLastActiveDate(LocalDate.now());
+                userDAO.updateUser(user);
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
                     cqManager.sendMsg(cqMsg);
@@ -1127,6 +1140,8 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
+        user.setLastActiveDate(LocalDate.now());
+        userDAO.updateUser(user);
         if (user.isBanned()) {
             cqMsg.setMessage(Tip.USER_IS_BANNED);
             cqManager.sendMsg(cqMsg);
@@ -1245,6 +1260,8 @@ public class CqServiceImpl {
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
+                user.setLastActiveDate(LocalDate.now());
+                userDAO.updateUser(user);
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
                     cqManager.sendMsg(cqMsg);
@@ -1329,6 +1346,8 @@ public class CqServiceImpl {
                     cqManager.sendMsg(cqMsg);
                     return;
                 }
+                user.setLastActiveDate(LocalDate.now());
+                userDAO.updateUser(user);
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
                     cqManager.sendMsg(cqMsg);
@@ -1374,7 +1393,7 @@ public class CqServiceImpl {
         return;
     }
 
-    @GroupAuthorityControl(allowed = {793981222L})
+
     public void roll(CqMsg cqMsg) {
         cqMsg.setMessage(String.valueOf(new Random().nextInt(100)));
         cqManager.sendMsg(cqMsg);
@@ -1557,6 +1576,7 @@ public class CqServiceImpl {
             logger.info("尝试将" + userFromAPI.getUserName() + "的模式修改为" + argument.getMode());
 
             user.setMode(argument.getMode());
+            user.setLastActiveDate(LocalDate.now());
             userDAO.updateUser(user);
             cqMsg.setMessage("更新成功：你的游戏模式已修改为" + scoreUtil.convertGameModeToString(argument.getMode()));
         }
@@ -1596,6 +1616,8 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
+        user.setLastActiveDate(LocalDate.now());
+        userDAO.updateUser(user);
         if (user.isBanned()) {
             cqMsg.setMessage(Tip.USER_IS_BANNED);
             cqManager.sendMsg(cqMsg);
@@ -1605,6 +1627,40 @@ public class CqServiceImpl {
         user.setUseEloBorder(!user.getUseEloBorder());
         userDAO.updateUser(user);
         cqMsg.setMessage("更新成功：你已修改为" + (user.getUseEloBorder() ? "" : "不") + "使用ELO边框");
+        cqManager.sendMsg(cqMsg);
+    }
+
+    public void save(CqMsg cqMsg) {
+        User user = userDAO.getUser(cqMsg.getUserId(), null);
+        //这里四个模式都要更新，但是只有主模式的才判断PP超限
+        for (int i = 0; i < 4; i++) {
+            Userinfo userinfo = apiManager.getUser(i, user.getUserId());
+            if (userinfo != null) {
+                //将日期改为一天前写入
+                userinfo.setQueryDate(LocalDate.now().minusDays(1));
+                userInfoDAO.addUserInfo(userinfo);
+                //2018-3-16 17:47:51实验性特性：加入redis缓存
+                redisDAO.add(user.getUserId(), userinfo);
+                redisDAO.expire(user.getUserId(), 1, TimeUnit.DAYS);
+                logger.info("将" + userinfo.getUserName() + "在模式" + scoreUtil.convertGameModeToString(i) + "的数据录入成功");
+                if (!userinfo.getUserName().equals(user.getCurrentUname())) {
+                    //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
+                    user = userUtil.renameUser(user, userinfo.getUserName());
+                    userDAO.updateUser(user);
+                }
+                //如果能获取到userinfo，就把banned设置为0
+                user.setBanned(false);
+                userDAO.updateUser(user);
+            } else {
+                //将null的用户直接设为banned
+                if (!user.isBanned()) {
+                    user.setBanned(true);
+                    logger.info("检测到玩家" + user.getUserId() + "被Ban，已登记");
+                    userDAO.updateUser(user);
+                }
+            }
+        }
+        cqMsg.setMessage("录入完成，");
         cqManager.sendMsg(cqMsg);
     }
 }

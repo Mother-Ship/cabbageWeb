@@ -121,6 +121,7 @@ public interface UserDAO {
             + "<if test=\"user.mode != null\">mode=#{user.mode},</if>"
             + "<if test=\"user.mainRole != null\">main_role=#{user.mainRole},</if>"
             + "<if test=\"user.useEloBorder != null\">use_elo_border=#{user.useEloBorder},</if>"
+            + "<if test=\"user.lastActiveDate != null\">last_active_date=#{user.lastActiveDate},</if>"
             + "</set>"
             + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);
@@ -131,8 +132,19 @@ public interface UserDAO {
      * @param user the user
      * @return the integer
      */
-    @Insert("INSERT INTO `userrole` VALUES (null,#{user.userId},#{user.role},#{user.qq}" +
-            ",#{user.legacyUname},#{user.currentUname},#{user.banned},#{user.repeatCount},#{user.speakingCount},#{user.mode},#{user.mainRole},#{user.useEloBorder})")
+    @Insert("INSERT INTO `userrole` VALUES (null," +
+            "#{user.userId}," +
+            "#{user.role}," +
+            "#{user.qq}," +
+            "#{user.legacyUname}," +
+            "#{user.currentUname}," +
+            "#{user.banned}," +
+            "#{user.repeatCount}," +
+            "#{user.speakingCount}," +
+            "#{user.mode}," +
+            "#{user.mainRole}," +
+            "#{user.useEloBorder}," +
+            "#{user.lastActiveDate})")
     Integer addUser(@Param("user") User user);
 
 

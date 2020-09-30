@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.manager.ApiManager;
@@ -16,6 +17,7 @@ import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +55,7 @@ public class UserUtil {
             redisDAO.add(userId, userFromAPI);
             userInfoDAO.addUserInfo(userFromAPI);
         }
-        User user = new User(userId, role, QQ, "[]", userFromAPI.getUserName(), false, mode, 0L, 0L, Overall.DEFAULT_ROLE,false);
+        User user = new User(userId, role, QQ, "[]", userFromAPI.getUserName(), false, mode, 0L, 0L, Overall.DEFAULT_ROLE,false, LocalDate.now());
         userDAO.addUser(user);
         return user;
     }

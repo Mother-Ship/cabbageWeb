@@ -197,7 +197,7 @@ public class ImgUtil {
                 带day = 0:进入本方法，不读数据库，不进行对比
                 day>1，例如day=2，21号进入本方法，查的是19号结束时候的成绩
                 */
-            if (day > 1) {
+
                 //临时关闭平滑
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
                 //只有day>1才会出现文字
@@ -214,7 +214,7 @@ public class ImgUtil {
                     drawTextToImage(g2, "#666666", "宋体", 15, "『对比于" + day + "天前』", 725, 155);
                 }
 
-            }
+
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             //这样确保了userInDB不是空的
             //绘制Rank变化

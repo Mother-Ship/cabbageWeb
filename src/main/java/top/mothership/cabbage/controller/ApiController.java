@@ -126,6 +126,8 @@ public class ApiController {
     @RequestMapping(value = "/user/qq/{qq}", method = RequestMethod.GET)
     public String userRole(@PathVariable Long qq) {
         User user = userDAO.getUser(qq, null);
+        user.setLastActiveDate(LocalDate.now());
+        userDAO.updateUser(user);
         if (user == null) {
             return new Gson().toJson(new WebResponse<>(1, "user not found", null));
         } else if (user.isBanned()) {

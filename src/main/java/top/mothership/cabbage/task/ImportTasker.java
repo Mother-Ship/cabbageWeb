@@ -1,5 +1,6 @@
 package top.mothership.cabbage.task;
 
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +71,8 @@ public class ImportTasker {
     }
 
 
-    @Scheduled(cron = "0 0 4 * * ?")
+    @Scheduled(cron = "0 8 4 * * ?")
+    @SneakyThrows
     public void importUserInfo() {
         //似乎每分钟并发也就600+，不需要加延迟……
         java.util.Date start = Calendar.getInstance().getTime();
@@ -83,7 +85,12 @@ public class ImportTasker {
         Integer bindedCount = 0;
         List<Integer> list = userDAO.listUserIdByRole(null, false);
         for (Integer aList : list) {
+            Thread.sleep(100);
             User user = userDAO.getUser(null, aList);
+            //如果上次活跃在一个月之前，或者没绑定不录入
+            if (LocalDate.now().minusDays(30).isAfter(user.getLastActiveDate()) || user.getQq() == 0){
+                continue;
+            }
             //这里四个模式都要更新，但是只有主模式的才判断PP超限
             for (int i = 0; i < 4; i++) {
                 Userinfo userinfo = apiManager.getUser(i, aList);
