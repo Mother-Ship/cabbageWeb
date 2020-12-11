@@ -674,25 +674,20 @@ public class WebPageManager {
      */
     public Map<String, Double> getPPPlus(int uid) {
         Map<String, Double> map = new HashMap<>();
-        int retry = 0;
+
         Document doc = null;
-        while (retry < 5) {
-            try {
-                logger.info("正在获取" + uid + "的PP+数据");
-                doc = Jsoup.connect(PP_PLUS_URL + uid).timeout((int) Math.pow(2, retry + 1) * 5000).get();
-                break;
-            } catch (IOException e) {
-                logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
-                retry++;
-            }
+        try {
+            doc = Jsoup.connect(PP_PLUS_URL + uid).timeout(300000).get();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        if (retry == 5) {
-            logger.error("玩家" + uid + "访问PP+失败五次");
+
+        if (doc == null) {
             return null;
         }
         Elements link = doc.select("tr[class*=perform]");
         if (link.size() == 0) {
-            logger.error("玩家" + uid + "访问PP+失败五次");
+            logger.error("玩家" + uid + "访问PP+失败");
             return null;
         }
 

@@ -126,13 +126,13 @@ public class ApiController {
     @RequestMapping(value = "/user/qq/{qq}", method = RequestMethod.GET)
     public String userRole(@PathVariable Long qq) {
         User user = userDAO.getUser(qq, null);
-        user.setLastActiveDate(LocalDate.now());
-        userDAO.updateUser(user);
         if (user == null) {
             return new Gson().toJson(new WebResponse<>(1, "user not found", null));
         } else if (user.isBanned()) {
             return new Gson().toJson(new WebResponse<>(2, "user is banned", user));
         } else {
+            user.setLastActiveDate(LocalDate.now());
+            userDAO.updateUser(user);
             return new Gson().toJson(new WebResponse<>(0, "success", user));
         }
     }
@@ -182,13 +182,11 @@ public class ApiController {
                     userFromAPI.setUserName(String.valueOf(user.getUserId()));
                 }
             }
-            List<String> list = userUtil.sortRoles(user.getRole());
-            role = list.get(0);
+            role = user.getMainRole();
             day = 0;
             mode = user.getMode();
         } else {
-            List<String> list = userUtil.sortRoles(user.getRole());
-            role = list.get(0);
+            role = user.getMainRole();
             userInDB = redisDAO.get(uid, mode);
             if (userInDB == null) {
                 userInDB = userInfoDAO.getUserInfo(mode, userFromAPI.getUserId(), LocalDate.now().minusDays(day));

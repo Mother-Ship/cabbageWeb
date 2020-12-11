@@ -275,7 +275,6 @@ public class CqServiceImpl {
                         //2018-1-22 12:59:06如果这个玩家的模式不是主模式，则取出相应模式
                         userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
                     }
-                    role = user.getRole();
                     if (argument.getDay() > 0) {
                         if (argument.getDay().equals(1)) {
                             //加一个从redis取数据的设定
@@ -295,12 +294,7 @@ public class CqServiceImpl {
                 break;
 
         }
-        roles = userUtil.sortRoles(role);
-        if (user.getMainRole().equals(Overall.DEFAULT_ROLE)) {
-            role = roles.get(0);
-        } else {
-            role = user.getMainRole();
-        }
+        role = user.getMainRole();
         if (argument.getMode().equals(0)) {
             //主模式才获取score rank
             //2019-7-18 看样子四个人是全够2k名了，没必要特殊处理了
@@ -956,7 +950,7 @@ public class CqServiceImpl {
             case "807757470":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";
                 break;
-            case "793981222":
+            case "951968006":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：http://www.mpmatch.cn/5/reg.html\n比赛信息： http://www.mpmatch.cn/5/info.html\n选手列表：http://www.mpmatch.cn/5/roster.html";
                 break;
             default:
@@ -1111,7 +1105,7 @@ public class CqServiceImpl {
             cqManager.sendMsg(cqMsg);
             return;
         }
-        cqMsg.setMessage("由于网络原因（PP+的网站过于弱智），获取你的Cost失败……");
+        cqMsg.setMessage("获取你的Cost失败，根据以往经验，国内凌晨（1:00-7:00）的成功率可能会增加……");
         cqManager.sendMsg(cqMsg);
         return;
     }
@@ -1627,40 +1621,6 @@ public class CqServiceImpl {
         user.setUseEloBorder(!user.getUseEloBorder());
         userDAO.updateUser(user);
         cqMsg.setMessage("更新成功：你已修改为" + (user.getUseEloBorder() ? "" : "不") + "使用ELO边框");
-        cqManager.sendMsg(cqMsg);
-    }
-
-    public void save(CqMsg cqMsg) {
-        User user = userDAO.getUser(cqMsg.getUserId(), null);
-        //这里四个模式都要更新，但是只有主模式的才判断PP超限
-        for (int i = 0; i < 4; i++) {
-            Userinfo userinfo = apiManager.getUser(i, user.getUserId());
-            if (userinfo != null) {
-                //将日期改为一天前写入
-                userinfo.setQueryDate(LocalDate.now().minusDays(1));
-                userInfoDAO.addUserInfo(userinfo);
-                //2018-3-16 17:47:51实验性特性：加入redis缓存
-                redisDAO.add(user.getUserId(), userinfo);
-                redisDAO.expire(user.getUserId(), 1, TimeUnit.DAYS);
-                logger.info("将" + userinfo.getUserName() + "在模式" + scoreUtil.convertGameModeToString(i) + "的数据录入成功");
-                if (!userinfo.getUserName().equals(user.getCurrentUname())) {
-                    //如果检测到用户改名，取出数据库中的现用名加入到曾用名，并且更新现用名和曾用名
-                    user = userUtil.renameUser(user, userinfo.getUserName());
-                    userDAO.updateUser(user);
-                }
-                //如果能获取到userinfo，就把banned设置为0
-                user.setBanned(false);
-                userDAO.updateUser(user);
-            } else {
-                //将null的用户直接设为banned
-                if (!user.isBanned()) {
-                    user.setBanned(true);
-                    logger.info("检测到玩家" + user.getUserId() + "被Ban，已登记");
-                    userDAO.updateUser(user);
-                }
-            }
-        }
-        cqMsg.setMessage("录入完成，");
         cqManager.sendMsg(cqMsg);
     }
 }

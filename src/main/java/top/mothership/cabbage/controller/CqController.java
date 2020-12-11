@@ -203,9 +203,6 @@ public class CqController {
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
                                     cqAdminService.score(cqMsg);
                                     break;
-                                case "ping":
-                                    cqAdminService.ping(cqMsg);
-                                    break;
                                 default:
                                     doLog = false;
                                     break;
@@ -398,9 +395,6 @@ public class CqController {
                                     break;
                                 case "switchborder":
                                     cqService.switchBorder(cqMsg);
-                                    break;
-                                case "save":
-                                    cqService.save(cqMsg);
                                     break;
                                 case "addmap":
                                     analyzeService.addTargetMap(cqMsg);

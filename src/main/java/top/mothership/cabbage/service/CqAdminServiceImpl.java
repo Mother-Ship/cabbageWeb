@@ -864,33 +864,6 @@ public class CqAdminServiceImpl {
 
     }
 
-    @UserAuthorityControl({1427922341})
-    public void ping(CqMsg cqMsg) {
-        Long msgSendTime = cqMsg.getTime() * 1000L;
-        Long msgReceivedTime = System.currentTimeMillis();
-        Userinfo userinfo = null;
-        for (int i = 0; i < 10; i++) {
-            userinfo = apiManager.getUser(0, "peppy");
-        }
-        Long afterQueryOsuApiFor10Times = System.currentTimeMillis();
-        imgUtil.drawUserInfo(userinfo, userinfo, "creep", 1, false, 1, 0);
-        Long afterDrawStat = System.currentTimeMillis();
-        for (int i = 0; i < 10; i++) {
-            webPageManager.getPPPlus(userinfo.getUserId());
-        }
-        Long afterQueryPPPlusFor10Times = System.currentTimeMillis();
-        cqMsg.setMessage("自检结束。" +
-                "\n从消息发送，到白菜收到消息，花费：" + (msgReceivedTime - msgSendTime) +
-                "ms。\n请求10次osu!接口，平均每次花费：" + (afterQueryOsuApiFor10Times - msgReceivedTime) / 10 +
-                "ms。\n绘制一次Stat图片，花费：" + (afterDrawStat - afterQueryOsuApiFor10Times) +
-                "ms。\n请求10次PP+数据，平均每次花费：" + (afterQueryPPPlusFor10Times - afterDrawStat) / 10 +
-                "ms。\n消息离开白菜的时间：" + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withLocale(Locale.CHINA)
-                .withZone(ZoneId.systemDefault()).format(Instant.now()) + "。\n接下来会发送一张图片，以测试图片发送是否出错：");
-        cqManager.sendMsg(cqMsg);
-        cqMsg.setMessage("[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"), CompressLevelEnum.不压缩) + "]");
-        cqManager.sendMsg(cqMsg);
-    }
-
     @Scheduled(cron = "0 0 * * * ?")
     public void watch() {
         CqMsg cqMsg = new CqMsg();
@@ -907,13 +880,6 @@ public class CqAdminServiceImpl {
             msg += "osu! API访问缓慢，此时10次平均访问时间为：" + (afterQueryOsuApiFor10Times - time) / 10;
         }
         Long afterDrawStat = System.currentTimeMillis();
-        for (int i = 0; i < 10; i++) {
-            webPageManager.getPPPlus(2);
-        }
-        Long afterQueryPPPlusFor10Times = System.currentTimeMillis();
-        if ((afterQueryPPPlusFor10Times - afterDrawStat) / 10 > 5000) {
-            msg += "\nPP+访问缓慢，此时10次平均访问时间为：" + (afterQueryPPPlusFor10Times - time) / 10;
-        }
         msg += "[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"), CompressLevelEnum.不压缩) + "]";
         cqMsg.setMessage(msg);
         cqManager.sendMsg(cqMsg);
