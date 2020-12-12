@@ -11,7 +11,7 @@ import java.util.ResourceBundle;
  */
 public class Overall {
     /**
-     * 指定配置文件
+     * 指定API Key等私密信息的配置文件
      */
     public final static ResourceBundle CABBAGE_CONFIG = ResourceBundle.getBundle("cabbage");
 
@@ -21,6 +21,5 @@ public class Overall {
 
     public final static ParameterEnum[] EMPTY_PARAMETER_LIST = new ParameterEnum[]{};
 
-    public final static String LAST_MODIFIED  = "2018-5-22 21:41:31";
 }
 
