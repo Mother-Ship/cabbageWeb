@@ -62,7 +62,7 @@ public class SmokeUtil {
         for (RespData respData : groups) {
             if(!REPEAT_RECORD_GROUP.contains(String.valueOf(respData.getGroupId()))
                     &&!REPEAT_SMOKE_GROUP.contains(String.valueOf(respData.getGroupId()))) {
-                MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
+//                MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
             }else{
                 MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
             }

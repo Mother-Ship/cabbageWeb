@@ -91,24 +91,24 @@ public class CqAdminServiceImpl {
      * 其实好像没必要做成静态的了……？但是静态的似乎也没啥影响，先留着吧
      */
     private static void loadCache() {
-        //调用NIO遍历那些可以加载一次的文件
-        //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
-        ImgUtil.images = new HashMap<>();
-        //逻辑改为从数据库加载
-        List<Map<String, Object>> list = resDAO.getImages();
-        for (Map<String, Object> aList : list) {
-            String name = (String) aList.get("name");
-            Matcher m = RegularPattern.OSU_USER_ID.matcher(name);
-            //节约内存，只缓存不是用户自定义的BG
-            if (!m.find()) {
-                byte[] data = (byte[]) aList.get("data");
-                try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
-                    ImgUtil.images.put(name, ImageIO.read(in));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+//        //调用NIO遍历那些可以加载一次的文件
+//        //在方法体内初始化，重新初始化的时候就可以去除之前缓存的文件
+//        ImgUtil.images = new HashMap<>();
+//        //逻辑改为从数据库加载
+//        List<Map<String, Object>> list = resDAO.getImages();
+//        for (Map<String, Object> aList : list) {
+//            String name = (String) aList.get("name");
+//            Matcher m = RegularPattern.OSU_USER_ID.matcher(name);
+//            //节约内存，只缓存不是用户自定义的BG
+//            if (!m.find()) {
+//                byte[] data = (byte[]) aList.get("data");
+//                try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
+//                    ImgUtil.images.put(name, ImageIO.read(in));
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
     }
 
     public void addUserRole(CqMsg cqMsg) {
@@ -369,10 +369,10 @@ public class CqAdminServiceImpl {
                 cqManager.sendMsg(cqMsg);
                 logger.info(aList.getUserId() + "被" + operator + "禁言" + argument.getSecond() + "秒。");
             }
-            String img = imgUtil.drawImage(ImgUtil.images.get("smokeAll.png"), CompressLevelEnum.不压缩);
-            cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
-            cqMsg.setMessageType("group");
-            cqManager.sendMsg(cqMsg);
+//            String img = imgUtil.drawImage(ImgUtil.images.get("smokeAll.png"), CompressLevelEnum.不压缩);
+//            cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
+//            cqMsg.setMessageType("group");
+//            cqManager.sendMsg(cqMsg);
         } else {
             logger.info(argument.getQq() + "被" + cqMsg.getUserId() + "禁言" + argument.getSecond() + "秒。");
             if (argument.getSecond() > 0) {
@@ -864,29 +864,4 @@ public class CqAdminServiceImpl {
 
     }
 
-    @Scheduled(cron = "0 0 * * * ?")
-    public void watch() {
-        CqMsg cqMsg = new CqMsg();
-        cqMsg.setMessageType("group");
-        cqMsg.setGroupId(693299572L);
-        cqMsg.setSelfId(1335734629L);
-        String msg = "";
-        long time = System.currentTimeMillis();
-        for (int i = 0; i < 10; i++) {
-            apiManager.getUser(0, "peppy");
-        }
-        Long afterQueryOsuApiFor10Times = System.currentTimeMillis();
-        if ((afterQueryOsuApiFor10Times - time) / 10 > 1000) {
-            msg += "osu! API访问缓慢，此时10次平均访问时间为：" + (afterQueryOsuApiFor10Times - time) / 10;
-        }
-        Long afterDrawStat = System.currentTimeMillis();
-        msg += "[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"), CompressLevelEnum.不压缩) + "]";
-        cqMsg.setMessage(msg);
-        cqManager.sendMsg(cqMsg);
-
-        cqMsg.setSelfId(1020640876L);
-        msg = "[CQ:image,file=base64://" + imgUtil.drawImage(ImgUtil.images.get("test.png"), CompressLevelEnum.不压缩) + "]";
-        cqMsg.setMessage(msg);
-        cqManager.sendMsg(cqMsg);
-    }
 }

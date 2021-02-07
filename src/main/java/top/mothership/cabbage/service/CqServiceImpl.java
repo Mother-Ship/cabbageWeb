@@ -600,10 +600,10 @@ public class CqServiceImpl {
     public void help(CqMsg cqMsg) {
         String img;
         if ((int) (Math.random() * 20) == 1) {
-            img = imgUtil.drawImage(ImgUtil.images.get("helpTrick.png"), CompressLevelEnum.不压缩);
+            img = imgUtil.drawImage(imgUtil.get("helpTrick.png"), CompressLevelEnum.不压缩);
             cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
         } else {
-            img = imgUtil.drawImage(ImgUtil.images.get("help.png"), CompressLevelEnum.不压缩);
+            img = imgUtil.drawImage(imgUtil.get("help.png"), CompressLevelEnum.不压缩);
         }
         cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
         cqManager.sendMsg(cqMsg);

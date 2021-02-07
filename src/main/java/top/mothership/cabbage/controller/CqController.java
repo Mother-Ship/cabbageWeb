@@ -13,7 +13,6 @@ import top.mothership.cabbage.enums.ParameterEnum;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.manager.DayLilyManager;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
-import top.mothership.cabbage.service.AnalyzeServiceImpl;
 import top.mothership.cabbage.service.CqAdminServiceImpl;
 import top.mothership.cabbage.service.CqServiceImpl;
 import top.mothership.cabbage.util.qq.SmokeUtil;
@@ -35,7 +34,6 @@ public class CqController {
     private final SmokeUtil smokeUtil;
     private final CqAdminServiceImpl cqAdminService;
     private final CqManager cqManager;
-    private final AnalyzeServiceImpl analyzeService;
     private final DayLilyManager dayLilyManager;
 
     private Logger logger = LogManager.getLogger(this.getClass());
@@ -46,16 +44,15 @@ public class CqController {
      * @param smokeUtil      负责禁言的工具类
      * @param cqAdminService
      * @param cqManager
-     * @param analyzeService
      * @param dayLilyManager
      */
     @Autowired
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, CqManager cqManager, AnalyzeServiceImpl analyzeService, DayLilyManager dayLilyManager) {
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, CqManager cqManager, DayLilyManager dayLilyManager) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
         this.cqAdminService = cqAdminService;
         this.cqManager = cqManager;
-        this.analyzeService = analyzeService;
+
         this.dayLilyManager = dayLilyManager;
     }
 
@@ -72,9 +69,9 @@ public class CqController {
             case "message":
                 //转义
                 String msg = cqMsg.getMessage();
-                msg = msg.replaceAll("&amp;#91;", "[");
-                msg = msg.replaceAll("&amp;#93;", "]");
-                msg = msg.replaceAll("&amp;#44;", ",");
+                msg = msg.replaceAll("&#91;", "[");
+                msg = msg.replaceAll("&#93;", "]");
+                msg = msg.replaceAll("&#44;", ",");
                 cqMsg.setMessage(msg);
                 String msgWithoutImage;
                 Matcher imageMatcher = CQCodePattern.SINGLE_IMG.matcher(msg);
@@ -396,31 +393,6 @@ public class CqController {
                                 case "switchborder":
                                     cqService.switchBorder(cqMsg);
                                     break;
-                                case "addmap":
-                                    analyzeService.addTargetMap(cqMsg);
-                                    break;
-                                case "delmap":
-                                    analyzeService.delTargetMap(cqMsg);
-                                    break;
-                                case "delallmap":
-                                    analyzeService.delAllTargetMap(cqMsg);
-                                    break;
-                                case "listmap":
-                                    analyzeService.listTargetMap(cqMsg);
-                                    break;
-                                case "adduser":
-                                    analyzeService.addTargetUser(cqMsg);
-                                    break;
-                                case "deluser":
-                                    analyzeService.delTargetUser(cqMsg);
-                                    break;
-                                case "delalluser":
-                                    analyzeService.delAllTargetUser(cqMsg);
-                                    break;
-                                case "listuser":
-                                    analyzeService.listTargetUser(cqMsg);
-                                    break;
-
                                 default:
                                     doLog = false;
                                     break;

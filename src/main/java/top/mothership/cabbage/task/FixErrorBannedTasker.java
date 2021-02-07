@@ -44,7 +44,7 @@ public class FixErrorBannedTasker {
     }
 
 
-//    @Scheduled(cron = "0 0 * * * ?")
+    @Scheduled(cron = "0 0 * * * ?")
     public void refreshBannedStatus() {
         List<User> list = userDAO.listBannedUser();
         for (User user : list) {

@@ -49,14 +49,12 @@ import static top.mothership.cabbage.enums.CompressLevelEnum.不压缩;
 @Component
 //采用原型模式注入，避免出现错群问题
 //2017-11-6 12:50:14改为全部返回BASE64编码
-@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS, value = "prototype")
-
 
 public class ImgUtil {
     /**
      * 2017-9-8 13:55:42我他妈是个智障……没初始化的map我在下面用
      */
-    public static Map<String, BufferedImage> images;
+//    public static Map<String, BufferedImage> images;
     private static Logger logger = LogManager.getLogger(ImgUtil.class);
     private WebPageManager webPageManager;
     private ScoreUtil scoreUtil;
@@ -78,7 +76,15 @@ public class ImgUtil {
         //而且resDAO也不能在这个类里声明……反正是初始化顺序的原因
         this.resDAO = resDAO;
     }
-
+    public BufferedImage get(String name){
+        byte[] data = (byte[]) resDAO.getImage(name);
+        try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
+            return ImageIO.read(in);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     /**
      * 绘制Stat图片（已改造完成）
@@ -96,13 +102,13 @@ public class ImgUtil {
     public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean approximate, int scoreRank, Integer mode) {
         BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId());
         BufferedImage bg = null;
-        BufferedImage layout = getCopyImage(images.get("layout.png"));
-        BufferedImage scoreRankBG = getCopyImage(images.get("scorerank.png"));
+        BufferedImage layout = getCopyImage(get("layout.png"));
+        BufferedImage scoreRankBG = getCopyImage(get("scorerank.png"));
         BufferedImage roleBg;
         try {
-            roleBg = getCopyImage(images.get("role-" + role + ".png"));
+            roleBg = getCopyImage(get("role-" + role + ".png"));
         } catch (NullPointerException e) {
-            roleBg = getCopyImage(images.get("role-creep.png"));
+            roleBg = getCopyImage(get("role-creep.png"));
         }
 
         byte[] data = (byte[]) resDAO.getImage(userFromAPI.getUserId() + ".png");
@@ -118,11 +124,11 @@ public class ImgUtil {
         } else {
             //现在已经不用再去扫描硬盘了啊
             try {
-                bg = getCopyImage(images.get(role + ".png"));
+                bg = getCopyImage(get(role + ".png"));
             } catch (NullPointerException ignore) {
                 //这个异常是在出现了新用户组，但是没有准备这个用户组的背景时候出现
                 //2018-2-27 09:34:46 调整逻辑，没准备背景时候使用默认
-                bg = getCopyImage(images.get("creep.png"));
+                bg = getCopyImage(get("creep.png"));
             }
         }
 
@@ -130,7 +136,7 @@ public class ImgUtil {
         //绘制布局
         g2.drawImage(layout, 0, 0, null);
         //模式的图标
-        g2.drawImage(images.get("mode-" + mode + ".png"), 365, 80, null);
+        g2.drawImage(get("mode-" + mode + ".png"), 365, 80, null);
         //用户组对应的背景
         g2.drawImage(roleBg, 0, 0, null);
         try {
@@ -355,25 +361,25 @@ public class ImgUtil {
     public String drawUserBP(Userinfo userFromAPI, List<Score> list, Integer mode, boolean mixedmode) {
 
         //计算最终宽高
-        int height = images.get("bptop.png").getHeight();
+        int height = get("bptop.png").getHeight();
         int heightpoint = 0;
-        int width = images.get("bptop.png").getWidth();
+        int width = get("bptop.png").getWidth();
         for (Score aList : list) {
             if (aList.getBeatmapName().length() <= 80) {
-                height = height + images.get("bpmid2.png").getHeight();
+                height = height + get("bpmid2.png").getHeight();
             } else {
-                height = height + images.get("bpmid3.png").getHeight();
+                height = height + get("bpmid3.png").getHeight();
             }
         }
         BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = result.createGraphics();
 
         //头部
-        BufferedImage bpTop = getCopyImage(images.get("bptop.png"));
+        BufferedImage bpTop = getCopyImage(get("bptop.png"));
         Graphics2D g2 = (Graphics2D) bpTop.getGraphics();
         //模式图标(所有bp为同一模式的时候画在顶上)
         if (!mixedmode) {
-            g2.drawImage(images.get("mode-" + mode + ".png"), 650, 4, null);
+            g2.drawImage(get("mode-" + mode + ".png"), 650, 4, null);
         }
         //那行字
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -404,10 +410,10 @@ public class ImgUtil {
             Graphics2D g3 = null;
             switch (a) {
                 case 2:
-                    bpMid = getCopyImage(images.get("bpmid2.png"));
+                    bpMid = getCopyImage(get("bpmid2.png"));
                     g3 = bpMid.createGraphics();
                     //小图标
-                    g3.drawImage(images.get(aList.getRank() + "_small.png"), 10, 2, null);
+                    g3.drawImage(get(aList.getRank() + "_small.png"), 10, 2, null);
                     //绘制文字
                     g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     //绘制日期(给的就是北京时间，不转)
@@ -428,14 +434,14 @@ public class ImgUtil {
                     drawTextToImage(g3, "#3843a6", "Ubuntu Medium", 16,
                             aList.getBeatmapName() + "(" + acc + "%)", 26, 16);
                     if (mixedmode) {
-                        g3.drawImage(images.get("mode-" + aList.getMode() + ".png"), 650, 4, null);
+                        g3.drawImage(get("mode-" + aList.getMode() + ".png"), 650, 4, null);
                     }
                     break;
                 case 3:
-                    bpMid = getCopyImage(images.get("bpmid3.png"));
+                    bpMid = getCopyImage(get("bpmid3.png"));
                     g3 = bpMid.createGraphics();
                     //小图标
-                    g3.drawImage(images.get(aList.getRank() + "_small.png"), 10, 1, null);
+                    g3.drawImage(get(aList.getRank() + "_small.png"), 10, 1, null);
                     //绘制文字
                     g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     //绘制日期(给的就是北京时间，不转)
@@ -461,7 +467,7 @@ public class ImgUtil {
                             7, 30);
                     //模式图标
                     if (mixedmode) {
-                        g3.drawImage(images.get("mode-" + aList.getMode() + ".png"), 650, 4, null);
+                        g3.drawImage(get("mode-" + aList.getMode() + ".png"), 650, 4, null);
                     }
                     break;
                 default:
@@ -512,15 +518,15 @@ public class ImgUtil {
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
         //画上各个元素，这里Images按文件名排序
         //顶端banner(下方也暗化了20%，JAVA自带算法容易导致某些图片生成透明图片)
-        g2.drawImage(images.get("bpBanner.png"), 0, 0, null);
+        g2.drawImage(get("bpBanner.png"), 0, 0, null);
 
 
         //Rank
-        g2.drawImage(images.get("ranking-" + score.getRank() + ".png").getScaledInstance(images.get("ranking-" + score.getRank() + ".png").getWidth(), images.get("ranking-" + score.getRank() + ".png").getHeight(), Image.SCALE_SMOOTH), 1131 - 245, 341 - 242, null);
+        g2.drawImage(get("ranking-" + score.getRank() + ".png").getScaledInstance(get("ranking-" + score.getRank() + ".png").getWidth(), get("ranking-" + score.getRank() + ".png").getHeight(), Image.SCALE_SMOOTH), 1131 - 245, 341 - 242, null);
 
         //FC
         if (score.getPerfect() == 1) {
-            g2.drawImage(images.get("ranking-perfect.png"), 296 - 30, 675 - 37, null);
+            g2.drawImage(get("ranking-perfect.png"), 296 - 30, 675 - 37, null);
         }
         //分数 图片扩大到1.27倍
         //分数是否上e，每个数字的位置都不一样
@@ -528,7 +534,7 @@ public class ImgUtil {
             char[] Score = String.valueOf(score.getScore()).toCharArray();
             for (int i = 0; i < Score.length; i++) {
                 //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                g2.drawImage(images.get("score-" + Score[i] + ".png"), 55 * i + 128 - 21, 173 - 55, null);
+                g2.drawImage(get("score-" + Score[i] + ".png"), 55 * i + 128 - 21, 173 - 55, null);
             }
         } else {
             char[] Score = String.valueOf(score.getScore()).toCharArray();
@@ -537,14 +543,14 @@ public class ImgUtil {
                     //如果分数不到8位，左边用0补全
                     //获取Score的长度和8的差距，然后把i小于等于这个差距的时候画的数字改成0
                     if (i < 8 - Score.length) {
-                        g2.drawImage(images.get("score-0.png"), 55 * i + 141 - 6, 173 - 55, null);
+                        g2.drawImage(get("score-0.png"), 55 * i + 141 - 6, 173 - 55, null);
                     } else {
                         //第一次应该拿的是数组里第0个字符
-                        g2.drawImage(images.get("score-" + Score[i - 8 + Score.length] + ".png"), 55 * i + 141 - 6, 173 - 55, null);
+                        g2.drawImage(get("score-" + Score[i - 8 + Score.length] + ".png"), 55 * i + 141 - 6, 173 - 55, null);
                     }
                 } else {
                     //直接绘制
-                    g2.drawImage(images.get("score-" + Score[i] + ".png"), 55 * i + 141 - 6, 173 - 55, null);
+                    g2.drawImage(get("score-" + Score[i] + ".png"), 55 * i + 141 - 6, 173 - 55, null);
                 }
             }
         }
@@ -554,10 +560,10 @@ public class ImgUtil {
         char[] Combo = String.valueOf(score.getMaxCombo()).toCharArray();
         for (int i = 0; i < Combo.length; i++) {
             //第二个参数是数字之间的距离+第一个数字离最左边的距离
-            g2.drawImage(images.get("score-" + Combo[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 30 - 7, 576 - 55 + 10, null);
+            g2.drawImage(get("score-" + Combo[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 30 - 7, 576 - 55 + 10, null);
         }
         //画上结尾的x
-        g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * Combo.length + 30 - 7, 576 - 55 + 10, null);
+        g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * Combo.length + 30 - 7, 576 - 55 + 10, null);
 
 
         char[] count300 = String.valueOf(score.getCount300()).toCharArray();
@@ -570,57 +576,57 @@ public class ImgUtil {
             case 0:
                 //STD
 
-                g2.drawImage(images.get("hit300.png").getScaledInstance(73, 73, Image.SCALE_SMOOTH), 30 - 4, 245 - 27, null);
+                g2.drawImage(get("hit300.png").getScaledInstance(73, 73, Image.SCALE_SMOOTH), 30 - 4, 245 - 27, null);
                 for (int i = 0; i < count300.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count300[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
+                    g2.drawImage(get("score-" + count300[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
 
                 //激
-                g2.drawImage(images.get("hit300.png").getScaledInstance(73, 73, Image.SCALE_SMOOTH), 350 - 4, 245 - 27, null);
+                g2.drawImage(get("hit300.png").getScaledInstance(73, 73, Image.SCALE_SMOOTH), 350 - 4, 245 - 27, null);
                 for (int i = 0; i < countgeki.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + countgeki[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
+                    g2.drawImage(get("score-" + countgeki[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
                 //100
-                g2.drawImage(images.get("hit100.png").getScaledInstance(50, 30, Image.SCALE_SMOOTH), 44 - 5, 346 - 8, null);
+                g2.drawImage(get("hit100.png").getScaledInstance(50, 30, Image.SCALE_SMOOTH), 44 - 5, 346 - 8, null);
                 for (int i = 0; i < count100.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count100[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
+                    g2.drawImage(get("score-" + count100[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
 
                 //喝
-                g2.drawImage(images.get("hit100.png").getScaledInstance(50, 30, Image.SCALE_SMOOTH), 364 - 5, 346 - 8, null);
+                g2.drawImage(get("hit100.png").getScaledInstance(50, 30, Image.SCALE_SMOOTH), 364 - 5, 346 - 8, null);
                 for (int i = 0; i < countkatu.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + countkatu[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
+                    g2.drawImage(get("score-" + countkatu[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 455 - 8, 374 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 455 - 8, 374 - 55, null);
 
                 //50
-                g2.drawImage(images.get("hit50.png").getScaledInstance(35, 30, Image.SCALE_SMOOTH), 51 - 5, 455 - 21, null);
+                g2.drawImage(get("hit50.png").getScaledInstance(35, 30, Image.SCALE_SMOOTH), 51 - 5, 455 - 21, null);
                 for (int i = 0; i < count50.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count50[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
+                    g2.drawImage(get("score-" + count50[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count50.length + 134 - 7, 470 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count50.length + 134 - 7, 470 - 55, null);
 
                 //x
-                g2.drawImage(images.get("hit0.png").getScaledInstance(32, 32, Image.SCALE_SMOOTH), 376 - 4, 437 - 5, null);
+                g2.drawImage(get("hit0.png").getScaledInstance(32, 32, Image.SCALE_SMOOTH), 376 - 4, 437 - 5, null);
                 for (int i = 0; i < count0.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count0[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 470 - 55, null);
+                    g2.drawImage(get("score-" + count0[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 470 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 455 - 8, 470 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 455 - 8, 470 - 55, null);
 
                 if (oppaiResult != null) {
 
@@ -637,7 +643,7 @@ public class ImgUtil {
                     }
 
                     //底端PP面板，在oppai计算结果不是null的时候
-                    g2.drawImage(images.get("ppBanner.png"), 570, 700, null);
+                    g2.drawImage(get("ppBanner.png"), 570, 700, null);
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setPaint(Color.decode("#ff66a9"));
                     g2.setFont(new Font("Gayatri", 0, 60));
@@ -683,50 +689,50 @@ public class ImgUtil {
             case 1:
                 //太鼓
                 //300
-                g2.drawImage(images.get("taiko-hit300.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 40 - 4, 263 - 27, null);
+                g2.drawImage(get("taiko-hit300.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 40 - 4, 263 - 27, null);
                 for (int i = 0; i < count300.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count300[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
+                    g2.drawImage(get("score-" + count300[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
 
                 //激
-                g2.drawImage(images.get("taiko-hit300g.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 360 - 4, 263 - 27, null);
+                g2.drawImage(get("taiko-hit300g.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 360 - 4, 263 - 27, null);
                 for (int i = 0; i < countgeki.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + countgeki[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
+                    g2.drawImage(get("score-" + countgeki[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
                 //100
-                g2.drawImage(images.get("taiko-hit100.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 42 - 5, 341 - 8, null);
+                g2.drawImage(get("taiko-hit100.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 42 - 5, 341 - 8, null);
                 for (int i = 0; i < count100.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count100[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
+                    g2.drawImage(get("score-" + count100[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
 
                 //喝
-                g2.drawImage(images.get("taiko-hit100k.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 362 - 5, 341 - 8, null);
+                g2.drawImage(get("taiko-hit100k.png").getScaledInstance(45, 40, Image.SCALE_SMOOTH), 362 - 5, 341 - 8, null);
                 for (int i = 0; i < countkatu.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + countkatu[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
+                    g2.drawImage(get("score-" + countkatu[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 455 - 8, 374 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 455 - 8, 374 - 55, null);
 
                 //x
-                g2.drawImage(images.get("taiko-hit0.png").getScaledInstance(56, 56, Image.SCALE_SMOOTH), 42 - 5, 440 - 21, null);
+                g2.drawImage(get("taiko-hit0.png").getScaledInstance(56, 56, Image.SCALE_SMOOTH), 42 - 5, 440 - 21, null);
                 for (int i = 0; i < count0.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count0[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
+                    g2.drawImage(get("score-" + count0[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 134 - 7, 470 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 134 - 7, 470 - 55, null);
                 if (score.getPp() != null) {
-                    g2.drawImage(images.get("ppBanner2.png"), 570, 700, null);
+                    g2.drawImage(get("ppBanner2.png"), 570, 700, null);
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setPaint(Color.decode("#ff66a9"));
                     g2.setFont(new Font("Gayatri", 0, 60));
@@ -740,50 +746,50 @@ public class ImgUtil {
             case 2:
                 //CTB
                 //300
-                g2.drawImage(images.get("fruit-orange-overlay.png").getScaledInstance(64, 64, Image.SCALE_SMOOTH), 40 - 4, 250 - 27, null);
+                g2.drawImage(get("fruit-orange-overlay.png").getScaledInstance(64, 64, Image.SCALE_SMOOTH), 40 - 4, 250 - 27, null);
                 for (int i = 0; i < count300.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count300[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
+                    g2.drawImage(get("score-" + count300[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 238 - 7, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 7, 238 - 7, null);
 
                 //100
 
-                g2.drawImage(images.get("fruit-drop.png").getScaledInstance(54, 62, Image.SCALE_SMOOTH), 44 - 5, 330 - 8, null);
+                g2.drawImage(get("fruit-drop.png").getScaledInstance(54, 62, Image.SCALE_SMOOTH), 44 - 5, 330 - 8, null);
                 for (int i = 0; i < count100.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count100[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
+                    g2.drawImage(get("score-" + count100[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 374 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 134 - 7, 374 - 55, null);
 
 
                 //50
                 //翻转180度
 
-                g2.drawImage(images.get("fruit-drop-reverse.png").getScaledInstance(45, 51, Image.SCALE_SMOOTH), 51 - 5, 440 - 21, null);
+                g2.drawImage(get("fruit-drop-reverse.png").getScaledInstance(45, 51, Image.SCALE_SMOOTH), 51 - 5, 440 - 21, null);
                 for (int i = 0; i < count50.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count50[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
+                    g2.drawImage(get("score-" + count50[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 7, 470 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count50.length + 134 - 7, 470 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count50.length + 134 - 7, 470 - 55, null);
 
 
                 //x
                 //将橘子图标缩小
-                g2.drawImage(images.get("fruit-orange-overlay.png").getScaledInstance(50, 50, Image.SCALE_SMOOTH), 360 - 4, 255 - 27, null);
+                g2.drawImage(get("fruit-orange-overlay.png").getScaledInstance(50, 50, Image.SCALE_SMOOTH), 360 - 4, 255 - 27, null);
                 //补上那个小x
-                g2.drawImage(images.get("hit0.png").getScaledInstance(10, 10, Image.SCALE_SMOOTH), 360 - 4, 255 - 27, null);
+                g2.drawImage(get("hit0.png").getScaledInstance(10, 10, Image.SCALE_SMOOTH), 360 - 4, 255 - 27, null);
                 for (int i = 0; i < count0.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count0[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
+                    g2.drawImage(get("score-" + count0[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 455 - 8, 238 - 7, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 455 - 8, 238 - 7, null);
                 if (score.getPp() != null) {
-                    g2.drawImage(images.get("ppBanner2.png"), 570, 700, null);
+                    g2.drawImage(get("ppBanner2.png"), 570, 700, null);
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setPaint(Color.decode("#ff66a9"));
                     g2.setFont(new Font("Gayatri", 0, 60));
@@ -796,60 +802,60 @@ public class ImgUtil {
                 break;
             case 3:
                 //mania
-                g2.drawImage(images.get("mania-hit300.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 10 - 4, 263 - 27, null);
+                g2.drawImage(get("mania-hit300.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 10 - 4, 263 - 27, null);
                 for (int i = 0; i < count300.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count300[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 2, 238 - 7, null);
+                    g2.drawImage(get("score-" + count300[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 2, 238 - 7, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 2, 238 - 7, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count300.length + 134 - 2, 238 - 7, null);
 
                 //320
-                g2.drawImage(images.get("mania-hit300g.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 320 - 4, 263 - 27, null);
+                g2.drawImage(get("mania-hit300g.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 320 - 4, 263 - 27, null);
                 for (int i = 0; i < countgeki.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + countgeki[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
+                    g2.drawImage(get("score-" + countgeki[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 238 - 7, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countgeki.length + 455 - 8, 238 - 7, null);
 
                 //200
-                g2.drawImage(images.get("mania-hit200.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 14 - 5, 336 - 8, null);
+                g2.drawImage(get("mania-hit200.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 14 - 5, 336 - 8, null);
                 for (int i = 0; i < countkatu.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + countkatu[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 2, 374 - 55, null);
+                    g2.drawImage(get("score-" + countkatu[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 2, 374 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 134 - 2, 374 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * countkatu.length + 134 - 2, 374 - 55, null);
 
                 //100
-                g2.drawImage(images.get("mania-hit100.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 320 - 5, 336 - 8, null);
+                g2.drawImage(get("mania-hit100.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 320 - 5, 336 - 8, null);
                 for (int i = 0; i < count100.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count100[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
+                    g2.drawImage(get("score-" + count100[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 374 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 455 - 8, 374 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count100.length + 455 - 8, 374 - 55, null);
 
                 //50
-                g2.drawImage(images.get("mania-hit50.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 1, 442 - 21, null);
+                g2.drawImage(get("mania-hit50.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 1, 442 - 21, null);
                 for (int i = 0; i < count50.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count50[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 2, 470 - 55, null);
+                    g2.drawImage(get("score-" + count50[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 134 - 2, 470 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count50.length + 134 - 2, 470 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count50.length + 134 - 2, 470 - 55, null);
 
                 //x
-                g2.drawImage(images.get("mania-hit0.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 318 - 4, 429 - 5, null);
+                g2.drawImage(get("mania-hit0.png").getScaledInstance(137, 30, Image.SCALE_SMOOTH), 318 - 4, 429 - 5, null);
                 for (int i = 0; i < count0.length; i++) {
                     //第二个参数是数字之间的距离+第一个数字离最左边的距离
-                    g2.drawImage(images.get("score-" + count0[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 470 - 55, null);
+                    g2.drawImage(get("score-" + count0[i] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * i + 455 - 8, 470 - 55, null);
                 }
                 //画上结尾的x
-                g2.drawImage(images.get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 455 - 8, 470 - 55, null);
+                g2.drawImage(get("score-x.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * count0.length + 455 - 8, 470 - 55, null);
                 if (score.getPp() != null) {
-                    g2.drawImage(images.get("ppBanner2.png"), 570, 700, null);
+                    g2.drawImage(get("ppBanner2.png"), 570, 700, null);
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setPaint(Color.decode("#ff66a9"));
                     g2.setFont(new Font("Gayatri", 0, 60));
@@ -866,32 +872,32 @@ public class ImgUtil {
         //acc
         if (acc == 100) {
             //从最左边的数字开始，先画出100
-            g2.drawImage(images.get("score-1.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * 0 + 317 - 8, 576 - 55 + 10, null);
-            g2.drawImage(images.get("score-0.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * 1 + 317 - 8, 576 - 55 + 10, null);
-            g2.drawImage(images.get("score-0.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * 2 + 317 - 8, 576 - 55 + 10, null);
+            g2.drawImage(get("score-1.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * 0 + 317 - 8, 576 - 55 + 10, null);
+            g2.drawImage(get("score-0.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * 1 + 317 - 8, 576 - 55 + 10, null);
+            g2.drawImage(get("score-0.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * 2 + 317 - 8, 576 - 55 + 10, null);
             //打点
-            g2.drawImage(images.get("score-dot.png").getScaledInstance(20, 45, Image.SCALE_SMOOTH), 37 * 1 + 407 - 8, 576 - 55 + 10, null);
+            g2.drawImage(get("score-dot.png").getScaledInstance(20, 45, Image.SCALE_SMOOTH), 37 * 1 + 407 - 8, 576 - 55 + 10, null);
             //从点的右边（+27像素）开始画两个0
-            g2.drawImage(images.get("score-0.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 37 * 1 + 407 - 8, 576 - 55 + 10, null);
-            g2.drawImage(images.get("score-0.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 37 * 2 + 407 - 8, 576 - 55 + 10, null);
-            g2.drawImage(images.get("score-percent.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 407 - 8 + 37 * 3, 576 - 55 + 10, null);
+            g2.drawImage(get("score-0.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 37 * 1 + 407 - 8, 576 - 55 + 10, null);
+            g2.drawImage(get("score-0.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 37 * 2 + 407 - 8, 576 - 55 + 10, null);
+            g2.drawImage(get("score-percent.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 407 - 8 + 37 * 3, 576 - 55 + 10, null);
         } else {
             //将ACC转化为整数部分、小数点和小数部分
             char[] accArray = accS.toCharArray();
-            g2.drawImage(images.get("score-" + accArray[0] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * 0 + 317 - 8 + 15, 576 - 55 + 10, null);
-            g2.drawImage(images.get("score-" + accArray[1] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * 1 + 317 - 8 + 15, 576 - 55 + 10, null);
+            g2.drawImage(get("score-" + accArray[0] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * 0 + 317 - 8 + 15, 576 - 55 + 10, null);
+            g2.drawImage(get("score-" + accArray[1] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 37 * 1 + 317 - 8 + 15, 576 - 55 + 10, null);
             //打点
-            g2.drawImage(images.get("score-dot.png").getScaledInstance(20, 45, Image.SCALE_SMOOTH), 407 - 8, 576 - 55 + 15, null);
+            g2.drawImage(get("score-dot.png").getScaledInstance(20, 45, Image.SCALE_SMOOTH), 407 - 8, 576 - 55 + 15, null);
 
-            g2.drawImage(images.get("score-" + accArray[3] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 407 - 8, 576 - 55 + 10, null);
-            g2.drawImage(images.get("score-" + accArray[4] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 407 - 8 + 37 * 1, 576 - 55 + 10, null);
-            g2.drawImage(images.get("score-percent.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 407 - 8 + 37 * 2, 576 - 55 + 10, null);
+            g2.drawImage(get("score-" + accArray[3] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 407 - 8, 576 - 55 + 10, null);
+            g2.drawImage(get("score-" + accArray[4] + ".png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 407 - 8 + 37 * 1, 576 - 55 + 10, null);
+            g2.drawImage(get("score-percent.png").getScaledInstance(40, 51, Image.SCALE_SMOOTH), 27 * 1 + 407 - 8 + 37 * 2, 576 - 55 + 10, null);
         }
         if (!mods.isEmpty()) {
             int i = 0;
             for (Map.Entry<String, String> entry : mods.entrySet()) {
                 //第一个mod画在1237，第二个画在1237+30,第三个1237-30(没有实现)
-                g2.drawImage(images.get("selection-mod-" + entry.getValue() + ".png"), 1237 - (50 * i), 375, null);
+                g2.drawImage(get("selection-mod-" + entry.getValue() + ".png"), 1237 - (50 * i), 375, null);
                 i++;
             }
         }
@@ -957,9 +963,9 @@ public class ImgUtil {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         //画好布局
-        g2.drawImage(images.get("fpLayout.png"), 0, 0, null);
+        g2.drawImage(get("fpLayout.png"), 0, 0, null);
         //Ranked状态
-        g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
+        g2.drawImage(get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
         //歌曲信息（这里不能是null）
         String title = "";
         //source artist
@@ -1089,11 +1095,11 @@ public class ImgUtil {
         g2.drawString("+" + new DecimalFormat("###,###").format(xE), 533 - a, 279);
 
         //Rank标志
-        g2.drawImage(images.get("fp" + score.getRank() + ".png"), 0, 0, null);
+        g2.drawImage(get("fp" + score.getRank() + ".png"), 0, 0, null);
         //头像上的灰板
-        g2.drawImage(images.get("fpMark.png"), 0, 0, null);
+        g2.drawImage(get("fpMark.png"), 0, 0, null);
         //谱面的Rank状态
-        g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
+        g2.drawImage(get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
         //右侧title
 
         g2.setPaint(Color.decode("#000000"));
@@ -1104,7 +1110,7 @@ public class ImgUtil {
                 break;
             default:
                 x = 982;
-                g2.drawImage(images.get("mode-" + mode + ".png"), x, 166, null);
+                g2.drawImage(get("mode-" + mode + ".png"), x, 166, null);
                 break;
         }
         if (unicode) {
@@ -1126,14 +1132,14 @@ public class ImgUtil {
         String[] b = String.valueOf(beatmap.getDifficultyRating()).split("\\.");
         //取出难度的整数部分，画上对应的star
         for (int i = 0; i < Integer.valueOf(b[0]); i++) {
-            g2.drawImage(images.get("fpStar.png"), x + 44 * i, 250, null);
+            g2.drawImage(get("fpStar.png"), x + 44 * i, 250, null);
         }
 
         //取出小数部分，缩放star并绘制在对应的地方
         float c = Integer.valueOf(b[1].substring(0, 1)) / 10F;
         //小于0.04的宽高会是0，
         if (c > 0.04) {
-            g2.drawImage(images.get("fpStar.png").getScaledInstance((int) (25 * c), (int) (25 * c), Image.SCALE_SMOOTH),
+            g2.drawImage(get("fpStar.png").getScaledInstance((int) (25 * c), (int) (25 * c), Image.SCALE_SMOOTH),
                     x + (Integer.valueOf(b[0])) * 44, (int) (250 + (1 - c) * 12.5), null);
         }
         //缩略图
@@ -1184,15 +1190,15 @@ public class ImgUtil {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         //画好布局
-        g2.drawImage(images.get("infoLayout.png"), 0, 0, null);
+        g2.drawImage(get("infoLayout.png"), 0, 0, null);
         //Ranked状态
-        g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
+        g2.drawImage(get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
 
         if (!modsMap.isEmpty()) {
             int i = 0;
             for (Map.Entry<String, String> entry : modsMap.entrySet()) {
                 //2018-2-27 09:31:41上移Mod图标位置
-                g2.drawImage(images.get("selection-mod-" + entry.getValue() + ".png"), 460 + (50 * i), 46, null);
+                g2.drawImage(get("selection-mod-" + entry.getValue() + ".png"), 460 + (50 * i), 46, null);
                 i++;
             }
         }
@@ -1289,7 +1295,7 @@ public class ImgUtil {
                         + " Stars(Old):" + new DecimalFormat("###.00").format(Double.valueOf(oppaiResult.getStarsLegacy())),
                 7, 125);
         //谱面的Rank状态
-        g2.drawImage(images.get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
+        g2.drawImage(get("fpRank" + beatmap.getApproved() + ".png"), 0, 0, null);
         //右侧title
 
         g2.setPaint(Color.decode("#000000"));
@@ -1314,14 +1320,14 @@ public class ImgUtil {
         String[] b = String.valueOf(oppaiResult.getStars()).split("\\.");
         //取出难度的整数部分，画上对应的star
         for (int i = 0; i < Integer.valueOf(b[0]); i++) {
-            g2.drawImage(images.get("fpStar.png"), 944 + 44 * i, 250, null);
+            g2.drawImage(get("fpStar.png"), 944 + 44 * i, 250, null);
         }
 
         //取出小数部分，缩放star并绘制在对应的地方
         float c = Integer.valueOf(b[1].substring(0, 1)) / 10F;
         //小于0.04的宽高会是0，
         if (c > 0.04) {
-            g2.drawImage(images.get("fpStar.png").getScaledInstance((int) (25 * c), (int) (25 * c), Image.SCALE_SMOOTH),
+            g2.drawImage(get("fpStar.png").getScaledInstance((int) (25 * c), (int) (25 * c), Image.SCALE_SMOOTH),
                     944 + (Integer.valueOf(b[0])) * 44, (int) (250 + (1 - c) * 12.5), null);
         }
         //缩略图
@@ -1376,7 +1382,7 @@ public class ImgUtil {
         double speed2 = speed;
         double stamina2 = stamina;
         double acc2 = acc;
-        BufferedImage bg = getCopyImage(images.get("costbg.png"));
+        BufferedImage bg = getCopyImage(get("costbg.png"));
         Graphics2D g2 = bg.createGraphics();
         double x = userinfo.getPpRaw() / 1000d;
         BigDecimal b = new BigDecimal(x);
@@ -1619,6 +1625,6 @@ public class ImgUtil {
 
     private BufferedImage getRandomBg() {
         String randomBG = "defaultBG1" + ((int) (Math.random() * 2) + 2) + ".png";
-        return getCopyImage(images.get(randomBG));
+        return getCopyImage(get(randomBG));
     }
 }
