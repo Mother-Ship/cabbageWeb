@@ -4,15 +4,12 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import okhttp3.MediaType;
+import okhttp3.*;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +20,6 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.constant.pattern.WebPagePattern;
 import top.mothership.cabbage.mapper.ResDAO;
@@ -134,115 +130,115 @@ public class WebPageManager {
      * @return the bg backup
      */
     public BufferedImage getBGBackup(Beatmap beatmap) {
+
         try {
-            DefaultHttpClient client = new DefaultHttpClient();
-            HttpGet get = new HttpGet("https://osu.ppy.sh/home");
-            client.execute(get);
-            List<org.apache.http.cookie.Cookie> cookies = client.getCookieStore().getCookies();
-            String token = null;
-            for (Cookie c : cookies) {
-                if (Objects.equals(c.getName(),"XSRF-TOKEN")){
-                    token = c.getValue();
+            Map<String, List<Cookie>> cookie = new HashMap<>();
+            OkHttpClient client1 = new OkHttpClient().newBuilder().cookieJar(new CookieJar() {
+                @Override
+                public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
+                    cookie.put(url.host(), cookies);
                 }
+
+                @Override
+                public List<Cookie> loadForRequest(HttpUrl url) {
+                    return cookie.get(url.host());
+                }
+            })
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("https://osu.ppy.sh/home")
+                    .build();
+            try (Response response = client1.newCall(request).execute()) {
+
+
+                request = new Request.Builder()
+                        .url("https://osu.ppy.sh/session")
+                        .addHeader("", "")
+                        .build();
+
             }
 
-            HttpPost post = new HttpPost("https://osu.ppy.sh/session");
-            //添加请求头
-            java.util.List<NameValuePair> urlParameters = new ArrayList<>();
 
-            urlParameters.add(new BasicNameValuePair("_token", token));
-            urlParameters.add(new BasicNameValuePair("username", Overall.CABBAGE_CONFIG.getString("accountForDL")));
-            urlParameters.add(new BasicNameValuePair("password", Overall.CABBAGE_CONFIG.getString("accountForDLPwd")));
-
-            logger.info("开始登录");
-            post.setEntity(new UrlEncodedFormEntity(urlParameters));
-            client.execute(post);
-
-            cookies = client.getCookieStore().getCookies();
-            StringBuilder cookie = new StringBuilder();
-            for (Cookie c : cookies) {
-                cookie.append(c.getName()).append(": ").append(c.getValue()).append("\n");
+//            if (cookie.toString().contains("osu_session")) {
+            //登录成功
+            DefaultHttpClient httpclient2 = new DefaultHttpClient();
+            OsuFile osuFile = parseOsuFile(beatmap);
+            if (osuFile == null) {
+                cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+                return null;
             }
-            post.releaseConnection();
-            if (cookie.toString().contains("osu_session")) {
-                //登录成功
-                DefaultHttpClient httpclient2 = new DefaultHttpClient();
-                OsuFile osuFile = parseOsuFile(beatmap);
-                if (osuFile == null) {
-                    cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
-                    return null;
-                }
-                httpclient2.setCookieStore(client.getCookieStore());
-                HttpGet httpGet = new HttpGet("https://osu.ppy.sh/beatmapsets/" + beatmap.getBeatmapSetId() + "/download");
-                HttpResponse httpResponse;
-                InputStream is;
-                try {
-                    httpResponse = httpclient2.execute(httpGet);
-                    HttpEntity entity = httpResponse.getEntity();
-                    is = entity.getContent();
-                } catch (IOException e) {
-                    cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，" + e.getMessage());
-                    e.printStackTrace();
-                    return null;
-                }
+//                httpclient2.setCookieStore(client.getCookieStore());
+            HttpGet httpGet = new HttpGet("https://osu.ppy.sh/beatmapsets/" + beatmap.getBeatmapSetId() + "/download");
+            HttpResponse httpResponse;
+            InputStream is;
+            try {
+                httpResponse = httpclient2.execute(httpGet);
+                HttpEntity entity = httpResponse.getEntity();
+                is = entity.getContent();
+            } catch (IOException e) {
+                cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，" + e.getMessage());
+                e.printStackTrace();
+                return null;
+            }
 
-                try (
-                        ZipInputStream zis = new ZipInputStream(new CheckedInputStream(is, new CRC32()))
-                ) {
-                    ZipEntry entry;
-                    while ((entry = zis.getNextEntry()) != null) {
-                        logger.info("当前文件名为：" + entry.getName());
-                        byte[] data = new byte[(int) entry.getSize()];
-                        int start = 0, end = 0, flag = 0;
-                        while (entry.getSize() - start > 0) {
-                            end = zis.read(data, start, (int) entry.getSize() - start);
-                            if (end <= 0) {
-                                logger.info("正在读取" + 100 + "%");
-                                break;
-                            }
-                            start += end;
-                            //每20%输出一次，如果为100则为1%
-                            if ((start - flag) > (int) entry.getSize() / 5) {
-                                flag = start;
-                                logger.info("正在读取" + (float) start / entry.getSize() * 100 + "%");
-                            }
-
+            try (
+                    ZipInputStream zis = new ZipInputStream(new CheckedInputStream(is, new CRC32()))
+            ) {
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    logger.info("当前文件名为：" + entry.getName());
+                    byte[] data = new byte[(int) entry.getSize()];
+                    int start = 0, end = 0, flag = 0;
+                    while (entry.getSize() - start > 0) {
+                        end = zis.read(data, start, (int) entry.getSize() - start);
+                        if (end <= 0) {
+                            logger.info("正在读取" + 100 + "%");
+                            break;
                         }
-                        String filename = entry.getName();
-                        if (filename.contains("/")) {
-                            filename = filename.substring(filename.indexOf("/") + 1);
-                        }
-                        if (osuFile.getBgName().equals(filename)) {
-                            ByteArrayInputStream in = new ByteArrayInputStream(data);
-                            BufferedImage bg = ImageIO.read(in);
-                            //懒得重构成方法了_(:з」∠)_
-                            //我错了 我不偷懒了_(:з」∠)_
-                            BufferedImage resizedBG = resizeImg(bg, 1366, 768);
-                            //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
-                            //在谱面rank状态是Ranked或者Approved时，写入硬盘
-                            if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
-                                //扩展名直接从文件里取
-                                try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                                    ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
-                                    resizedBG.flush();
-                                    byte[] imgBytes = out.toByteArray();
-                                    resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), imgBytes);
-                                } catch (IOException e) {
-                                    cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
-                                    return null;
-                                }
-                            }
-                            in.close();
-                            return resizedBG;
+                        start += end;
+                        //每20%输出一次，如果为100则为1%
+                        if ((start - flag) > (int) entry.getSize() / 5) {
+                            flag = start;
+                            logger.info("正在读取" + (float) start / entry.getSize() * 100 + "%");
                         }
 
                     }
+                    String filename = entry.getName();
+                    if (filename.contains("/")) {
+                        filename = filename.substring(filename.indexOf("/") + 1);
+                    }
+                    if (osuFile.getBgName().equals(filename)) {
+                        ByteArrayInputStream in = new ByteArrayInputStream(data);
+                        BufferedImage bg = ImageIO.read(in);
+                        //懒得重构成方法了_(:з」∠)_
+                        //我错了 我不偷懒了_(:з」∠)_
+                        BufferedImage resizedBG = resizeImg(bg, 1366, 768);
+                        //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
+                        //在谱面rank状态是Ranked或者Approved时，写入硬盘
+                        if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
+                            //扩展名直接从文件里取
+                            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                                ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
+                                resizedBG.flush();
+                                byte[] imgBytes = out.toByteArray();
+                                resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), imgBytes);
+                            } catch (IOException e) {
+                                cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
+                                return null;
+                            }
+                        }
+                        in.close();
+                        return resizedBG;
+                    }
 
-                } catch (Exception e) {
-                    cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
-                    return null;
                 }
+
+            } catch (Exception e) {
+                cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
+                return null;
             }
+//            }
         } catch (Exception e) {
             cqManager.warn("登录官网失败。" + e.getMessage());
             return null;

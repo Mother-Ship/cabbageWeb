@@ -1,11 +1,15 @@
 import org.junit.Test;
+import top.mothership.cabbage.manager.WebPageManager;
+import top.mothership.cabbage.pojo.osu.Beatmap;
 
 import java.io.IOException;
 
 public class SimpleTest {
     @Test
     public void Test() throws IOException {
+        Beatmap beatmap = new Beatmap();
 
+    new WebPageManager().getBGBackup(beatmap);
 
 //        String test = "osu file format v12\n" +
 //                "\n" +
