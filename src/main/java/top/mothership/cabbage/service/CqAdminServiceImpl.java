@@ -718,8 +718,9 @@ public class CqAdminServiceImpl {
         request.put(cqMsg, "否");
         CqMsg cqMsg1 = new CqMsg();
         User user = userDAO.getUser(cqMsg.getUserId(), null);
-        cqMsg1.setMessage("有新的拉群邀请，请注意查收：" + "Flag：" + cqMsg.getFlag() + "，群号：" + cqMsg.getGroupId()
-                + "，邀请人：" + cqMsg.getUserId() + "，根据邀请人QQ在白菜数据库中的查询结果：" + user);
+        cqMsg1.setMessage("有新的拉群邀请，请注意查收，编号："+cqMsg.getFlag()+"，群号：" + cqMsg.getGroupId()
+                + "，邀请人QQ：" + cqMsg.getUserId() + "，根据邀请人QQ在白菜数据库中的查询结果，用户名：" + user.getCurrentUname()
+                +"，模式："+user.getMode()+"，主显用户组："+user.getMainRole()+"，请复制下述命令通过请求");
         cqMsg1.setMessageType("private");
         cqMsg1.setSelfId(cqMsg.getSelfId());
         for (long i : Overall.ADMIN_LIST) {
@@ -727,6 +728,12 @@ public class CqAdminServiceImpl {
             cqMsg1.setUserId(i);
             cqManager.sendMsg(cqMsg1);
         }
+         for (long i : Overall.ADMIN_LIST) {
+             cqMsg.setMessage("!sudo handleInvite "+cqMsg.getFlag());
+             cqMsg1.setUserId(i);
+             cqManager.sendMsg(cqMsg1);
+        }
+
 
     }
 
