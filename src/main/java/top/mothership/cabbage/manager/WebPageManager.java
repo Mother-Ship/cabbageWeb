@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import okhttp3.*;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -20,6 +21,7 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.constant.pattern.WebPagePattern;
 import top.mothership.cabbage.mapper.ResDAO;
@@ -64,6 +66,8 @@ public class WebPageManager {
     private static final String OSU_UPDATE_INFO_URL = "https://osu.ppy.sh/web/check-updates.php?action=check&stream=stable40";
     private static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
+    private static OkHttpClient client = new OkHttpClient();
+
     @Autowired
     private ResDAO resDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
@@ -132,59 +136,69 @@ public class WebPageManager {
     public BufferedImage getBGBackup(Beatmap beatmap) {
 
         try {
-            Map<String, List<Cookie>> cookie = new HashMap<>();
-            OkHttpClient client1 = new OkHttpClient().newBuilder().cookieJar(new CookieJar() {
-                @Override
-                public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-                    cookie.put(url.host(), cookies);
-                }
-
-                @Override
-                public List<Cookie> loadForRequest(HttpUrl url) {
-                    return cookie.get(url.host());
-                }
-            })
-                    .build();
-
             Request request = new Request.Builder()
                     .url("https://osu.ppy.sh/home")
                     .build();
-            try (Response response = client1.newCall(request).execute()) {
-
-
-                request = new Request.Builder()
-                        .url("https://osu.ppy.sh/session")
-                        .addHeader("", "")
-                        .build();
+            String token = null;
+            String session = null;
+            try (Response response = client.newCall(request).execute()) {
+                if (!Objects.equals(response.code(), HttpStatus.SC_OK)){
+                    cqManager.warn("下载谱面" + beatmap.getBeatmapId() + "时访问官网失败");
+                    return null;
+                }
+                for (String s : response.headers().toMultimap().get("Set-Cookie")) {
+                    if (s.startsWith("XSRF-TOKEN")){
+                        token = s.substring(s.indexOf("=")+1,s.indexOf(";"));
+                    }
+                    if (s.startsWith("osu_session")){
+                        session = s.substring(s.indexOf("=")+1, s.indexOf(";"));
+                        break;
+                    }
+                }
+                System.out.println(token);
+                System.out.println(session);
+                System.out.println("token");
 
             }
 
+            FormBody.Builder builder = new FormBody.Builder();
 
-//            if (cookie.toString().contains("osu_session")) {
-            //登录成功
-            DefaultHttpClient httpclient2 = new DefaultHttpClient();
+            builder.add("_token",token);
+            builder.add("username", Overall.CABBAGE_CONFIG.getString("accountForDL"));
+            builder.add("password",Overall.CABBAGE_CONFIG.getString("accountForDLPwd"));
+
+            RequestBody body = builder.build();
+            request = new Request.Builder()
+                    .header("referer","https://osu.ppy.sh/home")
+                    .header("cookie","XSRF-TOKEN="+token+"; osu_session="+session)
+                    .url("https://osu.ppy.sh/session").post(body).build();
+
+            try (Response response = client.newCall(request).execute()) {
+                if (!Objects.equals(response.code(), HttpStatus.SC_OK)){
+                    cqManager.warn("下载谱面" + beatmap.getBeatmapId() + "时登陆失败，返回code："+response.code());
+                    return null;
+                }
+                for (String s : response.headers().toMultimap().get("Set-Cookie")) {
+                    if (s.startsWith("osu_session")){
+                        session = s.substring(s.indexOf("=")+1,s.indexOf(";"));
+                        break;
+                    }
+                }
+            }
             OsuFile osuFile = parseOsuFile(beatmap);
             if (osuFile == null) {
                 cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
                 return null;
             }
-//                httpclient2.setCookieStore(client.getCookieStore());
-            HttpGet httpGet = new HttpGet("https://osu.ppy.sh/beatmapsets/" + beatmap.getBeatmapSetId() + "/download");
-            HttpResponse httpResponse;
-            InputStream is;
-            try {
-                httpResponse = httpclient2.execute(httpGet);
-                HttpEntity entity = httpResponse.getEntity();
-                is = entity.getContent();
-            } catch (IOException e) {
-                cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，" + e.getMessage());
-                e.printStackTrace();
-                return null;
-            }
 
-            try (
-                    ZipInputStream zis = new ZipInputStream(new CheckedInputStream(is, new CRC32()))
-            ) {
+            request = new Request.Builder()
+                    .header("referer","https://osu.ppy.sh/beatmapsets/"+beatmap.getBeatmapSetId())
+                    .header("cookie","osu_session="+session)
+                    .url("https://osu.ppy.sh/beatmapsets/"+beatmap.getBeatmapSetId()+"/download").build();
+
+            try (Response response = client.newCall(request).execute();
+                 ZipInputStream zis = new ZipInputStream(new CheckedInputStream(response.body().byteStream(), new CRC32()))) {
+
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
                     logger.info("当前文件名为：" + entry.getName());
@@ -238,9 +252,8 @@ public class WebPageManager {
                 cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
                 return null;
             }
-//            }
         } catch (Exception e) {
-            cqManager.warn("登录官网失败。" + e.getMessage());
+            cqManager.warn("从官网获取谱面" + beatmap.getBeatmapId() + "的背景时出现异常");
             return null;
         }
         return null;
