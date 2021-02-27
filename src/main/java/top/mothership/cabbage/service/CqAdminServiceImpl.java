@@ -110,7 +110,7 @@ public class CqAdminServiceImpl {
 //            }
 //        }
     }
-
+    @UserAuthorityControl({670804973})
     public void addUserRole(CqMsg cqMsg) {
 
         Argument argument = cqMsg.getArgument();
@@ -178,7 +178,7 @@ public class CqAdminServiceImpl {
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
-
+    @UserAuthorityControl({670804973})
     public void delUserRole(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         List<String> usernames = argument.getUsernames();
@@ -237,7 +237,7 @@ public class CqAdminServiceImpl {
     }
 
 
-    @UserAuthorityControl({1427922341})
+    @UserAuthorityControl({1427922341,670804973})
     public void addComponent(CqMsg cqMsg) throws IOException {
         Argument argument = cqMsg.getArgument();
         //实验性功能
@@ -729,7 +729,7 @@ public class CqAdminServiceImpl {
             cqManager.sendMsg(cqMsg1);
         }
          for (long i : Overall.ADMIN_LIST) {
-             cqMsg.setMessage("!sudo handleInvite "+cqMsg.getFlag());
+             cqMsg1.setMessage("!sudo handleInvite "+cqMsg.getFlag());
              cqMsg1.setUserId(i);
              cqManager.sendMsg(cqMsg1);
         }
