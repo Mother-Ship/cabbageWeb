@@ -1097,7 +1097,7 @@ public class CqServiceImpl {
                     * Math.min(1, Math.pow((map2.get("Length") * (map2.get("BPM") / (190D * 150D))), 0.2D));
             String filename = imgUtil.drawRadarImage(map, userFromAPI);
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]\n"
-                    + "在**OCL系列比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(oclbS10Cost)
+                    + "在**OCL系列比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.000").format(oclbS10Cost)
                     + "。\n在**第六届某个不能提起名字的比赛**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(drugsS6Cost)
                     + "。\n在**第五届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S5Cost)
 //                    + "。\n在**第三届鱼塘杯**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(yuTangCost)
