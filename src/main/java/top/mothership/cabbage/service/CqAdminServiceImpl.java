@@ -572,7 +572,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @UserAuthorityControl({1427922341, 526942417})
+    @UserAuthorityControl({1427922341, 526942417,670804973})
     public void searchPlayer(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         String resp;
@@ -776,7 +776,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @UserAuthorityControl({496802290})
+    @UserAuthorityControl({496802290,670804973})
     public void roleInfo(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
 
@@ -808,13 +808,6 @@ public class CqAdminServiceImpl {
                         + "，绑定的QQ：" + user.getQq()
                         + "，当前rank：" + userinfo.getPpRank()
                         + "，PP：" + userinfo.getPpRaw();
-                if (userinfo1 != null && userinfo2 != null) {
-                    int day30 = userinfo.getPlayCount() - userinfo1.getPlayCount();
-                    int day90 = userinfo.getPlayCount() - userinfo2.getPlayCount();
-                    if (day90 < 3 * day30) {
-                        resp += "\n↑90天内PC：" + day90 + " 小于30天内PC" + day30 + " 的三倍，有小号嫌疑！";
-                    }
-                }
             } else {
                 if (user.isBanned()) {
                     resp += "\nuid：" + user.getUserId()
