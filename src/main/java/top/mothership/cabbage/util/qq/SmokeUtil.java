@@ -21,7 +21,7 @@ public class SmokeUtil {
             "201872650," +//MP5
             "112177148," +//MP4后花园
             "532783765," +//测试群
-            "1047435659," +//MP5赛群793981222
+            "895214831," +//MP5赛群793981222
             "521774765"//ODNL S3
     ).split(","));
     private final static List<String> REPEAT_RECORD_GROUP = Arrays.asList("576214175,532783765".split(","));

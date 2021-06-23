@@ -572,7 +572,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @UserAuthorityControl({1427922341, 526942417,670804973})
+    @UserAuthorityControl({1427922341, 526942417,670804973,934697463L})
     public void searchPlayer(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         String resp;
