@@ -30,7 +30,7 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.10.3</version>
+            <version>1.14.2</version>
         </dependency>
         <!--2）JSON解析 https://mvnrepository.com/artifact/com.google.code.gson/gson -->
         <dependency>
