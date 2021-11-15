@@ -952,6 +952,9 @@ public class CqServiceImpl {
             case "1005266186":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：http://www.mpmatch.cn/5/reg.html\n比赛信息： http://www.mpmatch.cn/5/info.html\n选手列表：http://www.mpmatch.cn/5/roster.html";
                 break;
+            case "693299572":
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，特殊进群提醒测试";
+                break;
             default:
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎加入本群。";
                 break;
