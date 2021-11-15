@@ -17,12 +17,12 @@ import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
-import top.mothership.cabbage.pojo.elo.Elo;
-import top.mothership.cabbage.pojo.elo.EloChange;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.QQInfo;
+import top.mothership.cabbage.pojo.elo.Elo;
+import top.mothership.cabbage.pojo.elo.EloChange;
 import top.mothership.cabbage.pojo.osu.*;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
@@ -36,7 +36,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 普通命令进行业务处理的类
@@ -950,7 +949,7 @@ public class CqServiceImpl {
             case "807757470":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";
                 break;
-            case "1047435659":
+            case "1005266186":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：http://www.mpmatch.cn/5/reg.html\n比赛信息： http://www.mpmatch.cn/5/info.html\n选手列表：http://www.mpmatch.cn/5/roster.html";
                 break;
             default:
