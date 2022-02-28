@@ -5,7 +5,6 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.mothership.cabbage.annotation.UserAuthorityControl;
 import top.mothership.cabbage.constant.Overall;
@@ -16,7 +15,6 @@ import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
-import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
@@ -29,14 +27,12 @@ import top.mothership.cabbage.pojo.osu.SearchParam;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
-import top.mothership.cabbage.enums.CompressLevelEnum;
 import top.mothership.cabbage.util.qq.ImgUtil;
 import top.mothership.cabbage.util.qq.MsgQueue;
 import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,13 +40,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.regex.Matcher;
 
 /**
  * 管理命令进行业务处理的类

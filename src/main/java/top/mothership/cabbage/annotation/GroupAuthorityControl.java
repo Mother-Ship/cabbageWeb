@@ -36,6 +36,7 @@ public @interface GroupAuthorityControl {
             201872650L,
             945263863,
             263668213L,
+            693299572L
     };
 
     /**
