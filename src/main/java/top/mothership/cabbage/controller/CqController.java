@@ -1,5 +1,6 @@
 package top.mothership.cabbage.controller;
 
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import top.mothership.cabbage.constant.pattern.CQCodePattern;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.enums.ParameterEnum;
 import top.mothership.cabbage.manager.CqManager;
-import top.mothership.cabbage.manager.DayLilyManager;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.service.CqAdminServiceImpl;
 import top.mothership.cabbage.service.CqServiceImpl;
@@ -19,6 +19,8 @@ import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.annotation.PostConstruct;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 
 /**
@@ -34,26 +36,25 @@ public class CqController {
     private final SmokeUtil smokeUtil;
     private final CqAdminServiceImpl cqAdminService;
     private final CqManager cqManager;
-    private final DayLilyManager dayLilyManager;
+
 
     private Logger logger = LogManager.getLogger(this.getClass());
-
+    private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(100);
     /**
      * Spring构造方法自动注入
-     *  @param cqService      Service层
+     * @param cqService      Service层
      * @param smokeUtil      负责禁言的工具类
      * @param cqAdminService
      * @param cqManager
-     * @param dayLilyManager
+
      */
     @Autowired
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, CqManager cqManager, DayLilyManager dayLilyManager) {
+
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, CqManager cqManager) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
         this.cqAdminService = cqAdminService;
         this.cqManager = cqManager;
-
-        this.dayLilyManager = dayLilyManager;
     }
 
     /**
@@ -64,6 +65,11 @@ public class CqController {
      */
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public void cqMsgParse(@RequestBody CqMsg cqMsg) throws Exception {
+        fixedThreadPool.submit(()->this.doHandle(cqMsg));
+    }
+    @SneakyThrows
+    public void doHandle(CqMsg cqMsg){
+
         //待整理业务逻辑
         switch (cqMsg.getPostType()) {
             case "message":
@@ -429,7 +435,6 @@ public class CqController {
             default:
                 logger.error("传入无法识别的Request："+cqMsg.getPostType()+"，可能是HTTP API插件已经更新");
         }
-
     }
 
     @PostConstruct
