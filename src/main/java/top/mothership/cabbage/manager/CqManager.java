@@ -104,8 +104,8 @@ public class CqManager {
             //这里不用用到下划线转驼峰
             CqResponse response = new Gson().fromJson(tmp2.toString(), CqResponse.class);
             if(response.getRetCode()!=0 && cqMsg.getMessage().contains("base64")){
-                warn("图片发送失败，"+cqMsg);
-                sendMsg2(cqMsg);
+                warn("图片发送失败，"+cqMsg +response);
+                response = sendMsg2(cqMsg);
             }
             return response;
         } catch (IOException e) {

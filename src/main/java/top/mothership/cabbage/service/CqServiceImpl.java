@@ -20,6 +20,7 @@ import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
+import top.mothership.cabbage.pojo.coolq.CqResponse;
 import top.mothership.cabbage.pojo.coolq.QQInfo;
 import top.mothership.cabbage.pojo.elo.Elo;
 import top.mothership.cabbage.pojo.elo.EloChange;
@@ -592,7 +593,15 @@ public class CqServiceImpl {
         } else {
             String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-            cqManager.sendMsg(cqMsg);
+            CqResponse response = cqManager.sendMsg(cqMsg);
+            if ("failed".equals(response.getStatus())){
+
+                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
+                resp += "由于风控导致图片发送失败，本次成绩使用文字展示";
+                cqMsg.setMessage(resp);
+                cqManager.sendMsg(cqMsg);
+
+            }
         }
     }
 
@@ -1196,7 +1205,16 @@ public class CqServiceImpl {
             case "pr":
                 String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-                cqManager.sendMsg(cqMsg);
+                CqResponse response = cqManager.sendMsg(cqMsg);
+                if ("failed".equals(response.getStatus())){
+
+                    resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
+                    resp += "由于风控导致图片发送失败，本次成绩使用文字展示";
+
+                    cqMsg.setMessage(resp);
+                    cqManager.sendMsg(cqMsg);
+
+                }
                 break;
             default:
                 break;

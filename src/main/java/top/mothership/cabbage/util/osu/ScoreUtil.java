@@ -5,10 +5,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import top.mothership.cabbage.manager.WebPageManager;
-import top.mothership.cabbage.pojo.osu.Beatmap;
-import top.mothership.cabbage.pojo.osu.OppaiResult;
-import top.mothership.cabbage.pojo.osu.Score;
+import top.mothership.cabbage.pojo.elo.Elo;
+import top.mothership.cabbage.pojo.osu.*;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
@@ -412,32 +412,53 @@ public class ScoreUtil {
             paramLegacy.nmiss = score.getCountMiss();
             paramLegacy.combo = score.getMaxCombo();
 
+            OppaiResult result = new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
+                    //Java实现如果出错会抛出异常，象征性给个0和null
+                    0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
+                    //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
+                    mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
+                    //scoreVersion只能是V1了，
+                    1, stars.total, starsLegacy.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold,
+                    0, 0, 0, 0, 0, mapstats.speed);
+
+            CalculateByBidRequest request = new CalculateByBidRequest();
+            request.setBid(beatmap.getBeatmapId());
+            request.setRefresh(!Integer.valueOf(1).equals(beatmap.getApproved()));
+
+            UserScore userScore = new UserScore();
+            userScore.setCombo(score.getMaxCombo());
+            userScore.setCount50(score.getCount50());
+            userScore.setCount100(score.getCount100());
+            userScore.setCount300(score.getCount300());
+            userScore.setCountMiss(score.getCountMiss());
+            userScore.setMode(map.mode);
+            userScore.setMods(score.getEnabledMods());
+            request.setUserScore(userScore);
+
+            CalcResult remoteResult = getCalcResult(request);
+            if (remoteResult != null && remoteResult.getScoreResult() != null) {
+                result.setAimPp(remoteResult.getScoreResult().getAim());
+                result.setSpeedPp(remoteResult.getScoreResult().getSpeed());
+                result.setPp(remoteResult.getScoreResult().getPp());
+                result.setAccPp(remoteResult.getScoreResult().getAcc());
+            }
 
             if (map.mode == 0) {
                 Koohii.PPv2 pp = new Koohii.PPv2(p);
-                KoohiiLegacy.PPv2 ppLegacy = new KoohiiLegacy.PPv2(paramLegacy);
-                return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
-                        //Java实现如果出错会抛出异常，象征性给个0和null
-                        0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
-                        //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
-                        mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
-                        //scoreVersion只能是V1了，
-                        1, stars.total, starsLegacy.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold,
-                        pp.aim, pp.speed, pp.acc, pp.total, ppLegacy.total, mapstats.speed);
-
-            } else {
-                return new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
-                        //Java实现如果出错会抛出异常，象征性给个0和null
-                        0, null, map.artist, map.artist_unicode, map.title, map.title_unicode, map.creator, map.version, Koohii.mods_str(score.getEnabledMods()), score.getEnabledMods(),
-                        //这里score的虽然叫MaxCombo，但实际上是这个分数的combo
-                        mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
-                        //scoreVersion只能是V1了，非STD的计算应该是没有PP的，给四个0
-                        1, stars.total,starsLegacy.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold, 0, 0, 0, 0, 0, mapstats.speed);
-
+                result.setPpLegacy(pp.total);
             }
+            return result;
         } catch (Exception e) {
             logger.error("离线计算PP出错");
             logger.error(e.getMessage());
+            return null;
+        }
+    }
+
+    private CalcResult getCalcResult(CalculateByBidRequest request) {
+        try {
+            return new RestTemplate().postForObject("http://k3.mothership.top:5000/api/PPCalc/CalculateByBeatmapId", request, CalcResult.class);
+        } catch (Exception e) {
             return null;
         }
     }
