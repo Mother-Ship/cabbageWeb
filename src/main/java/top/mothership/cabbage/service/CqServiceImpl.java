@@ -594,10 +594,10 @@ public class CqServiceImpl {
             String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
             CqResponse response = cqManager.sendMsg(cqMsg);
-            if ("failed".equals(response.getStatus())){
+            if (response.getRetCode()!=0 ){
 
                 String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
-                resp += "由于风控导致图片发送失败，本次成绩使用文字展示";
+                resp += "\n由于风控导致图片发送失败，本次成绩使用文字展示";
                 cqMsg.setMessage(resp);
                 cqManager.sendMsg(cqMsg);
 
@@ -1206,14 +1206,16 @@ public class CqServiceImpl {
                 String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
                 CqResponse response = cqManager.sendMsg(cqMsg);
-                if ("failed".equals(response.getStatus())){
+                if (response.getRetCode()!=0 ){
 
                     resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
-                    resp += "由于风控导致图片发送失败，本次成绩使用文字展示";
+                    resp += "\n由于风控导致图片发送失败，本次成绩使用文字展示";
 
                     cqMsg.setMessage(resp);
-                    cqManager.sendMsg(cqMsg);
-
+                    response = cqManager.sendMsg(cqMsg);
+                    if (response.getRetCode()!=0 ){
+                        cqManager.warn("兜底方案发送失败"+cqMsg);
+                    }
                 }
                 break;
             default:
