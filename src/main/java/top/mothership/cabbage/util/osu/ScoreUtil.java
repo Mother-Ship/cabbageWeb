@@ -426,7 +426,7 @@ public class ScoreUtil {
             request.setRefresh(!Integer.valueOf(1).equals(beatmap.getApproved()));
 
             UserScore userScore = new UserScore();
-            userScore.setCombo(map.max_combo());
+            userScore.setCombo(score.getMaxCombo());
             userScore.setCount50(score.getCount50());
             userScore.setCount100(score.getCount100());
             userScore.setCount300(score.getCount300());
