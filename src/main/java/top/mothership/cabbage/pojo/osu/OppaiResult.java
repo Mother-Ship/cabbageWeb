@@ -43,4 +43,5 @@ public class OppaiResult {
     private double pp;
     private double ppLegacy;
     private double speedMultiplier;
+    private double maxPP;
 }

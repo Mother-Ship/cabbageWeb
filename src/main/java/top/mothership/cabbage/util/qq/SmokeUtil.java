@@ -12,6 +12,7 @@ import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.RespData;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 @Component
@@ -53,20 +54,28 @@ public class SmokeUtil {
         this.cqManager = cqManager;
         this.userDAO = userDAO;
         this.resDAO = resDAO;
-        loadGroupAdmins();
-        //对所有群开启消息记录
-        List<RespData> groups = cqManager.getGroups(1335734629L).getData();
-        List<RespData> groups2 = cqManager.getGroups(1020640876L).getData();
-        groups.addAll(groups2);
-        //懒得去重了 反正Map会自动去
-        for (RespData respData : groups) {
-            if(!REPEAT_RECORD_GROUP.contains(String.valueOf(respData.getGroupId()))
-                    &&!REPEAT_SMOKE_GROUP.contains(String.valueOf(respData.getGroupId()))) {
+    }
+    @PostConstruct
+    public void initGroupMessageQueue(){
+        try{
+            loadGroupAdmins();
+            //对所有群开启消息记录
+            List<RespData> groups = cqManager.getGroups(1335734629L).getData();
+            List<RespData> groups2 = cqManager.getGroups(1020640876L).getData();
+            groups.addAll(groups2);
+            //懒得去重了 反正Map会自动去
+            for (RespData respData : groups) {
+                if(!REPEAT_RECORD_GROUP.contains(String.valueOf(respData.getGroupId()))
+                        &&!REPEAT_SMOKE_GROUP.contains(String.valueOf(respData.getGroupId()))) {
 //                MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
-            }else{
-                MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
+                }else{
+                    MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
+                }
             }
+        }catch (Exception e){
+            logger.info("初始化群管理员出错");
         }
+
     }
 
     /**

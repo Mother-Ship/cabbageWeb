@@ -419,14 +419,14 @@ public class ScoreUtil {
                     mapstats.od, mapstats.ar, mapstats.cs, mapstats.hp, score.getMaxCombo(), map.max_combo(), map.ncircles, map.nsliders, map.nspinners, score.getCountMiss(),
                     //scoreVersion只能是V1了，
                     1, stars.total, starsLegacy.total, stars.speed, stars.aim, stars.nsingles, stars.nsingles_threshold,
-                    0, 0, 0, 0, 0, mapstats.speed);
+                    0, 0, 0, 0, 0, mapstats.speed,0);
 
             CalculateByBidRequest request = new CalculateByBidRequest();
             request.setBid(beatmap.getBeatmapId());
             request.setRefresh(!Integer.valueOf(1).equals(beatmap.getApproved()));
 
             UserScore userScore = new UserScore();
-            userScore.setCombo(score.getMaxCombo());
+            userScore.setCombo(map.max_combo());
             userScore.setCount50(score.getCount50());
             userScore.setCount100(score.getCount100());
             userScore.setCount300(score.getCount300());
@@ -442,6 +442,22 @@ public class ScoreUtil {
                 result.setPp(remoteResult.getScoreResult().getPp());
                 result.setAccPp(remoteResult.getScoreResult().getAcc());
             }
+
+            //计算FC PP
+            int objects = map.ncircles+ map.nsliders+map.nspinners;
+            userScore.setCombo(map.max_combo());
+            userScore.setCount50(score.getCount50());
+            userScore.setCount100(score.getCount100());
+            userScore.setCount300(objects-score.getCount50()-score.getCount100() );
+            userScore.setCountMiss(0);
+            userScore.setMode(map.mode);
+            userScore.setMods(score.getEnabledMods());
+            request.setUserScore(userScore);
+            remoteResult = getCalcResult(request);
+            if (remoteResult != null && remoteResult.getScoreResult() != null) {
+                result.setMaxPP(remoteResult.getScoreResult().getPp());
+            }
+
 
             if (map.mode == 0) {
                 Koohii.PPv2 pp = new Koohii.PPv2(p);

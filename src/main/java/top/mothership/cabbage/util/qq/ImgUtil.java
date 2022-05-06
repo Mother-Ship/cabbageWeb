@@ -650,12 +650,12 @@ public class ImgUtil {
                     //临时修正，BP命令总PP使用官网爬到的
                     if(score.getPp() !=null){
                         if (score.getPp() > 1000) {
-                            g2.drawString(String.valueOf(Math.round(score.getPp())), 591, 753);
+                            g2.drawString(String.valueOf(Math.round(score.getPp())), 582, 753);
                         } else {
                             if (String.valueOf(Math.round(score.getPp())).contains("1")) {
-                                g2.drawString(String.valueOf(Math.round(score.getPp())), 616, 753);
+                                g2.drawString(String.valueOf(Math.round(score.getPp())), 607, 753);
                             } else {
-                                g2.drawString(String.valueOf(Math.round(score.getPp())), 601, 753);
+                                g2.drawString(String.valueOf(Math.round(score.getPp())), 592, 753);
                             }
 
                         }
@@ -669,12 +669,12 @@ public class ImgUtil {
 //                    @活泼花猫
 
                     if (oppaiResult.getPp() > 1000) {
-                        g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 591, 753);
+                        g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 582, 753);
                     } else {
                         if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
-                            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 616, 753);
+                            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 607, 753);
                         } else {
-                            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 601, 753);
+                            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 592, 753);
                         }
                     }
 
@@ -683,6 +683,7 @@ public class ImgUtil {
                     g2.drawString(String.valueOf(Math.round(oppaiResult.getAimPp())), 834, 758);
                     g2.drawString(String.valueOf(Math.round(oppaiResult.getSpeedPp())), 932, 758);
                     g2.drawString(String.valueOf(Math.round(oppaiResult.getAccPp())), 1030, 758);
+                    g2.drawString(String.valueOf(Math.round(oppaiResult.getMaxPP())), 1120, 758);
 
                 }
                 break;
