@@ -48,7 +48,7 @@ public class CqManager {
                 baseURL = "http://k3.mothership.top:5700";
                 break;
             case "1335734629":
-                baseURL = "http://cq.mothership.top:5700";
+                baseURL = "http://k3.mothership.top:5701";
                 break;
             case "2758858579":
                 baseURL = "http://cq.mothership.top:5702";
@@ -115,7 +115,7 @@ public class CqManager {
     }
 
     public CqResponse<List<QQInfo>> getGroupMembers(Long groupId) {
-        String URL = "http://cq.mothership.top:5700/get_group_member_list";
+        String URL = "http://k3.mothership.top:5701/get_group_member_list";
         HttpURLConnection httpConnection;
         try {
             CqMsg cqMsg = new CqMsg();
@@ -142,7 +142,7 @@ public class CqManager {
             CqResponse<List<QQInfo>> response = new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<QQInfo>>>() {
             }.getType());
             if (response.getRetCode() != 0) {
-                URL = "http://cq.mothership.top:5701/get_group_member_list";
+                URL = "http://k3.mothership.top:5700/get_group_member_list";
                 httpConnection =
                         (HttpURLConnection) new URL(URL).openConnection();
                 httpConnection.setRequestMethod("POST");
@@ -179,7 +179,7 @@ public class CqManager {
                 baseURL = "http://k3.mothership.top:5700";
                 break;
             case "1335734629":
-                baseURL = "http://cq.mothership.top:5700";
+                baseURL = "http://k3.mothership.top:5701";
                 break;
         }
         String URL = baseURL + "/get_group_list";
@@ -238,7 +238,7 @@ public class CqManager {
 
     public CqResponse<QQInfo> getGroupMember(Long groupId, Long userId) {
         //内部重试两个QQ的API
-        String URL = "http://cq.mothership.top:5700/get_group_member_info";
+        String URL = "http://k3.mothership.top:5701/get_group_member_info";
         HttpURLConnection httpConnection;
         try {
             CqMsg cqMsg = new CqMsg();
@@ -266,7 +266,7 @@ public class CqManager {
             CqResponse<QQInfo> response = new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<QQInfo>>() {
             }.getType());
             if (response.getRetCode() != 0) {
-                URL = "http://cq.mothership.top:5701/get_group_member_info";
+                URL = "http://k3.mothership.top:5700/get_group_member_info";
                 httpConnection =
                         (HttpURLConnection) new URL(URL).openConnection();
                 httpConnection.setRequestMethod("POST");
