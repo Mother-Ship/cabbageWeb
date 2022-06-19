@@ -268,75 +268,76 @@ public class WebPageManager {
      * @throws NullPointerException the null pointer exception
      */
     public BufferedImage getBG(Beatmap beatmap) {
-        logger.info("开始获取谱面" + beatmap.getBeatmapId() + "的背景");
-        HttpURLConnection httpConnection;
-        int retry = 0;
-        BufferedImage bg;
-        BufferedImage resizedBG = null;
-        OsuFile osuFile = parseOsuFile(beatmap);
-
-        if (osuFile == null) {
-            //08年老图是没有BG的……
-            cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
-            return null;
-        }
-        //这里dao层需要使用object，然后再这里转换为数组，于是判断非空就得用null而不是.length。
-        byte[] img = (byte[]) resDAO.getBGBySidAndName(beatmap.getBeatmapSetId(), osuFile.getBgName());
-        if (img != null) {
-            try (ByteArrayInputStream in = new ByteArrayInputStream(img)) {
-                return ImageIO.read(in);
-            } catch (IOException e) {
-                cqManager.warn("数据库中" + beatmap.getBeatmapId() + "的背景损坏。");
-            }
-        }
-        while (retry < 5) {
-            try {
-                httpConnection =
-                        (HttpURLConnection) new URL(BLOODCAT_BG_URL + beatmap.getBeatmapId()).openConnection();
-                httpConnection.setRequestMethod("GET");
-                httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
-                httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);
-                httpConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.40 Safari/537.36");
-                if (httpConnection.getResponseCode() != 200) {
-                    logger.error("HTTP GET请求失败: " + httpConnection.getResponseCode() + "，正在重试第" + (retry + 1) + "次");
-                    retry++;
-                    continue;
-                }
-                //读取返回结果
-                bg = ImageIO.read(httpConnection.getInputStream());
-                if (bg == null) {
-                    return null;
-                }
-
-                resizedBG = resizeImg(bg, 1366, 768);
-                //在谱面rank状态是Ranked或者Approved时，写入硬盘
-                if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
-                    //扩展名直接从文件里取
-                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                        //修正扩展名为最后一个点后面的内容2017-11-15 13:17:56
-                        ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
-                        resizedBG.flush();
-                        img = out.toByteArray();
-                        resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), img);
-                    } catch (IOException e) {
-                        logger.error("写入图片时出现IO异常：" + e.getMessage());
-                        return null;
-                    }
-                }
-                //手动关闭流
-                httpConnection.disconnect();
-                break;
-            } catch (IOException e) {
-                logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
-                retry++;
-            }
-
-        }
-        if (retry == 5) {
-            logger.error("获取" + beatmap.getBeatmapId() + "的背景图，失败五次");
-            return null;
-        }
-        return resizedBG;
+        return null;
+//        logger.info("开始获取谱面" + beatmap.getBeatmapId() + "的背景");
+//        HttpURLConnection httpConnection;
+//        int retry = 0;
+//        BufferedImage bg;
+//        BufferedImage resizedBG = null;
+//        OsuFile osuFile = parseOsuFile(beatmap);
+//
+//        if (osuFile == null) {
+//            //08年老图是没有BG的……
+//            cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+//            return null;
+//        }
+//        //这里dao层需要使用object，然后再这里转换为数组，于是判断非空就得用null而不是.length。
+//        byte[] img = (byte[]) resDAO.getBGBySidAndName(beatmap.getBeatmapSetId(), osuFile.getBgName());
+//        if (img != null) {
+//            try (ByteArrayInputStream in = new ByteArrayInputStream(img)) {
+//                return ImageIO.read(in);
+//            } catch (IOException e) {
+//                cqManager.warn("数据库中" + beatmap.getBeatmapId() + "的背景损坏。");
+//            }
+//        }
+//        while (retry < 5) {
+//            try {
+//                httpConnection =
+//                        (HttpURLConnection) new URL(BLOODCAT_BG_URL + beatmap.getBeatmapId()).openConnection();
+//                httpConnection.setRequestMethod("GET");
+//                httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
+//                httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);
+//                httpConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.40 Safari/537.36");
+//                if (httpConnection.getResponseCode() != 200) {
+//                    logger.error("HTTP GET请求失败: " + httpConnection.getResponseCode() + "，正在重试第" + (retry + 1) + "次");
+//                    retry++;
+//                    continue;
+//                }
+//                //读取返回结果
+//                bg = ImageIO.read(httpConnection.getInputStream());
+//                if (bg == null) {
+//                    return null;
+//                }
+//
+//                resizedBG = resizeImg(bg, 1366, 768);
+//                //在谱面rank状态是Ranked或者Approved时，写入硬盘
+//                if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
+//                    //扩展名直接从文件里取
+//                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+//                        //修正扩展名为最后一个点后面的内容2017-11-15 13:17:56
+//                        ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
+//                        resizedBG.flush();
+//                        img = out.toByteArray();
+//                        resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), img);
+//                    } catch (IOException e) {
+//                        logger.error("写入图片时出现IO异常：" + e.getMessage());
+//                        return null;
+//                    }
+//                }
+//                //手动关闭流
+//                httpConnection.disconnect();
+//                break;
+//            } catch (IOException e) {
+//                logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
+//                retry++;
+//            }
+//
+//        }
+//        if (retry == 5) {
+//            logger.error("获取" + beatmap.getBeatmapId() + "的背景图，失败五次");
+//            return null;
+//        }
+//        return resizedBG;
 
     }
 

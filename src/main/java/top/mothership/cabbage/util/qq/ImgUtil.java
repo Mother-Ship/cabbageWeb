@@ -5,8 +5,10 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.enums.CompressLevelEnum;
+import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
@@ -14,6 +16,7 @@ import top.mothership.cabbage.pojo.osu.Beatmap;
 import top.mothership.cabbage.pojo.osu.OppaiResult;
 import top.mothership.cabbage.pojo.osu.Score;
 import top.mothership.cabbage.pojo.osu.Userinfo;
+import top.mothership.cabbage.util.osu.ReplayUtil;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 
 import javax.imageio.ImageIO;
@@ -23,6 +26,7 @@ import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,6 +40,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import static top.mothership.cabbage.enums.CompressLevelEnum.USHORT_555_RGB_PNG;
 import static top.mothership.cabbage.enums.CompressLevelEnum.不压缩;
@@ -60,6 +65,9 @@ public class ImgUtil {
     private ScoreUtil scoreUtil;
     private ResDAO resDAO;
 
+    @Autowired
+    private ApiManager apiManager;
+
     /**
      * Instantiates a new Img util.
      *
@@ -76,7 +84,8 @@ public class ImgUtil {
         //而且resDAO也不能在这个类里声明……反正是初始化顺序的原因
         this.resDAO = resDAO;
     }
-    public BufferedImage get(String name){
+
+    public BufferedImage get(String name) {
         byte[] data = (byte[]) resDAO.getImage(name);
         try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
             return ImageIO.read(in);
@@ -204,21 +213,21 @@ public class ImgUtil {
                 day>1，例如day=2，21号进入本方法，查的是19号结束时候的成绩
                 */
 
-                //临时关闭平滑
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-                //只有day>1才会出现文字
-                if (approximate) {
-                    //如果取到的是模糊数据
-                    drawTextToImage(g2, "#666666", "宋体", 15, "请求的日期没有数据", 718, 138);
-                    //算出天数差别
-                    drawTextToImage(g2, "#666666", "宋体", 15, "『对比于" +
-                            ChronoUnit.DAYS.between(userInDB.getQueryDate(), LocalDate.now())
+            //临时关闭平滑
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            //只有day>1才会出现文字
+            if (approximate) {
+                //如果取到的是模糊数据
+                drawTextToImage(g2, "#666666", "宋体", 15, "请求的日期没有数据", 718, 138);
+                //算出天数差别
+                drawTextToImage(g2, "#666666", "宋体", 15, "『对比于" +
+                        ChronoUnit.DAYS.between(userInDB.getQueryDate(), LocalDate.now())
 //                            Long.valueOf(((Calendar.getInstance().getTime().getTime() - .getTime()) / 1000 / 60 / 60 / 24)).toString()
-                            + "天前』", 725, 155);
-                } else {
-                    //如果取到的是精确数据
-                    drawTextToImage(g2, "#666666", "宋体", 15, "『对比于" + day + "天前』", 725, 155);
-                }
+                        + "天前』", 725, 155);
+            } else {
+                //如果取到的是精确数据
+                drawTextToImage(g2, "#666666", "宋体", 15, "『对比于" + day + "天前』", 725, 155);
+            }
 
 
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -418,7 +427,7 @@ public class ImgUtil {
                     g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     //绘制日期(给的就是北京时间，不转)
                     drawTextToImage(g3, "#696969", "Tahoma", 14,
-                            DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.of("UTC-8")).format(aList.getDate().toInstant().plusSeconds(86400)) , 31, 34);
+                            DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.of("UTC-8")).format(aList.getDate().toInstant().plusSeconds(86400)), 31, 34);
                     //绘制Num和Weight
                     drawTextToImage(g3, "#a12e1e", "Ubuntu Medium", 13,
                             String.valueOf(aList.getBpId() + 1), 136, 34);
@@ -482,6 +491,25 @@ public class ImgUtil {
         //不，文件名最好还是数字
         return drawImage(result, USHORT_555_RGB_PNG);
 
+    }
+
+    private List<Pair<Integer, Integer>> getPoint(Long scoreId) {
+//        byte[] replay = apiManager.getReplay(scoreId);
+
+//        if (replay == null){
+            return Collections.emptyList();
+//        }
+//        logger.info("获取replay成功，字节数组尺寸：{}", replay.length);
+//        String lifePoint = ReplayUtil.getLifePoint(replay);
+//        logger.info("获取replay成功，解析血条信息：{}", lifePoint);
+//        String[] lifePoints = lifePoint.split(",");
+//        int maxTime = Integer.parseInt(lifePoints[lifePoints.length - 1].split("\\|")[0]);
+//        return Arrays.stream(lifePoints).map(point -> {
+//            int x = Math.round(262 + (300 * Float.parseFloat(point.split("\\|")[0]) / maxTime));
+//            int y = Math.round(753 - (753 - 615) * Float.parseFloat(point.split("\\|")[1]));
+//            logger.info("获取replay成功，计算血条点位：{}，{}", x,y);
+//            return Pair.of(x, y);
+//        }).collect(Collectors.toList());
     }
 
     /**
@@ -630,16 +658,37 @@ public class ImgUtil {
 
                 if (oppaiResult != null) {
 
-                    int progress = 300 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())
-                            / (oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners());
                     //进度条
                     if (score.getRank().equals("F")) {
+                        int progress = 300 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss())
+                                / (oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners());
+
                         //设置直线断点平滑
                         g2.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                         g2.setColor(Color.decode("#99cc31"));
-                        g2.drawLine(262, 615, 262 + progress, 615);
+                        g2.drawLine(262, 615, 262 + progress - 2, 615);
                         g2.setColor(Color.decode("#fe0000"));
-                        g2.drawLine(262 + progress, 615, 262 + progress, 753);
+                        g2.drawLine(262 + progress - 2, 615, 262 + progress, 753);
+                    } else {
+                        try{
+
+                            if (score.getOnlineId() != null) {
+                                List<Pair<Integer, Integer>> points = getPoint(score.getOnlineId());
+                                logger.info("获取replay成功，计算出血条点位：{}", points);
+                                for (int i = 0; i < points.size() - 1; i++) {
+                                    g2.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                                    g2.setColor(Color.decode("#99cc31"));
+                                    if (points.get(i + 1).getSecond() < (753 - 615) * 0.3) {
+                                        g2.setColor(Color.decode("#fe0000"));
+                                    }
+                                    g2.drawLine(points.get(i).getFirst(), points.get(i).getSecond(),
+                                            points.get(i + 1).getFirst(), points.get(i + 1).getSecond());
+                                }
+                            }
+                        }catch (Exception ignore){
+                            ignore.printStackTrace();
+                        }
+
                     }
 
                     //底端PP面板，在oppai计算结果不是null的时候
@@ -648,7 +697,7 @@ public class ImgUtil {
                     g2.setPaint(Color.decode("#ff66a9"));
                     g2.setFont(new Font("Gayatri", 0, 60));
                     //临时修正，BP命令总PP使用官网爬到的
-                    if(score.getPp() !=null){
+                    if (score.getPp() != null) {
                         if (score.getPp() > 1000) {
                             g2.drawString(String.valueOf(Math.round(score.getPp())), 582, 753);
                         } else {
@@ -659,7 +708,7 @@ public class ImgUtil {
                             }
 
                         }
-                    }else {
+                    } else {
 
 
 //                    2019-7-24
@@ -668,15 +717,15 @@ public class ImgUtil {
 //                    【中军】skystaR<rize@pending.moe>  13:31:05
 //                    @活泼花猫
 
-                    if (oppaiResult.getPp() > 1000) {
-                        g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 582, 753);
-                    } else {
-                        if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
-                            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 607, 753);
+                        if (oppaiResult.getPp() > 1000) {
+                            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 582, 753);
                         } else {
-                            g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 592, 753);
+                            if (String.valueOf(Math.round(oppaiResult.getPp())).contains("1")) {
+                                g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 607, 753);
+                            } else {
+                                g2.drawString(String.valueOf(Math.round(oppaiResult.getPp())), 592, 753);
+                            }
                         }
-                    }
 
                     }
                     g2.setFont(new Font("Gayatri", 0, 48));
@@ -1490,12 +1539,12 @@ public class ImgUtil {
         if (accMax < acc2) accMax = acc2;
 
         //兜底
-        if(jump2<0)jump2=0;
-        if(flow2<0)flow2=0;
-        if(prec2<0)prec2=0;
-        if(speed2<0)speed2=0;
-        if(stamina2<0)stamina2=0;
-        if(acc2<0)acc2=0;
+        if (jump2 < 0) jump2 = 0;
+        if (flow2 < 0) flow2 = 0;
+        if (prec2 < 0) prec2 = 0;
+        if (speed2 < 0) speed2 = 0;
+        if (stamina2 < 0) stamina2 = 0;
+        if (acc2 < 0) acc2 = 0;
 
         int jumpX = (int) (152D - jump2 / jmpMax * 40D);
         int jumpY = (int) (131D - jump2 / jmpMax * 40D * Math.sqrt(3));

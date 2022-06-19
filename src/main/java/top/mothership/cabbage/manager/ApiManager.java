@@ -1,7 +1,7 @@
 package top.mothership.cabbage.manager;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.GsonBuilder;
+import com.google.common.util.concurrent.RateLimiter;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,6 +30,8 @@ public class ApiManager {
     private final String getRecentURL = "https://osu.ppy.sh/api/get_user_recent";
     private final String getScoreURL = "https://osu.ppy.sh/api/get_scores";
     private final String getMatchURL = "https://osu.ppy.sh/api/get_match";
+
+    private final String getReplayURL = "https://osu.ppy.sh/api/get_replay";
 
     private final String key = Overall.CABBAGE_CONFIG.getString("apikey");
     private Logger logger = LogManager.getLogger(this.getClass());
@@ -192,6 +195,23 @@ public class ApiManager {
                 .setDateFormat("yyyy-MM-dd HH:mm:ss").create().fromJson(result, Lobby.class);
     }
 
+    public byte[] getReplay(Long scoreId) {
+        RateLimiter rateLimiter = RateLimiter.create(0.17);
+        if (!rateLimiter.tryAcquire()){
+            logger.error("获取replay接口限速");
+            return null;
+        }
+        String result = accessAPI("replay", null, null, null, null, null, String.valueOf(scoreId), null);
+        result = "{" + result + "}";
+        Replay jsonObject = new Gson().fromJson(result, Replay.class);
+        String content = jsonObject.getContent();
+        if (content == null){
+            logger.error("获取replay失败，result:{}", jsonObject);
+            return null;
+        }
+        return Base64.getDecoder().decode(content);
+    }
+
     private void fixRank(Userinfo userFromAPI) {
         userFromAPI.setCountRankSs(userFromAPI.getCountRankSs() + userFromAPI.getCountRankSsh());
         userFromAPI.setCountRankS(userFromAPI.getCountRankS() + userFromAPI.getCountRankSh());
@@ -244,6 +264,10 @@ public class ApiManager {
             case "match":
                 URL = getMatchURL + "?k=" + key + "&mp=" + mid;
                 failLog = "谱面" + bid + "请求API：get_scores失败五次";
+                break;
+            case "replay":
+                URL = getReplayURL + "?k=" + key + "&s=" + mid;
+                failLog = "谱面" + bid + "请求API：get_replay失败五次";
                 break;
             default:
                 logger.info("apiType错误");

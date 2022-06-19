@@ -22,6 +22,7 @@ public class Score {
     //永远是-1,在osr文件中代表LZMA流大小？
     private Integer size;
     //这个可能是get_scores的score_id值
+    @SerializedName("score_id")
     private Long onlineId;
     //用于存储BP的位数
     private Integer bpId;

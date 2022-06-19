@@ -958,7 +958,7 @@ public class CqServiceImpl {
             case "807757470":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";
                 break;
-            case "945263863":
+            case "453609745":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、给选手的建议。\n报名地址：http://www.mpmatch.cn/5/reg.html\n比赛信息： http://www.mpmatch.cn/5/info.html\n选手列表：http://www.mpmatch.cn/5/roster.html";
                 break;
             case "693299572":
@@ -1206,17 +1206,7 @@ public class CqServiceImpl {
                 String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
                 CqResponse response = cqManager.sendMsg(cqMsg);
-                if (response.getRetCode()!=0 ){
 
-                    resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
-                    resp += "\n由于风控导致图片发送失败，本次成绩使用文字展示";
-
-                    cqMsg.setMessage(resp);
-                    response = cqManager.sendMsg(cqMsg);
-                    if (response.getRetCode()!=0 ){
-                        cqManager.warn("兜底方案发送失败"+cqMsg);
-                    }
-                }
                 break;
             default:
                 break;
