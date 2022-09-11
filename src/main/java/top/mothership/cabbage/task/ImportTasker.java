@@ -87,8 +87,17 @@ public class ImportTasker {
         for (Integer aList : list) {
             Thread.sleep(100);
             User user = userDAO.getUser(null, aList);
-            //如果上次活跃在一个月之前，或者没绑定不录入
-            if (LocalDate.now().minusDays(30).isAfter(user.getLastActiveDate()) || user.getQq() == 0){
+            //如果上次活跃在3个月之前，或者没绑定不录入
+            boolean skip = false;
+            if (LocalDate.now().minusDays(90).isAfter(user.getLastActiveDate())
+                    || user.getQq() == 0){
+                skip = true;
+            }
+            Userinfo userInDB = userInfoDAO.getNearestUserInfo(0, aList, LocalDate.now().minusDays(2));
+            if (userInDB == null || userInDB.getPpRank() < 10000){
+                skip = false;
+            }
+            if (skip){
                 continue;
             }
             //这里四个模式都要更新，但是只有主模式的才判断PP超限
