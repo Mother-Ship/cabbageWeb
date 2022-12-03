@@ -594,7 +594,7 @@ public class CqServiceImpl {
             String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
             CqResponse response = cqManager.sendMsg(cqMsg);
-            if (response.getRetCode()!=0 ){
+            if (response.getRetCode() != 0) {
 
                 String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
                 resp += "\n由于风控导致图片发送失败，本次成绩使用文字展示";
@@ -730,6 +730,7 @@ public class CqServiceImpl {
         Beatmap beatmap;
         if (searchParam.getBeatmapId() == null) {
             beatmap = webPageManager.searchBeatmap(searchParam, argument.getMode());
+            beatmap = apiManager.getBeatmap(beatmap.getBeatmapId());
         } else {
             beatmap = apiManager.getBeatmap(searchParam.getBeatmapId());
         }
@@ -752,6 +753,7 @@ public class CqServiceImpl {
             }
 
             Score score = new Score();
+
             //逆计算stdacc
             score.setEnabledMods(searchParam.getMods());
             score.setCountMiss(searchParam.getCountMiss());
@@ -760,19 +762,19 @@ public class CqServiceImpl {
             if (searchParam.getAcc() == null) {
                 score.setCount100(searchParam.getCount100());
                 score.setCount300(-1);
+                OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+                int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
+                score.setCount300(objects - (score.getCount100() == null ? 0 : score.getCount100()));
+                score.setMaxCombo(score.getMaxCombo() == -1 ? objects : score.getMaxCombo());
             } else {
-                score.setCount100(0);
-                score.setCount300(-1);
                 OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
                 //随意指定300 100,先计算出谱面总物件数
                 int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
-//                100.0 * (6 * score.getCount300() + 2 * score.getCount100() + score.getCount50())
-//                        / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()));
-                //解方程：acc = 100*(6*(a-x)+2x)/(6*a)
                 score.setCount100((int) (100D - searchParam.getAcc()) * 3 * objects / 200);
                 score.setCount300(objects - score.getCount100());
+                score.setMaxCombo(score.getMaxCombo() == -1 ? objects : score.getMaxCombo());
             }
-
+            System.out.println(score);
             //这里默认构造FC成绩，所以不需要处理NPE……吧？
             OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
             String filename = imgUtil.drawBeatmap(beatmap, searchParam.getMods(), oppaiResult, argument.getMode());
@@ -1093,11 +1095,11 @@ public class CqServiceImpl {
                             + 5D * (Math.atan((2D * map.get("Accuracy") - (1425D + 1101D)) / (1425D - 1101D)) + Math.PI / 2D)
                             + 5D * (Math.atan((2D * map.get("Precision") - (597D + 466D)) / (597D - 466D)) + Math.PI / 2D))) - 1D)
                     , 2.5D);
-            double acc=Math.max(map.get("Accuracy"),500F);
+            double acc = Math.max(map.get("Accuracy"), 500F);
             double cost1 = (Math.sqrt(map.get("Jump") / 3000) + Math.sqrt(map.get("Flow") / 1500)) * (Math.sqrt(map.get("Jump") / 3000) + Math.sqrt(map.get("Flow") / 1500)) / 4;
-            cost1 = cost1 * (1+ map.get("Precision") /5000)/1.2;
-            double cost2 = Math.pow((acc - 500) / 2000, 0.6)*0.8;
-            double cost3 = Math.pow(integral(1, 1 + map.get("Speed") / 1000) / 2, 0.8) * Math.pow(integral( 1, 1 + map.get("Stamina") / 1000) / 2, 0.5);
+            cost1 = cost1 * (1 + map.get("Precision") / 5000) / 1.2;
+            double cost2 = Math.pow((acc - 500) / 2000, 0.6) * 0.8;
+            double cost3 = Math.pow(integral(1, 1 + map.get("Speed") / 1000) / 2, 0.8) * Math.pow(integral(1, 1 + map.get("Stamina") / 1000) / 2, 0.5);
             double oclbS10Cost = cost1 + cost2 + cost3;
             double yuTangCost = (Math.pow((map.get("Jump") / 3000F), 0.8F)
                     * Math.pow((map.get("Flow") / 1500F), 0.6F)
@@ -1120,20 +1122,20 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
         return;
     }
-    double integral(double min, double max)
-    {
+
+    double integral(double min, double max) {
         double result = 0;
         double delta = (max - min) / 100000;
-        for (int i = 0; i < 100000; i++)
-        {
-            result += f1(min + (i+0.5) * delta)*delta;
+        for (int i = 0; i < 100000; i++) {
+            result += f1(min + (i + 0.5) * delta) * delta;
         }
         return result;
     }
-    double f1(double x)
-    {
+
+    double f1(double x) {
         return Math.pow(x, 1 / x - 1);
     }
+
     public void recentPassed(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
 
@@ -1379,8 +1381,8 @@ public class CqServiceImpl {
         } else {
             resp = "玩家" + userFromAPI.getUserName() + "的ELO为：" + elo.getElo()
                     + "\n由PP计算的初始ELO为：" + elo.getInit_elo();
-            if (elo.getRank()!=null){
-                resp+= "\n排名为：" + elo.getRank();
+            if (elo.getRank() != null) {
+                resp += "\n排名为：" + elo.getRank();
             }
             if (Objects.equals(elo.getCode(), 40004)) {
                 resp += "\n您的初始ELO仅供参考，请尽快参加比赛获得真实ELO数据！" +
@@ -1417,6 +1419,7 @@ public class CqServiceImpl {
                 + formatter.format(UTC));
         cqManager.sendMsg(cqMsg);
     }
+
     @GroupAuthorityControl
     public void myRole(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
@@ -1590,6 +1593,7 @@ public class CqServiceImpl {
         cqManager.sendMsg(cqMsg);
 
     }
+
     @GroupAuthorityControl
     public void setRole(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
@@ -1602,7 +1606,7 @@ public class CqServiceImpl {
             cqMsg.setMessage(Tip.USER_NOT_BIND);
         } else {
             List<String> roles = new ArrayList<>(Arrays.asList(user.getRole().split(",")));
-            if (roles.contains(argument.getRole()) || Objects.equals("creep",argument.getRole())) {
+            if (roles.contains(argument.getRole()) || Objects.equals("creep", argument.getRole())) {
                 user.setMainRole(argument.getRole());
                 userDAO.updateUser(user);
                 cqMsg.setMessage("更新成功：你的主显用户组已修改为" + argument.getRole());
@@ -1613,6 +1617,7 @@ public class CqServiceImpl {
         }
         cqManager.sendMsg(cqMsg);
     }
+
     @GroupAuthorityControl
     public void switchBorder(CqMsg cqMsg) {
         User user;

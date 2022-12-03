@@ -1259,7 +1259,7 @@ public class ImgUtil {
         if (!beatmap.getSource().equals("")) {
             title = unicodeToString(beatmap.getSource());
             //换用Java实现之后这里不是Null而是""了
-            if (!"".equals(beatmap.getArtistUnicode())) {
+            if (beatmap.getArtistUnicode() != null) {
                 unicode = true;
                 title = title.concat(" (" + beatmap.getArtistUnicode() + ") ");
             } else {
@@ -1281,7 +1281,6 @@ public class ImgUtil {
             title = title.concat(" - " + oppaiResult.getTitle());
         }
         title = title.concat(" [" + oppaiResult.getVersion() + "]");
-        System.out.println(title);
         //白色字体
         g2.setPaint(Color.decode("#FFFFFF"));
         if (unicode) {
@@ -1351,9 +1350,9 @@ public class ImgUtil {
         g2.setPaint(Color.decode("#000000"));
         if (unicode) {
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 31));
-            g2.drawString(oppaiResult.getTitleUnicode(), 942, 196);
+            g2.drawString(beatmap.getTitleUnicode(), 942, 196);
             g2.setFont(new Font("微软雅黑", Font.PLAIN, 22));
-            g2.drawString(oppaiResult.getArtistUnicode() + " // " + oppaiResult.getCreator(), 942, 223);
+            g2.drawString(beatmap.getArtistUnicode() + " // " + oppaiResult.getCreator(), 942, 223);
         } else {
             g2.setFont(new Font("Aller light", Font.PLAIN, 31));
             g2.drawString(oppaiResult.getTitle(), 942, 196);

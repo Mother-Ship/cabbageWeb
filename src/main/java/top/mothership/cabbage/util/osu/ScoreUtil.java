@@ -466,7 +466,7 @@ public class ScoreUtil {
             return result;
         } catch (Exception e) {
             logger.error("离线计算PP出错");
-            logger.error(e.getMessage());
+            logger.error(e);
             return null;
         }
     }
