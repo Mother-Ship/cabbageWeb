@@ -62,5 +62,10 @@ public class Beatmap {
     private Integer maxCombo;
     @SerializedName(value = "difficultyrating", alternate = {"difficulty"})
     private Double difficultyRating;
+
+    @SerializedName("artist_unicode")
+    private String artistUnicode;
+    @SerializedName("title_unicode")
+    private String titleUnicode;
 }
 

@@ -1259,33 +1259,33 @@ public class ImgUtil {
         if (!beatmap.getSource().equals("")) {
             title = unicodeToString(beatmap.getSource());
             //换用Java实现之后这里不是Null而是""了
-            if (!"".equals(oppaiResult.getArtistUnicode())) {
+            if (!"".equals(beatmap.getArtistUnicode())) {
                 unicode = true;
-                title = title.concat(" (" + oppaiResult.getArtistUnicode() + ") ");
+                title = title.concat(" (" + beatmap.getArtistUnicode() + ") ");
             } else {
                 title = title.concat(" (" + oppaiResult.getArtist() + ") ");
             }
         } else {
-            if (!"".equals(oppaiResult.getArtistUnicode())) {
-                title = title.concat(oppaiResult.getArtistUnicode());
+            if (!"".equals(beatmap.getArtistUnicode())) {
+                title = title.concat(beatmap.getArtistUnicode());
                 unicode = true;
             } else {
                 title = title.concat(oppaiResult.getArtist());
             }
         }
         //title
-        if (!"".equals(oppaiResult.getTitleUnicode())) {
-            title = title.concat(" - " + oppaiResult.getTitleUnicode());
+        if (beatmap.getTitleUnicode() !=null ){
+            title = title.concat(" - " + beatmap.getTitleUnicode());
             unicode = true;
         } else {
             title = title.concat(" - " + oppaiResult.getTitle());
         }
         title = title.concat(" [" + oppaiResult.getVersion() + "]");
-
+        System.out.println(title);
         //白色字体
         g2.setPaint(Color.decode("#FFFFFF"));
         if (unicode) {
-            g2.setFont(new Font("微软雅黑", Font.PLAIN, 32));
+            g2.setFont(new Font("Meiryo", Font.PLAIN, 32));
         } else {
             g2.setFont(new Font("Aller light", Font.PLAIN, 32));
         }
