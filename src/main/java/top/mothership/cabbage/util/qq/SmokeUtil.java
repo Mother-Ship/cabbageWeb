@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.manager.CqManager;
 import top.mothership.cabbage.mapper.ResDAO;
@@ -44,6 +45,7 @@ public class SmokeUtil {
         GROUP_ADMIN_LIST = new HashMap<>(16);
         //仅仅记录复读的群不需要群管
         for (String smokeGroup : REPEAT_SMOKE_GROUP) {
+            logger.info("获取群{}管理员列表开始",smokeGroup);
             GROUP_ADMIN_LIST.put(Long.valueOf(smokeGroup), cqManager.getGroupAdmins(Long.valueOf(smokeGroup)));
         }
         logger.info("读取群管理员完成");
@@ -56,11 +58,14 @@ public class SmokeUtil {
         this.resDAO = resDAO;
     }
     @PostConstruct
+    @Async
     public void initGroupMessageQueue(){
         try{
             loadGroupAdmins();
-            //对所有群开启消息记录
+
+            logger.info("获取QQ{}群列表开始",1335734629L);
             List<RespData> groups = cqManager.getGroups(1335734629L).getData();
+            logger.info("获取QQ{}群列表开始",1020640876L);
             List<RespData> groups2 = cqManager.getGroups(1020640876L).getData();
             groups.addAll(groups2);
             //懒得去重了 反正Map会自动去

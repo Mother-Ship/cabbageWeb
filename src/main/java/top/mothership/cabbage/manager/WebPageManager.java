@@ -136,6 +136,23 @@ public class WebPageManager {
     public BufferedImage getBGBackup(Beatmap beatmap) {
 
         try {
+
+
+
+            OsuFile osuFile = parseOsuFile(beatmap);
+            if (osuFile == null) {
+                cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+                return null;
+            }
+            byte[] img = (byte[]) resDAO.getBGBySidAndName(beatmap.getBeatmapSetId(), osuFile.getBgName());
+            if (img != null) {
+                try (ByteArrayInputStream in = new ByteArrayInputStream(img)) {
+                    return ImageIO.read(in);
+                } catch (IOException e) {
+                    cqManager.warn("数据库中" + beatmap.getBeatmapId() + "的背景损坏。");
+                }
+            }
+
             Request request = new Request.Builder()
                     .url("https://osu.ppy.sh/home")
                     .build();
@@ -155,10 +172,6 @@ public class WebPageManager {
                         break;
                     }
                 }
-                System.out.println(token);
-                System.out.println(session);
-                System.out.println("token");
-
             }
 
             FormBody.Builder builder = new FormBody.Builder();
@@ -185,11 +198,7 @@ public class WebPageManager {
                     }
                 }
             }
-            OsuFile osuFile = parseOsuFile(beatmap);
-            if (osuFile == null) {
-                cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
-                return null;
-            }
+
 
             request = new Request.Builder()
                     .header("referer","https://osu.ppy.sh/beatmapsets/"+beatmap.getBeatmapSetId())
