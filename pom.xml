@@ -97,6 +97,7 @@
             <artifactId>javax.mail-api</artifactId>
             <version>1.5.6</version>
         </dependency>
+
         <!-- 4) Spring相关 https://mvnrepository.com/artifact/org.springframework/spring-context -->
         <dependency>
             <groupId>org.springframework</groupId>

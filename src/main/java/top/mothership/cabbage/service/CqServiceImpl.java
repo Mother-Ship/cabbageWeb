@@ -439,7 +439,7 @@ public class CqServiceImpl {
     }
 
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
-    @GroupAuthorityControl
+    @GroupAuthorityControl(banned = 136312506L)
     public void printSpecifiedBP(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         if ("白菜".equals(argument.getUsername())) {
@@ -961,7 +961,7 @@ public class CqServiceImpl {
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";
                 break;
             case "136312506":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告，以及群文件中的比赛规程、组队规则。\n报名地址：http://www.mpmatch.cn/5/reg.html\n比赛信息： http://www.mpmatch.cn/5/info.html\n选手列表：http://www.mpmatch.cn/5/roster.html";
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告";
                 break;
             case "693299572":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，特殊进群提醒测试";

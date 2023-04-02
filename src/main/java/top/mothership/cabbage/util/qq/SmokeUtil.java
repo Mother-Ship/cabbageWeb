@@ -58,28 +58,32 @@ public class SmokeUtil {
         this.resDAO = resDAO;
     }
     @PostConstruct
-    @Async
     public void initGroupMessageQueue(){
-        try{
-            loadGroupAdmins();
 
-            logger.info("获取QQ{}群列表开始",1335734629L);
-            List<RespData> groups = cqManager.getGroups(1335734629L).getData();
-            logger.info("获取QQ{}群列表开始",1020640876L);
-            List<RespData> groups2 = cqManager.getGroups(1020640876L).getData();
-            groups.addAll(groups2);
-            //懒得去重了 反正Map会自动去
-            for (RespData respData : groups) {
-                if(!REPEAT_RECORD_GROUP.contains(String.valueOf(respData.getGroupId()))
-                        &&!REPEAT_SMOKE_GROUP.contains(String.valueOf(respData.getGroupId()))) {
+        new Thread(() -> {
+            try{
+                loadGroupAdmins();
+
+                logger.info("获取QQ{}群列表开始",1335734629L);
+                List<RespData> groups = cqManager.getGroups(1335734629L).getData();
+                logger.info("获取QQ{}群列表开始",1020640876L);
+                List<RespData> groups2 = cqManager.getGroups(1020640876L).getData();
+                groups.addAll(groups2);
+                //懒得去重了 反正Map会自动去
+                for (RespData respData : groups) {
+                    if(!REPEAT_RECORD_GROUP.contains(String.valueOf(respData.getGroupId()))
+                            &&!REPEAT_SMOKE_GROUP.contains(String.valueOf(respData.getGroupId()))) {
 //                MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
-                }else{
-                    MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
+                    }else{
+                        MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
+                    }
                 }
+            }catch (Exception e){
+                logger.info("初始化群管理员出错");
             }
-        }catch (Exception e){
-            logger.info("初始化群管理员出错");
-        }
+
+        }).start();
+
 
     }
 

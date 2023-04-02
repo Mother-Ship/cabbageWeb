@@ -5,13 +5,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import okhttp3.*;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -89,8 +85,11 @@ public class WebPageManager {
         BufferedImage resizedAva;
         logger.info("开始获取玩家" + uid + "的头像");
         try {
-            avaurl = new URL(AVA_URL + uid + "?.png");
+            avaurl = new URL(AVA_URL + uid + "?" + System.currentTimeMillis() / 1000 + ".png");
             ava = ImageIO.read(avaurl);
+            int imageType = getImageType(ava);
+            ava = new BufferedImage(ava.getWidth(), ava.getHeight(), imageType);
+
             if (ava != null) {
                 //进行缩放
                 if (ava.getHeight() > 128 || ava.getWidth() > 128) {
@@ -126,7 +125,32 @@ public class WebPageManager {
         }
 
     }
+    private static int getImageType(BufferedImage img) {
+        int imageType = img.getType();
+        switch (imageType) {
+            case BufferedImage.TYPE_CUSTOM:
+                if (img.getAlphaRaster() != null) {
+                    imageType = BufferedImage.TYPE_INT_ARGB_PRE;
+                }
+                else {
+                    imageType = BufferedImage.TYPE_INT_RGB;
+                }
+                break;
+            case BufferedImage.TYPE_BYTE_BINARY:
+                // Handle both BYTE_BINARY (1-4 bit/pixel) and BYTE_INDEXED (8 bit/pixel)
+            case BufferedImage.TYPE_BYTE_INDEXED:
+                if (img.getColorModel().hasAlpha()) {
+                    imageType = BufferedImage.TYPE_INT_ARGB_PRE;
+                }
+                else {
+                    // Handle non-alpha variant
+                    imageType = BufferedImage.TYPE_INT_RGB;
+                }
+                break;
+        }
 
+        return imageType;
+    }
     /**
      * Gets bg backup.
      *
@@ -136,7 +160,6 @@ public class WebPageManager {
     public BufferedImage getBGBackup(Beatmap beatmap) {
 
         try {
-
 
 
             OsuFile osuFile = parseOsuFile(beatmap);
@@ -159,16 +182,16 @@ public class WebPageManager {
             String token = null;
             String session = null;
             try (Response response = client.newCall(request).execute()) {
-                if (!Objects.equals(response.code(), HttpStatus.SC_OK)){
+                if (!Objects.equals(response.code(), HttpStatus.SC_OK)) {
                     cqManager.warn("下载谱面" + beatmap.getBeatmapId() + "时访问官网失败");
                     return null;
                 }
                 for (String s : response.headers().toMultimap().get("Set-Cookie")) {
-                    if (s.startsWith("XSRF-TOKEN")){
-                        token = s.substring(s.indexOf("=")+1,s.indexOf(";"));
+                    if (s.startsWith("XSRF-TOKEN")) {
+                        token = s.substring(s.indexOf("=") + 1, s.indexOf(";"));
                     }
-                    if (s.startsWith("osu_session")){
-                        session = s.substring(s.indexOf("=")+1, s.indexOf(";"));
+                    if (s.startsWith("osu_session")) {
+                        session = s.substring(s.indexOf("=") + 1, s.indexOf(";"));
                         break;
                     }
                 }
@@ -176,24 +199,24 @@ public class WebPageManager {
 
             FormBody.Builder builder = new FormBody.Builder();
 
-            builder.add("_token",token);
+            builder.add("_token", token);
             builder.add("username", Overall.CABBAGE_CONFIG.getString("accountForDL"));
-            builder.add("password",Overall.CABBAGE_CONFIG.getString("accountForDLPwd"));
+            builder.add("password", Overall.CABBAGE_CONFIG.getString("accountForDLPwd"));
 
             RequestBody body = builder.build();
             request = new Request.Builder()
-                    .header("referer","https://osu.ppy.sh/home")
-                    .header("cookie","XSRF-TOKEN="+token+"; osu_session="+session)
+                    .header("referer", "https://osu.ppy.sh/home")
+                    .header("cookie", "XSRF-TOKEN=" + token + "; osu_session=" + session)
                     .url("https://osu.ppy.sh/session").post(body).build();
 
             try (Response response = client.newCall(request).execute()) {
-                if (!Objects.equals(response.code(), HttpStatus.SC_OK)){
-                    cqManager.warn("下载谱面" + beatmap.getBeatmapId() + "时登陆失败，返回code："+response.code());
+                if (!Objects.equals(response.code(), HttpStatus.SC_OK)) {
+                    cqManager.warn("下载谱面" + beatmap.getBeatmapId() + "时登陆失败，返回code：" + response.code());
                     return null;
                 }
                 for (String s : response.headers().toMultimap().get("Set-Cookie")) {
-                    if (s.startsWith("osu_session")){
-                        session = s.substring(s.indexOf("=")+1,s.indexOf(";"));
+                    if (s.startsWith("osu_session")) {
+                        session = s.substring(s.indexOf("=") + 1, s.indexOf(";"));
                         break;
                     }
                 }
@@ -201,9 +224,9 @@ public class WebPageManager {
 
 
             request = new Request.Builder()
-                    .header("referer","https://osu.ppy.sh/beatmapsets/"+beatmap.getBeatmapSetId())
-                    .header("cookie","osu_session="+session)
-                    .url("https://osu.ppy.sh/beatmapsets/"+beatmap.getBeatmapSetId()+"/download").build();
+                    .header("referer", "https://osu.ppy.sh/beatmapsets/" + beatmap.getBeatmapSetId())
+                    .header("cookie", "osu_session=" + session)
+                    .url("https://osu.ppy.sh/beatmapsets/" + beatmap.getBeatmapSetId() + "/download").build();
 
             try (Response response = client.newCall(request).execute();
                  ZipInputStream zis = new ZipInputStream(new CheckedInputStream(response.body().byteStream(), new CRC32()))) {
