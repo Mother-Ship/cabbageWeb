@@ -27,6 +27,8 @@ import top.mothership.cabbage.pojo.osu.*;
 import top.mothership.cabbage.util.osu.StringSimilarityUtil;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -73,6 +75,31 @@ public class WebPageManager {
     @Autowired
     private ApiManager apiManager;
 
+    private static int getImageType(BufferedImage img) {
+        int imageType = img.getType();
+        switch (imageType) {
+            case BufferedImage.TYPE_CUSTOM:
+                if (img.getAlphaRaster() != null) {
+                    imageType = BufferedImage.TYPE_INT_ARGB_PRE;
+                } else {
+                    imageType = BufferedImage.TYPE_INT_RGB;
+                }
+                break;
+            case BufferedImage.TYPE_BYTE_BINARY:
+                // Handle both BYTE_BINARY (1-4 bit/pixel) and BYTE_INDEXED (8 bit/pixel)
+            case BufferedImage.TYPE_BYTE_INDEXED:
+                if (img.getColorModel().hasAlpha()) {
+                    imageType = BufferedImage.TYPE_INT_ARGB_PRE;
+                } else {
+                    // Handle non-alpha variant
+                    imageType = BufferedImage.TYPE_INT_RGB;
+                }
+                break;
+        }
+
+        return imageType;
+    }
+
     /**
      * Gets avatar.
      *
@@ -87,8 +114,16 @@ public class WebPageManager {
         try {
             avaurl = new URL(AVA_URL + uid + "?" + System.currentTimeMillis() / 1000 + ".png");
             ava = ImageIO.read(avaurl);
-            int imageType = getImageType(ava);
-            ava = new BufferedImage(ava.getWidth(), ava.getHeight(), imageType);
+
+            ImageInputStream iis = ImageIO.createImageInputStream(avaurl.openConnection().getInputStream());
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
+            String format = readers.next().getFormatName();
+            if ("gif".equals(format)){
+                BufferedImage img = new BufferedImage(ava.getWidth(), ava.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                img.createGraphics().drawImage(ava, 0, 0, null);
+                ava = img;
+            }
+
 
             if (ava != null) {
                 //进行缩放
@@ -125,32 +160,7 @@ public class WebPageManager {
         }
 
     }
-    private static int getImageType(BufferedImage img) {
-        int imageType = img.getType();
-        switch (imageType) {
-            case BufferedImage.TYPE_CUSTOM:
-                if (img.getAlphaRaster() != null) {
-                    imageType = BufferedImage.TYPE_INT_ARGB_PRE;
-                }
-                else {
-                    imageType = BufferedImage.TYPE_INT_RGB;
-                }
-                break;
-            case BufferedImage.TYPE_BYTE_BINARY:
-                // Handle both BYTE_BINARY (1-4 bit/pixel) and BYTE_INDEXED (8 bit/pixel)
-            case BufferedImage.TYPE_BYTE_INDEXED:
-                if (img.getColorModel().hasAlpha()) {
-                    imageType = BufferedImage.TYPE_INT_ARGB_PRE;
-                }
-                else {
-                    // Handle non-alpha variant
-                    imageType = BufferedImage.TYPE_INT_RGB;
-                }
-                break;
-        }
 
-        return imageType;
-    }
     /**
      * Gets bg backup.
      *
