@@ -80,7 +80,10 @@ public class ExceptionNoticeAspect {
             cqMsg.setSelfId(1335734629L);
             cqMsg.setUserId(1335734657L);
             cqMsg.setMessageType("private");
-            cqManager.sendMsg(cqMsg);
+            if (cqManager != null) {
+                cqManager.sendMsg(cqMsg);
+            }
+
 
         }
         return result;

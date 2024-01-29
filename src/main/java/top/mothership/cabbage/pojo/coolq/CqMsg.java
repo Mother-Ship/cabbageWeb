@@ -32,6 +32,8 @@ public class CqMsg  {
     @SerializedName("user_id")
     private Long userId;
     private String message;
+    @SerializedName("raw_message")
+    private String rawMessage;
     @SerializedName("operator_id")
     private Long operatorId;
     private Integer duration;

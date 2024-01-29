@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
@@ -65,6 +66,9 @@ public class OneBotMessageHandler extends TextWebSocketHandler {
 
         } else {
             CqMsg cqMsg = new Gson().fromJson(message.getPayload().toString(), CqMsg.class);
+            if (!StringUtils.isEmpty(cqMsg.getRawMessage())){
+                cqMsg.setMessage(cqMsg.getRawMessage());
+            }
             fixedThreadPool.submit(() -> cqController.doHandle(cqMsg));
         }
 
