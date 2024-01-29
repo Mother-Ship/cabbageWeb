@@ -1403,7 +1403,24 @@ public class CqServiceImpl {
 
 
     public void roll(CqMsg cqMsg) {
-        cqMsg.setMessage(String.valueOf(new Random().nextInt(100)));
+        Argument argument = cqMsg.getArgument();
+
+        if (argument.getBound() != null && !argument.getBound().isEmpty()) {
+            try {
+                Integer.parseInt(argument.getBound());
+            } catch (Exception e) {
+                argument.setBound("100");
+            }
+            if (Integer.parseInt(argument.getBound()) <= 0) {
+                argument.setBound("100");
+            }
+            cqMsg.setMessage(String.valueOf(new Random().nextInt(Integer.parseInt(argument.getBound())) + 1));
+        } else {
+            cqMsg.setMessage(String.valueOf(new Random().nextInt(100) + 1));
+        }
+        if (cqMsg.getGroupId() != null) {
+            cqMsg.setMessage("[CQ:at,qq=" + cqMsg.getUserId() + "]" + cqMsg.getMessage());
+        }
         cqManager.sendMsg(cqMsg);
     }
 

@@ -32,24 +32,8 @@ public class SmokeUtil {
     private final UserDAO userDAO;
     private final ResDAO resDAO;
     public final static Map<Long, MsgQueue> MSG_QUEUE_MAP = new HashMap<>();
-    private  static Map<Long, List<Long>> GROUP_ADMIN_LIST;
 
 
-    /*
-    而读取管理员则独立成为方法，方便刷新
-    现在的问题是这个静态方法会在cqManager之前初始化，而且cqManager不是静态的，所以在这个方法里没法用cqManager
-    不使用静态方法，调用这个方法放在构造函数里，而Controller里正好由Spring托管了一个
-    */
-
-    public void loadGroupAdmins() {
-        GROUP_ADMIN_LIST = new HashMap<>(16);
-        //仅仅记录复读的群不需要群管
-        for (String smokeGroup : REPEAT_SMOKE_GROUP) {
-            logger.info("获取群{}管理员列表开始",smokeGroup);
-            GROUP_ADMIN_LIST.put(Long.valueOf(smokeGroup), cqManager.getGroupAdmins(Long.valueOf(smokeGroup)));
-        }
-        logger.info("读取群管理员完成");
-    }
 
     @Autowired
     public SmokeUtil(CqManager cqManager, UserDAO userDAO, ResDAO resDAO) {
@@ -57,35 +41,7 @@ public class SmokeUtil {
         this.userDAO = userDAO;
         this.resDAO = resDAO;
     }
-    @PostConstruct
-    public void initGroupMessageQueue(){
 
-        new Thread(() -> {
-            try{
-                loadGroupAdmins();
-
-                logger.info("获取QQ{}群列表开始",1335734629L);
-                List<RespData> groups = cqManager.getGroups(1335734629L).getData();
-                logger.info("获取QQ{}群列表开始",1020640876L);
-                List<RespData> groups2 = cqManager.getGroups(1020640876L).getData();
-                groups.addAll(groups2);
-                //懒得去重了 反正Map会自动去
-                for (RespData respData : groups) {
-                    if(!REPEAT_RECORD_GROUP.contains(String.valueOf(respData.getGroupId()))
-                            &&!REPEAT_SMOKE_GROUP.contains(String.valueOf(respData.getGroupId()))) {
-//                MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
-                    }else{
-                        MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
-                    }
-                }
-            }catch (Exception e){
-                logger.info("初始化群管理员出错");
-            }
-
-        }).start();
-
-
-    }
 
     /**
      * Parse smoke.
@@ -93,26 +49,35 @@ public class SmokeUtil {
      * @param cqMsg the cq msg
      */
     public void parseSmoke(CqMsg cqMsg) {
-        //ArrayList内部使用.equals比较对象，所以直接传入String
-        //如果是开启禁言的群
-        //获取绑定的那个MsgQueue
+
         MsgQueue msgQueue = MSG_QUEUE_MAP.get(cqMsg.getGroupId());
+        //如果获取队列失败，而且是开启禁言的群号，直接在这里初始化队列，懒加载避免获取群列表
+        if (msgQueue == null){
+            if(!REPEAT_RECORD_GROUP.contains(String.valueOf(cqMsg.getGroupId()))
+                    &&!REPEAT_SMOKE_GROUP.contains(String.valueOf(cqMsg.getGroupId()))) {
+//                MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
+            }else{
+                MSG_QUEUE_MAP.put(cqMsg.getGroupId(), new MsgQueue());
+            }
+        }
+
         //进行添加
         //判断非空……提高健壮性
         if (msgQueue != null) {
             msgQueue.addMsg(cqMsg);
             //如果是开启禁言的群,并且该条触发了禁言
 
-            if ((REPEAT_SMOKE_GROUP.contains(String.valueOf(cqMsg.getGroupId())) && msgQueue.countRepeat() >= 6)||(cqMsg.getGroupId().equals(521774765L) && msgQueue.countRepeat() >=2)) {
+            if ((REPEAT_SMOKE_GROUP.contains(String.valueOf(cqMsg.getGroupId())) && msgQueue.countRepeat() >= 6)) {
                 logger.info("触发复读禁言，正在记录案发现场：" + new Gson().toJson(msgQueue.getRepeatList()));
-                if (GROUP_ADMIN_LIST.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())) {
-                    logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
-                    cqMsg.setMessage("[CQ:at,qq=" + cqManager.getOwner(cqMsg.getGroupId()) + "] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
-                } else {
+                // 由于onebot实现改造，尽量减少API对接行为，去掉获取群管
+//                if (GROUP_ADMIN_LIST.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())) {
+//                    logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
+//                    cqMsg.setMessage("[CQ:at,qq=" + cqManager.getOwner(cqMsg.getGroupId()) + "] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
+//                } else {
                     logger.info("正在尝试禁言" + cqMsg.getUserId());
                     cqMsg.setDuration(600);
                     cqMsg.setMessageType("smoke");
-                }
+//                }
                 cqManager.sendMsg(cqMsg);
 
             }

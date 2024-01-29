@@ -11,6 +11,6 @@ public class CqResponse <T>{
     @SerializedName("retcode")
     private int retCode;
     private T data;
-
+    private String echo;
 
 }

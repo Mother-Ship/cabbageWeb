@@ -67,6 +67,8 @@ public class CqController {
     public void cqMsgParse(@RequestBody CqMsg cqMsg) throws Exception {
         fixedThreadPool.submit(()->this.doHandle(cqMsg));
     }
+
+
     @SneakyThrows
     public void doHandle(CqMsg cqMsg){
 
@@ -376,6 +378,7 @@ public class CqController {
                                     cqService.setMode(cqMsg);
                                     break;
                                 case "roll":
+                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.BOUND});
                                     cqService.roll(cqMsg);
                                     break;
                                 case "myrole":
@@ -421,10 +424,7 @@ public class CqController {
                     //有人退群
                     cqService.seeYouNextTime(cqMsg);
                 }
-                if ("group_admin".equals(cqMsg.getNoticeType())) {
-                    //群管变动
-                    smokeUtil.loadGroupAdmins();
-                }
+
                 break;
             case "request":
                 //只有是加群请求的时候才进入

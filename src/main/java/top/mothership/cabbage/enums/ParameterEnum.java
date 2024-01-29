@@ -12,6 +12,7 @@ public enum ParameterEnum {
     HOUR,
     NUM,
     SEARCH_PARAM,
+    BOUND,
 
     USERNAME_LIST,
     FILENAME,

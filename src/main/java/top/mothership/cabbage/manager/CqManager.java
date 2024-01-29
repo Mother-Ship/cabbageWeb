@@ -3,12 +3,12 @@ package top.mothership.cabbage.manager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import org.checkerframework.checker.units.qual.A;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.pojo.coolq.CqMsg;
-import top.mothership.cabbage.pojo.coolq.CqResponse;
-import top.mothership.cabbage.pojo.coolq.QQInfo;
-import top.mothership.cabbage.pojo.coolq.RespData;
+import top.mothership.cabbage.pojo.coolq.*;
+import top.mothership.cabbage.websocket.OneBotMessageHandler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,10 +19,15 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 //将CQ的HTTP API封装为接口，并托管到Spring
 @Component
 public class CqManager {
+    @Autowired
+    private OneBotMessageHandler handler;
+
+
     public CqResponse warn(String msg) {
         CqMsg cqMsg = new CqMsg();
         cqMsg.setMessageType("private");
@@ -48,10 +53,13 @@ public class CqManager {
                 baseURL = "http://k3.mothership.top:5700";
                 break;
             case "1335734629":
-                baseURL = "http://k3.mothership.top:5701";
+                handler.sendMessage(cqMsg);
                 break;
             case "2758858579":
                 baseURL = "http://cq.mothership.top:5702";
+                break;
+            default:
+                handler.sendMessage(cqMsg);
                 break;
         }
         String URL;
@@ -114,35 +122,33 @@ public class CqManager {
 
     }
 
+    /**
+     * 获取单个群成员列表，仅针对原有2个QQ所在的群才有用
+     * 目前用处是全员循环禁言（?什么傻逼功能），超管group info命令，2个chart群给MP系列主群加人用
+     * 后续如果自由接入的话获取不到其他接入QQ的群信息（懒得写，得在消息入口把发送人QQ一直保持到调用时候）
+     * @param groupId 目标群
+     * @return
+     */
+
     public CqResponse<List<QQInfo>> getGroupMembers(Long groupId) {
-        String URL = "http://k3.mothership.top:5701/get_group_member_list";
+
         HttpURLConnection httpConnection;
         try {
             CqMsg cqMsg = new CqMsg();
             cqMsg.setGroupId(groupId);
-            httpConnection =
-                    (HttpURLConnection) new URL(URL).openConnection();
-            httpConnection.setRequestMethod("POST");
-            httpConnection.setRequestProperty("Accept", "application/json");
-            httpConnection.setRequestProperty("Content-Type", "application/json");
-            httpConnection.setDoOutput(true);
+            cqMsg.setSelfId(1335734629L);
 
-            OutputStream os = httpConnection.getOutputStream();
-            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
-            os.flush();
-            os.close();
-            BufferedReader responseBuffer =
-                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
-            StringBuilder tmp2 = new StringBuilder();
-            String tmp;
-            while ((tmp = responseBuffer.readLine()) != null) {
-                tmp2.append(tmp);
-            }
-            //采用泛型封装，接住变化无穷的data
-            CqResponse<List<QQInfo>> response = new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<QQInfo>>>() {
+            OneBotApiRequest request = new OneBotApiRequest();
+            request.setAction("get_group_member_list");
+            request.setMsg(cqMsg);
+            request.setEcho(getId());
+            String response = handler.callApi(request);
+            CqResponse<List<QQInfo>> data = new Gson().fromJson(response, new TypeToken<CqResponse<List<QQInfo>>>() {
             }.getType());
-            if (response.getRetCode() != 0) {
-                URL = "http://k3.mothership.top:5700/get_group_member_list";
+
+            // 如果报错找不到
+            if (data.getRetCode() != 0) {
+                String URL = "http://k3.mothership.top:5700/get_group_member_list";
                 httpConnection =
                         (HttpURLConnection) new URL(URL).openConnection();
                 httpConnection.setRequestMethod("POST");
@@ -150,12 +156,12 @@ public class CqManager {
                 httpConnection.setRequestProperty("Content-Type", "application/json");
                 httpConnection.setDoOutput(true);
 
-                os = httpConnection.getOutputStream();
+                OutputStream os = httpConnection.getOutputStream();
                 os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
                 os.flush();
                 os.close();
-                responseBuffer = new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
-                tmp2 = new StringBuilder();
+                BufferedReader responseBuffer = new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
+                StringBuilder tmp2 = new StringBuilder();
                 String tmp3;
                 while ((tmp3 = responseBuffer.readLine()) != null) {
                     tmp2.append(tmp3);
@@ -163,7 +169,7 @@ public class CqManager {
                 return new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<QQInfo>>>() {
                 }.getType());
             }
-            return response;
+            return data;
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -171,102 +177,34 @@ public class CqManager {
 
     }
 
-    //在SmokeUtil里请求两次，将两个QQ的所有群合并
-    public CqResponse<List<RespData>> getGroups(Long selfId) {
-        String baseURL = null;
-        switch (selfId.toString()) {
-            case "1020640876":
-                baseURL = "http://k3.mothership.top:5700";
-                break;
-            case "1335734629":
-                baseURL = "http://k3.mothership.top:5701";
-                break;
-        }
-        String URL = baseURL + "/get_group_list";
-        HttpURLConnection httpConnection;
-        try {
-            CqMsg cqMsg = new CqMsg();
-            httpConnection =
-                    (HttpURLConnection) new URL(URL).openConnection();
-            httpConnection.setRequestMethod("POST");
-            httpConnection.setRequestProperty("Accept", "application/json");
-            httpConnection.setRequestProperty("Content-Type", "application/json");
-            httpConnection.setDoOutput(true);
 
-            OutputStream os = httpConnection.getOutputStream();
-            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
-            os.flush();
-            os.close();
-            BufferedReader responseBuffer =
-                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
-            StringBuilder tmp2 = new StringBuilder();
-            String tmp;
-            while ((tmp = responseBuffer.readLine()) != null) {
-                tmp2.append(tmp);
-            }
-            return new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<List<RespData>>>() {
-            }.getType());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-
-    }
-
-    public List<Long> getGroupAdmins(Long groupId) {
-        List<QQInfo> members = getGroupMembers(groupId).getData();
-        List<Long> result = new ArrayList<>();
-        if (members != null) {
-            for (int i = 0; i < members.size(); i++) {
-                if (members.get(i).getRole().equals("admin")) {
-                    result.add(members.get(i).getUserId());
-                }
-            }
-        }
-        return result;
-    }
-
-    public Long getOwner(Long groupId) {
-        List<QQInfo> members = getGroupMembers(groupId).getData();
-        for (int i = 0; i < members.size(); i++) {
-            if (members.get(i).getRole().equals("owner")) {
-                return members.get(i).getUserId();
-            }
-        }
-        return 0L;
-    }
-
+    /**
+     * 获取单个群成员信息，仅针对原有2个QQ所在的群才有用
+     * 后续如果自由接入的话获取不到其他接入QQ的群信息（懒得写，得在消息入口把发送人QQ一直保持到调用时候）
+     * 目前调用方：超管group info命令，list msg命令，还有每天循环查2个主群名片是否包含osu ID
+     * @param groupId 目标群
+     * @param userId 目标人
+     * @return
+     */
     public CqResponse<QQInfo> getGroupMember(Long groupId, Long userId) {
-        //内部重试两个QQ的API
-        String URL = "http://k3.mothership.top:5701/get_group_member_info";
+
         HttpURLConnection httpConnection;
         try {
             CqMsg cqMsg = new CqMsg();
             cqMsg.setGroupId(groupId);
             cqMsg.setUserId(userId);
-            httpConnection =
-                    (HttpURLConnection) new URL(URL).openConnection();
-            httpConnection.setRequestMethod("POST");
-            httpConnection.setRequestProperty("Accept", "application/json");
-            httpConnection.setRequestProperty("Content-Type", "application/json");
-            httpConnection.setDoOutput(true);
+            cqMsg.setSelfId(1335734629L);
 
-            OutputStream os = httpConnection.getOutputStream();
-            os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
-            os.flush();
-            os.close();
-            BufferedReader responseBuffer =
-                    new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
-            StringBuilder tmp2 = new StringBuilder();
-            String tmp;
-            while ((tmp = responseBuffer.readLine()) != null) {
-                tmp2.append(tmp);
-            }
-            //采用泛型封装，接住变化无穷的data
-            CqResponse<QQInfo> response = new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<QQInfo>>() {
+            OneBotApiRequest request = new OneBotApiRequest();
+            request.setAction("get_group_member_list");
+            request.setMsg(cqMsg);
+            request.setEcho(getId());
+            String response = handler.callApi(request);
+            CqResponse<QQInfo> data = new Gson().fromJson(response, new TypeToken<CqResponse<QQInfo>>() {
             }.getType());
-            if (response.getRetCode() != 0) {
-                URL = "http://k3.mothership.top:5700/get_group_member_info";
+
+            if (data.getRetCode() != 0) {
+                String URL = "http://k3.mothership.top:5700/get_group_member_info";
                 httpConnection =
                         (HttpURLConnection) new URL(URL).openConnection();
                 httpConnection.setRequestMethod("POST");
@@ -274,12 +212,12 @@ public class CqManager {
                 httpConnection.setRequestProperty("Content-Type", "application/json");
                 httpConnection.setDoOutput(true);
 
-                os = httpConnection.getOutputStream();
+                OutputStream os = httpConnection.getOutputStream();
                 os.write(new GsonBuilder().disableHtmlEscaping().create().toJson(cqMsg).getBytes(StandardCharsets.UTF_8));
                 os.flush();
                 os.close();
-                responseBuffer = new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
-                tmp2 = new StringBuilder();
+                BufferedReader responseBuffer = new BufferedReader(new InputStreamReader((httpConnection.getInputStream()), StandardCharsets.UTF_8));
+                StringBuilder tmp2 = new StringBuilder();
                 String tmp3;
                 while ((tmp3 = responseBuffer.readLine()) != null) {
                     tmp2.append(tmp3);
@@ -287,11 +225,26 @@ public class CqManager {
                 return new Gson().fromJson(tmp2.toString(), new TypeToken<CqResponse<QQInfo>>() {
                 }.getType());
             }
-            return response;
+            return data;
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
 
+    }
+
+    private String getId(){
+        // 创建一个新的Random对象
+        Random random = new Random();
+
+        // 生成10位随机数
+        long randomNumber = random.nextLong() % 10000000000L;
+
+        // 确保随机数是10位的
+        randomNumber = Math.abs(randomNumber);
+        if (randomNumber < 1000000000L) {
+            randomNumber += 1000000000L;
+        }
+        return System.currentTimeMillis() + "" + randomNumber;
     }
 }

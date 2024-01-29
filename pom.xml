@@ -116,11 +116,7 @@
             <artifactId>spring-core</artifactId>
             <version>4.3.18.RELEASE</version>
         </dependency>
-        <dependency>
-            <groupId>com.github.jponge</groupId>
-            <artifactId>lzma-java</artifactId>
-            <version>1.3</version>
-        </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.springframework/spring-beans -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -154,6 +150,18 @@
             <artifactId>spring-context-support</artifactId>
             <version>4.3.18.RELEASE</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-websocket</artifactId>
+            <version>4.3.18.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+            <version>4.3.18.RELEASE</version>
+        </dependency>
+
         <!-- 6)commons第三方包https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload -->
 
         <!--https://mvnrepository.com/artifact/commons-io/commons-io -->
@@ -167,6 +175,13 @@
             <artifactId>commons-email</artifactId>
             <version>1.4</version>
         </dependency>
+        <!--7) lzma(想用来解析.osr的 但是实际上没用)-->
+        <dependency>
+            <groupId>com.github.jponge</groupId>
+            <artifactId>lzma-java</artifactId>
+            <version>1.3</version>
+        </dependency>
+
         <!--8) AspectJ-->
         <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjrt -->
         <dependency>
