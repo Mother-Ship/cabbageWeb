@@ -27,23 +27,15 @@ import java.time.format.DateTimeFormatter;
  */
 @Order(3)
 public class ExceptionNoticeAspect {
-    private final CqManager cqManager;
+    @Autowired
+    private CqManager cqManager;
     private Logger logger = LogManager.getLogger(this.getClass());
     /**
      * 不知道放这对不对……总之是格式化时间用的
      */
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss");
 
-    /**
-     * 在构造函数中注入发送QQ消息的工具类
-     *
-     * @param cqManager 用于发送QQ消息
-     */
-    @Autowired
-    public ExceptionNoticeAspect(CqManager cqManager) {
-        this.cqManager = cqManager;
 
-    }
 
     /**
      * 捕获并通知异常，这里不使用@AfterThrowing（我也忘记原因了，反正有坑）
