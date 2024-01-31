@@ -1,6 +1,7 @@
 package top.mothership.cabbage.websocket;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,21 +56,32 @@ public class OneBotMessageHandler extends TextWebSocketHandler {
     /**
      * 处理客户发送的信息
      */
+    @SneakyThrows
     @Override
-    public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
-        log.info("收到来自客户端的信息: {}", message.getPayload());
+    public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) {
         if (message.getPayload().toString().contains("echo")
                 && !message.getPayload().toString().contains("post_type")) {
             // 这是onebot api调用的回复
             CqResponse response = new Gson().fromJson(message.getPayload().toString(), CqResponse.class);
+
             cqResponseMap.put(response.getEcho(), message.getPayload().toString());
 
         } else {
-            CqMsg cqMsg = new Gson().fromJson(message.getPayload().toString(), CqMsg.class);
+            JsonObject object = new Gson().fromJson(message.getPayload().toString(), JsonObject.class);
+            //去掉新的onebot实现按数组方式上报的message，保留rawmessage，避免序列化出现异常
+            object.remove("message");
+            CqMsg cqMsg = new Gson().fromJson(object, CqMsg.class);
+
             if (!StringUtils.isEmpty(cqMsg.getRawMessage())){
-                cqMsg.setMessage(cqMsg.getRawMessage());
+                // 将 Unicode 编码字符串转换为字节数组
+                byte[] unicodeBytes = cqMsg.getRawMessage().getBytes("Unicode");
+                // 将字节数组解码为字符串
+                String decodedString = new String(unicodeBytes, "Unicode");
+                cqMsg.setMessage(decodedString);
             }
+
             fixedThreadPool.submit(() -> cqController.doHandle(cqMsg));
+
         }
 
     }

@@ -40,13 +40,14 @@ public class CqController {
 
     private Logger logger = LogManager.getLogger(this.getClass());
     private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(100);
+
     /**
      * Spring构造方法自动注入
+     *
      * @param cqService      Service层
      * @param smokeUtil      负责禁言的工具类
      * @param cqAdminService
      * @param cqManager
-
      */
     @Autowired
 
@@ -65,12 +66,12 @@ public class CqController {
      */
     @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public void cqMsgParse(@RequestBody CqMsg cqMsg) throws Exception {
-        fixedThreadPool.submit(()->this.doHandle(cqMsg));
+        fixedThreadPool.submit(() -> this.doHandle(cqMsg));
     }
 
 
     @SneakyThrows
-    public void doHandle(CqMsg cqMsg){
+    public void doHandle(CqMsg cqMsg) {
 
         //待整理业务逻辑
         switch (cqMsg.getPostType()) {
@@ -104,13 +105,13 @@ public class CqController {
                     String log = "";
                     switch (cqMsg.getMessageType()) {
                         case "group":
-                            log += "群" + cqMsg.getGroupId() + "成员" + cqMsg.getUserId() + "发送了命令" + cqMsg.getMessage();
+                            log += "群" + cqMsg.getGroupId() + "成员" + cqMsg.getUserId() + "命令" + cqMsg.getMessage() + "执行完成";
                             break;
                         case "discuss":
-                            log += "讨论组" + cqMsg.getDiscussId() + "成员" + cqMsg.getUserId() + "发送了命令" + cqMsg.getMessage();
+                            log += "讨论组" + cqMsg.getDiscussId() + "成员" + cqMsg.getUserId() + "命令" + cqMsg.getMessage() + "执行完成";
                             break;
                         case "private":
-                            log += "用户" + cqMsg.getUserId() + "发送了命令" + cqMsg.getMessage();
+                            log += "用户" + cqMsg.getUserId() + "命令" + cqMsg.getMessage() + "执行完成";
                             break;
                         default:
                             break;
@@ -121,7 +122,9 @@ public class CqController {
                         case "sudo":
                             cmdMatcher = RegularPattern.ADMIN_CMD_REGEX.matcher(msg);
 
-                            if(!cmdMatcher.find()){return;}
+                            if (!cmdMatcher.find()) {
+                                return;
+                            }
                             //无视命令大小写
                             switch (cmdMatcher.group(1).toLowerCase(Locale.CHINA)) {
                                 case "add":
@@ -232,7 +235,7 @@ public class CqController {
                                     cqService.statUserInfo(cqMsg);
                                     break;
                                 case "statme":
-                                case  "statsme":
+                                case "statsme":
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.DAY, ParameterEnum.MODE});
                                     cqService.statUserInfo(cqMsg);
                                     break;
@@ -409,7 +412,7 @@ public class CqController {
                             }
                             break;
                     }
-                    if (doLog){
+                    if (doLog) {
                         logger.info(log);
                     }
                 }
@@ -432,8 +435,11 @@ public class CqController {
                     cqAdminService.stashInviteRequest(cqMsg);
                 }
                 break;
+            case "meta_event":
+                // 心跳包，什么都不做
+                return;
             default:
-                logger.error("传入无法识别的Request："+cqMsg.getPostType()+"，可能是HTTP API插件已经更新");
+                logger.error("传入无法识别的Request：" + cqMsg.getPostType() + "，可能是HTTP API插件已经更新");
         }
     }
 
