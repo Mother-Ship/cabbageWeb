@@ -10,20 +10,18 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 import top.mothership.cabbage.controller.CqController;
 
+import java.util.logging.SocketHandler;
+
 @Configuration
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    public static CqController cqController;
-
     @Autowired
-    public static void setCqController(CqController cqController) {
-        WebSocketConfig.cqController = cqController;
-    }
+    OneBotMessageHandler handler;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new OneBotMessageHandler(), "/onebot")
+        registry.addHandler(handler, "/onebot")
                 .addInterceptors(new HttpSessionHandshakeInterceptor())
                 .setAllowedOrigins("*"); //允许跨域访问
     }

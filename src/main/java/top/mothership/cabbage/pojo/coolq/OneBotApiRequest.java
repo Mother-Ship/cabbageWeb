@@ -6,5 +6,5 @@ import lombok.Data;
 public class OneBotApiRequest {
     private String echo;
     private String action;
-    private CqMsg msg;
+    private CqMsg params;
 }

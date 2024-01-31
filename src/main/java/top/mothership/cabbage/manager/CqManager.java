@@ -140,7 +140,7 @@ public class CqManager {
 
             OneBotApiRequest request = new OneBotApiRequest();
             request.setAction("get_group_member_list");
-            request.setMsg(cqMsg);
+            request.setParams(cqMsg);
             request.setEcho(getId());
             String response = OneBotMessageHandler.callApi(request);
             CqResponse<List<QQInfo>> data = new Gson().fromJson(response, new TypeToken<CqResponse<List<QQInfo>>>() {
@@ -197,7 +197,7 @@ public class CqManager {
 
             OneBotApiRequest request = new OneBotApiRequest();
             request.setAction("get_group_member_list");
-            request.setMsg(cqMsg);
+            request.setParams(cqMsg);
             request.setEcho(getId());
             String response = OneBotMessageHandler.callApi(request);
             CqResponse<QQInfo> data = new Gson().fromJson(response, new TypeToken<CqResponse<QQInfo>>() {

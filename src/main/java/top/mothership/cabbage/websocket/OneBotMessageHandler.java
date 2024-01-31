@@ -26,18 +26,19 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class OneBotMessageHandler extends TextWebSocketHandler {
-
-
     //用来保存连接进来session
     private static Map<String, WebSocketSession> map = new ConcurrentHashMap<>();
     private static Map<String, String> cqResponseMap = new ConcurrentHashMap<>();
+
+    @Autowired
+    private CqController cqController;
     private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(100);
     private Logger log = LogManager.getLogger(this.getClass());
 
 
     @SneakyThrows
     public static String callApi(OneBotApiRequest request) {
-        WebSocketSession session = map.get(String.valueOf(request.getMsg().getSelfId()));
+        WebSocketSession session = map.get(String.valueOf(request.getParams().getSelfId()));
         if (session != null) {
             session.sendMessage(new TextMessage(new Gson().toJson(request)));
         }
@@ -89,7 +90,7 @@ public class OneBotMessageHandler extends TextWebSocketHandler {
         WebSocketSession session = map.get(String.valueOf(cqMsg.getSelfId()));
         if (session != null) {
             OneBotApiRequest request = new OneBotApiRequest();
-            request.setMsg(cqMsg);
+            request.setParams(cqMsg);
             request.setAction(action);
             session.sendMessage(new TextMessage(new Gson().toJson(request)));
         }
@@ -122,9 +123,10 @@ public class OneBotMessageHandler extends TextWebSocketHandler {
         if (message.getPayload().toString().contains("echo")
                 && !message.getPayload().toString().contains("post_type")) {
             // 这是onebot api调用的回复
-            CqResponse response = new Gson().fromJson(message.getPayload().toString(), CqResponse.class);
 
-            cqResponseMap.put(response.getEcho(), message.getPayload().toString());
+            CqResponse response = new Gson().fromJson(message.getPayload().toString(), CqResponse.class);
+            if (response.getEcho() != null)
+                cqResponseMap.put(response.getEcho(), message.getPayload().toString());
 
         } else {
             JsonObject object = new Gson().fromJson(message.getPayload().toString(), JsonObject.class);
@@ -132,15 +134,15 @@ public class OneBotMessageHandler extends TextWebSocketHandler {
             object.remove("message");
             CqMsg cqMsg = new Gson().fromJson(object, CqMsg.class);
 
-            if (!StringUtils.isEmpty(cqMsg.getRawMessage())) {
+            if (cqMsg.getRawMessage() != null) {
                 // 将 Unicode 编码字符串转换为字节数组
                 byte[] unicodeBytes = cqMsg.getRawMessage().getBytes("Unicode");
                 // 将字节数组解码为字符串
                 String decodedString = new String(unicodeBytes, "Unicode");
                 cqMsg.setMessage(decodedString);
             }
-            log.info(WebSocketConfig.cqController);
-            fixedThreadPool.submit(() -> WebSocketConfig.cqController.doHandle(cqMsg));
+            log.info(cqController);
+            fixedThreadPool.submit(() -> cqController.doHandle(cqMsg));
 
         }
 
