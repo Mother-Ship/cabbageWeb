@@ -54,13 +54,13 @@ public class CqManager {
                 break;
             case "1335734629":
                 OneBotMessageHandler.sendMessage(cqMsg);
-                break;
+                return null;
             case "2758858579":
                 baseURL = "http://cq.mothership.top:5702";
                 break;
             default:
                 OneBotMessageHandler.sendMessage(cqMsg);
-                break;
+                return null;
         }
         String URL;
         switch (cqMsg.getMessageType()) {

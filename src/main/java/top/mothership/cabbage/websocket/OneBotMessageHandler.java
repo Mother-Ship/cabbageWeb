@@ -27,17 +27,13 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class OneBotMessageHandler extends TextWebSocketHandler {
 
-    private static CqController cqController;
+
     //用来保存连接进来session
     private static Map<String, WebSocketSession> map = new ConcurrentHashMap<>();
     private static Map<String, String> cqResponseMap = new ConcurrentHashMap<>();
     private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(100);
     private Logger log = LogManager.getLogger(this.getClass());
 
-    @Autowired
-    public static void setCqController(CqController cqController) {
-        OneBotMessageHandler.cqController = cqController;
-    }
 
     @SneakyThrows
     public static String callApi(OneBotApiRequest request) {
@@ -143,8 +139,8 @@ public class OneBotMessageHandler extends TextWebSocketHandler {
                 String decodedString = new String(unicodeBytes, "Unicode");
                 cqMsg.setMessage(decodedString);
             }
-
-            fixedThreadPool.submit(() -> cqController.doHandle(cqMsg));
+            log.info(WebSocketConfig.cqController);
+            fixedThreadPool.submit(() -> WebSocketConfig.cqController.doHandle(cqMsg));
 
         }
 
