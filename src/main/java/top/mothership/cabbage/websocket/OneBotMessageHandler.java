@@ -26,15 +26,79 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class OneBotMessageHandler extends TextWebSocketHandler {
-    @Autowired
-    private CqController cqController;
-    private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(100);
 
+    private static CqController cqController;
+    //用来保存连接进来session
+    private static Map<String, WebSocketSession> map = new ConcurrentHashMap<>();
+    private static Map<String, String> cqResponseMap = new ConcurrentHashMap<>();
+    private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(100);
     private Logger log = LogManager.getLogger(this.getClass());
 
-    //用来保存连接进来session
-    private Map<String, WebSocketSession> map = new ConcurrentHashMap<>();
-    private Map<String, String> cqResponseMap = new ConcurrentHashMap<>();
+    @Autowired
+    public static void setCqController(CqController cqController) {
+        OneBotMessageHandler.cqController = cqController;
+    }
+
+    @SneakyThrows
+    public static String callApi(OneBotApiRequest request) {
+        WebSocketSession session = map.get(String.valueOf(request.getMsg().getSelfId()));
+        if (session != null) {
+            session.sendMessage(new TextMessage(new Gson().toJson(request)));
+        }
+        // 自旋等待返回值map里出现要的返回值，直到次数上限
+        int retry = 0;
+        while (true) {
+            String response = cqResponseMap.get(request.getEcho());
+            if (response != null) {
+                return response;
+            }
+            TimeUnit.SECONDS.sleep(1);
+
+            retry++;
+            if (retry > 10) {
+                return null;
+            }
+        }
+    }
+
+    @SneakyThrows
+    public static void sendMessage(CqMsg cqMsg) {
+        String action = null;
+        switch (cqMsg.getMessageType()) {
+            case "group":
+                action = "send_group_msg";
+                break;
+            case "discuss":
+                action = "send_discuss_msg";
+                break;
+            case "private":
+                action = "send_private_msg";
+                break;
+            case "smoke":
+                action = "set_group_ban";
+                break;
+            case "smokeAll":
+                action = "set_group_whole_ban";
+                break;
+            case "handleInvite":
+                action = "set_group_add_request";
+                break;
+            case "kick":
+                action = "set_group_kick";
+                break;
+            default:
+                return;
+        }
+
+        WebSocketSession session = map.get(String.valueOf(cqMsg.getSelfId()));
+        if (session != null) {
+            OneBotApiRequest request = new OneBotApiRequest();
+            request.setMsg(cqMsg);
+            request.setAction(action);
+            session.sendMessage(new TextMessage(new Gson().toJson(request)));
+        }
+    }
+
     /**
      * 关闭连接进入这个方法处理，将session从 list中删除
      */
@@ -72,7 +136,7 @@ public class OneBotMessageHandler extends TextWebSocketHandler {
             object.remove("message");
             CqMsg cqMsg = new Gson().fromJson(object, CqMsg.class);
 
-            if (!StringUtils.isEmpty(cqMsg.getRawMessage())){
+            if (!StringUtils.isEmpty(cqMsg.getRawMessage())) {
                 // 将 Unicode 编码字符串转换为字节数组
                 byte[] unicodeBytes = cqMsg.getRawMessage().getBytes("Unicode");
                 // 将字节数组解码为字符串
@@ -89,65 +153,6 @@ public class OneBotMessageHandler extends TextWebSocketHandler {
     private String getClientQQ(WebSocketSession session) {
         // 按one bot文档，取第一个X-Self-ID请求头
         return session.getHandshakeHeaders().get("X-Self-ID").get(0);
-    }
-
-    @SneakyThrows
-    public String callApi(OneBotApiRequest request){
-        WebSocketSession session = map.get(String.valueOf(request.getMsg().getSelfId()));
-        if (session != null){
-            session.sendMessage(new TextMessage(new Gson().toJson(request)));
-        }
-        // 自旋等待返回值map里出现要的返回值，直到次数上限
-        int retry = 0;
-        while(true){
-            String response = cqResponseMap.get(request.getEcho());
-            if (response != null){
-                return response;
-            }
-            TimeUnit.SECONDS.sleep(1);
-
-            retry ++;
-            if (retry > 10){
-                return null;
-            }
-        }
-    }
-    @SneakyThrows
-    public void sendMessage(CqMsg cqMsg) {
-        String action = null;
-        switch (cqMsg.getMessageType()) {
-            case "group":
-                action = "send_group_msg";
-                break;
-            case "discuss":
-                action = "send_discuss_msg";
-                break;
-            case "private":
-                action = "send_private_msg";
-                break;
-            case "smoke":
-                action = "set_group_ban";
-                break;
-            case "smokeAll":
-                action = "set_group_whole_ban";
-                break;
-            case "handleInvite":
-                action = "set_group_add_request";
-                break;
-            case "kick":
-                action = "set_group_kick";
-                break;
-            default:
-                return;
-        }
-        
-        WebSocketSession session = map.get(String.valueOf(cqMsg.getSelfId()));
-        if (session != null){
-            OneBotApiRequest request = new OneBotApiRequest();
-            request.setMsg(cqMsg);
-            request.setAction(action);
-            session.sendMessage(new TextMessage(new Gson().toJson(request)));
-        }
     }
 
 }

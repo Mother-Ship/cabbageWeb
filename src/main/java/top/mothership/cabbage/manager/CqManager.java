@@ -53,13 +53,13 @@ public class CqManager {
                 baseURL = "http://k3.mothership.top:5700";
                 break;
             case "1335734629":
-                handler.sendMessage(cqMsg);
+                OneBotMessageHandler.sendMessage(cqMsg);
                 break;
             case "2758858579":
                 baseURL = "http://cq.mothership.top:5702";
                 break;
             default:
-                handler.sendMessage(cqMsg);
+                OneBotMessageHandler.sendMessage(cqMsg);
                 break;
         }
         String URL;
@@ -142,7 +142,7 @@ public class CqManager {
             request.setAction("get_group_member_list");
             request.setMsg(cqMsg);
             request.setEcho(getId());
-            String response = handler.callApi(request);
+            String response = OneBotMessageHandler.callApi(request);
             CqResponse<List<QQInfo>> data = new Gson().fromJson(response, new TypeToken<CqResponse<List<QQInfo>>>() {
             }.getType());
 
@@ -199,7 +199,7 @@ public class CqManager {
             request.setAction("get_group_member_list");
             request.setMsg(cqMsg);
             request.setEcho(getId());
-            String response = handler.callApi(request);
+            String response = OneBotMessageHandler.callApi(request);
             CqResponse<QQInfo> data = new Gson().fromJson(response, new TypeToken<CqResponse<QQInfo>>() {
             }.getType());
 
