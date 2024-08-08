@@ -29,6 +29,7 @@ import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -1292,16 +1293,18 @@ public class CqServiceImpl {
         double totalpp = userFromAPI.getPpRaw();
         double bonuspp = totalpp - scorepp;
 
-        int scoreCount = ((int) (Math.log10(-(bonuspp / 416.6667D) + 1.0D) / Math.log10(0.9994D)));
-        String scoreCountS = (scoreCount == 0 && bonuspp > 0.0D) ? "25397+" : String.valueOf(scoreCount);
-        String resp = "玩家" + userFromAPI.getUserName() + "在模式" + scoreUtil.convertGameModeToString(argument.getMode()) + "的BonusPP为：" + new DecimalFormat("#0.00").format(bonuspp)
+        int scoreCount = ((int) (Math.log10(-(bonuspp / 416.6667D) + 1.0D) / Math.log10(0.995D)));
+        String scoreCountS = (scoreCount == 0 && bonuspp > 0.0D) ? "1000+" : String.valueOf(scoreCount);
+
+        String resp = "玩家" + userFromAPI.getUserName() + "在模式" + scoreUtil.convertGameModeToString(argument.getMode())
+                + "的BonusPP为：" + new DecimalFormat("#0.00").format(bonuspp)
                 + "\n计算出的ScorePP（所有成绩提供的PP）为：" + new DecimalFormat("#0.00").format(scorepp)
                 + "\n总PP为：" + new DecimalFormat("#0.00").format(userFromAPI.getPpRaw())
-                + "\n计算出的总成绩数为：" + scoreCountS
-                + "\n改造自https://github.com/RoanH/osu-BonusPP项目。";
+                + "\n你的成绩数大于1000，已经获取了所有的Bonus PP！"
+                + "\n基于https://github.com/RoanH/osu-BonusPP项目，适配了2024-03-19的最新Bonus PP改动";
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
-        return;
+
     }
 
     @GroupAuthorityControl

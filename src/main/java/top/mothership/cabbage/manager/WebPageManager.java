@@ -55,6 +55,7 @@ public class WebPageManager {
     private static final String AVA_URL = "https://a.ppy.sh/";
     private static final String USERPAGE_URL = "https://osu.ppy.sh/u/";
     private static final String USERPAGE_INNER_URL = "https://osu.ppy.sh/pages/include/profile-general.php?u=";
+    private static final String SAYOBOT_DOWN_URL = "https://txy1.sayobot.cn/beatmaps/download/full/";
     private static final String BLOODCAT_BG_URL = "http://bloodcat.com/osu/i/";
     private static final String OSU_FILE_URL = "https://osu.ppy.sh/osu/";
     private static final String OSUSEARCH_URL = "https://osusearch.com/query/";
@@ -118,7 +119,7 @@ public class WebPageManager {
             ImageInputStream iis = ImageIO.createImageInputStream(avaurl.openConnection().getInputStream());
             Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
             String format = readers.next().getFormatName();
-            if ("gif".equals(format)){
+            if ("gif".equals(format)) {
                 BufferedImage img = new BufferedImage(ava.getWidth(), ava.getHeight(), BufferedImage.TYPE_INT_ARGB);
                 img.createGraphics().drawImage(ava, 0, 0, null);
                 ava = img;
@@ -162,13 +163,13 @@ public class WebPageManager {
     }
 
     /**
-     * Gets bg backup.
-     *
-     * @param beatmap the beatmap
-     * @return the bg backup
+     * 从官网下载谱面并解析背景图。
+     * 由于官网模拟登录添加Cloudflare验证码，此方法暂时被Sayobot替代。
      */
     public BufferedImage getBGBackup(Beatmap beatmap) {
-
+        if (true) {
+            return getBG(beatmap);
+        }
         try {
 
 
@@ -303,84 +304,89 @@ public class WebPageManager {
     }
 
     /**
-     * Gets bg.
-     *
-     * @param beatmap the beatmap
-     * @return the bg
-     * @throws NullPointerException the null pointer exception
+     * 从sayobot下载谱面并解析BG
      */
     public BufferedImage getBG(Beatmap beatmap) {
-        return null;
-//        logger.info("开始获取谱面" + beatmap.getBeatmapId() + "的背景");
-//        HttpURLConnection httpConnection;
-//        int retry = 0;
-//        BufferedImage bg;
-//        BufferedImage resizedBG = null;
-//        OsuFile osuFile = parseOsuFile(beatmap);
-//
-//        if (osuFile == null) {
-//            //08年老图是没有BG的……
-//            cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
-//            return null;
-//        }
-//        //这里dao层需要使用object，然后再这里转换为数组，于是判断非空就得用null而不是.length。
-//        byte[] img = (byte[]) resDAO.getBGBySidAndName(beatmap.getBeatmapSetId(), osuFile.getBgName());
-//        if (img != null) {
-//            try (ByteArrayInputStream in = new ByteArrayInputStream(img)) {
-//                return ImageIO.read(in);
-//            } catch (IOException e) {
-//                cqManager.warn("数据库中" + beatmap.getBeatmapId() + "的背景损坏。");
-//            }
-//        }
-//        while (retry < 5) {
-//            try {
-//                httpConnection =
-//                        (HttpURLConnection) new URL(BLOODCAT_BG_URL + beatmap.getBeatmapId()).openConnection();
-//                httpConnection.setRequestMethod("GET");
-//                httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
-//                httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);
-//                httpConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.40 Safari/537.36");
-//                if (httpConnection.getResponseCode() != 200) {
-//                    logger.error("HTTP GET请求失败: " + httpConnection.getResponseCode() + "，正在重试第" + (retry + 1) + "次");
-//                    retry++;
-//                    continue;
-//                }
-//                //读取返回结果
-//                bg = ImageIO.read(httpConnection.getInputStream());
-//                if (bg == null) {
-//                    return null;
-//                }
-//
-//                resizedBG = resizeImg(bg, 1366, 768);
-//                //在谱面rank状态是Ranked或者Approved时，写入硬盘
-//                if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
-//                    //扩展名直接从文件里取
-//                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-//                        //修正扩展名为最后一个点后面的内容2017-11-15 13:17:56
-//                        ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
-//                        resizedBG.flush();
-//                        img = out.toByteArray();
-//                        resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), img);
-//                    } catch (IOException e) {
-//                        logger.error("写入图片时出现IO异常：" + e.getMessage());
-//                        return null;
-//                    }
-//                }
-//                //手动关闭流
-//                httpConnection.disconnect();
-//                break;
-//            } catch (IOException e) {
-//                logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
-//                retry++;
-//            }
-//
-//        }
-//        if (retry == 5) {
-//            logger.error("获取" + beatmap.getBeatmapId() + "的背景图，失败五次");
-//            return null;
-//        }
-//        return resizedBG;
 
+        logger.info("开始获取谱面" + beatmap.getBeatmapId() + "的背景");
+
+        OsuFile osuFile = parseOsuFile(beatmap);
+
+        if (osuFile == null) {
+            //08年老图是没有BG的……
+            cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+            return null;
+        }
+        //这里dao层需要使用object，然后再这里转换为数组，于是判断非空就得用null而不是.length。
+        byte[] img = (byte[]) resDAO.getBGBySidAndName(beatmap.getBeatmapSetId(), osuFile.getBgName());
+        if (img != null) {
+            try (ByteArrayInputStream in = new ByteArrayInputStream(img)) {
+                return ImageIO.read(in);
+            } catch (IOException e) {
+                cqManager.warn("数据库中" + beatmap.getBeatmapId() + "的背景损坏。");
+            }
+        }
+
+        Request request = new Request.Builder()
+                .url(SAYOBOT_DOWN_URL + beatmap.getBeatmapSetId()).build();
+
+        try (Response response = client.newCall(request).execute();
+             ZipInputStream zis = new ZipInputStream(new CheckedInputStream(response.body().byteStream(), new CRC32()))) {
+
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                logger.info("当前文件名为：" + entry.getName());
+                byte[] data = new byte[(int) entry.getSize()];
+                int start = 0, end = 0, flag = 0;
+                while (entry.getSize() - start > 0) {
+                    end = zis.read(data, start, (int) entry.getSize() - start);
+                    if (end <= 0) {
+                        logger.info("正在读取" + 100 + "%");
+                        break;
+                    }
+                    start += end;
+                    //每20%输出一次，如果为100则为1%
+                    if ((start - flag) > (int) entry.getSize() / 5) {
+                        flag = start;
+                        logger.info("正在读取" + (float) start / entry.getSize() * 100 + "%");
+                    }
+
+                }
+                String filename = entry.getName();
+                if (filename.contains("/")) {
+                    filename = filename.substring(filename.indexOf("/") + 1);
+                }
+                if (osuFile.getBgName().equals(filename)) {
+                    ByteArrayInputStream in = new ByteArrayInputStream(data);
+                    BufferedImage bg = ImageIO.read(in);
+
+                    BufferedImage resizedBG = resizeImg(bg, 1366, 768);
+                    //获取bp原分辨率，将宽拉到1366，然后算出高，减去768除以二然后上下各减掉这部分
+                    //在谱面rank状态是Ranked或者Approved时，写入硬盘
+                    if (beatmap.getApproved() == 1 || beatmap.getApproved() == 2) {
+                        //扩展名直接从文件里取
+                        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                            ImageIO.write(resizedBG, osuFile.getBgName().substring(osuFile.getBgName().lastIndexOf(".") + 1), out);
+                            resizedBG.flush();
+                            byte[] imgBytes = out.toByteArray();
+                            resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), imgBytes);
+                        } catch (IOException e) {
+                            cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
+                            return null;
+                        }
+                    }
+                    in.close();
+                    return resizedBG;
+                }
+
+            }
+
+        } catch (Exception e) {
+            cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
+            return null;
+        }
+
+        return null;
     }
 
     /**
