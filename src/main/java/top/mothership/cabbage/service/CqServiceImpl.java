@@ -1291,13 +1291,14 @@ public class CqServiceImpl {
         double scorepp = calculateScorePP(bps);
         double totalpp = userFromAPI.getPpRaw();
         double bonuspp = totalpp - scorepp;
+        bonuspp = Math.min(bonuspp, 413.894179759);
 
         int scoreCount = ((int) (Math.log10(-(bonuspp / 416.6667D) + 1.0D) / Math.log10(0.995D)));
         String scoreCountS = (scoreCount == 0 && bonuspp > 0.0D) || scoreCount > 1000 ? "1000+" : String.valueOf(scoreCount);
 
         String resp = "玩家" + userFromAPI.getUserName() + "在模式" + scoreUtil.convertGameModeToString(argument.getMode())
-                + "的BonusPP为：" + new DecimalFormat("#0.00").format(bonuspp)
-                + "\n计算出的ScorePP（所有成绩提供的PP）为：" + new DecimalFormat("#0.00").format(scorepp)
+                + "估算的BonusPP为：" + new DecimalFormat("#0.00").format(bonuspp)
+                + "\n线性回归估算出的ScorePP（所有成绩提供的PP）为：" + new DecimalFormat("#0.00").format(scorepp)
                 + "\n总PP为：" + new DecimalFormat("#0.00").format(userFromAPI.getPpRaw())
                 + "\n你的成绩数是：" + scoreCountS
                 + "\n基于https://github.com/RoanH/osu-BonusPP项目，适配了2024-03-19的最新Bonus PP改动";
