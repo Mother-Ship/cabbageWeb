@@ -29,7 +29,6 @@ import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -1294,7 +1293,7 @@ public class CqServiceImpl {
         double bonuspp = totalpp - scorepp;
 
         int scoreCount = ((int) (Math.log10(-(bonuspp / 416.6667D) + 1.0D) / Math.log10(0.995D)));
-        String scoreCountS = (scoreCount == 0 && bonuspp > 0.0D) ? "1000+" : String.valueOf(scoreCount);
+        String scoreCountS = (scoreCount == 0 && bonuspp > 0.0D) || scoreCount > 1000 ? "1000+" : String.valueOf(scoreCount);
 
         String resp = "玩家" + userFromAPI.getUserName() + "在模式" + scoreUtil.convertGameModeToString(argument.getMode())
                 + "的BonusPP为：" + new DecimalFormat("#0.00").format(bonuspp)
