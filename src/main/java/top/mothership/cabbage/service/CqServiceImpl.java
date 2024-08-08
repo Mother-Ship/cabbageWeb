@@ -1300,7 +1300,7 @@ public class CqServiceImpl {
                 + "估算的BonusPP为：" + new DecimalFormat("#0.00").format(bonuspp)
                 + "\n线性回归估算出的ScorePP（所有成绩提供的PP）为：" + new DecimalFormat("#0.00").format(scorepp)
                 + "\n总PP为：" + new DecimalFormat("#0.00").format(userFromAPI.getPpRaw())
-                + "\n你的成绩数是：" + scoreCountS
+                + "\n基于估算的Bonus PP反向计算，玩家的成绩数是：" + scoreCountS
                 + "\n基于https://github.com/RoanH/osu-BonusPP项目，适配了2024-03-19的最新Bonus PP改动";
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
