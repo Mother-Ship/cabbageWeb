@@ -76,7 +76,7 @@ public class SmokeUtil {
 //                } else {
                 logger.info("检测到最近100条消息中第{}条复读，正在尝试禁言" + cqMsg.getUserId(), countRepeat);
                 int time = (countRepeat - 5) * 600;
-                time = Math.max(time, 3600);
+                time = Math.min(time, 3600);
                 cqMsg.setDuration(time);
                 cqMsg.setMessageType("smoke");
 //                }
