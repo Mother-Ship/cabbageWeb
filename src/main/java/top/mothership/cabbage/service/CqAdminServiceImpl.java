@@ -102,7 +102,7 @@ public class CqAdminServiceImpl {
 //            }
 //        }
     }
-    @UserAuthorityControl({670804973})
+    @UserAuthorityControl({670804973,2591482572L})
     public void addUserRole(CqMsg cqMsg) {
 
         Argument argument = cqMsg.getArgument();
@@ -170,7 +170,7 @@ public class CqAdminServiceImpl {
         cqMsg.setMessage(resp);
         cqManager.sendMsg(cqMsg);
     }
-    @UserAuthorityControl({670804973})
+    @UserAuthorityControl({670804973,2591482572L})
     public void delUserRole(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         List<String> usernames = argument.getUsernames();
