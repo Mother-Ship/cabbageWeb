@@ -229,7 +229,7 @@ public class CqAdminServiceImpl {
     }
 
 
-    @UserAuthorityControl({1427922341,670804973})
+    @UserAuthorityControl({1427922341,670804973,2591482572L})
     public void addComponent(CqMsg cqMsg) throws IOException {
         Argument argument = cqMsg.getArgument();
         //实验性功能
