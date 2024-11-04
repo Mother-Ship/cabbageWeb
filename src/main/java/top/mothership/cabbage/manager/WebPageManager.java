@@ -58,7 +58,7 @@ public class WebPageManager {
     private static final String SAYOBOT_DOWN_URL = "https://txy1.sayobot.cn/beatmaps/download/full/";
     private static final String BLOODCAT_BG_URL = "http://bloodcat.com/osu/i/";
     private static final String OSU_FILE_URL = "https://osu.ppy.sh/osu/";
-    private static final String OSUSEARCH_URL = "https://osusearch.com/query/";
+    private static final String OSU_DIRECT_SEARCH_URL = "https://osu.direct/api/v2/search";
     private static final String PP_PLUS_URL = "http://syrin.me/pp+/u/";
     private static final String OSU_PROFILE_DETAIL_URL = "https://osu.ppy.sh/pages/include/profile-general.php";
     private static final String OSU_CHAN_URL = "https://syrin.me/osuchan/u/";
@@ -549,69 +549,46 @@ public class WebPageManager {
     }
 
     /**
-     * 对接osu search进行谱面搜索的方法。
+     * 对接osu direct进行谱面搜索的方法。
      *
      * @return 谱面
      */
     public Beatmap searchBeatmap(SearchParam searchParam, Integer mode) {
         int retry = 0;
-        Beatmap beatmap = null;
-        DecimalFormat FOUR_DEMENSIONS = new DecimalFormat("#0.00");
+
         while (retry < 5) {
             HttpURLConnection httpConnection;
             try {
-                String url = OSUSEARCH_URL;
+                String url = OSU_DIRECT_SEARCH_URL;
 
                 List<NameValuePair> params = new LinkedList<>();
-                if (!"".equals(searchParam.getTitle())) {
-                    params.add(new BasicNameValuePair("title", searchParam.getTitle()));
+                if (!"".equals(searchParam.toOsuDirectSearchString())) {
+                    params.add(new BasicNameValuePair("query", searchParam.getTitle()));
                 }
-                if (!"".equals(searchParam.getArtist())) {
-                    params.add(new BasicNameValuePair("artist", searchParam.getArtist()));
-                }
-                if (!"".equals(searchParam.getMapper())) {
-                    params.add(new BasicNameValuePair("mapper", searchParam.getMapper()));
-                }
-                if (!"".equals(searchParam.getDiffName())) {
-                    params.add(new BasicNameValuePair("diff_name", searchParam.getDiffName()));
-                }
-                if (searchParam.getAr() != null) {
-                    params.add(new BasicNameValuePair("ar",
-                            "(" + FOUR_DEMENSIONS.format(searchParam.getAr()) + "," + FOUR_DEMENSIONS.format(searchParam.getAr()) + ")"));
-                }
-                if (searchParam.getOd() != null) {
-                    params.add(new BasicNameValuePair("od",
-                            "(" + FOUR_DEMENSIONS.format(searchParam.getOd()) + "," + FOUR_DEMENSIONS.format(searchParam.getOd()) + ")"));
-                }
-                if (searchParam.getCs() != null) {
-                    params.add(new BasicNameValuePair("cs",
-                            "(" + FOUR_DEMENSIONS.format(searchParam.getCs()) + "," + FOUR_DEMENSIONS.format(searchParam.getCs()) + ")"));
-                }
-                if (searchParam.getHp() != null) {
-                    params.add(new BasicNameValuePair("hp",
-                            "(" + FOUR_DEMENSIONS.format(searchParam.getHp()) + "," + FOUR_DEMENSIONS.format(searchParam.getHp()) + ")"));
-                }
-                //虽然osu search支持多模式搜索，但这个命令本来就只取一个结果，还是switch吧
+
 
                 switch (mode) {
                     case 0:
-                        params.add(new BasicNameValuePair("modes", "Standard"));
+                        params.add(new BasicNameValuePair("mode", "0"));
                         break;
                     case 1:
-                        params.add(new BasicNameValuePair("modes", "Taiko"));
+                        params.add(new BasicNameValuePair("mode", "1"));
                         break;
                     case 2:
-                        params.add(new BasicNameValuePair("modes", "CtB"));
+                        params.add(new BasicNameValuePair("mode", "2"));
                         break;
                     case 3:
-                        params.add(new BasicNameValuePair("modes", "Mania"));
+                        params.add(new BasicNameValuePair("mode", "3"));
                         break;
                     default:
                         break;
 
                 }
 
-                params.add(new BasicNameValuePair("query_order", "play_count"));
+                params.add(new BasicNameValuePair("sort", "play_count:desc"));
+                params.add(new BasicNameValuePair("amount", "10"));
+                params.add(new BasicNameValuePair("offset", "0"));
+                params.add(new BasicNameValuePair("sort", "play_count:desc"));
 
                 url += "?" + URLEncodedUtils.format(params, "utf-8");
 
@@ -638,24 +615,25 @@ public class WebPageManager {
                 }
                 OsuSearchResp osuSearchResp = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create().fromJson(tmp2.toString(), OsuSearchResp.class);
-                if (osuSearchResp.getResultCount() > 0) {
-                    beatmap = osuSearchResp.getBeatmaps().get(0);
+
+                OsuSearchResp.Beatmap beatmap = osuSearchResp.getBeatmaps().get(0);
+                Beatmap result = null;
                     if (searchParam.getDiffName() != null && beatmap != null) {
                         float maxSimilar = 0;
-                        List<Beatmap> list = apiManager.getBeatmaps(beatmap.getBeatmapSetId());
+                        List<Beatmap> list = apiManager.getBeatmaps(beatmap.getBeatmapsetId());
                         for (Beatmap osuSearchRespBeatmap : list) {
                             float similar = StringSimilarityUtil.calc(osuSearchRespBeatmap.getVersion(), searchParam.getDiffName());
                             if (similar > maxSimilar) {
-                                beatmap = osuSearchRespBeatmap;
+                                result = osuSearchRespBeatmap;
                                 maxSimilar = similar;
                             }
                         }
                     }
-                }
+
                 //手动关闭流
                 httpConnection.disconnect();
                 responseBuffer.close();
-                return beatmap;
+                return result;
             } catch (IOException e) {
                 logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
                 retry++;

@@ -141,9 +141,7 @@ public class OneBotMessageHandler extends TextWebSocketHandler {
                 String decodedString = new String(unicodeBytes, "Unicode");
                 cqMsg.setMessage(decodedString);
             }
-            log.info(cqController);
             fixedThreadPool.submit(() -> cqController.doHandle(cqMsg));
-
         }
 
     }
