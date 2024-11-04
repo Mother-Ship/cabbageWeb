@@ -621,12 +621,18 @@ public class WebPageManager {
                         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create().fromJson(tmp2.toString(), new TypeToken<List<OsuSearchResp>>() {
                         }.getType());
                 logger.info("osu direct入参：{}搜索结果：{}", url, osuSearchResp);
+
+
                 if (osuSearchResp != null && !osuSearchResp.isEmpty()) {
+
+
                     OsuSearchResp.Beatmap beatmap = osuSearchResp.get(0).getBeatmaps().get(0);
                     Beatmap result = null;
                     if (beatmap != null) {
                         List<Beatmap> list = apiManager.getBeatmaps(beatmap.getBeatmapsetId());
                         result = list.get(0);
+
+                        // 如果传了难度名，则在列表中寻找相似度最高的谱面
                         if (searchParam.getDiffName() != null) {
                             float maxSimilar = 0;
 
