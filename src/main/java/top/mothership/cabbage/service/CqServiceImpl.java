@@ -730,18 +730,25 @@ public class CqServiceImpl {
         Beatmap beatmap;
         if (searchParam.getBeatmapId() == null) {
             beatmap = webPageManager.searchBeatmap(searchParam, argument.getMode());
+            if (beatmap == null) {
+                cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。" +
+                        "\n请尝试根据解析出的结果，去掉关键词中的特殊符号……");
+                cqManager.sendMsg(cqMsg);
+                return;
+            }
             beatmap = apiManager.getBeatmap(beatmap.getBeatmapId());
         } else {
             beatmap = apiManager.getBeatmap(searchParam.getBeatmapId());
+            if (beatmap == null) {
+                cqMsg.setMessage("根据提供的谱面ID：" + searchParam.getBeatmapId() + "没有找到任何谱面。" +
+                        "\n请尝试根据解析出的结果，去掉关键词中的特殊符号……");
+                cqManager.sendMsg(cqMsg);
+                return;
+            }
         }
         logger.info("开始处理" + cqMsg.getUserId() + "进行的谱面搜索，关键词为：" + searchParam);
 
-        if (beatmap == null) {
-            cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。" +
-                    "\n请尝试根据解析出的结果，去掉关键词中的特殊符号……");
-            cqManager.sendMsg(cqMsg);
-            return;
-        } else {
+
             if (!beatmap.getMode().equals(0)) {
                 cqMsg.setMessage("根据提供的bid找到了一张" + scoreUtil.convertGameModeToString(beatmap.getMode()) + "模式的专谱。由于oppai不支持其他模式，因此白菜也只有主模式支持!search命令。");
                 cqManager.sendMsg(cqMsg);
@@ -783,7 +790,7 @@ public class CqServiceImpl {
                     + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId()
                     + "\n" + "在线试玩：http://osugame.online/search.html?q=" + beatmap.getBeatmapSetId()
                     + "\n" + "预览：https://bloodcat.com/osu/preview.html#" + beatmap.getBeatmapId());
-        }
+
         cqManager.sendMsg(cqMsg);
 
     }

@@ -8,7 +8,6 @@ import okhttp3.*;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +34,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -618,30 +616,34 @@ public class WebPageManager {
                 httpConnection.disconnect();
                 responseBuffer.close();
 
-                Beatmap result = null;
+
                 List<OsuSearchResp> osuSearchResp = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create().fromJson(tmp2.toString(), new TypeToken<List<OsuSearchResp>>() {}.getType());
-
-                if (osuSearchResp  != null && !osuSearchResp.isEmpty()){
+                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create().fromJson(tmp2.toString(), new TypeToken<List<OsuSearchResp>>() {
+                        }.getType());
+                logger.info("osu direct入参：{}搜索结果：{}", url, osuSearchResp);
+                if (osuSearchResp != null && !osuSearchResp.isEmpty()) {
                     OsuSearchResp.Beatmap beatmap = osuSearchResp.get(0).getBeatmaps().get(0);
-
-                    if (searchParam.getDiffName() != null && beatmap != null) {
-                        float maxSimilar = 0;
+                    Beatmap result = null;
+                    if (beatmap != null) {
                         List<Beatmap> list = apiManager.getBeatmaps(beatmap.getBeatmapsetId());
-                        for (Beatmap osuSearchRespBeatmap : list) {
-                            float similar = StringSimilarityUtil.calc(osuSearchRespBeatmap.getVersion(), searchParam.getDiffName());
-                            if (similar > maxSimilar) {
-                                result = osuSearchRespBeatmap;
-                                maxSimilar = similar;
+                        result = list.get(0);
+                        if (searchParam.getDiffName() != null) {
+                            float maxSimilar = 0;
+
+                            for (Beatmap osuSearchRespBeatmap : list) {
+                                float similar = StringSimilarityUtil.calc(osuSearchRespBeatmap.getVersion(), searchParam.getDiffName());
+                                if (similar > maxSimilar) {
+                                    result = osuSearchRespBeatmap;
+                                    maxSimilar = similar;
+                                }
                             }
                         }
                     }
-
                     return result;
                 }
 
 
-                return result;
+                return null;
             } catch (IOException e) {
                 logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
                 retry++;
