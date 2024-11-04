@@ -8,6 +8,7 @@ import okhttp3.*;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -613,11 +614,17 @@ public class WebPageManager {
                 while ((tmp = responseBuffer.readLine()) != null) {
                     tmp2.append(tmp);
                 }
-                OsuSearchResp osuSearchResp = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create().fromJson(tmp2.toString(), OsuSearchResp.class);
+                //关闭流
+                httpConnection.disconnect();
+                responseBuffer.close();
 
-                OsuSearchResp.Beatmap beatmap = osuSearchResp.getBeatmaps().get(0);
                 Beatmap result = null;
+                List<OsuSearchResp> osuSearchResp = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create().fromJson(tmp2.toString(), new TypeToken<List<OsuSearchResp>>() {}.getType());
+
+                if (osuSearchResp  != null && !osuSearchResp.isEmpty()){
+                    OsuSearchResp.Beatmap beatmap = osuSearchResp.get(0).getBeatmaps().get(0);
+
                     if (searchParam.getDiffName() != null && beatmap != null) {
                         float maxSimilar = 0;
                         List<Beatmap> list = apiManager.getBeatmaps(beatmap.getBeatmapsetId());
@@ -630,9 +637,10 @@ public class WebPageManager {
                         }
                     }
 
-                //手动关闭流
-                httpConnection.disconnect();
-                responseBuffer.close();
+                    return result;
+                }
+
+
                 return result;
             } catch (IOException e) {
                 logger.error("出现IO异常：" + e.getMessage() + "，正在重试第" + (retry + 1) + "次");
