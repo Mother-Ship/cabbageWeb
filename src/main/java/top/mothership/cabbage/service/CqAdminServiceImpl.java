@@ -768,7 +768,7 @@ public class CqAdminServiceImpl {
         cqManager.sendMsg(cqMsg);
     }
 
-    @UserAuthorityControl({496802290,670804973})
+    @UserAuthorityControl({496802290,670804973,2591482572L})
     public void roleInfo(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
 
