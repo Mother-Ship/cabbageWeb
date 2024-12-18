@@ -250,23 +250,27 @@ public class CqAdminServiceImpl {
                 byte[] bytes = bos.toByteArray();
                 resDAO.addResource(argument.getFileName(), bytes);
                 is.close();
-            } catch (IOException ignore) {
-                cqMsg.setMessage("修改组件" + argument.getFileName() + "失败，错误信息：" + ignore.getMessage());
+            } catch (IOException e) {
+                cqMsg.setMessage("修改组件" + argument.getFileName() + "失败，错误信息：" + e.getMessage());
                 cqManager.sendMsg(cqMsg);
                 return;
             }
             cqMsg.setMessage("修改组件" + argument.getFileName() + "成功。");
             cqManager.sendMsg(cqMsg);
         } else {
-            BufferedImage tmp = ImageIO.read(new URL(argument.getUrl()));
+
+
             //这个方法从QQ直接发送图片+程序下载，改为采用URL写入到硬盘，到现在改为存入数据库+打破目录限制，只不过命令依然叫!sudo bg……
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                BufferedImage tmp = ImageIO.read(new URL(argument.getUrl()));
                 ImageIO.write(tmp, "png", out);
                 tmp.flush();
                 byte[] imgBytes = out.toByteArray();
                 resDAO.addImage(argument.getFileName() + ".png", imgBytes);
-            } catch (IOException ignore) {
-
+            } catch (Exception e) {
+                cqMsg.setMessage("修改组件" + argument.getFileName() + "失败，错误信息：" + e.getMessage());
+                cqManager.sendMsg(cqMsg);
+                return;
             }
             //手动调用重载缓存
             loadCache();

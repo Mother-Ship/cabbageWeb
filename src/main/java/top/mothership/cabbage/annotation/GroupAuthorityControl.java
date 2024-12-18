@@ -21,20 +21,19 @@ public @interface GroupAuthorityControl {
      * @return the long [ ]
      */
     long[] banned() default {0L};
-    //MP4后花园
-    //MP2
-    //测试群
-    //MP3
-    //MP5
-//    MP5赛群
-    //FK群
+
     long[] bannedDefault() default {
+        //MP4后花园
             112177148L,
+            // MP2群
             234219559L,
-            532783765L,
+            // MP3群
             210342787L,
+            // MP5群
             201872650L,
+            // FK群
             263668213L,
+            // 测试群
             693299572L
     };
 

@@ -439,7 +439,7 @@ public class CqServiceImpl {
     }
 
     //很迷啊，在printBP里传userinfo cqmsg text等参数，aop拦截不到，只能让代码重复了_(:з」∠)_
-    @GroupAuthorityControl(banned = 136312506L)
+    @GroupAuthorityControl
     public void printSpecifiedBP(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         if ("白菜".equals(argument.getUsername())) {
