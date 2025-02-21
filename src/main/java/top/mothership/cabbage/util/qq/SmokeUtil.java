@@ -73,12 +73,12 @@ public class SmokeUtil {
 //                    logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
 //                    cqMsg.setMessage("[CQ:at,qq=" + cqManager.getOwner(cqMsg.getGroupId()) + "] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
 //                } else {
-                logger.info("检测到最近100条消息中第{}条复读，正在尝试禁言" + cqMsg.getUserId(), countRepeat);
 
                 int time = (countRepeat - 5) * 600;
                 time = Math.min(time, 8 * 3600);
 
-                if ("136312506".equals(String.valueOf(cqMsg.getGroupId()))) {
+                if ("136312506".equals(String.valueOf(cqMsg.getGroupId()))
+                        || "693299572".equals(String.valueOf(cqMsg.getGroupId()))) {
                     // 1 2 4 8 16 24 +24 h
                     switch ((countRepeat - 5)) {
                         case 1:
@@ -96,6 +96,8 @@ public class SmokeUtil {
                             break;
                     }
                 }
+                logger.info("检测到最近100条消息中{}发送第{}条复读，正在尝试禁言 {}秒", cqMsg.getUserId(), countRepeat, time);
+
                 cqMsg.setDuration(time);
                 cqMsg.setMessageType("smoke");
 //                }
