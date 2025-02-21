@@ -95,6 +95,7 @@ public class SmokeUtil {
                             time = (countRepeat - 5 - 5) * 24 * 3600;
                             break;
                     }
+                    time = Math.min(time, 30 * 24 * 3600);
                 }
                 logger.info("检测到最近100条消息中{}发送第{}条复读，正在尝试禁言 {}秒", cqMsg.getUserId(), countRepeat, time);
 
