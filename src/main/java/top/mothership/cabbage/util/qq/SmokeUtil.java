@@ -1,7 +1,6 @@
 package top.mothership.cabbage.util.qq;
 
 import com.google.gson.Gson;
-import lombok.experimental.var;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,8 +74,28 @@ public class SmokeUtil {
 //                    cqMsg.setMessage("[CQ:at,qq=" + cqManager.getOwner(cqMsg.getGroupId()) + "] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
 //                } else {
                 logger.info("检测到最近100条消息中第{}条复读，正在尝试禁言" + cqMsg.getUserId(), countRepeat);
+
                 int time = (countRepeat - 5) * 600;
-                time = Math.min(time, 8*3600);
+                time = Math.min(time, 8 * 3600);
+
+                if ("136312506".equals(String.valueOf(cqMsg.getGroupId()))) {
+                    // 1 2 4 8 16 24 +24 h
+                    switch ((countRepeat - 5)) {
+                        case 1:
+                        case 2:
+                        case 3:
+                        case 4:
+                        case 5:
+                            time = (int) (Math.pow(2, (countRepeat - 5 - 1)) * 3600);
+                            break;
+                        case 6:
+                            time = 24 * 3600;
+                            break;
+                        default:
+                            time = (countRepeat - 5 - 6) * 24 * 3600;
+                            break;
+                    }
+                }
                 cqMsg.setDuration(time);
                 cqMsg.setMessageType("smoke");
 //                }
