@@ -92,7 +92,7 @@ public class SmokeUtil {
                             time = 24 * 3600;
                             break;
                         default:
-                            time = (countRepeat - 5 - 6) * 24 * 3600;
+                            time = (countRepeat - 5 - 5) * 24 * 3600;
                             break;
                     }
                 }
