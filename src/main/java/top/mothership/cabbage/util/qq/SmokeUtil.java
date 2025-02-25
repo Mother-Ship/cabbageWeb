@@ -57,6 +57,9 @@ public class SmokeUtil {
 //                MSG_QUEUE_MAP.put(respData.getGroupId(), new MsgQueue());
             } else {
                 MSG_QUEUE_MAP.put(cqMsg.getGroupId(), new MsgQueue());
+                if ("136312506".equals(String.valueOf(cqMsg.getGroupId()))){
+                    MSG_QUEUE_MAP.put(cqMsg.getGroupId(), new MsgQueue(300));
+                }
             }
         }
 
