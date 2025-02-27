@@ -895,10 +895,6 @@ public class CqServiceImpl {
 
     public void welcomeNewsPaper(CqMsg cqMsg) {
         logger.info("开始处理" + cqMsg.getUserId() + "在" + cqMsg.getGroupId() + "群的加群请求");
-        if ("1020640876".equals(String.valueOf(cqMsg.getSelfId()))){
-            logger.warn("临时处理cq客户端重复上报加群问题，先关闭");
-            return;
-        }
         String resp = null;
         switch (String.valueOf(cqMsg.getGroupId())) {
             case "201872650":
