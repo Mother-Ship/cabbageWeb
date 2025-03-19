@@ -71,7 +71,7 @@ public class WebPageManager {
     private Logger logger = LogManager.getLogger(this.getClass());
     private HashMap<Integer, Document> map = new HashMap<>();
     @Autowired
-    private CqManager cqManager;
+    private OneBotManager oneBotManager;
     @Autowired
     private ApiManager apiManager;
 
@@ -174,7 +174,7 @@ public class WebPageManager {
 
             OsuFile osuFile = parseOsuFile(beatmap);
             if (osuFile == null) {
-                cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+                oneBotManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
                 return null;
             }
             byte[] img = (byte[]) resDAO.getBGBySidAndName(beatmap.getBeatmapSetId(), osuFile.getBgName());
@@ -182,7 +182,7 @@ public class WebPageManager {
                 try (ByteArrayInputStream in = new ByteArrayInputStream(img)) {
                     return ImageIO.read(in);
                 } catch (IOException e) {
-                    cqManager.warn("数据库中" + beatmap.getBeatmapId() + "的背景损坏。");
+                    oneBotManager.warn("数据库中" + beatmap.getBeatmapId() + "的背景损坏。");
                 }
             }
 
@@ -193,7 +193,7 @@ public class WebPageManager {
             String session = null;
             try (Response response = client.newCall(request).execute()) {
                 if (!Objects.equals(response.code(), HttpStatus.SC_OK)) {
-                    cqManager.warn("下载谱面" + beatmap.getBeatmapId() + "时访问官网失败");
+                    oneBotManager.warn("下载谱面" + beatmap.getBeatmapId() + "时访问官网失败");
                     return null;
                 }
                 for (String s : response.headers().toMultimap().get("Set-Cookie")) {
@@ -221,7 +221,7 @@ public class WebPageManager {
 
             try (Response response = client.newCall(request).execute()) {
                 if (!Objects.equals(response.code(), HttpStatus.SC_OK)) {
-                    cqManager.warn("下载谱面" + beatmap.getBeatmapId() + "时登陆失败，返回code：" + response.code());
+                    oneBotManager.warn("下载谱面" + beatmap.getBeatmapId() + "时登陆失败，返回code：" + response.code());
                     return null;
                 }
                 for (String s : response.headers().toMultimap().get("Set-Cookie")) {
@@ -280,7 +280,7 @@ public class WebPageManager {
                                 byte[] imgBytes = out.toByteArray();
                                 resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), imgBytes);
                             } catch (IOException e) {
-                                cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
+                                oneBotManager.warn("解析谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
                                 return null;
                             }
                         }
@@ -291,11 +291,11 @@ public class WebPageManager {
                 }
 
             } catch (Exception e) {
-                cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
+                oneBotManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
                 return null;
             }
         } catch (Exception e) {
-            cqManager.warn("从官网获取谱面" + beatmap.getBeatmapId() + "的背景时出现异常");
+            oneBotManager.warn("从官网获取谱面" + beatmap.getBeatmapId() + "的背景时出现异常");
             return null;
         }
         return null;
@@ -313,7 +313,7 @@ public class WebPageManager {
 
         if (osuFile == null) {
             //08年老图是没有BG的……
-            cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
+            oneBotManager.warn("解析谱面" + beatmap.getBeatmapId() + "的.osu文件中BG名失败。");
             return null;
         }
         //这里dao层需要使用object，然后再这里转换为数组，于是判断非空就得用null而不是.length。
@@ -322,7 +322,7 @@ public class WebPageManager {
             try (ByteArrayInputStream in = new ByteArrayInputStream(img)) {
                 return ImageIO.read(in);
             } catch (IOException e) {
-                cqManager.warn("数据库中" + beatmap.getBeatmapId() + "的背景损坏。");
+                oneBotManager.warn("数据库中" + beatmap.getBeatmapId() + "的背景损坏。");
             }
         }
 
@@ -370,7 +370,7 @@ public class WebPageManager {
                             byte[] imgBytes = out.toByteArray();
                             resDAO.addBG(beatmap.getBeatmapSetId(), osuFile.getBgName(), imgBytes);
                         } catch (IOException e) {
-                            cqManager.warn("解析谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
+                            oneBotManager.warn("解析谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
                             return null;
                         }
                     }
@@ -381,7 +381,7 @@ public class WebPageManager {
             }
 
         } catch (Exception e) {
-            cqManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
+            oneBotManager.warn("获取谱面" + beatmap.getBeatmapId() + "的ZIP流时出现异常，", e);
             return null;
         }
 

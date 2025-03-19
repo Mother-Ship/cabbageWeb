@@ -10,7 +10,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.annotation.GroupAuthorityControl;
 import top.mothership.cabbage.annotation.UserAuthorityControl;
-import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.manager.OneBotManager;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 
 import java.lang.annotation.Annotation;
@@ -28,17 +28,17 @@ import static top.mothership.cabbage.constant.Overall.ADMIN_LIST;
  */
 @Order(1)
 public class RoleControlAspect {
-    private final CqManager cqManager;
+    private final OneBotManager oneBotManager;
     private static final long[] ZERO = {0L};
 
     /**
      * 在构造函数中注入发送QQ消息的工具类
      *
-     * @param cqManager 用于发送QQ消息
+     * @param oneBotManager 用于发送QQ消息
      */
     @Autowired
-    public RoleControlAspect(CqManager cqManager) {
-        this.cqManager = cqManager;
+    public RoleControlAspect(OneBotManager oneBotManager) {
+        this.oneBotManager = oneBotManager;
 
     }
 
@@ -92,7 +92,7 @@ public class RoleControlAspect {
         //如果拿到了用户权限的注解，并且这个注解的值没有消息发送者的qq，并且是QQ消息（而不是事件或者邀请）
         if (allowedUser.size() > 0 && !allowedUser.contains(cqMsg.getUserId()) && "message".equals(cqMsg.getPostType())) {
             cqMsg.setMessage("[CQ:face,id=14]？");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return null;
         } else {
             //如果通过了用户权限判别
@@ -109,7 +109,7 @@ public class RoleControlAspect {
                 //如果不允许任何群内使用
                 if (groupAuthorityControl.allBanned()) {
                     cqMsg.setMessage("本命令不允许任何群内使用。请私聊。");
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return null;
                 }
                 if (!Arrays.equals(groupAuthorityControl.allowed(), ZERO)) {
@@ -125,14 +125,14 @@ public class RoleControlAspect {
                 for (long l : groupAuthorityControl.banned()) {
                     if (cqMsg.getGroupId().equals(l)) {
                         cqMsg.setMessage("该群已停用本命令。");
-                        cqManager.sendMsg(cqMsg);
+                        oneBotManager.sendMsg(cqMsg);
                         return null;
                     }
                 }
                 for (long l : groupAuthorityControl.bannedDefault()) {
                     if (cqMsg.getGroupId().equals(l)) {
                         cqMsg.setMessage("该群已停用本命令。");
-                        cqManager.sendMsg(cqMsg);
+                        oneBotManager.sendMsg(cqMsg);
                         return null;
                     }
                 }

@@ -5,7 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.manager.OneBotManager;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.pojo.User;
@@ -28,15 +28,15 @@ public class SmokeUtil {
                     "521774765"//ODNL S3
     ).split(","));
     private final static List<String> REPEAT_RECORD_GROUP = Arrays.asList("576214175,532783765".split(","));
-    private final CqManager cqManager;
+    private final OneBotManager oneBotManager;
     private final UserDAO userDAO;
     private final ResDAO resDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
 
 
     @Autowired
-    public SmokeUtil(CqManager cqManager, UserDAO userDAO, ResDAO resDAO) {
-        this.cqManager = cqManager;
+    public SmokeUtil(OneBotManager oneBotManager, UserDAO userDAO, ResDAO resDAO) {
+        this.oneBotManager = oneBotManager;
         this.userDAO = userDAO;
         this.resDAO = resDAO;
     }
@@ -105,7 +105,7 @@ public class SmokeUtil {
                 cqMsg.setDuration(time);
                 cqMsg.setMessageType("smoke");
 //                }
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
 
             }
             if (REPEAT_RECORD_GROUP.contains(String.valueOf(cqMsg.getGroupId()))) {

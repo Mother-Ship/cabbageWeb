@@ -10,7 +10,7 @@ import top.mothership.cabbage.annotation.UserAuthorityControl;
 import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.constant.Tip;
 import top.mothership.cabbage.manager.ApiManager;
-import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.manager.OneBotManager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.mapper.UserDAO;
@@ -54,7 +54,7 @@ import java.util.*;
 public class CqAdminServiceImpl {
     public static Map<CqMsg, String> request = new HashMap<>();
     private static ResDAO resDAO;
-    private final CqManager cqManager;
+    private final OneBotManager oneBotManager;
     private final ApiManager apiManager;
     private final UserDAO userDAO;
     private final UserInfoDAO userInfoDAO;
@@ -65,8 +65,8 @@ public class CqAdminServiceImpl {
     private Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
-    public CqAdminServiceImpl(CqManager cqManager, ApiManager apiManager, UserDAO userDAO, UserInfoDAO userInfoDAO, WebPageManager webPageManager, ImgUtil imgUtil, ResDAO resDAO, ScoreUtil scoreUtil, UserUtil userUtil) {
-        this.cqManager = cqManager;
+    public CqAdminServiceImpl(OneBotManager oneBotManager, ApiManager apiManager, UserDAO userDAO, UserInfoDAO userInfoDAO, WebPageManager webPageManager, ImgUtil imgUtil, ResDAO resDAO, ScoreUtil scoreUtil, UserUtil userUtil) {
+        this.oneBotManager = oneBotManager;
         this.apiManager = apiManager;
         this.userDAO = userDAO;
         this.userInfoDAO = userInfoDAO;
@@ -168,7 +168,7 @@ public class CqAdminServiceImpl {
             resp = "没有做出改动。";
         }
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
     @UserAuthorityControl({670804973,2591482572L})
     public void delUserRole(CqMsg cqMsg) {
@@ -225,7 +225,7 @@ public class CqAdminServiceImpl {
             resp = resp.concat("\n该用户之前的用户组是：" + lastUserOldRole);
         }
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
 
@@ -252,11 +252,11 @@ public class CqAdminServiceImpl {
                 is.close();
             } catch (IOException e) {
                 cqMsg.setMessage("修改组件" + argument.getFileName() + "失败，错误信息：" + e.getMessage());
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
             }
             cqMsg.setMessage("修改组件" + argument.getFileName() + "成功。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
         } else {
 
 
@@ -269,13 +269,13 @@ public class CqAdminServiceImpl {
                 resDAO.addImage(argument.getFileName() + ".png", imgBytes);
             } catch (Exception e) {
                 cqMsg.setMessage("修改组件" + argument.getFileName() + "失败，错误信息：" + e.getMessage());
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
             }
             //手动调用重载缓存
             loadCache();
             cqMsg.setMessage("修改组件" + argument.getFileName() + ".png成功。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
 
         }
     }
@@ -289,7 +289,7 @@ public class CqAdminServiceImpl {
         Userinfo userFromAPI = apiManager.getUser(0, argument.getUsername());
         if (userFromAPI == null) {
             cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
 
@@ -297,25 +297,25 @@ public class CqAdminServiceImpl {
         Score score = apiManager.getRecent(argument.getMode(), userFromAPI.getUserId());
         if (score == null) {
             cqMsg.setMessage(String.format(Tip.NO_RECENT_RECORD, userFromAPI.getUserName(), scoreUtil.convertGameModeToString(argument.getMode())));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
         if (beatmap == null) {
             cqMsg.setMessage(String.format(Tip.BEATMAP_GET_FAILED, score.getBeatmapId()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         switch (argument.getSubCommandLowCase()) {
             case "rs":
                 String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), null);
                 cqMsg.setMessage(resp);
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 break;
             case "recent":
                 String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 break;
             default:
                 break;
@@ -348,7 +348,7 @@ public class CqAdminServiceImpl {
             resp = resp.concat("\n没有检测" + argument.getRole() + "用户组中最后登录时间在" + argument.getDay() + "天前的玩家。");
         }
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     @UserAuthorityControl({372427060})
@@ -356,13 +356,13 @@ public class CqAdminServiceImpl {
         //开放给树姐
         Argument argument = cqMsg.getArgument();
         if (argument.getQq().equals(-1L)) {
-            List<QQInfo> memberList = cqManager.getGroupMembers(cqMsg.getGroupId()).getData();
+            List<QQInfo> memberList = oneBotManager.getGroupMembers(cqMsg.getGroupId()).getData();
             cqMsg.setMessageType("smoke");
             cqMsg.setDuration(argument.getSecond());
             String operator = cqMsg.getUserId().toString();
             for (QQInfo aList : memberList) {
                 cqMsg.setUserId(aList.getUserId());
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 logger.info(aList.getUserId() + "被" + operator + "禁言" + argument.getSecond() + "秒。");
             }
 //            String img = imgUtil.drawImage(ImgUtil.images.get("smokeAll.png"), CompressLevelEnum.不压缩);
@@ -373,12 +373,12 @@ public class CqAdminServiceImpl {
             logger.info(argument.getQq() + "被" + cqMsg.getUserId() + "禁言" + argument.getSecond() + "秒。");
             if (argument.getSecond() > 0) {
                 cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("all_dead.wav")) + "]");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
             }
             cqMsg.setMessageType("smoke");
             cqMsg.setDuration(argument.getSecond());
             cqMsg.setUserId(argument.getQq());
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
         }
     }
 
@@ -386,7 +386,7 @@ public class CqAdminServiceImpl {
         String resp;
         if (!"private".equals(cqMsg.getMessageType())) {
             cqMsg.setMessage("已经私聊返回结果，请查看，如果没有收到请添加好友。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             cqMsg.setMessageType("private");
         }
         if (request.size() > 0) {
@@ -400,7 +400,7 @@ public class CqAdminServiceImpl {
             resp = "本次启动白菜没有收到加群邀请。";
         }
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     public void handleInvite(CqMsg cqMsg) {
@@ -414,7 +414,7 @@ public class CqAdminServiceImpl {
         newMsg.setMessageType("handleInvite");
         newMsg.setSelfId(cqMsg.getSelfId());
         //邀请谁的只能在谁那边回消息通过
-        CqResponse cqResponse = cqManager.sendMsg(newMsg);
+        CqResponse cqResponse = oneBotManager.sendMsg(newMsg);
         if (cqResponse.getRetCode() == 0) {
             for (CqMsg aList : request.keySet()) {
                 if (aList.getFlag().equals(argument.getFlag())) {
@@ -429,15 +429,15 @@ public class CqAdminServiceImpl {
             cqMsg1.setSelfId(cqMsg.getSelfId());
             for (long l : Overall.ADMIN_LIST) {
                 cqMsg1.setUserId(l);
-                cqManager.sendMsg(cqMsg1);
+                oneBotManager.sendMsg(cqMsg1);
             }
         } else {
             cqMsg.setMessage("通过Flag为：" + argument.getFlag() + "的邀请失败，返回信息：" + cqResponse);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             cqMsg.setMessage("通过Flag为：" + argument.getFlag() + "的邀请失败，操作人：" + cqMsg.getUserId() + "，返回信息：" + cqResponse);
             cqMsg.setMessageType("private");
             cqMsg.setUserId(1335734657L);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
         }
     }
 
@@ -448,7 +448,7 @@ public class CqAdminServiceImpl {
         Userinfo userFromAPI = apiManager.getUser(0, argument.getUsername());
         if (userFromAPI == null) {
             cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         User user = userDAO.getUser(null, userFromAPI.getUserId());
@@ -476,7 +476,7 @@ public class CqAdminServiceImpl {
         }
 
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     public void firstPlace(CqMsg cqMsg) {
@@ -494,14 +494,14 @@ public class CqAdminServiceImpl {
         if (beatmap == null) {
             cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。" +
                     "\n请尝试根据解析出的结果，去掉关键词中的特殊符号……");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         //一次性取2个
         List<Score> scores = apiManager.getFirstScore(argument.getMode(), beatmap.getBeatmapId(), 2);
         if (scores.size() == 0) {
             cqMsg.setMessage("提供的bid没有找到#1成绩。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         Userinfo userFromAPI = apiManager.getUser(0, scores.get(0).getUserId());
@@ -510,7 +510,7 @@ public class CqAdminServiceImpl {
         scores.get(0).setBeatmapId(beatmap.getBeatmapId());
         String filename = imgUtil.drawFirstRank(beatmap, scores.get(0), userFromAPI, scores.get(0).getScore() - scores.get(1).getScore(), argument.getMode());
         cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     @UserAuthorityControl({934697463L})
@@ -524,16 +524,16 @@ public class CqAdminServiceImpl {
             if (msgQueue == null) {
                 resp = new StringBuilder("获取群" + cqMsg.getGroupId() + "的消息列表失败；请重启Tomcat");
                 cqMsg.setMessage(resp.toString());
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
             }
             ArrayList<CqMsg> msgs = msgQueue.getMsgsByQQ(QQ);
             logger.info("记录ListMsg：" + msgs);
-            CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(cqMsg.getGroupId(), QQ);
+            CqResponse<QQInfo> cqResponse = oneBotManager.getGroupMember(cqMsg.getGroupId(), QQ);
             if (cqResponse.getData() == null) {
                 resp = new StringBuilder("获取" + QQ + "的详细信息失败。请尝试再次使用命令。");
                 cqMsg.setMessage(resp.toString());
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
             }
             QQInfo data = cqResponse.getData();
@@ -565,7 +565,7 @@ public class CqAdminServiceImpl {
             }
         }
         cqMsg.setMessage(resp.toString());
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     @UserAuthorityControl({1427922341, 526942417,670804973,934697463L})
@@ -596,7 +596,7 @@ public class CqAdminServiceImpl {
             resp = "根据提供的关键词" + argument.getUsername() + "没有找到任何玩家。";
         }
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
 
@@ -607,14 +607,14 @@ public class CqAdminServiceImpl {
         String resp = "";
         //根据是否带群号，取出相应的群成员
         if (argument.getGroupId() == null) {
-            cqResponse = cqManager.getGroupMembers(cqMsg.getGroupId());
+            cqResponse = oneBotManager.getGroupMembers(cqMsg.getGroupId());
         } else {
-            cqResponse = cqManager.getGroupMembers(argument.getGroupId());
+            cqResponse = oneBotManager.getGroupMembers(argument.getGroupId());
         }
         for (QQInfo qqInfo : cqResponse.getData()) {
             //根据QQ获取user和群名片
             user = userDAO.getUser(qqInfo.getUserId(), null);
-            String card = cqManager.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
+            String card = oneBotManager.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
             if (user != null) {
                 //被ban的玩家也有待在用户组里的权利……
                 List<String> roles = Arrays.asList(user.getRole().split(","));
@@ -654,7 +654,7 @@ public class CqAdminServiceImpl {
         }
         cqMsg.setMessage(resp);
         logger.info(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     public void unbind(CqMsg cqMsg) {
@@ -663,13 +663,13 @@ public class CqAdminServiceImpl {
         User user = userDAO.getUser(qq, null);
         if (user == null) {
             cqMsg.setMessage("该QQ没有绑定用户……");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         user.setQq(0L);
         userDAO.updateUser(user);
         cqMsg.setMessage("QQ " + qq + " 的绑定信息已经清除。");
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     public void help(CqMsg cqMsg) {
@@ -705,7 +705,7 @@ public class CqAdminServiceImpl {
                 "!sudo searchPlayer xxx 查询曾用/现用用户名中包含xxx，或者QQ/uid全文匹配xxx的玩家。\n";
 
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
 
@@ -722,12 +722,12 @@ public class CqAdminServiceImpl {
         for (long i : Overall.ADMIN_LIST) {
             //debug 这里设置的user id 应该是cqMsg1的，之前漏了个1
             cqMsg1.setUserId(i);
-            cqManager.sendMsg(cqMsg1);
+            oneBotManager.sendMsg(cqMsg1);
         }
          for (long i : Overall.ADMIN_LIST) {
              cqMsg1.setMessage("!sudo handleInvite "+cqMsg.getFlag());
              cqMsg1.setUserId(i);
-             cqManager.sendMsg(cqMsg1);
+             oneBotManager.sendMsg(cqMsg1);
         }
 
 
@@ -738,10 +738,10 @@ public class CqAdminServiceImpl {
         User user = userDAO.getRepeatStar();
         if (!user.getRepeatCount().equals(0L) && !user.getSpeakingCount().equals(0L)) {
             cqMsg.setMessage("在OCLC赛群中，当前的复读之星为：" + user.getQq() + "，总发言数：" + user.getSpeakingCount() + "，复读次数：" + user.getRepeatCount());
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
         } else {
             cqMsg.setMessage("暂时还没有复读之星。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
         }
     }
     public void listUserPP(CqMsg cqMsg) {
@@ -769,7 +769,7 @@ public class CqAdminServiceImpl {
             resp = "用户组没有成员。";
         }
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     @UserAuthorityControl({496802290,670804973,2591482572L})
@@ -785,7 +785,7 @@ public class CqAdminServiceImpl {
         if (list.size() == 0) {
             resp = "该用户组没有成员。";
             cqMsg.setMessage(resp);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         if (argument.getMode() == null) {
@@ -823,9 +823,9 @@ public class CqAdminServiceImpl {
         final int mid = resp.length() / 2;
         String[] parts = {resp.substring(0, mid),resp.substring(mid)};
         cqMsg.setMessage(parts[0]);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
         cqMsg.setMessage(parts[1]);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
 
 
     }
@@ -839,24 +839,24 @@ public class CqAdminServiceImpl {
         Userinfo userinfo = apiManager.getUser(argument.getMode(), argument.getUsername());
         if (userinfo == null) {
             cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         Beatmap beatmap = apiManager.getBeatmap(argument.getBeatmapId());
         if (beatmap == null) {
             cqMsg.setMessage(String.format(Tip.BEATMAP_GET_FAILED, argument.getBeatmapId()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         List<Score> scores = apiManager.getScore(argument.getMode(), beatmap.getBeatmapId(), userinfo.getUserId());
         if (scores.size() == 0) {
             cqMsg.setMessage(String.format(Tip.THIS_USER_BEATMAP_NO_SCORE, argument.getUsername(), beatmap.getBeatmapId(), scoreUtil.convertGameModeToString(argument.getMode())));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         String image = imgUtil.drawResult(userinfo, scores.get(0), beatmap, argument.getMode());
         cqMsg.setMessage("[CQ:image,file=base64://" + image + "]");
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
 
     }
 

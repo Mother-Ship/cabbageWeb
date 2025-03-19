@@ -11,7 +11,7 @@ import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.constant.Tip;
 import top.mothership.cabbage.enums.CompressLevelEnum;
 import top.mothership.cabbage.manager.ApiManager;
-import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.manager.OneBotManager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.ResDAO;
@@ -47,7 +47,7 @@ import java.util.*;
 public class CqServiceImpl {
     //
     private final ApiManager apiManager;
-    private final CqManager cqManager;
+    private final OneBotManager oneBotManager;
     private final WebPageManager webPageManager;
     private final UserInfoDAO userInfoDAO;
     private final UserDAO userDAO;
@@ -63,7 +63,7 @@ public class CqServiceImpl {
      *
      * @param
      * @param apiManager     the api manager
-     * @param cqManager      the cq manager
+     * @param oneBotManager      the cq manager
      * @param webPageManager 网页相关抓取工具
      * @param userDAO        the user dao
      * @param userInfoDAO    the user info dao
@@ -74,9 +74,9 @@ public class CqServiceImpl {
      * @param redisDAO
      */
     @Autowired
-    public CqServiceImpl(ApiManager apiManager, CqManager cqManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, UserUtil userUtil, ResDAO resDAO, RedisDAO redisDAO) {
+    public CqServiceImpl(ApiManager apiManager, OneBotManager oneBotManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, UserUtil userUtil, ResDAO resDAO, RedisDAO redisDAO) {
         this.apiManager = apiManager;
-        this.cqManager = cqManager;
+        this.oneBotManager = oneBotManager;
         this.webPageManager = webPageManager;
         this.userDAO = userDAO;
         this.userInfoDAO = userInfoDAO;
@@ -113,7 +113,7 @@ public class CqServiceImpl {
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
                     cqMsg.setMessage(Tip.USER_NOT_BIND);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 user.setLastActiveDate(LocalDate.now());
@@ -132,7 +132,7 @@ public class CqServiceImpl {
                     if (userFromAPI == null) {
                         //如果数据库中该玩家该模式没有历史记录……
                         cqMsg.setMessage(Tip.USER_IS_BANNED);
-                        cqManager.sendMsg(cqMsg);
+                        oneBotManager.sendMsg(cqMsg);
                         return;
                     }
                     //尝试补上当前用户名
@@ -152,7 +152,7 @@ public class CqServiceImpl {
                 } else {
                     if (userFromAPI == null) {
                         cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, user.getQq(), user.getUserId()));
-                        cqManager.sendMsg(cqMsg);
+                        oneBotManager.sendMsg(cqMsg);
                         return;
                     }
                     if (argument.getDay() > 0) {
@@ -179,7 +179,7 @@ public class CqServiceImpl {
                 if (user == null) {
                     if (userFromAPI == null) {
                         cqMsg.setMessage(String.format(Tip.USER_ID_GET_FAILED_AND_NOT_USED, argument.getUserId()));
-                        cqManager.sendMsg(cqMsg);
+                        oneBotManager.sendMsg(cqMsg);
                         return;
                     } else {
                         //构造User对象和4条Userinfo写入数据库，如果指定了mode就使用指定mode
@@ -202,7 +202,7 @@ public class CqServiceImpl {
                     if (userFromAPI == null) {
                         //如果数据库中该玩家该模式没有历史记录……
                         cqMsg.setMessage(Tip.USER_IS_BANNED);
-                        cqManager.sendMsg(cqMsg);
+                        oneBotManager.sendMsg(cqMsg);
                         return;
                     }
                     //尝试补上当前用户名
@@ -242,7 +242,7 @@ public class CqServiceImpl {
             case "stat":
                 if ("白菜".equals(argument.getUsername())) {
                     cqMsg.setMessage("没人疼，没人爱，我是地里一颗小白菜。");
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 //直接从api根据参数提供的用户名获取
@@ -250,7 +250,7 @@ public class CqServiceImpl {
 
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
 
@@ -302,7 +302,7 @@ public class CqServiceImpl {
         }
         String result = imgUtil.drawUserInfo(userFromAPI, userInDB, role, argument.getDay(), approximate, scoreRank, argument.getMode());
         cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
 
@@ -312,12 +312,12 @@ public class CqServiceImpl {
         if ("白菜".equals(argument.getUsername())) {
             cqMsg.setMessage("大白菜（学名：Brassica rapa pekinensis，异名Brassica campestris pekinensis或Brassica pekinensis）" +
                     "是一种原产于中国的蔬菜，又称“结球白菜”、“包心白菜”、“黄芽白”、“胶菜”等。(via 维基百科)");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         if (argument.isText()) {
             cqMsg.setMessage("不（lan）支（de）持（zuo）以文本形式展现今日BP。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         ArrayList<Score> todayBP = new ArrayList<>();
@@ -331,7 +331,7 @@ public class CqServiceImpl {
                 userFromAPI = apiManager.getUser(0, argument.getUsername());
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
@@ -340,7 +340,7 @@ public class CqServiceImpl {
                 userFromAPI = apiManager.getUser(0, argument.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USERID_GET_FAILED, argument.getUserId()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
@@ -352,20 +352,20 @@ public class CqServiceImpl {
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
                     cqMsg.setMessage(Tip.USER_NOT_BIND);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 user.setLastActiveDate(LocalDate.now());
                 userDAO.updateUser(user);
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 userFromAPI = apiManager.getUser(user.getMode(), user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, user.getQq(), user.getUserId()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
@@ -391,9 +391,9 @@ public class CqServiceImpl {
             }
             if (todayBP.size() == 0) {
                 cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("NI_QI_BU_QI.wav")) + "]");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
             }
             if (todayBP.size() == 1) {
@@ -424,9 +424,9 @@ public class CqServiceImpl {
             }
             if (todayBP.size() == 0) {
                 cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("NI_QI_BU_QI.wav")) + "]");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "今天还。。\n这么悲伤的事情，不忍心说啊。");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
             }
         }
@@ -434,7 +434,7 @@ public class CqServiceImpl {
         //如果是多模式的BP，mixedmode是true，getmode是null
         String result = imgUtil.drawUserBP(userFromAPI, todayBP, argument.getMode(), mixedMode);
         cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
 
     }
 
@@ -445,7 +445,7 @@ public class CqServiceImpl {
         if ("白菜".equals(argument.getUsername())) {
             cqMsg.setMessage("大白菜（学名：Brassica rapa pekinensis，异名Brassica campestris pekinensis或Brassica pekinensis）" +
                     "是一种原产于中国的蔬菜，又称“结球白菜”、“包心白菜”、“黄芽白”、“胶菜”等。(via 维基百科)");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
 
@@ -458,7 +458,7 @@ public class CqServiceImpl {
                 userFromAPI = apiManager.getUser(0, argument.getUsername());
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
@@ -467,7 +467,7 @@ public class CqServiceImpl {
                 userFromAPI = apiManager.getUser(0, argument.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USERID_GET_FAILED, argument.getUserId()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
@@ -478,20 +478,20 @@ public class CqServiceImpl {
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
                     cqMsg.setMessage(Tip.USER_NOT_BIND);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 user.setLastActiveDate(LocalDate.now());
                 userDAO.updateUser(user);
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 userFromAPI = apiManager.getUser(0, user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, user.getQq(), user.getUserId()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
@@ -515,7 +515,7 @@ public class CqServiceImpl {
 
         if (argument.getNum() > bpList.size()) {
             cqMsg.setMessage("该玩家没有打出指定的bp……");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         } else {
             if (argument.isText()) {
@@ -524,7 +524,7 @@ public class CqServiceImpl {
                 logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + argument.getMode() + "的第" + argument.getNum() + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
                 Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
                 cqMsg.setMessage(scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), null));
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
             } else {
                 //list基于0，得-1
                 Score score = bpList.get(argument.getNum() - 1);
@@ -532,7 +532,7 @@ public class CqServiceImpl {
                 Beatmap map = apiManager.getBeatmap(score.getBeatmapId());
                 String result = imgUtil.drawResult(userFromAPI, score, map, argument.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
             }
         }
     }
@@ -544,14 +544,14 @@ public class CqServiceImpl {
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
             cqMsg.setMessage(Tip.USER_NOT_BIND);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         user.setLastActiveDate(LocalDate.now());
         userDAO.updateUser(user);
         if (user.isBanned()) {
             cqMsg.setMessage(Tip.USER_IS_BANNED);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         if (argument.getMode() == null) {
@@ -561,7 +561,7 @@ public class CqServiceImpl {
         userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
         if (userFromAPI == null) {
             cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, user.getQq(), user.getUserId()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
 
@@ -569,7 +569,7 @@ public class CqServiceImpl {
         Score score = apiManager.getRecent(argument.getMode(), userFromAPI.getUserId());
         if (score == null) {
             cqMsg.setMessage(String.format(Tip.NO_RECENT_RECORD, userFromAPI.getUserName(), scoreUtil.convertGameModeToString(argument.getMode())));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         List<Score> scores = apiManager.getRecents(argument.getMode(), userFromAPI.getUserId());
@@ -583,23 +583,23 @@ public class CqServiceImpl {
         Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
         if (beatmap == null) {
             cqMsg.setMessage(String.format(Tip.BEATMAP_GET_FAILED, score.getBeatmapId()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         if (argument.isText()) {
             String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
             cqMsg.setMessage(resp);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
         } else {
             String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-            CqResponse response = cqManager.sendMsg(cqMsg);
+            CqResponse response = oneBotManager.sendMsg(cqMsg);
             if (response.getRetCode() != 0) {
 
                 String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
                 resp += "\n由于风控导致图片发送失败，本次成绩使用文字展示";
                 cqMsg.setMessage(resp);
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
 
             }
         }
@@ -614,7 +614,7 @@ public class CqServiceImpl {
             img = imgUtil.drawImage(imgUtil.get("help.png"), CompressLevelEnum.不压缩);
         }
         cqMsg.setMessage("[CQ:image,file=base64://" + img + "]");
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
 
     }
 
@@ -622,10 +622,10 @@ public class CqServiceImpl {
         Argument argument = cqMsg.getArgument();
         logger.info(cqMsg.getUserId() + "被自己禁言" + argument.getHour() + "小时。");
         cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("zou_hao_bu_song.wav")) + "]");
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
         cqMsg.setMessageType("smoke");
         cqMsg.setDuration((int) (argument.getHour() * 3600));
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     @GroupAuthorityControl
@@ -638,7 +638,7 @@ public class CqServiceImpl {
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
             cqMsg.setMessage("你没有绑定默认id。请使用!setid 你的osu!id 命令。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         user.setLastActiveDate(LocalDate.now());
@@ -646,7 +646,7 @@ public class CqServiceImpl {
         userFromAPI = apiManager.getUser(0, user.getUserId());
         if (userFromAPI == null) {
             cqMsg.setMessage("没有获取到QQ：" + cqMsg.getUserId() + "绑定的uid为" + user.getUserId() + "玩家的信息。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         Beatmap beatmap;
@@ -661,7 +661,7 @@ public class CqServiceImpl {
         if (beatmap == null) {
             cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。" +
                     "\n请尝试根据解析出的结果，去掉关键词中的特殊符号……");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         if (argument.getMode() == null) {
@@ -672,7 +672,7 @@ public class CqServiceImpl {
         List<Score> scores = apiManager.getFirstScore(argument.getMode(), beatmap.getBeatmapId(), 2);
         if (scores.size() == 0) {
             cqMsg.setMessage(String.format(Tip.BEATMAP_NO_SCORE, beatmap.getBeatmapId(), scoreUtil.convertGameModeToString(argument.getMode())));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         //如果不是#1
@@ -684,7 +684,7 @@ public class CqServiceImpl {
                         if (s.getEnabledMods().equals(searchParam.getMods())) {
                             String filename = imgUtil.drawResult(userFromAPI, s, beatmap, argument.getMode());
                             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-                            cqManager.sendMsg(cqMsg);
+                            oneBotManager.sendMsg(cqMsg);
                             return;
                         }
                     }
@@ -701,7 +701,7 @@ public class CqServiceImpl {
                         + "\n" + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")" +
                         "，你在该谱面没有模式：" + scoreUtil.convertGameModeToString(argument.getMode()) + "的成绩。");
             }
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
 
 
         } else {
@@ -711,7 +711,7 @@ public class CqServiceImpl {
             scores.get(0).setBeatmapId(Integer.valueOf(beatmap.getBeatmapId()));
             String filename = imgUtil.drawFirstRank(beatmap, scores.get(0), userFromAPI, scores.get(0).getScore() - scores.get(1).getScore(), argument.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
         }
 
 
@@ -733,7 +733,7 @@ public class CqServiceImpl {
             if (beatmap == null) {
                 cqMsg.setMessage("根据提供的关键词：" + searchParam + "没有找到任何谱面。" +
                         "\n请尝试根据解析出的结果，去掉关键词中的特殊符号……");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
             }
             beatmap = apiManager.getBeatmap(beatmap.getBeatmapId());
@@ -742,7 +742,7 @@ public class CqServiceImpl {
             if (beatmap == null) {
                 cqMsg.setMessage("根据提供的谱面ID：" + searchParam.getBeatmapId() + "没有找到任何谱面。" +
                         "\n请尝试根据解析出的结果，去掉关键词中的特殊符号……");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
             }
         }
@@ -751,7 +751,7 @@ public class CqServiceImpl {
 
             if (!beatmap.getMode().equals(0)) {
                 cqMsg.setMessage("根据提供的bid找到了一张" + scoreUtil.convertGameModeToString(beatmap.getMode()) + "模式的专谱。由于oppai不支持其他模式，因此白菜也只有主模式支持!search命令。");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
             }
             if (searchParam.getMods() == null) {
@@ -791,7 +791,7 @@ public class CqServiceImpl {
                     + "\n" + "在线试玩：http://osugame.online/search.html?q=" + beatmap.getBeatmapSetId()
                     + "\n" + "预览：https://bloodcat.com/osu/preview.html#" + beatmap.getBeatmapId());
 
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
 
     }
 
@@ -807,22 +807,22 @@ public class CqServiceImpl {
         //面向mp4 5 chart组，相当于!setid+!sudo add
         List<Long> mpChartMember = new ArrayList<>();
         //加入两个chart组群员
-        for (QQInfo q : cqManager.getGroupMembers(517183331L).getData()) {
+        for (QQInfo q : oneBotManager.getGroupMembers(517183331L).getData()) {
             mpChartMember.add(q.getUserId());
         }
-        for (QQInfo q : cqManager.getGroupMembers(635731109L).getData()) {
+        for (QQInfo q : oneBotManager.getGroupMembers(635731109L).getData()) {
             mpChartMember.add(q.getUserId());
         }
         if (!mpChartMember.contains(cqMsg.getUserId())) {
             cqMsg.setMessage("[CQ:face,id=14]？");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
 
         userFromAPI = apiManager.getUser(0, argument.getUsername());
         if (userFromAPI == null) {
             cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, argument.getUsername()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         user = userDAO.getUser(null, userFromAPI.getUserId());
@@ -834,7 +834,7 @@ public class CqServiceImpl {
                 break;
             default:
                 cqMsg.setMessage("请不要在mp5/chart群之外的地方使用。");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
         }
         String resp = "";
@@ -873,12 +873,12 @@ public class CqServiceImpl {
                     resp = resp.concat("\n[CQ:image,file=base64://" + filename + "]");
                 }
                 cqMsg.setMessage(resp);
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 break;
             case "del":
                 if (user == null) {
                     cqMsg.setMessage("玩家" + userFromAPI.getUserName() + "没有使用过白菜。");
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 } else {
                     resp = "已将玩家" + userFromAPI.getUserName() + "从" + role + "用户组中移除。";
@@ -886,7 +886,7 @@ public class CqServiceImpl {
                     resp += "\n修改后的用户组为：" + user.getRole();
                     userDAO.updateUser(user);
                     cqMsg.setMessage(resp);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                 }
                 break;
 
@@ -980,7 +980,7 @@ public class CqServiceImpl {
 
         cqMsg.setMessageType("group");
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
 
     }
 
@@ -1021,7 +1021,7 @@ public class CqServiceImpl {
         cqMsg.setGroupId(chartGroupId);
         cqMsg.setMessageType("group");
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     @GroupAuthorityControl
@@ -1037,20 +1037,20 @@ public class CqServiceImpl {
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
                     cqMsg.setMessage(Tip.USER_NOT_BIND);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 user.setLastActiveDate(LocalDate.now());
                 userDAO.updateUser(user);
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 userFromAPI = apiManager.getUser(0, user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, user.getQq(), user.getUserId()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
@@ -1062,18 +1062,18 @@ public class CqServiceImpl {
                             "...\n" +
                             "[Crz]Makii  11:01:01\n" +
                             "思考");
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 userFromAPI = apiManager.getUser(0, username);
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, username));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 if (userFromAPI.getUserId() == 3) {
                     cqMsg.setMessage(Tip.QUERY_BANCHO_BOT);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 user = userDAO.getUser(null, userFromAPI.getUserId());
@@ -1122,11 +1122,11 @@ public class CqServiceImpl {
                     + "。\n在**第五届MP4**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(mp4S5Cost)
 //                    + "。\n在**第三届鱼塘杯**中，该玩家的Cost是：" + new DecimalFormat("#0.00").format(yuTangCost)
                     + "。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         cqMsg.setMessage("获取你的Cost失败，根据以往经验，国内凌晨（1:00-7:00）的成功率可能会增加……");
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
         return;
     }
 
@@ -1151,20 +1151,20 @@ public class CqServiceImpl {
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
             cqMsg.setMessage(Tip.USER_NOT_BIND);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         user.setLastActiveDate(LocalDate.now());
         userDAO.updateUser(user);
         if (user.isBanned()) {
             cqMsg.setMessage(Tip.USER_IS_BANNED);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         userFromAPI = apiManager.getUser(0, user.getUserId());
         if (userFromAPI == null) {
             cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         if (argument.getMode() == null) {
@@ -1176,7 +1176,7 @@ public class CqServiceImpl {
         List<Score> scores = apiManager.getRecents(argument.getMode(), userFromAPI.getUserId());
         if (scores.size() == 0) {
             cqMsg.setMessage(String.format(Tip.NO_RECENT_RECORD, userFromAPI.getUserName(), scoreUtil.convertGameModeToString(argument.getMode())));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         Score score = null;
@@ -1190,7 +1190,7 @@ public class CqServiceImpl {
 
         if (score == null) {
             cqMsg.setMessage(String.format(Tip.NO_RECENT_RECORD_PASSED, userFromAPI.getUserName(), scoreUtil.convertGameModeToString(argument.getMode())));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         Integer count = 0;
@@ -1202,19 +1202,19 @@ public class CqServiceImpl {
         Beatmap beatmap = apiManager.getBeatmap(score.getBeatmapId());
         if (beatmap == null) {
             cqMsg.setMessage(String.format(Tip.BEATMAP_GET_FAILED, score.getBeatmapId()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         switch (argument.getSubCommandLowCase()) {
             case "prs":
                 String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
                 cqMsg.setMessage(resp);
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 break;
             case "pr":
                 String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-                CqResponse response = cqManager.sendMsg(cqMsg);
+                CqResponse response = oneBotManager.sendMsg(cqMsg);
 
                 break;
             default:
@@ -1241,18 +1241,18 @@ public class CqServiceImpl {
                 //处理彩蛋
                 if ("白菜".equals(username)) {
                     cqMsg.setMessage("你以为会有彩蛋吗x");
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 userFromAPI = apiManager.getUser(argument.getMode(), username);
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 if (userFromAPI.getUserId() == 3) {
                     cqMsg.setMessage(Tip.QUERY_BANCHO_BOT);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 user = userDAO.getUser(null, userFromAPI.getUserId());
@@ -1262,7 +1262,7 @@ public class CqServiceImpl {
                 }
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
 
@@ -1272,20 +1272,20 @@ public class CqServiceImpl {
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
                     cqMsg.setMessage(Tip.USER_NOT_BIND);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 user.setLastActiveDate(LocalDate.now());
                 userDAO.updateUser(user);
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
@@ -1310,7 +1310,7 @@ public class CqServiceImpl {
                 + "\n基于估算的Bonus PP反向计算，玩家的成绩数是：" + scoreCountS
                 + "\n基于https://github.com/RoanH/osu-BonusPP项目，适配了2024-03-19的最新Bonus PP改动";
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
 
     }
 
@@ -1330,18 +1330,18 @@ public class CqServiceImpl {
                 //处理彩蛋
                 if ("白菜".equals(username)) {
                     cqMsg.setMessage("你以为会有彩蛋吗x");
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 userFromAPI = apiManager.getUser(argument.getMode(), username);
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 if (userFromAPI.getUserId() == 3) {
                     cqMsg.setMessage(Tip.QUERY_BANCHO_BOT);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 user = userDAO.getUser(null, userFromAPI.getUserId());
@@ -1351,7 +1351,7 @@ public class CqServiceImpl {
                 }
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
 
@@ -1361,20 +1361,20 @@ public class CqServiceImpl {
                 user = userDAO.getUser(cqMsg.getUserId(), null);
                 if (user == null) {
                     cqMsg.setMessage(Tip.USER_NOT_BIND);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 user.setLastActiveDate(LocalDate.now());
                 userDAO.updateUser(user);
                 if (user.isBanned()) {
                     cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
                 if (userFromAPI == null) {
                     cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
-                    cqManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
                     return;
                 }
                 break;
@@ -1407,7 +1407,7 @@ public class CqServiceImpl {
         }
 
         cqMsg.setMessage(resp);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
         return;
     }
 
@@ -1431,7 +1431,7 @@ public class CqServiceImpl {
         if (cqMsg.getGroupId() != null) {
             cqMsg.setMessage("[CQ:at,qq=" + cqMsg.getUserId() + "]" + cqMsg.getMessage());
         }
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     @GroupAuthorityControl(allowed = {308419061, 793260840})
@@ -1444,7 +1444,7 @@ public class CqServiceImpl {
                 + formatter.format(NY)
                 + "\n当前UTC时间为："
                 + formatter.format(UTC));
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     @GroupAuthorityControl
@@ -1459,7 +1459,7 @@ public class CqServiceImpl {
         } else {
             cqMsg.setMessage("你的当前用户组有：" + user.getRole() + "，主显用户组为：" + user.getMainRole());
         }
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
         return;
 
     }
@@ -1550,7 +1550,7 @@ public class CqServiceImpl {
         userFromAPI = apiManager.getUser(0, argument.getUsername());
         if (userFromAPI == null) {
             cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         logger.info("尝试将" + userFromAPI.getUserName() + "绑定到QQ：" + cqMsg.getUserId() + "上，指定的模式是" + argument.getMode());
@@ -1587,7 +1587,7 @@ public class CqServiceImpl {
                 cqMsg.setMessage("你的QQ已经绑定了玩家：" + userFromAPI.getUserName() + "，如果发生错误请联系妈妈船。");
             }
         }
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
 
     }
 
@@ -1600,13 +1600,13 @@ public class CqServiceImpl {
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
             cqMsg.setMessage(Tip.USER_NOT_BIND);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         } else {
             userFromAPI = apiManager.getUser(0, user.getUserId());
             if (userFromAPI == null) {
                 cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return;
             }
             logger.info("尝试将" + userFromAPI.getUserName() + "的模式修改为" + argument.getMode());
@@ -1617,7 +1617,7 @@ public class CqServiceImpl {
             cqMsg.setMessage("更新成功：你的游戏模式已修改为" + scoreUtil.convertGameModeToString(argument.getMode()));
         }
 
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
 
     }
 
@@ -1642,7 +1642,7 @@ public class CqServiceImpl {
             }
 
         }
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 
     @GroupAuthorityControl
@@ -1651,20 +1651,20 @@ public class CqServiceImpl {
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
             cqMsg.setMessage(Tip.USER_NOT_BIND);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
         user.setLastActiveDate(LocalDate.now());
         userDAO.updateUser(user);
         if (user.isBanned()) {
             cqMsg.setMessage(Tip.USER_IS_BANNED);
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return;
         }
 
         user.setUseEloBorder(!user.getUseEloBorder());
         userDAO.updateUser(user);
         cqMsg.setMessage("更新成功：你已修改为" + (user.getUseEloBorder() ? "" : "不") + "使用ELO边框");
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 }

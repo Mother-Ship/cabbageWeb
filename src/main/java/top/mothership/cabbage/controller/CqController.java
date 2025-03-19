@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import top.mothership.cabbage.constant.pattern.CQCodePattern;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
 import top.mothership.cabbage.enums.ParameterEnum;
-import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.manager.OneBotManager;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.service.CqAdminServiceImpl;
 import top.mothership.cabbage.service.CqServiceImpl;
@@ -35,7 +35,7 @@ public class CqController {
     private final CqServiceImpl cqService;
     private final SmokeUtil smokeUtil;
     private final CqAdminServiceImpl cqAdminService;
-    private final CqManager cqManager;
+    private final OneBotManager oneBotManager;
 
 
     private Logger logger = LogManager.getLogger(this.getClass());
@@ -47,15 +47,15 @@ public class CqController {
      * @param cqService      Service层
      * @param smokeUtil      负责禁言的工具类
      * @param cqAdminService
-     * @param cqManager
+     * @param oneBotManager
      */
     @Autowired
 
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, CqManager cqManager) {
+    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, OneBotManager oneBotManager) {
         this.cqService = cqService;
         this.smokeUtil = smokeUtil;
         this.cqAdminService = cqAdminService;
-        this.cqManager = cqManager;
+        this.oneBotManager = oneBotManager;
     }
 
     /**
@@ -165,7 +165,7 @@ public class CqController {
                                 case "clearinvite":
                                     CqAdminServiceImpl.request.clear();
                                     cqMsg.setMessage("清除列表成功");
-                                    cqManager.sendMsg(cqMsg);
+                                    oneBotManager.sendMsg(cqMsg);
                                     return;
                                 case "钦点":
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME});
@@ -450,6 +450,6 @@ public class CqController {
         cqMsg.setUserId(1335734657L);
         cqMsg.setSelfId(1335734629L);
         cqMsg.setMessage("初始化完成，欢迎使用");
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
 }

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import top.mothership.cabbage.constant.Overall;
 import top.mothership.cabbage.enums.ParameterEnum;
 import top.mothership.cabbage.constant.Tip;
-import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.manager.OneBotManager;
 import top.mothership.cabbage.mapper.ResDAO;
 import top.mothership.cabbage.constant.pattern.CQCodePattern;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
@@ -31,13 +31,13 @@ import java.util.regex.Matcher;
 @Aspect
 @Order(2)
 public class ParameterVerifyAspect {
-    private final CqManager cqManager;
+    private final OneBotManager oneBotManager;
     private final ScoreUtil scoreUtil;
     private final ResDAO resDAO;
     private Logger logger = LogManager.getLogger(this.getClass());
 
-    public ParameterVerifyAspect(CqManager cqManager, ScoreUtil scoreUtil, ResDAO resDAO) {
-        this.cqManager = cqManager;
+    public ParameterVerifyAspect(OneBotManager oneBotManager, ScoreUtil scoreUtil, ResDAO resDAO) {
+        this.oneBotManager = oneBotManager;
         this.scoreUtil = scoreUtil;
         this.resDAO = resDAO;
     }
@@ -180,7 +180,7 @@ public class ParameterVerifyAspect {
                         //确保实参数目不小于最小形参数目，也不大于最大形参数目
                         if (argumentCount < cqMsg.getRequired().length) {
                             cqMsg.setMessage(String.format(Tip.ARGUMENTS_LESS_THAN_PARAMETERS, Arrays.toString(cqMsg.getRequired()), argumentCount));
-                            cqManager.sendMsg(cqMsg);
+                            oneBotManager.sendMsg(cqMsg);
                             return null;
                         }
                         int maxArgumentCount = cqMsg.getRequired().length + cqMsg.getOptional().length;
@@ -190,7 +190,7 @@ public class ParameterVerifyAspect {
                         }
                         if (argumentCount > maxArgumentCount) {
                             cqMsg.setMessage(String.format(Tip.ARGUMENTS_MORE_THAN_PARAMETERS, Arrays.toString(cqMsg.getRequired()), Arrays.toString(cqMsg.getOptional()), argumentCount));
-                            cqManager.sendMsg(cqMsg);
+                            oneBotManager.sendMsg(cqMsg);
                             return null;
                         }
 
@@ -216,7 +216,7 @@ public class ParameterVerifyAspect {
                                         argument.setQq(Long.valueOf(qqRaw));
                                     } else {
                                         cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, qqRaw, "QQ号"));
-                                        cqManager.sendMsg(cqMsg);
+                                        oneBotManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     break;
@@ -226,12 +226,12 @@ public class ParameterVerifyAspect {
                                         argument.setUserId(Integer.valueOf(firstParam));
                                     } else {
                                         cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, firstParam, "osu!uid"));
-                                        cqManager.sendMsg(cqMsg);
+                                        oneBotManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     if (argument.getUserId() == 3) {
                                         cqMsg.setMessage(Tip.QUERY_BANCHO_BOT);
-                                        cqManager.sendMsg(cqMsg);
+                                        oneBotManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     break;
@@ -242,12 +242,12 @@ public class ParameterVerifyAspect {
                                         argument.setUsername(firstParam);
                                     } else {
                                         cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, firstParam, "osu!用户名"));
-                                        cqManager.sendMsg(cqMsg);
+                                        oneBotManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     if (argument.getUsername().toLowerCase().equals("banchobot")) {
                                         cqMsg.setMessage(Tip.QUERY_BANCHO_BOT);
-                                        cqManager.sendMsg(cqMsg);
+                                        oneBotManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     break;
@@ -266,7 +266,7 @@ public class ParameterVerifyAspect {
                                     }
                                     if (mode == null) {
                                         cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, firstParam, "osu!游戏模式"));
-                                        cqManager.sendMsg(cqMsg);
+                                        oneBotManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     argument.setMode(mode);
@@ -283,7 +283,7 @@ public class ParameterVerifyAspect {
                                         argument.setUrl(url);
                                     } else {
                                         cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, url, "URL"));
-                                        cqManager.sendMsg(cqMsg);
+                                        oneBotManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     break;
@@ -321,7 +321,7 @@ public class ParameterVerifyAspect {
                                             argument.setQq(Long.valueOf(firstParam));
                                         } else {
                                             cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, firstParam, "QQ号"));
-                                            cqManager.sendMsg(cqMsg);
+                                            oneBotManager.sendMsg(cqMsg);
                                             return null;
                                         }
                                     }
@@ -362,17 +362,17 @@ public class ParameterVerifyAspect {
                                         }
                                         if (day < 0) {
                                             cqMsg.setMessage("白菜不会预知未来。");
-                                            cqManager.sendMsg(cqMsg);
+                                            oneBotManager.sendMsg(cqMsg);
                                             return null;
                                         }
                                         if (LocalDate.now().minusDays(day).isBefore(LocalDate.of(2007, 9, 16))) {
                                             cqMsg.setMessage("你要找史前时代的数据吗。");
-                                            cqManager.sendMsg(cqMsg);
+                                            oneBotManager.sendMsg(cqMsg);
                                             return null;
                                         }
                                     } catch (java.lang.NumberFormatException e) {
                                         cqMsg.setMessage("假使这些完全……不能用的参数，你再给他传一遍，你等于……你也等于……你也有泽任吧？");
-                                        cqManager.sendMsg(cqMsg);
+                                        oneBotManager.sendMsg(cqMsg);
                                         return null;
                                     }
 
@@ -417,13 +417,13 @@ public class ParameterVerifyAspect {
                                             num = Integer.valueOf(secondParam);
                                             if (num <= 0 || num > 100) {
                                                 cqMsg.setMessage("其他人看不到的东西，白菜也看不到啦。");
-                                                cqManager.sendMsg(cqMsg);
+                                                oneBotManager.sendMsg(cqMsg);
 
                                                 return null;
                                             }
                                         } else {
                                             cqMsg.setMessage("[CQ:record,file=base64://" + Base64.getEncoder().encodeToString((byte[]) resDAO.getResource("ay_ay_ay.wav")) + "]");
-                                            cqManager.sendMsg(cqMsg);
+                                            oneBotManager.sendMsg(cqMsg);
                                             return null;
                                         }
                                         argument.setNum(num);
@@ -435,7 +435,7 @@ public class ParameterVerifyAspect {
                                         mode = convertModeStrToInteger(thirdParam);
                                         if (mode == null) {
                                             cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, thirdParam, "osu!游戏模式"));
-                                            cqManager.sendMsg(cqMsg);
+                                            oneBotManager.sendMsg(cqMsg);
                                             return null;
                                         }
                                         argument.setMode(mode);
@@ -461,7 +461,7 @@ public class ParameterVerifyAspect {
                                         argument.setGroupId(Long.valueOf(firstParam));
                                     } else {
                                         cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, firstParam, "群号"));
-                                        cqManager.sendMsg(cqMsg);
+                                        oneBotManager.sendMsg(cqMsg);
                                         return null;
                                     }
                                     break;
@@ -472,7 +472,7 @@ public class ParameterVerifyAspect {
                                         argument.setQq(Long.valueOf(secondParam));
                                     } else {
                                         cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, secondParam, "QQ号"));
-                                        cqManager.sendMsg(cqMsg);
+                                        oneBotManager.sendMsg(cqMsg);
                                         return null;
                                     }
 
@@ -525,7 +525,7 @@ public class ParameterVerifyAspect {
             if (modsNum == null) {
                 cqMsg.setMessage("请使用MOD的双字母缩写，不需要任何分隔符。" +
                         "\n接受的Mod有：NF EZ TD HD HR SD DT HT NC FL SO PF。");
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return null;
             }
             //如果检测出来就去掉
@@ -581,7 +581,7 @@ public class ParameterVerifyAspect {
             if (mode == null) {
                 logger.debug(getKeyWordAndMod.group(3));
                 cqMsg.setMessage(String.format(Tip.FORMAT_ERROR, getKeyWordAndMod.group(3), "osu!游戏模式"));
-                cqManager.sendMsg(cqMsg);
+                oneBotManager.sendMsg(cqMsg);
                 return null;
             }
             argument.setMode(mode);
@@ -604,7 +604,7 @@ public class ParameterVerifyAspect {
         //如果mode不是主模式，而且命令是search
         if (!argument.getMode().equals(0) && "search".equals(argument.getSubCommandLowCase())) {
             cqMsg.setMessage("由于oppai不支持其他模式，因此白菜也只有主模式支持!search命令。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return null;
         }
 
@@ -645,7 +645,7 @@ public class ParameterVerifyAspect {
         if (!getArtistTitleEtc.find()) {
             cqMsg.setMessage("搜索格式：艺术家-歌曲标题[难度名](麻婆名){AR9.0OD9.0CS9.0HP9.0}:osu!std<98acc 1x100 2x50 3xmiss 4cb> +MOD双字母简称。\n" +
                     "所有参数都可以省略(但横线、方括号和圆括号不能省略)，方括号 圆括号和四维的小数点支持全/半角；四维顺序必须按AR OD CS HP排列。");
-            cqManager.sendMsg(cqMsg);
+            oneBotManager.sendMsg(cqMsg);
             return null;
         } else {
             //没啥办法……手动处理吧，这个正则管不了了，去掉可能存在的空格

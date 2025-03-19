@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import top.mothership.cabbage.manager.ApiManager;
-import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.manager.OneBotManager;
 import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
@@ -63,11 +63,11 @@ public class ImportTasker {
     }
 
 
-    private CqManager cqManager;
+    private OneBotManager oneBotManager;
 
     @Autowired
-    public void setCqManager(CqManager cqManager) {
-        this.cqManager = cqManager;
+    public void setCqManager(OneBotManager oneBotManager) {
+        this.oneBotManager = oneBotManager;
     }
 
 
@@ -79,7 +79,7 @@ public class ImportTasker {
         //清掉前一天全部信息
         redisDAO.flushDb();
         userInfoDAO.clearTodayInfo(LocalDate.now().minusDays(1));
-        cqManager.warn("开始进行每日登记");
+        oneBotManager.warn("开始进行每日登记");
         List<String> bannedList = new ArrayList<>();
         Integer successCount = 0;
         Integer bindedCount = 0;
@@ -148,7 +148,7 @@ public class ImportTasker {
         cqMsg.setMessageType("private");
         cqMsg.setUserId(1335734657L);
         cqMsg.setMessage("录入完成，录入的玩家数量：" + successCount + "，以下玩家本次被标明已封禁：" + bannedList+"，绑定QQ的玩家数量："+bindedCount);
-        cqManager.sendMsg(cqMsg);
+        oneBotManager.sendMsg(cqMsg);
     }
     private void handlePPOverflow(User user, Userinfo userinfo) {
         //如果用户在mp4组
@@ -158,13 +158,13 @@ public class ImportTasker {
             cqMsg.setMessageType("group");
             cqMsg.setSelfId(1020640876L);
             cqMsg.setGroupId(201872650L);
-            CqResponse<QQInfo> cqResponse = cqManager.getGroupMember(201872650L, user.getQq());
+            CqResponse<QQInfo> cqResponse = oneBotManager.getGroupMember(201872650L, user.getQq());
             if (cqResponse != null) {
                 if (cqResponse.getData() != null) {
                     if (!cqResponse.getData().getCard().toLowerCase(Locale.CHINA).replace("_", " ")
                             .contains(user.getCurrentUname().toLowerCase(Locale.CHINA).replace("_", " "))) {
                         cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的群名片没有包含完整id。请修改名片。");
-                        cqManager.sendMsg(cqMsg);
+                        oneBotManager.sendMsg(cqMsg);
                     }
                 }
             }
@@ -189,30 +189,30 @@ public class ImportTasker {
                                 userDAO.updateUser(user);
                                 cqMsg.setUserId(user.getQq());
                                 cqMsg.setMessageType("kick");
-                                cqManager.sendMsg(cqMsg);
+                                oneBotManager.sendMsg(cqMsg);
                                 cqMsg.setMessageType("private");
                                 cqMsg.setMessage("由于PP超限，已将你移出MP5群。");
-                                cqManager.sendMsg(cqMsg);
+                                oneBotManager.sendMsg(cqMsg);
                             }
                         } else {
                             //大前天没超
                             if (!user.getQq().equals(0L)) {
                                 cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在1天后将你移除。");
-                                cqManager.sendMsg(cqMsg);
+                                oneBotManager.sendMsg(cqMsg);
                             }
                         }
                     } else {
                         //前天没超
                         if (!user.getQq().equals(0L)) {
                             cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在2天后将你移除。");
-                            cqManager.sendMsg(cqMsg);
+                            oneBotManager.sendMsg(cqMsg);
                         }
                     }
                 } else {
                     //昨天没超
                     if (!user.getQq().equals(0L)) {
                         cqMsg.setMessage("[CQ:at,qq=" + user.getQq() + "] 检测到你的PP超限。将会在3天后将你移除。");
-                        cqManager.sendMsg(cqMsg);
+                        oneBotManager.sendMsg(cqMsg);
                     }
 
                 }

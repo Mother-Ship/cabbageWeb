@@ -9,7 +9,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import top.mothership.cabbage.manager.CqManager;
+import top.mothership.cabbage.manager.OneBotManager;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 
 import java.time.LocalDateTime;
@@ -28,7 +28,7 @@ import java.time.format.DateTimeFormatter;
 @Order(3)
 public class ExceptionNoticeAspect {
     @Autowired
-    private CqManager cqManager;
+    private OneBotManager oneBotManager;
     private Logger logger = LogManager.getLogger(this.getClass());
     /**
      * 不知道放这对不对……总之是格式化时间用的
@@ -80,8 +80,8 @@ public class ExceptionNoticeAspect {
             cqMsg.setSelfId(1335734629L);
             cqMsg.setUserId(1335734657L);
             cqMsg.setMessageType("private");
-            if (cqManager != null) {
-                cqManager.sendMsg(cqMsg);
+            if (oneBotManager != null) {
+                oneBotManager.sendMsg(cqMsg);
             }
 
 
