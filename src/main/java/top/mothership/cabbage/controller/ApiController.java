@@ -3,6 +3,7 @@ package top.mothership.cabbage.controller;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import lombok.experimental.var;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import top.mothership.cabbage.controller.vo.ChartsVo;
 import top.mothership.cabbage.controller.vo.PPChartVo;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.OneBotManager;
+import top.mothership.cabbage.manager.OsuApiV2Manager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.UserDAO;
@@ -20,6 +22,7 @@ import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.WebResponse;
 import top.mothership.cabbage.pojo.osu.Userinfo;
+import top.mothership.cabbage.pojo.osu.apiv2.request.UserScoresRequest;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
@@ -51,6 +54,9 @@ public class ApiController {
     private OneBotManager oneBotManager;
 
     @Autowired
+    private OsuApiV2Manager osuApiV2Manager;
+
+    @Autowired
     public void setCqManager(OneBotManager oneBotManager){
         this.oneBotManager = oneBotManager;
     }
@@ -79,10 +85,17 @@ public class ApiController {
         return c;
     }
 
-    @RequestMapping(value = "/code", method = RequestMethod.GET)
+    @RequestMapping(value = "/test", method = RequestMethod.GET)
 
     public String getCode() {
-        return null;
+
+        UserScoresRequest request = new UserScoresRequest();
+        request.setUserId("15650011");
+        request.setOffset(0);
+        request.setLimit(200);
+
+        return new Gson().toJson(osuApiV2Manager.getUserBestScores(request));
+
     }
 
     @RequestMapping(value = "/userinfo/{uid}", method = RequestMethod.GET)

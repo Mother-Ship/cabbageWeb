@@ -36,8 +36,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
@@ -870,7 +870,10 @@ public class WebPageManager {
         } else {
             doc = map.get(p);
         }
-        String score = doc.select("td[class*=focused]").get(num).child(0).attr("title");
+
+        String score =  doc.select("tr.ranking-page-table__row")
+                .get(num).child(5).child(0).attr("title");
+
         return Long.valueOf(score.replace(",", ""));
 
     }
