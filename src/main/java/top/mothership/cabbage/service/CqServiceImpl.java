@@ -298,7 +298,11 @@ public class CqServiceImpl {
         if (argument.getMode().equals(0)) {
             //主模式才获取score rank
             //2019-7-18 看样子四个人是全够2k名了，没必要特殊处理了
-            scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
+            try {
+                scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
+            } catch (Exception e) {
+                logger.warn("获取BP排名失败");
+            }
         }
         String result = imgUtil.drawUserInfo(userFromAPI, userInDB, role, argument.getDay(), approximate, scoreRank, argument.getMode());
         cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");

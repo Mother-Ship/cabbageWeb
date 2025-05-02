@@ -872,7 +872,7 @@ public class WebPageManager {
         }
 
         String score =  doc.select("tr.ranking-page-table__row")
-                .get(num).child(5).child(0).attr("title");
+                .get(num).child(5).text();
 
         return Long.valueOf(score.replace(",", ""));
 
