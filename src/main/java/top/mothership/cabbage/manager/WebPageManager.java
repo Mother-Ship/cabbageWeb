@@ -424,7 +424,9 @@ public class WebPageManager {
      * @return the rank
      */
     public int getRank(long rScore, int start, int end) {
+        logger.info("正在获取" + rScore + "的排名");
         long endValue = getScore(end);
+        logger.info("获取" + end + "的分数 " +endValue);
         if (rScore < endValue || endValue == 0) {
             logger.info("玩家的分数" + rScore + "小于" + end + "的分数" + endValue);
             map.clear();
@@ -871,7 +873,7 @@ public class WebPageManager {
         }
 
         String score =  doc.select("tr.ranking-page-table__row")
-                .get(num).child(5).text();
+                .get(num).child(4).text();
 
         return Long.valueOf(score.replace(",", ""));
 
