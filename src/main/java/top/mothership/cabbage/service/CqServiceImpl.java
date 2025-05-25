@@ -1246,7 +1246,7 @@ public class CqServiceImpl {
             cqMsg.setMessage(String.valueOf(new Random().nextInt(100) + 1));
         }
         if (cqMsg.getGroupId() != null) {
-            cqMsg.setMessage("[CQ:at,qq=" + cqMsg.getUserId() + "]" + cqMsg.getMessage());
+            cqMsg.setMessage("[CQ:at,qq=" + cqMsg.getUserId() + "] " + cqMsg.getMessage());
         }
         oneBotManager.sendMsg(cqMsg);
     }
@@ -1266,9 +1266,7 @@ public class CqServiceImpl {
 
     @GroupAuthorityControl
     public void myRole(CqMsg cqMsg) {
-        Argument argument = cqMsg.getArgument();
-        String username;
-        Userinfo userFromAPI = null;
+
         User user;
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
@@ -1277,85 +1275,11 @@ public class CqServiceImpl {
             cqMsg.setMessage("你的当前用户组有：" + user.getRole() + "，主显用户组为：" + user.getMainRole());
         }
         oneBotManager.sendMsg(cqMsg);
-        return;
 
     }
 
     public void pretreatmentParameterForBPCommand(CqMsg cqMsg) {
 
-    }
-
-    /**
-     * 尝试计算非Bonus PP
-     *
-     * @param s The list of the player's top 100 scores
-     * @return The amount of non-bonus PP this player has
-     */
-    private double calculateScorePP(List<Score> s) {
-        double scorepp = 0.0D;
-        for (int i = 0; i < s.size(); i++) {
-            scorepp += s.get(i).getPp() * Math.pow(0.95D, i);
-        }
-        return scorepp + extraPolatePPRemainder(s);
-    }
-
-    /**
-     * 计算BP外的PP，Top玩家可能这个值非常大，如果BP数目不到100返回0
-     *
-     * @param s The list of the player's top scores
-     * @return The amount of PP the player has from non-top-100 scores
-     */
-    private double extraPolatePPRemainder(List<Score> s) {
-        if (s.size() < 100) {
-            return 0D;
-        }
-        double[] b = calculateLinearRegression(s);
-        double n = s.size() + 1;
-        double pp = 0D;
-        while (true) {
-            double val = (b[0] + b[1] * n) * Math.pow(0.95D, n);
-            if (val < 0D) {
-                break;
-            }
-            pp += val;
-            n++;
-        }
-        return pp;
-    }
-
-    /**
-     * 用线性回归等式推断BP外的成绩
-     * <pre>
-     * The following formulas are used:
-     * B1 = Ox,y / Ox^2
-     * B0 = Uy - B1 * Ux
-     * Ox,y = (1/N) * 'sigma(N,i=1)'((Xi - Ux)(Yi - Uy))
-     * Ox^2 = (1/N) * 'sigma(N,i=1)'((Xi - U)^2)
-     * </pre>
-     *
-     * @param s 前100BP
-     * @return 线性回归方程的两个参数： y = b0 + b1 * x
-     */
-    private double[] calculateLinearRegression(List<Score> s) {
-        double sumOxy = 0.0D;
-        double sumOx2 = 0.0D;
-        double avgX = 0.0D;
-        double avgY = 0.0D;
-        for (Score score : s) {
-            avgX++;
-            avgY += score.getPp();
-        }
-        avgX = avgX / s.size();
-        avgY = avgY / s.size();
-        double n = 0;
-        for (Score sc : s) {
-            sumOxy += (n - avgX) * (sc.getPp() - avgY);
-            sumOx2 += Math.pow(n - avgX, 2.0D);
-            n++;
-        }
-        double Oxy = sumOxy / s.size();
-        double Ox2 = sumOx2 / s.size();
-        return new double[]{avgY - (Oxy / Ox2) * avgX, Oxy / Ox2};
     }
 
     public void setId(CqMsg cqMsg) {

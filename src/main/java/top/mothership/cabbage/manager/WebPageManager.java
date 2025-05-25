@@ -55,15 +55,13 @@ public class WebPageManager {
     private static final String USERPAGE_URL = "https://osu.ppy.sh/u/";
     private static final String USERPAGE_INNER_URL = "https://osu.ppy.sh/pages/include/profile-general.php?u=";
     private static final String SAYOBOT_DOWN_URL = "https://txy1.sayobot.cn/beatmaps/download/full/";
-    private static final String BLOODCAT_BG_URL = "http://bloodcat.com/osu/i/";
     private static final String OSU_FILE_URL = "https://osu.ppy.sh/osu/";
     private static final String OSU_DIRECT_SEARCH_URL = "https://osu.direct/api/v2/search";
     private static final String PP_PLUS_URL = "http://syrin.me/pp+/u/";
     private static final String OSU_PROFILE_DETAIL_URL = "https://osu.ppy.sh/pages/include/profile-general.php";
     private static final String OSU_CHAN_URL = "https://syrin.me/osuchan/u/";
     private static final String OSU_UPDATE_INFO_URL = "https://osu.ppy.sh/web/check-updates.php?action=check&stream=stable40";
-    private static final MediaType JSON
-            = MediaType.parse("application/json; charset=utf-8");
+
     private static OkHttpClient client = new OkHttpClient();
 
     @Autowired
@@ -428,6 +426,7 @@ public class WebPageManager {
     public int getRank(long rScore, int start, int end) {
         long endValue = getScore(end);
         if (rScore < endValue || endValue == 0) {
+            logger.info("玩家的分数" + rScore + "小于" + end + "的分数" + endValue);
             map.clear();
             return 0;
         }
