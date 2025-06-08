@@ -155,9 +155,9 @@ public class ApiController {
         List<Integer> list = userDAO.listUserIdByRole(null, false);
         return new Gson().toJson(list);
     }
-    @RequestMapping(value = "/import", method = RequestMethod.POST)
-    public String addTodayUserinfo(@RequestBody List<Userinfo> list){
-        oneBotManager.warn("收到了批量导入的用户数据共"+list.size()+"条");
+    @RequestMapping(value = "/importInfo", method = RequestMethod.POST)
+    public String addTodayUserinfo(String info){
+        oneBotManager.warn(info);
 
         return "OK";
     }
