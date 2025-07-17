@@ -1431,8 +1431,8 @@ public class CqServiceImpl {
 
             //绘制头像
             g2d.drawImage(ava,
-                    60 + (280 - ava.getWidth()) / 2,
-                    34 + (280 - ava.getHeight()) / 2,
+                    57 + (280 - ava.getWidth()) / 2,
+                    31 + (280 - ava.getHeight()) / 2,
                     ava.getWidth(), ava.getHeight(), null);
 
             //指定颜色
@@ -1445,7 +1445,7 @@ public class CqServiceImpl {
             int width = fm.stringWidth(userinfo.getUserName());
 
             logger.info("绘制ID 宽度" + width);
-            g2d.drawString(userinfo.getUserName(), 200 - (width / 2), 386);
+            g2d.drawString(userinfo.getUserName(), 200 - (width / 2), 376);
 
             g2d.dispose();
 
