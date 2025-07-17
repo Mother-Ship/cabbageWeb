@@ -22,13 +22,13 @@ import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.CqResponse;
 import top.mothership.cabbage.pojo.coolq.QQInfo;
-import top.mothership.cabbage.pojo.elo.Elo;
-import top.mothership.cabbage.pojo.elo.EloChange;
 import top.mothership.cabbage.pojo.osu.*;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -37,6 +37,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.List;
 
 /**
  * 普通命令进行业务处理的类
@@ -63,7 +64,7 @@ public class CqServiceImpl {
      *
      * @param
      * @param apiManager     the api manager
-     * @param oneBotManager      the cq manager
+     * @param oneBotManager  the cq manager
      * @param webPageManager 网页相关抓取工具
      * @param userDAO        the user dao
      * @param userInfoDAO    the user info dao
@@ -753,47 +754,47 @@ public class CqServiceImpl {
         logger.info("开始处理" + cqMsg.getUserId() + "进行的谱面搜索，关键词为：" + searchParam);
 
 
-            if (!beatmap.getMode().equals(0)) {
-                cqMsg.setMessage("根据提供的bid找到了一张" + scoreUtil.convertGameModeToString(beatmap.getMode()) + "模式的专谱。由于oppai不支持其他模式，因此白菜也只有主模式支持!search命令。");
-                oneBotManager.sendMsg(cqMsg);
-                return;
-            }
-            if (searchParam.getMods() == null) {
-                //在search中，未指定mod即视为none
-                searchParam.setMods(0);
-            }
+        if (!beatmap.getMode().equals(0)) {
+            cqMsg.setMessage("根据提供的bid找到了一张" + scoreUtil.convertGameModeToString(beatmap.getMode()) + "模式的专谱。由于oppai不支持其他模式，因此白菜也只有主模式支持!search命令。");
+            oneBotManager.sendMsg(cqMsg);
+            return;
+        }
+        if (searchParam.getMods() == null) {
+            //在search中，未指定mod即视为none
+            searchParam.setMods(0);
+        }
 
-            Score score = new Score();
+        Score score = new Score();
 
-            //逆计算stdacc
-            score.setEnabledMods(searchParam.getMods());
-            score.setCountMiss(searchParam.getCountMiss());
-            score.setMaxCombo(searchParam.getMaxCombo());
-            score.setCount50(searchParam.getCount50());
-            if (searchParam.getAcc() == null) {
-                score.setCount100(searchParam.getCount100());
-                score.setCount300(-1);
-                OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
-                int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
-                score.setCount300(objects - (score.getCount100() == null ? 0 : score.getCount100()));
-                score.setMaxCombo(score.getMaxCombo() == -1 ? objects : score.getMaxCombo());
-            } else {
-                OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
-                //随意指定300 100,先计算出谱面总物件数
-                int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
-                score.setCount100((int) (100D - searchParam.getAcc()) * 3 * objects / 200);
-                score.setCount300(objects - score.getCount100());
-                score.setMaxCombo(score.getMaxCombo() == -1 ? objects : score.getMaxCombo());
-            }
-            System.out.println(score);
-            //这里默认构造FC成绩，所以不需要处理NPE……吧？
+        //逆计算stdacc
+        score.setEnabledMods(searchParam.getMods());
+        score.setCountMiss(searchParam.getCountMiss());
+        score.setMaxCombo(searchParam.getMaxCombo());
+        score.setCount50(searchParam.getCount50());
+        if (searchParam.getAcc() == null) {
+            score.setCount100(searchParam.getCount100());
+            score.setCount300(-1);
             OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
-            String filename = imgUtil.drawBeatmap(beatmap, searchParam.getMods(), oppaiResult, argument.getMode());
-            cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
-                    + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")"
-                    + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId()
-                    + "\n" + "在线试玩：http://osugame.online/search.html?q=" + beatmap.getBeatmapSetId()
-                    + "\n" + "预览：https://bloodcat.com/osu/preview.html#" + beatmap.getBeatmapId());
+            int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
+            score.setCount300(objects - (score.getCount100() == null ? 0 : score.getCount100()));
+            score.setMaxCombo(score.getMaxCombo() == -1 ? objects : score.getMaxCombo());
+        } else {
+            OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+            //随意指定300 100,先计算出谱面总物件数
+            int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
+            score.setCount100((int) (100D - searchParam.getAcc()) * 3 * objects / 200);
+            score.setCount300(objects - score.getCount100());
+            score.setMaxCombo(score.getMaxCombo() == -1 ? objects : score.getMaxCombo());
+        }
+        System.out.println(score);
+        //这里默认构造FC成绩，所以不需要处理NPE……吧？
+        OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+        String filename = imgUtil.drawBeatmap(beatmap, searchParam.getMods(), oppaiResult, argument.getMode());
+        cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
+                + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")"
+                + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId()
+                + "\n" + "在线试玩：http://osugame.online/search.html?q=" + beatmap.getBeatmapSetId()
+                + "\n" + "预览：https://bloodcat.com/osu/preview.html#" + beatmap.getBeatmapId());
 
         oneBotManager.sendMsg(cqMsg);
 
@@ -1228,7 +1229,6 @@ public class CqServiceImpl {
     }
 
 
-
     public void roll(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
 
@@ -1384,6 +1384,77 @@ public class CqServiceImpl {
 
         }
         oneBotManager.sendMsg(cqMsg);
+    }
+
+    public void drawAvatar(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
+        List<String> usernames = argument.getUsernames();
+        for (String username : usernames) {
+            Userinfo userinfo = apiManager.getUser(0, username);
+
+            BufferedImage ava = webPageManager.getAvatar(userinfo.getUserId(), 280);
+
+            BufferedImage image = new BufferedImage(400, 450, BufferedImage.TYPE_INT_RGB);
+
+            // 获取Graphics2D对象用于绘制
+            Graphics2D g2d = image.createGraphics();
+
+            // 设置抗锯齿
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            // 填充背景色
+            g2d.setColor(Color.decode("#efecfb"));
+            g2d.fillRect(0, 0, 400, 450);
+
+            // 设置阴影参数 (对应 0 1px 2px rgba(0, 0, 0, 0.15))
+
+            int shadowBlur = 4;       // 模糊半径
+            Color shadowColor = new Color(0, 0, 0, (int) (0.05 * 255)); // rgba(0,0,0,0.15)
+
+            // 绘制阴影
+            g2d.setColor(shadowColor);
+            g2d.fillRoundRect(
+                    54 - shadowBlur,
+                    28 - shadowBlur,
+                    286 + shadowBlur * 2,
+                    286 + shadowBlur * 2,
+                    5, 5
+            );
+            // 绘制方框
+            g2d.setColor(Color.WHITE);
+            g2d.fillRoundRect(
+                    54,
+                    28,
+                    286,
+                    286,
+                    5, 5
+            );
+
+            //绘制头像
+            g2d.drawImage(ava,
+                    60 + (280 - ava.getWidth()) / 2,
+                    34 + (280 - ava.getHeight()) / 2,
+                    ava.getWidth(), ava.getHeight(), null);
+
+            //指定颜色
+            g2d.setPaint(Color.BLACK);
+            Font font = new Font("Aller", Font.PLAIN, 48);
+            //指定字体
+            g2d.setFont(font);
+            //指定坐标
+            FontMetrics fm = g2d.getFontMetrics(font);
+            int width = fm.stringWidth(userinfo.getUserName());
+
+            logger.info("绘制ID 宽度" + width);
+            g2d.drawString(userinfo.getUserName(), 200 - (width / 2), 386);
+
+            g2d.dispose();
+
+            String result = imgUtil.drawImage(image, CompressLevelEnum.不压缩);
+
+            cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
+            oneBotManager.sendMsg(cqMsg);
+        }
+
     }
 
 }

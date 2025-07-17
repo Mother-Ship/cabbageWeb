@@ -382,6 +382,10 @@ public class CqController {
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.ROLE});
                                     cqService.setRole(cqMsg);
                                     break;
+                                case "ava":
+                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME_LIST});
+                                    cqService.drawAvatar(cqMsg);
+                                    break;
 
                                 case "time":
                                     cqService.time(cqMsg);

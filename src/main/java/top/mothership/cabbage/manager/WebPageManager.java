@@ -104,7 +104,7 @@ public class WebPageManager {
      * @param uid the uid
      * @return the avatar
      */
-    public BufferedImage getAvatar(int uid) {
+    public BufferedImage getAvatar(int uid, int maxsize) {
         URL avaurl;
         BufferedImage ava;
         BufferedImage resizedAva;
@@ -125,18 +125,18 @@ public class WebPageManager {
 
             if (ava != null) {
                 //进行缩放
-                if (ava.getHeight() > 128 || ava.getWidth() > 128) {
+                if (ava.getHeight() > maxsize || ava.getWidth() > maxsize) {
                     //获取原图比例，将较大的值除以128，然后把较小的值去除以这个f
                     int resizedHeight;
                     int resizedWidth;
                     if (ava.getHeight() > ava.getWidth()) {
-                        float f = (float) ava.getHeight() / 128;
-                        resizedHeight = 128;
+                        float f = (float) ava.getHeight() / maxsize;
+                        resizedHeight = maxsize;
                         resizedWidth = (int) (ava.getWidth() / f);
                     } else {
-                        float f = (float) ava.getWidth() / 128;
+                        float f = (float) ava.getWidth() / maxsize;
                         resizedHeight = (int) (ava.getHeight() / f);
-                        resizedWidth = 128;
+                        resizedWidth = maxsize;
                     }
                     resizedAva = new BufferedImage(resizedWidth, resizedHeight, ava.getType());
                     Graphics2D g = (Graphics2D) resizedAva.getGraphics();
