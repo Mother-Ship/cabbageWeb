@@ -383,7 +383,7 @@ public class CqController {
                                     cqService.setRole(cqMsg);
                                     break;
                                 case "ava":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME_LIST});
+                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.USERNAME_LIST});
                                     cqService.drawAvatar(cqMsg);
                                     break;
 

@@ -2,6 +2,7 @@ package top.mothership.cabbage.service;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.twelvemonkeys.util.CollectionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1389,10 +1390,16 @@ public class CqServiceImpl {
     public void drawAvatar(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         List<String> usernames = argument.getUsernames();
+        if (usernames == null) {
+            User user = userDAO.getUser(cqMsg.getUserId(), null);
+            usernames = Collections.singletonList(user.getCurrentUname());
+        }
+
         for (String username : usernames) {
             Userinfo userinfo = apiManager.getUser(0, username);
 
             BufferedImage ava = webPageManager.getAvatar(userinfo.getUserId(), 280);
+            BufferedImage flag = webPageManager.getCountryFlag(userinfo.getCountry());
 
             BufferedImage image = new BufferedImage(400, 450, BufferedImage.TYPE_INT_RGB);
 
@@ -1434,6 +1441,9 @@ public class CqServiceImpl {
                     57 + (280 - ava.getWidth()) / 2,
                     31 + (280 - ava.getHeight()) / 2,
                     ava.getWidth(), ava.getHeight(), null);
+           g2d.drawImage(flag,
+                    180,404,
+                    32, 22, null);
 
             //指定颜色
             g2d.setPaint(Color.BLACK);

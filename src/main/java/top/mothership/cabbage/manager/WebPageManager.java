@@ -98,6 +98,25 @@ public class WebPageManager {
         return imageType;
     }
 
+    public BufferedImage getCountryFlag(String country) {
+        URL url;
+        BufferedImage flag;
+        try {
+            url = new URL("http://s.ppy.sh/images/flags/" + country.toLowerCase() + ".gif");
+            flag = ImageIO.read(url);
+
+
+            BufferedImage img = new BufferedImage(flag.getWidth(), flag.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            img.createGraphics().drawImage(flag, 0, 0, null);
+            flag = img;
+
+            return flag;
+        } catch (IOException e) {
+            return null;
+        }
+
+    }
+
     /**
      * Gets avatar.
      *
@@ -426,7 +445,7 @@ public class WebPageManager {
     public int getRank(long rScore, int start, int end) {
         logger.info("正在获取" + rScore + "的排名");
         long endValue = getScore(end);
-        logger.info("获取" + end + "的分数 " +endValue);
+        logger.info("获取" + end + "的分数 " + endValue);
         if (rScore < endValue || endValue == 0) {
             logger.info("玩家的分数" + rScore + "小于" + end + "的分数" + endValue);
             map.clear();
@@ -872,7 +891,7 @@ public class WebPageManager {
             doc = map.get(p);
         }
 
-        String score =  doc.select("tr.ranking-page-table__row")
+        String score = doc.select("tr.ranking-page-table__row")
                 .get(num).child(4).text();
 
         return Long.valueOf(score.replace(",", ""));
