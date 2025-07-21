@@ -974,7 +974,7 @@ public class CqServiceImpl {
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";
                 break;
             case "136312506":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告";
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯赛群。\n请修改群名片为osu! id，并使用!setid 你的osuid来绑定到你的QQ。赛事动态等信息请阅读群公告";
                 break;
             case "693299572":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，特殊进群提醒测试";
