@@ -102,7 +102,7 @@ public class CqAdminServiceImpl {
 //            }
 //        }
     }
-    @UserAuthorityControl({670804973,2591482572L})
+    @UserAuthorityControl({670804973,2591482572L,1172482284})
     public void addUserRole(CqMsg cqMsg) {
 
         Argument argument = cqMsg.getArgument();
@@ -170,7 +170,7 @@ public class CqAdminServiceImpl {
         cqMsg.setMessage(resp);
         oneBotManager.sendMsg(cqMsg);
     }
-    @UserAuthorityControl({670804973,2591482572L})
+    @UserAuthorityControl({670804973,2591482572L,1172482284})
     public void delUserRole(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
         List<String> usernames = argument.getUsernames();
@@ -229,7 +229,7 @@ public class CqAdminServiceImpl {
     }
 
 
-    @UserAuthorityControl({1427922341,670804973,2591482572L})
+    @UserAuthorityControl({1427922341,670804973,2591482572L,1172482284})
     public void addComponent(CqMsg cqMsg) throws IOException {
         Argument argument = cqMsg.getArgument();
         //实验性功能
@@ -772,7 +772,7 @@ public class CqAdminServiceImpl {
         oneBotManager.sendMsg(cqMsg);
     }
 
-    @UserAuthorityControl({496802290,670804973,2591482572L})
+    @UserAuthorityControl({496802290,670804973,2591482572L,1172482284})
     public void roleInfo(CqMsg cqMsg) {
         Argument argument = cqMsg.getArgument();
 
