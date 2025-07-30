@@ -601,18 +601,6 @@ public class CqAdminServiceImpl {
             user = userDAO.getUser(qqInfo.getUserId(), null);
             String card = oneBotManager.getGroupMember(qqInfo.getGroupId(), qqInfo.getUserId()).getData().getCard();
             if (user != null) {
-                //被ban的玩家也有待在用户组里的权利……
-                List<String> roles = Arrays.asList(user.getRole().split(","));
-                switch (String.valueOf(cqResponse.getData().get(0).getGroupId())) {
-                    //如果群号是mp5但是又不在mp5群，做出相应提示
-                    case "201872650":
-                        if (!roles.contains("mp5") && !roles.contains("mp5chart")) {
-                            resp += "QQ： " + qqInfo.getUserId() + " 绑定的id不在mp5用户组，osu! id：" + user.getCurrentUname() + "，用户组：" + user.getRole() + "。\n";
-                        }
-                        break;
-                    default:
-                        break;
-                }
                 Userinfo userFromAPI = apiManager.getUser(0, user.getUserId());
                 if (userFromAPI == null) {
                     user.setBanned(true);
