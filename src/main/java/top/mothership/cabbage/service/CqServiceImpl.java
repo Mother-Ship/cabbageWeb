@@ -599,15 +599,7 @@ public class CqServiceImpl {
         } else {
             String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-            CqResponse response = oneBotManager.sendMsg(cqMsg);
-            if (response.getRetCode() != 0) {
-
-                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
-                resp += "\n由于风控导致图片发送失败，本次成绩使用文字展示";
-                cqMsg.setMessage(resp);
-                oneBotManager.sendMsg(cqMsg);
-
-            }
+            oneBotManager.sendMsg(cqMsg);
         }
     }
 
@@ -1220,8 +1212,7 @@ public class CqServiceImpl {
             case "pr":
                 String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-                CqResponse response = oneBotManager.sendMsg(cqMsg);
-
+                oneBotManager.sendMsg(cqMsg);
                 break;
             default:
                 break;

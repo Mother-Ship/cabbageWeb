@@ -413,31 +413,16 @@ public class CqAdminServiceImpl {
         newMsg.setType("invite");
         newMsg.setMessageType("handleInvite");
         newMsg.setSelfId(cqMsg.getSelfId());
-        //邀请谁的只能在谁那边回消息通过
-        CqResponse cqResponse = oneBotManager.sendMsg(newMsg);
-        if (cqResponse.getRetCode() == 0) {
-            for (CqMsg aList : request.keySet()) {
-                if (aList.getFlag().equals(argument.getFlag())) {
-                    request.replace(aList, "是");
-                    //通过新群邀请时，向消息队列Map中添加一个消息队列对象
-                    SmokeUtil.MSG_QUEUE_MAP.put(aList.getGroupId(), new MsgQueue());
-                }
-            }
-            CqMsg cqMsg1 = new CqMsg();
-            cqMsg1.setMessage("Flag为：" + argument.getFlag() + "的邀请被" + cqMsg.getUserId() + "通过");
-            cqMsg1.setMessageType("private");
-            cqMsg1.setSelfId(cqMsg.getSelfId());
-            for (long l : Overall.ADMIN_LIST) {
-                cqMsg1.setUserId(l);
-                oneBotManager.sendMsg(cqMsg1);
-            }
-        } else {
-            cqMsg.setMessage("通过Flag为：" + argument.getFlag() + "的邀请失败，返回信息：" + cqResponse);
-            oneBotManager.sendMsg(cqMsg);
-            cqMsg.setMessage("通过Flag为：" + argument.getFlag() + "的邀请失败，操作人：" + cqMsg.getUserId() + "，返回信息：" + cqResponse);
-            cqMsg.setMessageType("private");
-            cqMsg.setUserId(1335734657L);
-            oneBotManager.sendMsg(cqMsg);
+
+        oneBotManager.sendMsg(newMsg);
+
+        CqMsg cqMsg1 = new CqMsg();
+        cqMsg1.setMessage("Flag为：" + argument.getFlag() + "的邀请被" + cqMsg.getUserId() + "通过");
+        cqMsg1.setMessageType("private");
+        cqMsg1.setSelfId(cqMsg.getSelfId());
+        for (long l : Overall.ADMIN_LIST) {
+            cqMsg1.setUserId(l);
+            oneBotManager.sendMsg(cqMsg1);
         }
     }
 
