@@ -614,6 +614,10 @@ public class CqAdminServiceImpl {
                     if (!userFromAPI.getUserName().equals(user.getCurrentUname())) {
                         user = userUtil.renameUser(user, userFromAPI.getUserName());
                     }
+                    if (card == null){
+                        logger.warn("QQ {} 在群 {} 名片为空", qqInfo.getUserId(), qqInfo.getGroupId());
+                        continue;
+                    }
                     if (!card.toLowerCase(Locale.CHINA).replace("_", " ")
                             .contains(userFromAPI.getUserName().toLowerCase(Locale.CHINA).replace("_", " "))) {
                         resp += "QQ：" + qqInfo.getUserId() + "的id和名片不一致，osu! id：" + userFromAPI.getUserName() + "，群名片：" + card + "\n";

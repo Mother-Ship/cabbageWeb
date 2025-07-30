@@ -283,8 +283,8 @@ public class ApiManager {
                 //设置请求头
                 httpConnection.setRequestMethod("GET");
                 httpConnection.setRequestProperty("Accept", "application/json");
-                httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1000);
-                httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1000);
+                httpConnection.setConnectTimeout((int) Math.pow(2, retry + 1) * 1500);
+                httpConnection.setReadTimeout((int) Math.pow(2, retry + 1) * 1500);
                 if (httpConnection.getResponseCode() != 200) {
                     logger.info("HTTP GET请求失败: " + httpConnection.getResponseCode() + "，正在重试第" + (retry + 1) + "次");
                     retry++;
