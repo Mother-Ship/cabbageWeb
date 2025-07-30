@@ -103,7 +103,7 @@ public class OneBotManager {
         cqMsg.setSelfId(1335734629L);
 
         OneBotApiRequest request = new OneBotApiRequest();
-        request.setAction("get_group_member_list");
+        request.setAction("get_group_member_info");
         request.setParams(cqMsg);
         request.setEcho(getId());
         String response = OneBotMessageHandler.callApi(request);
