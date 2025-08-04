@@ -30,7 +30,6 @@ public class OsuApiV2Manager {
 
     private final String CLIENT_ID = Overall.CABBAGE_CONFIG.getString("apiV2Id");
     private final String CLIENT_SECRET = Overall.CABBAGE_CONFIG.getString("apiV2Secret");
-    private final String REFRESH_TOKEN = Overall.CABBAGE_CONFIG.getString("refreshToken");
 
 
     private RestTemplate restTemplate = new RestTemplate();
@@ -56,8 +55,9 @@ public class OsuApiV2Manager {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
         requestBody.add("client_id", CLIENT_ID);
         requestBody.add("client_secret", CLIENT_SECRET);
-        requestBody.add("refresh_token", REFRESH_TOKEN);
-        requestBody.add("grant_type", "refresh_token");
+        requestBody.add("grant_type", "client_credentials");
+        requestBody.add("scope", "public");
+        requestBody.add("code", "cabbage");
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(requestBody, headers);
 
