@@ -3,7 +3,6 @@ package top.mothership.cabbage.controller;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import lombok.experimental.var;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +20,9 @@ import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.WebResponse;
+import top.mothership.cabbage.pojo.coolq.CqMsg;
+import top.mothership.cabbage.pojo.coolq.CqResponse;
+import top.mothership.cabbage.pojo.coolq.QQInfo;
 import top.mothership.cabbage.pojo.osu.Userinfo;
 import top.mothership.cabbage.pojo.osu.apiv2.request.UserScoresRequest;
 import top.mothership.cabbage.util.osu.UserUtil;
@@ -57,12 +59,7 @@ public class ApiController {
     private OsuApiV2Manager osuApiV2Manager;
 
     @Autowired
-    public void setCqManager(OneBotManager oneBotManager){
-        this.oneBotManager = oneBotManager;
-    }
-
-    @Autowired
-    public ApiController( UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, UserUtil userUtil, WebPageManager webPageManager, RedisDAO redisDAO) {
+    public ApiController(UserInfoDAO userInfoDAO, ApiManager apiManager, ImgUtil imgUtil, UserDAO userDAO, UserUtil userUtil, WebPageManager webPageManager, RedisDAO redisDAO) {
         this.userInfoDAO = userInfoDAO;
         this.apiManager = apiManager;
         this.imgUtil = imgUtil;
@@ -72,23 +69,13 @@ public class ApiController {
         this.redisDAO = redisDAO;
     }
 
-
-    private static int[][] multiple(int[][] a) {
-        int[][] c = new int[1200][1200];
-        for (int i = 0; i < 1200; i++) {
-            for (int j = 0; j < 1200; j++) {
-                for (int k = 0; k < 1200; k++) {
-                    c[i][j] += a[i][k] * a[k][j];
-                }
-            }
-        }
-        return c;
+    @Autowired
+    public void setCqManager(OneBotManager oneBotManager) {
+        this.oneBotManager = oneBotManager;
     }
 
     @RequestMapping(value = "/test", method = RequestMethod.GET)
-
     public String getCode() {
-
         UserScoresRequest request = new UserScoresRequest();
         request.setUserId("15650011");
         request.setOffset(0);
@@ -155,9 +142,10 @@ public class ApiController {
         List<Integer> list = userDAO.listUserIdByRole(null, false);
         return new Gson().toJson(list);
     }
-    @RequestMapping(value = "/import", method = RequestMethod.POST)
-    public String addTodayUserinfo(@RequestBody List<Userinfo> list){
-        oneBotManager.warn("收到了批量导入的用户数据共"+list.size()+"条");
+
+    @RequestMapping(value = "/importInfo", method = RequestMethod.POST)
+    public String addTodayUserinfo(String info) {
+        oneBotManager.warn(info);
 
         return "OK";
     }
@@ -291,16 +279,16 @@ public class ApiController {
         quickSort(nowUserinfoList, 0, nowUserinfoList.size() - 1, criteria);
         Userinfo max = nowUserinfoList.get(nowUserinfoList.size() - 1);
         Userinfo min = nowUserinfoList.get(0);
-         long  maxValue ;
+        long maxValue;
         switch (criteria) {
             case "tth":
                 //划下X轴
-                if(end.equals(0)) {
+                if (end.equals(0)) {
                     maxValue = max.getCount100() + max.getCount300() + max.getCount50() - min.getCount50() - min.getCount300() - min.getCount100();
-                }else{
+                } else {
                     maxValue = end;
                 }
-                if(grainSize.equals(0)) grainSize = 10000;
+                if (grainSize.equals(0)) grainSize = 10000;
                 for (long i = start; i <= maxValue; i += grainSize) {
                     xAxis.add(i);
                 }
@@ -318,12 +306,12 @@ public class ApiController {
                 }
                 break;
             case "pc":
-                if(end.equals(0)){
+                if (end.equals(0)) {
                     maxValue = max.getPlayCount() - min.getPlayCount();
-                }else{
+                } else {
                     maxValue = end;
                 }
-                if(grainSize.equals(0)) grainSize = 20;
+                if (grainSize.equals(0)) grainSize = 20;
                 for (long i = start; i <= maxValue; i += grainSize) {
                     xAxis.add(i);
                 }
@@ -341,13 +329,13 @@ public class ApiController {
                 }
                 break;
             case "rs":
-                if(end.equals(0)) {
+                if (end.equals(0)) {
                     maxValue = max.getRankedScore() - min.getRankedScore();
-                }else{
+                } else {
                     maxValue = end;
                 }
-                if(grainSize.equals(0)) grainSize = 1000000;
-                for (long i = start; i <  maxValue; i +=grainSize) {
+                if (grainSize.equals(0)) grainSize = 1000000;
+                for (long i = start; i < maxValue; i += grainSize) {
                     xAxis.add(i);
                 }
                 yAxisRaw = new Integer[xAxis.size() - 1];
@@ -363,13 +351,13 @@ public class ApiController {
                     }
                 }
             case "tts":
-                if(end.equals(0)) {
+                if (end.equals(0)) {
                     maxValue = max.getTotalScore() - min.getTotalScore();
-                }else{
+                } else {
                     maxValue = end;
                 }
-                if(grainSize.equals(0)) grainSize = 10000000;
-                for (long i = start; i <  maxValue; i += grainSize) {
+                if (grainSize.equals(0)) grainSize = 10000000;
+                for (long i = start; i < maxValue; i += grainSize) {
                     xAxis.add(i);
                 }
                 yAxisRaw = new Integer[xAxis.size() - 1];
@@ -394,9 +382,9 @@ public class ApiController {
      */
     @RequestMapping(value = "/pp_chart.php", method = RequestMethod.GET)
     @CrossOrigin
-    public String kongouHikari(@RequestParam("id") String id,@RequestParam("mode") Integer mode) {
-        Userinfo userinfo = apiManager.getUser(0,id);
-        List<Userinfo> list = userInfoDAO.listUserInfoByUserIdAndMode(userinfo.getUserId(),mode);
+    public String kongouHikari(@RequestParam("id") String id, @RequestParam("mode") Integer mode) {
+        Userinfo userinfo = apiManager.getUser(0, id);
+        List<Userinfo> list = userInfoDAO.listUserInfoByUserIdAndMode(userinfo.getUserId(), mode);
         PPChartVo vo = new PPChartVo();
         List<String> xAxis = new ArrayList<>(list.size());
         List<Float> yAxis = new ArrayList<>(list.size());
@@ -481,34 +469,4 @@ public class ApiController {
         arr.set(i, arr.get(j));
         arr.set(j, temp);
     }
-//    @RequestMapping(value = "/upload",method = RequestMethod.POST)
-//    @CrossOrigin(origins = "http://localhost")
-//    public String upload(@RequestParam(value = "myfile") MultipartFile file) throws Exception {
-//        String path = "C:\\coolq Pro\\data\\image\\resource\\db\\";
-//        String fileName = file.getOriginalFilename();
-//        String resp;
-//
-//        if(!fileName.matches("(.*).db$")){
-//            logger.warn("检测到文件扩展名错误的文件上传请求：文件名为"+fileName);
-//            //返回字符串给JS进行弹窗
-//            return "文件类型错误";
-////            throw new Exception("类型错误");
-//        }
-//        File targetFile = new File(path, fileName);
-//        if (!targetFile.exists()){
-//            targetFile.mkdirs();
-//            // 保存
-//            resp = "服务端消息：上传成功";
-//        }else{
-//            resp = "服务端消息：覆盖成功";
-//        }
-//        try {
-//            logger.info("检测到文件上传请求：文件名为"+fileName);
-//            file.transferTo(targetFile);
-//        }
-//        catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return resp;
-//    }
 }

@@ -481,6 +481,12 @@ public class ParameterVerifyAspect {
                                 case BOUND:
                                     argument.setBound(firstParam);
                                     //以后可以考虑大规模重构，把用户组抽出来做一个表
+                                case USERNAME_LIST:
+                                    if (firstParam != null) {
+                                        String[] usernames = firstParam.split(",");
+                                        argument.setUsernames(Arrays.asList(usernames));
+                                    }
+                                    break;
                                 default:
                                     break;
                             }

@@ -366,16 +366,7 @@ public class CqController {
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
                                     cqService.recentPassed(cqMsg);
                                     break;
-                                case "bns":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME});
-                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
-                                    cqService.getBonusPP(cqMsg);
-                                    break;
-                                case "mybns":
-                                case "bnsme":
-                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.MODE});
-                                    cqService.getBonusPP(cqMsg);
-                                    break;
+
                                 case "mode":
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.MODE});
                                     cqService.setMode(cqMsg);
@@ -391,20 +382,15 @@ public class CqController {
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.ROLE});
                                     cqService.setRole(cqMsg);
                                     break;
-                                case "elo":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME});
-                                    cqService.getElo(cqMsg);
+                                case "ava":
+                                    cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.USERNAME_LIST});
+                                    cqService.drawAvatar(cqMsg);
                                     break;
-                                case "myelo":
-                                case "elome":
-                                    cqService.getElo(cqMsg);
-                                    break;
+
                                 case "time":
                                     cqService.time(cqMsg);
                                     break;
-                                case "switchborder":
-                                    cqService.switchBorder(cqMsg);
-                                    break;
+
                                 default:
                                     doLog = false;
                                     break;

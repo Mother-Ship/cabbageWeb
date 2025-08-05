@@ -2,6 +2,7 @@ package top.mothership.cabbage.service;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.twelvemonkeys.util.CollectionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +23,13 @@ import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.CqResponse;
 import top.mothership.cabbage.pojo.coolq.QQInfo;
-import top.mothership.cabbage.pojo.elo.Elo;
-import top.mothership.cabbage.pojo.elo.EloChange;
 import top.mothership.cabbage.pojo.osu.*;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -37,6 +38,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.List;
 
 /**
  * 普通命令进行业务处理的类
@@ -63,7 +65,7 @@ public class CqServiceImpl {
      *
      * @param
      * @param apiManager     the api manager
-     * @param oneBotManager      the cq manager
+     * @param oneBotManager  the cq manager
      * @param webPageManager 网页相关抓取工具
      * @param userDAO        the user dao
      * @param userInfoDAO    the user info dao
@@ -597,15 +599,7 @@ public class CqServiceImpl {
         } else {
             String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
             cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-            CqResponse response = oneBotManager.sendMsg(cqMsg);
-            if (response.getRetCode() != 0) {
-
-                String resp = scoreUtil.genScoreString(score, beatmap, userFromAPI.getUserName(), count);
-                resp += "\n由于风控导致图片发送失败，本次成绩使用文字展示";
-                cqMsg.setMessage(resp);
-                oneBotManager.sendMsg(cqMsg);
-
-            }
+            oneBotManager.sendMsg(cqMsg);
         }
     }
 
@@ -753,47 +747,47 @@ public class CqServiceImpl {
         logger.info("开始处理" + cqMsg.getUserId() + "进行的谱面搜索，关键词为：" + searchParam);
 
 
-            if (!beatmap.getMode().equals(0)) {
-                cqMsg.setMessage("根据提供的bid找到了一张" + scoreUtil.convertGameModeToString(beatmap.getMode()) + "模式的专谱。由于oppai不支持其他模式，因此白菜也只有主模式支持!search命令。");
-                oneBotManager.sendMsg(cqMsg);
-                return;
-            }
-            if (searchParam.getMods() == null) {
-                //在search中，未指定mod即视为none
-                searchParam.setMods(0);
-            }
+        if (!beatmap.getMode().equals(0)) {
+            cqMsg.setMessage("根据提供的bid找到了一张" + scoreUtil.convertGameModeToString(beatmap.getMode()) + "模式的专谱。由于oppai不支持其他模式，因此白菜也只有主模式支持!search命令。");
+            oneBotManager.sendMsg(cqMsg);
+            return;
+        }
+        if (searchParam.getMods() == null) {
+            //在search中，未指定mod即视为none
+            searchParam.setMods(0);
+        }
 
-            Score score = new Score();
+        Score score = new Score();
 
-            //逆计算stdacc
-            score.setEnabledMods(searchParam.getMods());
-            score.setCountMiss(searchParam.getCountMiss());
-            score.setMaxCombo(searchParam.getMaxCombo());
-            score.setCount50(searchParam.getCount50());
-            if (searchParam.getAcc() == null) {
-                score.setCount100(searchParam.getCount100());
-                score.setCount300(-1);
-                OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
-                int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
-                score.setCount300(objects - (score.getCount100() == null ? 0 : score.getCount100()));
-                score.setMaxCombo(score.getMaxCombo() == -1 ? objects : score.getMaxCombo());
-            } else {
-                OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
-                //随意指定300 100,先计算出谱面总物件数
-                int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
-                score.setCount100((int) (100D - searchParam.getAcc()) * 3 * objects / 200);
-                score.setCount300(objects - score.getCount100());
-                score.setMaxCombo(score.getMaxCombo() == -1 ? objects : score.getMaxCombo());
-            }
-            System.out.println(score);
-            //这里默认构造FC成绩，所以不需要处理NPE……吧？
+        //逆计算stdacc
+        score.setEnabledMods(searchParam.getMods());
+        score.setCountMiss(searchParam.getCountMiss());
+        score.setMaxCombo(searchParam.getMaxCombo());
+        score.setCount50(searchParam.getCount50());
+        if (searchParam.getAcc() == null) {
+            score.setCount100(searchParam.getCount100());
+            score.setCount300(-1);
             OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
-            String filename = imgUtil.drawBeatmap(beatmap, searchParam.getMods(), oppaiResult, argument.getMode());
-            cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
-                    + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")"
-                    + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId()
-                    + "\n" + "在线试玩：http://osugame.online/search.html?q=" + beatmap.getBeatmapSetId()
-                    + "\n" + "预览：https://bloodcat.com/osu/preview.html#" + beatmap.getBeatmapId());
+            int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
+            score.setCount300(objects - (score.getCount100() == null ? 0 : score.getCount100()));
+            score.setMaxCombo(score.getMaxCombo() == -1 ? objects : score.getMaxCombo());
+        } else {
+            OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+            //随意指定300 100,先计算出谱面总物件数
+            int objects = oppaiResult.getNumCircles() + oppaiResult.getNumSliders() + oppaiResult.getNumSpinners();
+            score.setCount100((int) (100D - searchParam.getAcc()) * 3 * objects / 200);
+            score.setCount300(objects - score.getCount100());
+            score.setMaxCombo(score.getMaxCombo() == -1 ? objects : score.getMaxCombo());
+        }
+        System.out.println(score);
+        //这里默认构造FC成绩，所以不需要处理NPE……吧？
+        OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
+        String filename = imgUtil.drawBeatmap(beatmap, searchParam.getMods(), oppaiResult, argument.getMode());
+        cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]" + "\n" + "https://osu.ppy.sh/b/" + beatmap.getBeatmapId() + "\n"
+                + beatmap.getArtist() + " - " + beatmap.getTitle() + "[" + beatmap.getVersion() + "](" + beatmap.getCreator() + ")"
+                + "\n" + "http://bloodcat.com/osu/s/" + beatmap.getBeatmapSetId()
+                + "\n" + "在线试玩：http://osugame.online/search.html?q=" + beatmap.getBeatmapSetId()
+                + "\n" + "预览：https://bloodcat.com/osu/preview.html#" + beatmap.getBeatmapId());
 
         oneBotManager.sendMsg(cqMsg);
 
@@ -972,7 +966,7 @@ public class CqServiceImpl {
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到第三届MP4杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告。";
                 break;
             case "136312506":
-                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯赛群。\n请修改群名片为osu! id，并且仔细阅读群公告";
+                resp = "[CQ:at,qq=" + cqMsg.getUserId() + "],欢迎来到MP5杯赛群。\n请修改群名片为osu! id，并使用!setid 你的osuid来绑定到你的QQ。赛事动态等信息请阅读群公告";
                 break;
             case "693299572":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，特殊进群提醒测试";
@@ -1218,201 +1212,12 @@ public class CqServiceImpl {
             case "pr":
                 String filename = imgUtil.drawResult(userFromAPI, score, beatmap, argument.getMode());
                 cqMsg.setMessage("[CQ:image,file=base64://" + filename + "]");
-                CqResponse response = oneBotManager.sendMsg(cqMsg);
-
+                oneBotManager.sendMsg(cqMsg);
                 break;
             default:
                 break;
         }
 
-    }
-
-    @GroupAuthorityControl
-    public void getBonusPP(CqMsg cqMsg) {
-        //为什么这个方法会被切面拦截两次。。
-        //2018-2-28 17:25:09 卧槽 没写break 我是sb
-        Userinfo userFromAPI = null;
-        User user;
-        int num = 0;
-        boolean text = true;
-        Argument argument = cqMsg.getArgument();
-        if (argument.getMode() == null) {
-            argument.setMode(0);
-        }
-        switch (argument.getSubCommandLowCase()) {
-            case "bns":
-                String username = argument.getUsername();
-                //处理彩蛋
-                if ("白菜".equals(username)) {
-                    cqMsg.setMessage("你以为会有彩蛋吗x");
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                userFromAPI = apiManager.getUser(argument.getMode(), username);
-                if (userFromAPI == null) {
-                    cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                if (userFromAPI.getUserId() == 3) {
-                    cqMsg.setMessage(Tip.QUERY_BANCHO_BOT);
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                user = userDAO.getUser(null, userFromAPI.getUserId());
-                if (user == null) {
-                    logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-                    user = userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), 0L, Overall.DEFAULT_ROLE);
-                }
-                if (user.isBanned()) {
-                    cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-
-                break;
-            case "mybns":
-            case "bnsme":
-                user = userDAO.getUser(cqMsg.getUserId(), null);
-                if (user == null) {
-                    cqMsg.setMessage(Tip.USER_NOT_BIND);
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                user.setLastActiveDate(LocalDate.now());
-                userDAO.updateUser(user);
-                if (user.isBanned()) {
-                    cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
-                if (userFromAPI == null) {
-                    cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                break;
-            default:
-                break;
-        }
-        //获取页面：getuser
-        List<Score> bps = apiManager.getBP(argument.getMode(), userFromAPI.getUserName());
-
-        double scorepp = calculateScorePP(bps);
-        double totalpp = userFromAPI.getPpRaw();
-        double bonuspp = totalpp - scorepp;
-
-
-        int scoreCount = ((int) (Math.log10(-(bonuspp / 416.6667D) + 1.0D) / Math.log10(0.995D)));
-        String scoreCountS = (scoreCount == 0 && bonuspp > 0.0D) || scoreCount > 1000 ? "1000+" : String.valueOf(scoreCount);
-        bonuspp = Math.min(bonuspp, 413.894179759);
-        String resp = "玩家" + userFromAPI.getUserName() + "在模式" + scoreUtil.convertGameModeToString(argument.getMode())
-                + "估算的BonusPP为：" + new DecimalFormat("#0.00").format(bonuspp)
-                + "\n线性回归估算出的ScorePP（所有成绩提供的PP）为：" + new DecimalFormat("#0.00").format(scorepp)
-                + "\n总PP为：" + new DecimalFormat("#0.00").format(userFromAPI.getPpRaw())
-                + "\n基于估算的Bonus PP反向计算，玩家的成绩数是：" + scoreCountS
-                + "\n基于https://github.com/RoanH/osu-BonusPP项目，适配了2024-03-19的最新Bonus PP改动";
-        cqMsg.setMessage(resp);
-        oneBotManager.sendMsg(cqMsg);
-
-    }
-
-    @GroupAuthorityControl
-    public void getElo(CqMsg cqMsg) {
-        Userinfo userFromAPI = null;
-        User user;
-        int num = 0;
-        boolean text = true;
-        Argument argument = cqMsg.getArgument();
-        if (argument.getMode() == null) {
-            argument.setMode(0);
-        }
-        switch (argument.getSubCommandLowCase()) {
-            case "elo":
-                String username = argument.getUsername();
-                //处理彩蛋
-                if ("白菜".equals(username)) {
-                    cqMsg.setMessage("你以为会有彩蛋吗x");
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                userFromAPI = apiManager.getUser(argument.getMode(), username);
-                if (userFromAPI == null) {
-                    cqMsg.setMessage(String.format(Tip.USERNAME_GET_FAILED, argument.getUsername()));
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                if (userFromAPI.getUserId() == 3) {
-                    cqMsg.setMessage(Tip.QUERY_BANCHO_BOT);
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                user = userDAO.getUser(null, userFromAPI.getUserId());
-                if (user == null) {
-                    logger.info("玩家" + userFromAPI.getUserName() + "初次使用本机器人，开始登记");
-                    user = userUtil.registerUser(userFromAPI.getUserId(), argument.getMode(), 0L, Overall.DEFAULT_ROLE);
-                }
-                if (user.isBanned()) {
-                    cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-
-                break;
-            case "myelo":
-            case "elome":
-                user = userDAO.getUser(cqMsg.getUserId(), null);
-                if (user == null) {
-                    cqMsg.setMessage(Tip.USER_NOT_BIND);
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                user.setLastActiveDate(LocalDate.now());
-                userDAO.updateUser(user);
-                if (user.isBanned()) {
-                    cqMsg.setMessage(Tip.USER_IS_BANNED);
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                userFromAPI = apiManager.getUser(argument.getMode(), user.getUserId());
-                if (userFromAPI == null) {
-                    cqMsg.setMessage(String.format(Tip.USER_GET_FAILED, cqMsg.getUserId(), user.getUserId()));
-                    oneBotManager.sendMsg(cqMsg);
-                    return;
-                }
-                break;
-            default:
-                return;
-        }
-        //获取页面：getuser
-        Elo elo = webPageManager.getElo(userFromAPI.getUserId());
-        EloChange eloChange = webPageManager.getEloChange(userFromAPI.getUserId());
-        String resp;
-        if (elo == null) {
-            resp = "没有找到你的ELO信息。";
-
-        } else {
-            resp = "玩家" + userFromAPI.getUserName() + "的ELO为：" + elo.getElo()
-                    + "\n由PP计算的初始ELO为：" + elo.getInit_elo();
-            if (elo.getRank() != null) {
-                resp += "\n排名为：" + elo.getRank();
-            }
-            if (Objects.equals(elo.getCode(), 40004)) {
-                resp += "\n您的初始ELO仅供参考，请尽快参加比赛获得真实ELO数据！" +
-                        "\nELO周赛火热进行中，QQ群：738401694";
-            }
-        }
-        if (eloChange.getElo_change() != null) {
-            resp += "\n最近一次ELO更改：" + eloChange.getElo_change();
-            resp += "\nMP Link：http://otsu.fun/matches/" + eloChange.getMatch_id();
-        } else {
-            resp += "\n最近没有ELO变动。";
-        }
-
-        cqMsg.setMessage(resp);
-        oneBotManager.sendMsg(cqMsg);
-        return;
     }
 
 
@@ -1433,7 +1238,7 @@ public class CqServiceImpl {
             cqMsg.setMessage(String.valueOf(new Random().nextInt(100) + 1));
         }
         if (cqMsg.getGroupId() != null) {
-            cqMsg.setMessage("[CQ:at,qq=" + cqMsg.getUserId() + "]" + cqMsg.getMessage());
+            cqMsg.setMessage("[CQ:at,qq=" + cqMsg.getUserId() + "] " + cqMsg.getMessage());
         }
         oneBotManager.sendMsg(cqMsg);
     }
@@ -1453,9 +1258,7 @@ public class CqServiceImpl {
 
     @GroupAuthorityControl
     public void myRole(CqMsg cqMsg) {
-        Argument argument = cqMsg.getArgument();
-        String username;
-        Userinfo userFromAPI = null;
+
         User user;
         user = userDAO.getUser(cqMsg.getUserId(), null);
         if (user == null) {
@@ -1464,85 +1267,11 @@ public class CqServiceImpl {
             cqMsg.setMessage("你的当前用户组有：" + user.getRole() + "，主显用户组为：" + user.getMainRole());
         }
         oneBotManager.sendMsg(cqMsg);
-        return;
 
     }
 
     public void pretreatmentParameterForBPCommand(CqMsg cqMsg) {
 
-    }
-
-    /**
-     * 尝试计算非Bonus PP
-     *
-     * @param s The list of the player's top 100 scores
-     * @return The amount of non-bonus PP this player has
-     */
-    private double calculateScorePP(List<Score> s) {
-        double scorepp = 0.0D;
-        for (int i = 0; i < s.size(); i++) {
-            scorepp += s.get(i).getPp() * Math.pow(0.95D, i);
-        }
-        return scorepp + extraPolatePPRemainder(s);
-    }
-
-    /**
-     * 计算BP外的PP，Top玩家可能这个值非常大，如果BP数目不到100返回0
-     *
-     * @param s The list of the player's top scores
-     * @return The amount of PP the player has from non-top-100 scores
-     */
-    private double extraPolatePPRemainder(List<Score> s) {
-        if (s.size() < 100) {
-            return 0D;
-        }
-        double[] b = calculateLinearRegression(s);
-        double n = s.size() + 1;
-        double pp = 0D;
-        while (true) {
-            double val = (b[0] + b[1] * n) * Math.pow(0.95D, n);
-            if (val < 0D) {
-                break;
-            }
-            pp += val;
-            n++;
-        }
-        return pp;
-    }
-
-    /**
-     * 用线性回归等式推断BP外的成绩
-     * <pre>
-     * The following formulas are used:
-     * B1 = Ox,y / Ox^2
-     * B0 = Uy - B1 * Ux
-     * Ox,y = (1/N) * 'sigma(N,i=1)'((Xi - Ux)(Yi - Uy))
-     * Ox^2 = (1/N) * 'sigma(N,i=1)'((Xi - U)^2)
-     * </pre>
-     *
-     * @param s 前100BP
-     * @return 线性回归方程的两个参数： y = b0 + b1 * x
-     */
-    private double[] calculateLinearRegression(List<Score> s) {
-        double sumOxy = 0.0D;
-        double sumOx2 = 0.0D;
-        double avgX = 0.0D;
-        double avgY = 0.0D;
-        for (Score score : s) {
-            avgX++;
-            avgY += score.getPp();
-        }
-        avgX = avgX / s.size();
-        avgY = avgY / s.size();
-        double n = 0;
-        for (Score sc : s) {
-            sumOxy += (n - avgX) * (sc.getPp() - avgY);
-            sumOx2 += Math.pow(n - avgX, 2.0D);
-            n++;
-        }
-        double Oxy = sumOxy / s.size();
-        double Ox2 = sumOx2 / s.size();
-        return new double[]{avgY - (Oxy / Ox2) * avgX, Oxy / Ox2};
     }
 
     public void setId(CqMsg cqMsg) {
@@ -1649,26 +1378,84 @@ public class CqServiceImpl {
         oneBotManager.sendMsg(cqMsg);
     }
 
-    @GroupAuthorityControl
-    public void switchBorder(CqMsg cqMsg) {
-        User user;
-        user = userDAO.getUser(cqMsg.getUserId(), null);
-        if (user == null) {
-            cqMsg.setMessage(Tip.USER_NOT_BIND);
-            oneBotManager.sendMsg(cqMsg);
-            return;
-        }
-        user.setLastActiveDate(LocalDate.now());
-        userDAO.updateUser(user);
-        if (user.isBanned()) {
-            cqMsg.setMessage(Tip.USER_IS_BANNED);
-            oneBotManager.sendMsg(cqMsg);
-            return;
+    public void drawAvatar(CqMsg cqMsg) {
+        Argument argument = cqMsg.getArgument();
+        List<String> usernames = argument.getUsernames();
+        if (usernames == null) {
+            User user = userDAO.getUser(cqMsg.getUserId(), null);
+            usernames = Collections.singletonList(user.getCurrentUname());
         }
 
-        user.setUseEloBorder(!user.getUseEloBorder());
-        userDAO.updateUser(user);
-        cqMsg.setMessage("更新成功：你已修改为" + (user.getUseEloBorder() ? "" : "不") + "使用ELO边框");
-        oneBotManager.sendMsg(cqMsg);
+        for (String username : usernames) {
+            Userinfo userinfo = apiManager.getUser(0, username);
+
+            BufferedImage ava = webPageManager.getAvatar(userinfo.getUserId(), 280);
+            BufferedImage flag = webPageManager.getCountryFlag(userinfo.getCountry());
+
+            BufferedImage image = new BufferedImage(400, 450, BufferedImage.TYPE_INT_RGB);
+
+            // 获取Graphics2D对象用于绘制
+            Graphics2D g2d = image.createGraphics();
+
+            // 设置抗锯齿
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            // 填充背景色
+            g2d.setColor(Color.decode("#efecfb"));
+            g2d.fillRect(0, 0, 400, 450);
+
+            // 设置阴影参数 (对应 0 1px 2px rgba(0, 0, 0, 0.15))
+
+            int shadowBlur = 4;       // 模糊半径
+            Color shadowColor = new Color(0, 0, 0, (int) (0.05 * 255)); // rgba(0,0,0,0.15)
+
+            // 绘制阴影
+            g2d.setColor(shadowColor);
+            g2d.fillRoundRect(
+                    54 - shadowBlur,
+                    28 - shadowBlur,
+                    286 + shadowBlur * 2,
+                    286 + shadowBlur * 2,
+                    5, 5
+            );
+            // 绘制方框
+            g2d.setColor(Color.WHITE);
+            g2d.fillRoundRect(
+                    54,
+                    28,
+                    286,
+                    286,
+                    5, 5
+            );
+
+            //绘制头像
+            g2d.drawImage(ava,
+                    57 + (280 - ava.getWidth()) / 2,
+                    31 + (280 - ava.getHeight()) / 2,
+                    ava.getWidth(), ava.getHeight(), null);
+           g2d.drawImage(flag,
+                    180,404,
+                    32, 22, null);
+
+            //指定颜色
+            g2d.setPaint(Color.BLACK);
+            Font font = new Font("Aller", Font.PLAIN, 48);
+            //指定字体
+            g2d.setFont(font);
+            //指定坐标
+            FontMetrics fm = g2d.getFontMetrics(font);
+            int width = fm.stringWidth(userinfo.getUserName());
+
+            logger.info("绘制ID 宽度" + width);
+            g2d.drawString(userinfo.getUserName(), 200 - (width / 2), 376);
+
+            g2d.dispose();
+
+            String result = imgUtil.drawImage(image, CompressLevelEnum.不压缩);
+
+            cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
+            oneBotManager.sendMsg(cqMsg);
+        }
+
     }
+
 }

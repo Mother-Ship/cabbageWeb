@@ -55,15 +55,13 @@ public class WebPageManager {
     private static final String USERPAGE_URL = "https://osu.ppy.sh/u/";
     private static final String USERPAGE_INNER_URL = "https://osu.ppy.sh/pages/include/profile-general.php?u=";
     private static final String SAYOBOT_DOWN_URL = "https://txy1.sayobot.cn/beatmaps/download/full/";
-    private static final String BLOODCAT_BG_URL = "http://bloodcat.com/osu/i/";
     private static final String OSU_FILE_URL = "https://osu.ppy.sh/osu/";
     private static final String OSU_DIRECT_SEARCH_URL = "https://osu.direct/api/v2/search";
     private static final String PP_PLUS_URL = "http://syrin.me/pp+/u/";
     private static final String OSU_PROFILE_DETAIL_URL = "https://osu.ppy.sh/pages/include/profile-general.php";
     private static final String OSU_CHAN_URL = "https://syrin.me/osuchan/u/";
     private static final String OSU_UPDATE_INFO_URL = "https://osu.ppy.sh/web/check-updates.php?action=check&stream=stable40";
-    private static final MediaType JSON
-            = MediaType.parse("application/json; charset=utf-8");
+
     private static OkHttpClient client = new OkHttpClient();
 
     @Autowired
@@ -100,13 +98,32 @@ public class WebPageManager {
         return imageType;
     }
 
+    public BufferedImage getCountryFlag(String country) {
+        URL url;
+        BufferedImage flag;
+        try {
+            url = new URL("http://s.ppy.sh/images/flags/" + country.toLowerCase() + ".gif");
+            flag = ImageIO.read(url);
+
+
+            BufferedImage img = new BufferedImage(flag.getWidth(), flag.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            img.createGraphics().drawImage(flag, 0, 0, null);
+            flag = img;
+
+            return flag;
+        } catch (IOException e) {
+            return null;
+        }
+
+    }
+
     /**
      * Gets avatar.
      *
      * @param uid the uid
      * @return the avatar
      */
-    public BufferedImage getAvatar(int uid) {
+    public BufferedImage getAvatar(int uid, int maxsize) {
         URL avaurl;
         BufferedImage ava;
         BufferedImage resizedAva;
@@ -127,18 +144,18 @@ public class WebPageManager {
 
             if (ava != null) {
                 //进行缩放
-                if (ava.getHeight() > 128 || ava.getWidth() > 128) {
+                if (ava.getHeight() > maxsize || ava.getWidth() > maxsize) {
                     //获取原图比例，将较大的值除以128，然后把较小的值去除以这个f
                     int resizedHeight;
                     int resizedWidth;
                     if (ava.getHeight() > ava.getWidth()) {
-                        float f = (float) ava.getHeight() / 128;
-                        resizedHeight = 128;
+                        float f = (float) ava.getHeight() / maxsize;
+                        resizedHeight = maxsize;
                         resizedWidth = (int) (ava.getWidth() / f);
                     } else {
-                        float f = (float) ava.getWidth() / 128;
+                        float f = (float) ava.getWidth() / maxsize;
                         resizedHeight = (int) (ava.getHeight() / f);
-                        resizedWidth = 128;
+                        resizedWidth = maxsize;
                     }
                     resizedAva = new BufferedImage(resizedWidth, resizedHeight, ava.getType());
                     Graphics2D g = (Graphics2D) resizedAva.getGraphics();
@@ -426,8 +443,11 @@ public class WebPageManager {
      * @return the rank
      */
     public int getRank(long rScore, int start, int end) {
+        logger.info("正在获取" + rScore + "的排名");
         long endValue = getScore(end);
+        logger.info("获取" + end + "的分数 " + endValue);
         if (rScore < endValue || endValue == 0) {
+            logger.info("玩家的分数" + rScore + "小于" + end + "的分数" + endValue);
             map.clear();
             return 0;
         }
@@ -871,8 +891,8 @@ public class WebPageManager {
             doc = map.get(p);
         }
 
-        String score =  doc.select("tr.ranking-page-table__row")
-                .get(num).child(5).text();
+        String score = doc.select("tr.ranking-page-table__row")
+                .get(num).child(4).text();
 
         return Long.valueOf(score.replace(",", ""));
 

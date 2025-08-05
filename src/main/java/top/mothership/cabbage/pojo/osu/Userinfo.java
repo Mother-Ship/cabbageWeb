@@ -29,6 +29,7 @@ public class Userinfo {
     private int countRankS;
     private int countRankSh;
     private int countRankA;
+    private String country;
     private LocalDate queryDate;
 
 }

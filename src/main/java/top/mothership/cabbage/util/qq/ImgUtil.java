@@ -109,7 +109,7 @@ public class ImgUtil {
      * @return Base64字串 string
      */
     public String drawUserInfo(Userinfo userFromAPI, Userinfo userInDB, String role, int day, boolean approximate, int scoreRank, Integer mode) {
-        BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId());
+        BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId(), 128);
         BufferedImage bg = null;
         BufferedImage layout = getCopyImage(get("layout.png"));
         BufferedImage scoreRankBG = getCopyImage(get("scorerank.png"));
@@ -983,7 +983,7 @@ public class ImgUtil {
         Image bg2;
         boolean unicode = false;
         //头像
-        BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId());
+        BufferedImage ava = webPageManager.getAvatar(userFromAPI.getUserId(), 128);
         OppaiResult oppaiResult = scoreUtil.calcPP(score, beatmap);
 
         BufferedImage bg = webPageManager.getBG(beatmap);
