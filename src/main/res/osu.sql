@@ -92,7 +92,7 @@ CREATE TABLE `userinfo` (
   `queryDate` date DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `idx_user_id` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=80966 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 #
 # Structure for table "userrole"
