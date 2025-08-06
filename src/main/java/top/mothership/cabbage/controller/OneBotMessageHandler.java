@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RestController;
 import top.mothership.cabbage.constant.pattern.CQCodePattern;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
@@ -20,6 +21,7 @@ import java.util.regex.Matcher;
 
 
 @RequiredArgsConstructor
+@Component
 public class OneBotMessageHandler {
 
 
