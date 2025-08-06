@@ -389,11 +389,13 @@ public class CqServiceImpl {
             for (int i = 0; i < bpListMixedMode.size(); i++) {
                 //双重for
                 for (int j = 0; j < bpListMixedMode.get(i).size(); j++) {
-                    if (bpListMixedMode.get(i).get(j).getDate().toInstant().isAfter(Instant.now().minus(1, ChronoUnit.DAYS))) {
+                    if (scoreUtil.toInstant(bpListMixedMode.get(i).get(j).getDate())
+                            .isAfter(Instant.now().minus(1, ChronoUnit.DAYS))) {
                         bpListMixedMode.get(i).get(j).setBpId(j);
                         //对BP进行遍历，请求API将名称写入
                         Beatmap map = apiManager.getBeatmap(bpListMixedMode.get(i).get(j).getBeatmapId());
-                        bpListMixedMode.get(i).get(j).setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
+                        bpListMixedMode.get(i).get(j).setBeatmapName(
+                                map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");
                         todayBP.add(bpListMixedMode.get(i).get(j));
                     }
                 }
@@ -424,7 +426,8 @@ public class CqServiceImpl {
             List<Score> bpListSingleMode = apiManager.getBP(argument.getMode(), userFromAPI.getUserId());
             for (int i = 0; i < bpListSingleMode.size(); i++) {
                 //对BP进行遍历，如果产生时间在24小时内，就加入今日bp豪华午餐，并且加上bp所在的编号
-                if (bpListSingleMode.get(i).getDate().after(Date.from(Instant.now().minus(1, ChronoUnit.DAYS)))) {
+                if (scoreUtil.toInstant(bpListSingleMode.get(i).getDate())
+                        .isAfter(Instant.now().minus(1, ChronoUnit.DAYS))){
                     bpListSingleMode.get(i).setBpId(i);
                     Beatmap map = apiManager.getBeatmap(bpListSingleMode.get(i).getBeatmapId());
                     bpListSingleMode.get(i).setBeatmapName(map.getArtist() + " - " + map.getTitle() + " [" + map.getVersion() + "]");

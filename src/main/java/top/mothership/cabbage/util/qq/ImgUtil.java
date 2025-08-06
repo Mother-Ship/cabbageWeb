@@ -427,7 +427,9 @@ public class ImgUtil {
                     g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     //绘制日期(给的就是北京时间，不转)
                     drawTextToImage(g3, "#696969", "Tahoma", 14,
-                            DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.of("UTC-8")).format(aList.getDate().toInstant().plusSeconds(86400)), 31, 34);
+                            DateTimeFormatter.ofPattern("MM-dd HH:mm")
+                                    .withZone(ZoneId.of("UTC+8"))
+                                    .format(scoreUtil.toInstant(aList.getDate())), 31, 34);
                     //绘制Num和Weight
                     drawTextToImage(g3, "#a12e1e", "Ubuntu Medium", 13,
                             String.valueOf(aList.getBpId() + 1), 136, 34);
@@ -455,7 +457,9 @@ public class ImgUtil {
                     g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     //绘制日期(给的就是北京时间，不转)
                     drawTextToImage(g3, "#696969", "Tahoma", 14,
-                            new SimpleDateFormat("MM-dd HH:mm").format(aList.getDate().getTime()), 31, 48);
+                            DateTimeFormatter.ofPattern("MM-dd HH:mm")
+                                    .withZone(ZoneId.of("UTC+8"))
+                                    .format(scoreUtil.toInstant(aList.getDate())), 31, 48);
                     //绘制Num和Weight
                     drawTextToImage(g3, "#a12e1e", "Ubuntu Medium", 13,
                             String.valueOf(aList.getBpId() + 1), 136, 48);
@@ -961,7 +965,10 @@ public class ImgUtil {
         g2.drawString(beatmap.getArtist() + " - " + beatmap.getTitle() + " [" + beatmap.getVersion() + "]", 7, 26);
         g2.setFont(new Font("Aller", 0, 21));
         g2.drawString("Beatmap by " + beatmap.getCreator() + ", ID: " + beatmap.getBeatmapId(), 7, 52);
-        g2.drawString("Played by " + userFromAPI.getUserName() + " on " + DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").withZone(ZoneId.of("UTC-8")).format(score.getDate().toInstant().plusSeconds(86400)) + ".", 7, 74);
+        g2.drawString("Played by " + userFromAPI.getUserName() + " on " +
+                DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+                        .withZone(ZoneId.of("UTC+8"))
+                        .format(scoreUtil.toInstant(score.getDate())) + ".", 7, 74);
 
 
         g2.dispose();

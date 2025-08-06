@@ -13,9 +13,9 @@ import top.mothership.cabbage.pojo.osu.apiv2.response.ApiV2Score;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.text.DecimalFormat;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -78,11 +78,9 @@ public class ScoreUtil {
 
         scoreV1.setUserId((int) scoreLazer.getUserId());
 
-        // 把 beatmap 的ended_at字符串 2024-12-23T01:23:45+00:00 转换成Date类型
-        scoreV1.setDate(Date.from(
-                ZonedDateTime.parse(scoreLazer.getEndedAt(),
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX", Locale.ENGLISH))
-                        .toInstant()));
+        // 把 beatmap的yyyy-MM-dd'T'HH:mm:ssX格式ended_at字符串
+        // 转换成UTC时间的yyyy-MM-dd HH:mm:ss字符串
+        scoreV1.setDate(convertToUtcString(scoreLazer.getEndedAt()));
         scoreV1.setRank(scoreLazer.getRank());
         scoreV1.setPp(scoreLazer.getPp() != null ? scoreLazer.getPp().floatValue() : null);
 
@@ -394,6 +392,43 @@ public class ScoreUtil {
     }
 
     /**
+     * 将yyyy-MM-dd'T'HH:mm:ssX格式的时间字符串转换为UTC时间的yyyy-MM-dd HH:mm:ss格式
+     *
+     * @param endedAtStr 输入的时间字符串，格式：yyyy-MM-dd'T'HH:mm:ssX
+     * @return UTC时间的字符串，格式：yyyy-MM-dd HH:mm:ss
+     */
+    public String convertToUtcString(String endedAtStr) {
+        // 定义输入格式的解析器
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX");
+
+        // 定义输出格式的格式化器
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        // 解析输入字符串为OffsetDateTime
+        OffsetDateTime offsetDateTime = OffsetDateTime.parse(endedAtStr, inputFormatter);
+
+        // 转换为UTC时间
+        OffsetDateTime utcDateTime = offsetDateTime.withOffsetSameInstant(ZoneOffset.UTC);
+
+        // 格式化为目标字符串格式
+        return utcDateTime.format(outputFormatter);
+    }
+    /**
+     * 返回输入的UTC时间对应的Instant
+     */
+    public Instant toInstant(String utcTimeStr) {
+        // 定义UTC时间字符串的格式
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        // 解析UTC时间字符串为LocalDateTime
+        LocalDateTime utcLocalDateTime = LocalDateTime.parse(utcTimeStr, formatter);
+
+        // 将LocalDateTime转换为UTC的Instant
+        Instant utcInstant = utcLocalDateTime.atZone(ZoneOffset.UTC).toInstant();
+
+        return utcInstant;
+    }
+    /**
      * Gen score string string.
      *
      * @param score    the score
@@ -413,23 +448,21 @@ public class ScoreUtil {
                         / (6 * (score.getCount50() + score.getCount100() + score.getCount300() + score.getCountMiss()))) + "%)";
         if (oppaiResult != null) {
             resp += "，" + Math.round(oppaiResult.getPp()) + "PP";
-            resp += "，" + Math.round(oppaiResult.getPpLegacy()) + "PP(2019-02-07前)";
         }
         if (count != null) {
             resp += "\n在该玩家24小时内游戏记录中，该谱面出现了" + count + "次。";
         }
         //由于比较分数等涉及到其他时区问题，懒得重构
         //将成绩的时间使用小技巧显示成UTC+8
-        resp += "\nPlayed by " + username + ", " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC-8")).format(score.getDate().toInstant().plusSeconds(86400));
+        resp += "\nPlayed by " + username + ", " +
+                DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+                        .withZone(ZoneId.of("UTC+8"))
+                        .format(toInstant(score.getDate()));
         return resp;
     }
 
     /**
      * Calc pp oppai result.
-     *
-     * @param score   the score
-     * @param beatmap the beatmap
-     * @return the oppai result
      */
     public OppaiResult calcPP(Score score, Beatmap beatmap) {
         logger.info("开始计算PP");
@@ -437,43 +470,21 @@ public class ScoreUtil {
         try (BufferedReader in = new BufferedReader(new StringReader(osuFile));
              //似乎oppai会自动关闭流？用同一个流会出现第二个PP计算为0的情况
              BufferedReader in2 = new BufferedReader(new StringReader(osuFile))) {
-            //日后再说，暂时不去按自己的想法改造它……万一作者日后放出更新呢..
-            //把这种充满静态内部类，PPv2Params没有有参构造、成员变量给包访问权限、没有get/set的危险东西局限在这个方法里，不要在外面用就是了……%
             Koohii.Map map = new Koohii.Parser().map(in);
             map.mode = beatmap.getMode();
             Koohii.DiffCalc stars = new Koohii.DiffCalc().calc(map, score.getEnabledMods());
-            Koohii.PPv2Parameters p = new Koohii.PPv2Parameters();
-            p.beatmap = map;
-            p.aim_stars = stars.aim;
-            p.speed_stars = stars.speed;
-            p.mods = score.getEnabledMods();
-            p.n300 = score.getCount300();
-            p.n100 = score.getCount100();
-            p.n50 = score.getCount50();
-            p.nmiss = score.getCountMiss();
-            p.combo = score.getMaxCombo();
+
+            KoohiiLegacy.Map mapLegacy = new KoohiiLegacy.Parser().map(in2);
+            KoohiiLegacy.DiffCalc starsLegacy = new KoohiiLegacy.DiffCalc().calc(mapLegacy, score.getEnabledMods());
+
             Koohii.MapStats mapstats = new Koohii.MapStats();
             mapstats.ar = beatmap.getDiffApproach();
             mapstats.cs = beatmap.getDiffSize();
             mapstats.od = beatmap.getDiffOverall();
             mapstats.hp = beatmap.getDiffDrain();
-            //APPLY_AR OD CS HP是1 2 4 8，把flag改成15好像就会 四维都进行计算？
             mapstats = Koohii.mods_apply(score.getEnabledMods(), mapstats, 15);
 
-            //削HD之前的PP可以彻底砍了，现在的Legacy就是2019.2这次重做之前的PP
-            KoohiiLegacy.Map mapLegacy = new KoohiiLegacy.Parser().map(in2);
-            mapLegacy.mode = beatmap.getMode();
-            KoohiiLegacy.DiffCalc starsLegacy = new KoohiiLegacy.DiffCalc().calc(mapLegacy, score.getEnabledMods());
-            KoohiiLegacy.PPv2Parameters paramLegacy = new KoohiiLegacy.PPv2Parameters();
-            paramLegacy.beatmap = mapLegacy;
-            paramLegacy.aim_stars = starsLegacy.aim;
-            paramLegacy.speed_stars = starsLegacy.speed;
-            paramLegacy.mods = score.getEnabledMods();
-            paramLegacy.n300 = score.getCount300();
-            paramLegacy.n100 = score.getCount100();
-            paramLegacy.n50 = score.getCount50();
-            paramLegacy.nmiss = score.getCountMiss();
-            paramLegacy.combo = score.getMaxCombo();
+
 
             OppaiResult result = new OppaiResult(Koohii.VERSION_MAJOR + "." + Koohii.VERSION_MINOR + "." + Koohii.VERSION_PATCH,
                     //Java实现如果出错会抛出异常，象征性给个0和null
@@ -521,11 +532,6 @@ public class ScoreUtil {
                 result.setMaxPP(remoteResult.getScoreResult().getPp());
             }
 
-
-            if (map.mode == 0) {
-                Koohii.PPv2 pp = new Koohii.PPv2(p);
-                result.setPpLegacy(pp.total);
-            }
             return result;
         } catch (Exception e) {
             logger.error("离线计算PP出错");
@@ -540,21 +546,6 @@ public class ScoreUtil {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    /**
-     * Convert score v 1 to v 2 integer.
-     *
-     * @param score   the score
-     * @param beatmap the beatmap
-     * @return the integer
-     */
-    public Integer convertScoreV1ToV2(Score score, Beatmap beatmap) {
-        return 0;
-    }
-
-    public Integer calcNoneXScore(Beatmap beatmap) {
-        return 0;
     }
 
     public String calcMilliSecondForFourDimensions(String dimensions, Double value) {

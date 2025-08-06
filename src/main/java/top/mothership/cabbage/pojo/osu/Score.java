@@ -41,8 +41,7 @@ public class Score {
     private Integer perfect;
     @SerializedName("enabled_mods")
     private Integer enabledMods;
-    //更换为LocalDateTime会出反序列化异常
-    private Date date;
+    private String date;
     private String rank;
     //recent的API里压根没有这个字段
     private Float pp;
@@ -50,8 +49,4 @@ public class Score {
     @SerializedName("username")
     private String userName;
     private Integer userId;
-    //为兼容get_match
-    private Integer slot;
-    private Integer team;
-    private Integer pass;
 }
