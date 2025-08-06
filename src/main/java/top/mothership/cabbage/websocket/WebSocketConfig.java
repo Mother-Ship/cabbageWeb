@@ -15,7 +15,7 @@ import top.mothership.cabbage.controller.OneBotMessageHandler;
 public class WebSocketConfig implements WebSocketConfigurer {
 
     @Autowired
-    OneBotMessageHandler handler;
+    OneBotWebsocketHandler handler;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
