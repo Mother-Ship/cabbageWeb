@@ -2,7 +2,6 @@ package top.mothership.cabbage.service;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.twelvemonkeys.util.CollectionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +12,7 @@ import top.mothership.cabbage.constant.Tip;
 import top.mothership.cabbage.enums.CompressLevelEnum;
 import top.mothership.cabbage.manager.ApiManager;
 import top.mothership.cabbage.manager.OneBotManager;
+import top.mothership.cabbage.manager.OsuApiV2Manager;
 import top.mothership.cabbage.manager.WebPageManager;
 import top.mothership.cabbage.mapper.RedisDAO;
 import top.mothership.cabbage.mapper.ResDAO;
@@ -21,9 +21,10 @@ import top.mothership.cabbage.mapper.UserInfoDAO;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.Argument;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
-import top.mothership.cabbage.pojo.coolq.CqResponse;
 import top.mothership.cabbage.pojo.coolq.QQInfo;
 import top.mothership.cabbage.pojo.osu.*;
+import top.mothership.cabbage.pojo.osu.apiv2.request.UserScoresRequest;
+import top.mothership.cabbage.pojo.osu.apiv2.response.ApiV2Score;
 import top.mothership.cabbage.util.osu.ScoreUtil;
 import top.mothership.cabbage.util.osu.UserUtil;
 import top.mothership.cabbage.util.qq.ImgUtil;
@@ -58,6 +59,7 @@ public class CqServiceImpl {
     private final UserUtil userUtil;
     private final ResDAO resDAO;
     private final RedisDAO redisDAO;
+    private final OsuApiV2Manager osuApiV2Manager;
     private Logger logger = LogManager.getLogger(this.getClass());
 
     /**
@@ -76,7 +78,7 @@ public class CqServiceImpl {
      * @param redisDAO
      */
     @Autowired
-    public CqServiceImpl(ApiManager apiManager, OneBotManager oneBotManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, UserUtil userUtil, ResDAO resDAO, RedisDAO redisDAO) {
+    public CqServiceImpl(ApiManager apiManager, OneBotManager oneBotManager, WebPageManager webPageManager, UserDAO userDAO, UserInfoDAO userInfoDAO, ImgUtil imgUtil, ScoreUtil scoreUtil, UserUtil userUtil, ResDAO resDAO, RedisDAO redisDAO, OsuApiV2Manager osuApiV2Manager) {
         this.apiManager = apiManager;
         this.oneBotManager = oneBotManager;
         this.webPageManager = webPageManager;
@@ -87,6 +89,7 @@ public class CqServiceImpl {
         this.userUtil = userUtil;
         this.resDAO = resDAO;
         this.redisDAO = redisDAO;
+        this.osuApiV2Manager = osuApiV2Manager;
     }
 
 
@@ -515,6 +518,10 @@ public class CqServiceImpl {
             //如果是mybp并且没有指定mode
             argument.setMode(user.getMode());
         }
+        if (argument.getNum() > 100) {
+            handleApiV2BP(cqMsg, argument.isText(), argument.getNum(), argument.getMode(), userFromAPI);
+            return;
+        }
 
         bpList = apiManager.getBP(argument.getMode(), userFromAPI.getUserId());
 
@@ -541,6 +548,34 @@ public class CqServiceImpl {
                 oneBotManager.sendMsg(cqMsg);
             }
         }
+    }
+
+    private void handleApiV2BP(CqMsg cqMsg, boolean isText, Integer num, Integer mode, Userinfo userFromAPI) {
+        String v2Mode = scoreUtil.convertGameModeToV2String(mode);
+        List<ApiV2Score.ScoreLazer> list = osuApiV2Manager.getUserBestScores(
+                new UserScoresRequest(String.valueOf(userFromAPI.getUserId()),
+                        "best", 100, 100,
+                        true, true, v2Mode));
+        if (isText) {
+            //list基于0，得-1
+            ApiV2Score.ScoreLazer score = list.get(num - 100 - 1);
+            Score scoreV1 = scoreUtil.convertV2ToV1(score);
+            logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + mode + "的第" + num + "个BP：" + score.getBeatmapId() + "，正在获取歌曲名称");
+            Beatmap beatmap = apiManager.getBeatmap(scoreV1.getBeatmapId());
+            cqMsg.setMessage(scoreUtil.genScoreString(scoreV1, beatmap, userFromAPI.getUserName(), null));
+            oneBotManager.sendMsg(cqMsg);
+        } else {
+            //list基于0，得-1
+            ApiV2Score.ScoreLazer score = list.get(num - 100 - 1);
+            Score scoreV1 = scoreUtil.convertV2ToV1(score);
+            logger.info("获得了玩家" + userFromAPI.getUserName() + "在模式：" + mode + "的第" + num + "个BP：" + scoreV1);
+            Beatmap map = apiManager.getBeatmap(scoreV1.getBeatmapId());
+            String result = imgUtil.drawResult(userFromAPI, scoreV1, map, mode);
+            cqMsg.setMessage("[CQ:image,file=base64://" + result + "]");
+            oneBotManager.sendMsg(cqMsg);
+        }
+
+
     }
 
     public void recent(CqMsg cqMsg) {
@@ -1432,8 +1467,8 @@ public class CqServiceImpl {
                     57 + (280 - ava.getWidth()) / 2,
                     31 + (280 - ava.getHeight()) / 2,
                     ava.getWidth(), ava.getHeight(), null);
-           g2d.drawImage(flag,
-                    180,404,
+            g2d.drawImage(flag,
+                    180, 404,
                     32, 22, null);
 
             //指定颜色

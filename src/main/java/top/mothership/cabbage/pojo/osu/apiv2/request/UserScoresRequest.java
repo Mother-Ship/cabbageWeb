@@ -16,5 +16,6 @@ public class UserScoresRequest {
     private Integer limit;        // 返回结果数量限制 (可选)
     private Integer offset;       // 结果偏移量 (可选)
     private Boolean includeFails; // 是否包含失败成绩 (可选, 仅用于recent类型)
+    private Boolean legacyOnly   ; // 是否仅包含stable成绩
     private String mode;          // 游戏模式 (可选): "osu", "taiko", "fruits", "mania"
 }

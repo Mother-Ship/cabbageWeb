@@ -22,4 +22,5 @@ public class User {
     private String mainRole;
     private Boolean useEloBorder;
     private LocalDate lastActiveDate;
+    private Boolean useLazer;
 }

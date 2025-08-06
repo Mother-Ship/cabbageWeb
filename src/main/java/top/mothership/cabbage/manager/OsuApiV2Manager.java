@@ -68,7 +68,7 @@ public class OsuApiV2Manager {
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
             TokenResponse tokenResponse = response.getBody();
             updateCredentials(tokenResponse);
-            log.info("更新API V2 Token成功");
+            log.info("更新API V2 Token成功, result: {}", tokenResponse);
         } else {
             log.error("更新API V2 Token 失败: {}", response.getStatusCode());
         }
@@ -95,21 +95,21 @@ public class OsuApiV2Manager {
     /**
      * 获取用户最佳成绩
      */
-    public List<ApiV2Score> getUserBestScores(UserScoresRequest request) {
+    public List<ApiV2Score.ScoreLazer> getUserBestScores(UserScoresRequest request) {
         return getUserScores(request, "best");
     }
 
     /**
      * 获取用户最近成绩
      */
-    public List<ApiV2Score> getUserRecentScores(UserScoresRequest request) {
+    public List<ApiV2Score.ScoreLazer> getUserRecentScores(UserScoresRequest request) {
         return getUserScores(request, "recent");
     }
 
     /**
      * 获取用户成绩通用方法
      */
-    private List<ApiV2Score> getUserScores(UserScoresRequest request, String type) {
+    private List<ApiV2Score.ScoreLazer> getUserScores(UserScoresRequest request, String type) {
         // 构建URL
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromHttpUrl(OSU_API_BASE_URL + "/users/" + request.getUserId() + "/scores/" + type);
@@ -123,8 +123,13 @@ public class OsuApiV2Manager {
             uriBuilder.queryParam("offset", request.getOffset());
         }
 
-        if ("recent".equals(type) && request.getIncludeFails() != null) {
-            uriBuilder.queryParam("include_fails", request.getIncludeFails() ? "1" : "0");
+        if ("recent".equals(type)) {
+            if (request.getIncludeFails() != null) {
+                uriBuilder.queryParam("include_fails", request.getIncludeFails() ? "1" : "0");
+            }
+            if (request.getLegacyOnly() != null) {
+                uriBuilder.queryParam("legacy_only", request.getLegacyOnly() ? "1" : "0");
+            }
         }
 
         if (request.getMode() != null) {
@@ -132,27 +137,29 @@ public class OsuApiV2Manager {
         }
 
         String url = uriBuilder.build().toUriString();
+        log.info("获取用户成绩，拼接的URL：{}", url);
 
         // 准备请求头
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
         headers.set("Authorization", "Bearer " + getValidAccessToken());
+        headers.set("x-api-version", "20220705");
 
 
         HttpEntity<?> entity = new HttpEntity<>(headers);
 
 
         try {
-            ResponseEntity<List<ApiV2Score>> response = restTemplate.exchange(
+            ResponseEntity<List<ApiV2Score.ScoreLazer>> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    new ParameterizedTypeReference<List<ApiV2Score>>() {
+                    new ParameterizedTypeReference<List<ApiV2Score.ScoreLazer>>() {
                     }
             );
 
             if (response.getStatusCode() == HttpStatus.OK) {
-                List<ApiV2Score> scores = response.getBody();
+                List<ApiV2Score.ScoreLazer> scores = response.getBody();
                 log.info("Successfully retrieved {} user scores of type '{}'",
                         scores != null ? scores.size() : 0, type);
                 return scores;

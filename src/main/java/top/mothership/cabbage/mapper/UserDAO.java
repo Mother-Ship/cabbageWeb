@@ -122,6 +122,7 @@ public interface UserDAO {
             + "<if test=\"user.mainRole != null\">main_role=#{user.mainRole},</if>"
             + "<if test=\"user.useEloBorder != null\">use_elo_border=#{user.useEloBorder},</if>"
             + "<if test=\"user.lastActiveDate != null\">last_active_date=#{user.lastActiveDate},</if>"
+            + "<if test=\"user.useLazer != null\">use_lazer=#{user.useLazer},</if>"
             + "</set>"
             + " where `user_id` = #{user.userId}" + "</script>")
     Integer updateUser(@Param("user") User user);
@@ -144,7 +145,9 @@ public interface UserDAO {
             "#{user.mode}," +
             "#{user.mainRole}," +
             "#{user.useEloBorder}," +
-            "#{user.lastActiveDate})")
+            "#{user.lastActiveDate}," +
+            "#{user.useLazer}" +
+            ")")
     Integer addUser(@Param("user") User user);
 
 

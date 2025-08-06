@@ -415,7 +415,7 @@ public class ParameterVerifyAspect {
                                         Matcher bpNumMatcher = RegularPattern.BPNUM.matcher(secondParam);
                                         if (bpNumMatcher.find()) {
                                             num = Integer.valueOf(secondParam);
-                                            if (num <= 0 || num > 100) {
+                                            if (num <= 0 || num > 200) {
                                                 cqMsg.setMessage("其他人看不到的东西，白菜也看不到啦。");
                                                 oneBotManager.sendMsg(cqMsg);
 
@@ -526,7 +526,7 @@ public class ParameterVerifyAspect {
                 keywordFound = true;
             }
             mods = getKeyWordAndMod.group(3);
-            modsNum = scoreUtil.reverseConvertMod(mods);
+            modsNum = scoreUtil.reverseConvertMod(mods, false);
             //如果字符串解析出错，会返回null，因此这里用null值来判断输入格式
             if (modsNum == null) {
                 cqMsg.setMessage("请使用MOD的双字母缩写，不需要任何分隔符。" +
