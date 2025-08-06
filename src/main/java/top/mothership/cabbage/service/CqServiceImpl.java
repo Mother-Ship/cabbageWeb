@@ -933,57 +933,6 @@ public class CqServiceImpl {
         logger.info("开始处理" + cqMsg.getUserId() + "在" + cqMsg.getGroupId() + "群的加群请求");
         String resp = null;
         switch (String.valueOf(cqMsg.getGroupId())) {
-            case "201872650":
-                String role = null;
-                Long chartGroupId = null;
-                switch (String.valueOf(cqMsg.getGroupId())) {
-                    case "201872650":
-                        role = "mp5";
-                        chartGroupId = 635731109L;
-                        resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp5。请修改一下你的群名片(包含完整osu! id)，并读一下置顶的群规。另外欢迎参加mp群系列活动Chart(详见公告)，成绩高者可以赢取奖励。";
-                        break;
-                }
-                User user = userDAO.getUser(cqMsg.getUserId(), null);
-                if (user == null) {
-                    resp += "\n该玩家没有使用过白菜，请使用add命令手动添加。";
-                } else {
-                    String newRole;
-                    //拿到原先的user，把role拼上去，塞回去
-                    //如果当前的用户组是creep，就直接改成现有的组
-                    resp += "\n该玩家之前已使用过白菜。原有用户组为：" + user.getRole();
-                    if (Overall.DEFAULT_ROLE.equals(user.getRole())) {
-                        newRole = role;
-                    } else {
-                        //当用户不在想要添加的用户组的时候才添加 2017-11-27 20:45:20
-                        if (!Arrays.asList(user.getRole().split(",")).contains(role)) {
-                            newRole = user.getRole() + "," + role;
-                        } else {
-                            newRole = user.getRole();
-                        }
-
-                    }
-                    resp += "，修改后的用户组为：" + newRole;
-                    user.setRole(newRole);
-                    user.setLastActiveDate(LocalDate.now());
-                    Userinfo userFromAPI = apiManager.getUser(0, user.getUserId());
-                    if (userFromAPI == null) {
-                        resp += "\n警告：从API获取绑定的玩家信息失败，已将被ban状态设为True；如果出现错误，请提醒我手动修改！";
-                        user.setBanned(true);
-                    } else {
-                        boolean near = false;
-                        Userinfo userInDB = userInfoDAO.getUserInfo(0, userFromAPI.getUserId(), LocalDate.now().minusDays(1));
-                        if (userInDB == null) {
-                            userInDB = userInfoDAO.getNearestUserInfo(0, userFromAPI.getUserId(), LocalDate.now().minusDays(1));
-                            near = true;
-                        }
-                        int scoreRank = webPageManager.getRank(userFromAPI.getRankedScore(), 1, 2000);
-                        String filename = imgUtil.drawUserInfo(userFromAPI, userInDB, role, 1, near, scoreRank, user.getMode());
-                        resp = resp.concat("\n[CQ:image,file=base64://" + filename + "]");
-                    }
-                    userDAO.updateUser(user);
-                }
-
-                break;
             case "210342787":
                 resp = "[CQ:at,qq=" + cqMsg.getUserId() + "]，欢迎来到mp3。请修改一下你的群名片(包含完整osu! id)，并读一下置顶的群规。另外欢迎参加mp群系列活动Chart(详见公告)，成绩高者可以赢取奖励。";
                 break;
@@ -1018,46 +967,6 @@ public class CqServiceImpl {
         cqMsg.setMessage(resp);
         oneBotManager.sendMsg(cqMsg);
 
-    }
-
-    public void seeYouNextTime(CqMsg cqMsg) {
-        logger.info("开始处理" + cqMsg.getUserId() + "在" + cqMsg.getGroupId() + "群的褪裙信息");
-        String resp = null;
-        String role = null;
-        String newRole;
-        Long chartGroupId = null;
-        User user = userDAO.getUser(cqMsg.getUserId(), null);
-        //先判断群号
-        switch (String.valueOf(cqMsg.getGroupId())) {
-            case "201872650":
-                role = "mp5";
-                chartGroupId = 635731109L;
-                break;
-            default:
-                //只处理mp5的褪裙
-                return;
-        }
-        switch (cqMsg.getSubType()) {
-            case "leave":
-                resp = "检测到QQ为" + cqMsg.getUserId() + "的玩家退出" + role + "群；";
-                break;
-            case "kick":
-                resp = "检测到QQ为" + cqMsg.getUserId() + "的玩家被" + cqMsg.getOperatorId() + "移出" + role + "群；";
-        }
-        if (user == null) {
-            //褪裙的人没有用过白菜
-            resp += "该玩家没有使用过白菜。";
-        } else {
-            Userinfo userFromAPI = apiManager.getUser(0, user.getUserId());
-            user = userUtil.delRole(role, user);
-            userDAO.updateUser(user);
-            resp += "已自动将玩家" + userFromAPI.getUserName() + "从" + role + "用户组中移除。";
-            resp += "\n修改后的用户组为：" + user.getRole();
-        }
-        cqMsg.setGroupId(chartGroupId);
-        cqMsg.setMessageType("group");
-        cqMsg.setMessage(resp);
-        oneBotManager.sendMsg(cqMsg);
     }
 
     @GroupAuthorityControl

@@ -1,5 +1,7 @@
 package top.mothership.cabbage.controller;
 
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +31,7 @@ import java.util.regex.Matcher;
  * @author QHS
  */
 @RestController
+@RequiredArgsConstructor
 public class CqController {
 
 
@@ -41,22 +44,7 @@ public class CqController {
     private Logger logger = LogManager.getLogger(this.getClass());
     private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(100);
 
-    /**
-     * Spring构造方法自动注入
-     *
-     * @param cqService      Service层
-     * @param smokeUtil      负责禁言的工具类
-     * @param cqAdminService
-     * @param oneBotManager
-     */
-    @Autowired
 
-    public CqController(CqServiceImpl cqService, SmokeUtil smokeUtil, CqAdminServiceImpl cqAdminService, OneBotManager oneBotManager) {
-        this.cqService = cqService;
-        this.smokeUtil = smokeUtil;
-        this.cqAdminService = cqAdminService;
-        this.oneBotManager = oneBotManager;
-    }
 
     /**
      * Controller主方法
@@ -408,10 +396,6 @@ public class CqController {
                 if ("group_increase".equals(cqMsg.getNoticeType())) {
                     //新增人口
                     cqService.welcomeNewsPaper(cqMsg);
-                }
-                if ("group_decrease".equals(cqMsg.getNoticeType())) {
-                    //有人退群
-                    cqService.seeYouNextTime(cqMsg);
                 }
 
                 break;
