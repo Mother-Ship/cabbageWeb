@@ -1,7 +1,6 @@
 package top.mothership.cabbage.manager;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,15 +8,8 @@ import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.CqResponse;
 import top.mothership.cabbage.pojo.coolq.OneBotApiRequest;
 import top.mothership.cabbage.pojo.coolq.QQInfo;
-import top.mothership.cabbage.websocket.OneBotMessageHandler;
+import top.mothership.cabbage.websocket.OneBotWebsocketHandler;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Random;
 
@@ -25,7 +17,7 @@ import java.util.Random;
 @Component
 public class OneBotManager {
     @Autowired
-    private OneBotMessageHandler handler;
+    private OneBotWebsocketHandler handler;
 
 
     public void warn(String msg) {
@@ -47,7 +39,7 @@ public class OneBotManager {
     }
 
     public void sendMsg(CqMsg cqMsg) {
-        OneBotMessageHandler.sendMessage(cqMsg);
+        OneBotWebsocketHandler.sendMessage(cqMsg);
     }
 
     /**
@@ -69,14 +61,14 @@ public class OneBotManager {
         request.setAction("get_group_member_list");
         request.setParams(cqMsg);
         request.setEcho(getId());
-        String response = OneBotMessageHandler.callApi(request);
+        String response = OneBotWebsocketHandler.callApi(request);
         CqResponse<List<QQInfo>> data = new Gson().fromJson(response, new TypeToken<CqResponse<List<QQInfo>>>() {
         }.getType());
 
         // 如果报错找不到
         if (data == null || data.getRetCode() != 0) {
             cqMsg.setSelfId(1020640876L);
-            response = OneBotMessageHandler.callApi(request);
+            response = OneBotWebsocketHandler.callApi(request);
             data = new Gson().fromJson(response, new TypeToken<CqResponse<List<QQInfo>>>() {
             }.getType());
         }
@@ -106,13 +98,13 @@ public class OneBotManager {
         request.setAction("get_group_member_info");
         request.setParams(cqMsg);
         request.setEcho(getId());
-        String response = OneBotMessageHandler.callApi(request);
+        String response = OneBotWebsocketHandler.callApi(request);
         CqResponse<QQInfo> data = new Gson().fromJson(response, new TypeToken<CqResponse<QQInfo>>() {
         }.getType());
 
         if (data.getRetCode() != 0) {
             cqMsg.setSelfId(1020640876L);
-            response = OneBotMessageHandler.callApi(request);
+            response = OneBotWebsocketHandler.callApi(request);
             data = new Gson().fromJson(response, new TypeToken<CqResponse<QQInfo>>() {
             }.getType());
         }

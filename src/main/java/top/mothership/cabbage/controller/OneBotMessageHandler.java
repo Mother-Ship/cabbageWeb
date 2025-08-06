@@ -1,14 +1,9 @@
 package top.mothership.cabbage.controller;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import top.mothership.cabbage.constant.pattern.CQCodePattern;
 import top.mothership.cabbage.constant.pattern.RegularPattern;
@@ -21,18 +16,11 @@ import top.mothership.cabbage.util.qq.SmokeUtil;
 
 import javax.annotation.PostConstruct;
 import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 
-/**
- * CQ控制器，用于处理CQ消息
- *
- * @author QHS
- */
-@RestController
+
 @RequiredArgsConstructor
-public class CqController {
+public class OneBotMessageHandler {
 
 
     private final CqServiceImpl cqService;
@@ -41,21 +29,7 @@ public class CqController {
     private final OneBotManager oneBotManager;
 
 
-    private Logger logger = LogManager.getLogger(this.getClass());
-    private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(100);
-
-
-
-    /**
-     * Controller主方法
-     *
-     * @param cqMsg 传入的QQ消息
-     * @throws Exception 抛出异常给AOP检测
-     */
-    @RequestMapping(value = "/cqAPI", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
-    public void cqMsgParse(@RequestBody CqMsg cqMsg) throws Exception {
-        fixedThreadPool.submit(() -> this.doHandle(cqMsg));
-    }
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
 
     @SneakyThrows
@@ -324,14 +298,6 @@ public class CqController {
                                 case "sleep":
                                     cqMsg.setOptional(new ParameterEnum[]{ParameterEnum.HOUR});
                                     cqService.sleep(cqMsg);
-                                    break;
-                                case "add":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME, ParameterEnum.QQ});
-                                    cqService.chartMemberCmd(cqMsg);
-                                    break;
-                                case "del":
-                                    cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.USERNAME});
-                                    cqService.chartMemberCmd(cqMsg);
                                     break;
                                 case "me":
                                     cqMsg.setRequired(new ParameterEnum[]{ParameterEnum.SEARCH_PARAM});

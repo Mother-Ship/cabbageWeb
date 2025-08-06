@@ -7,13 +7,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-import top.mothership.cabbage.controller.CqController;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 import top.mothership.cabbage.pojo.coolq.CqResponse;
 import top.mothership.cabbage.pojo.coolq.OneBotApiRequest;
@@ -25,13 +23,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Component
-public class OneBotMessageHandler extends TextWebSocketHandler {
+public class OneBotWebsocketHandler extends TextWebSocketHandler {
     //用来保存连接进来session
     private static Map<String, WebSocketSession> map = new ConcurrentHashMap<>();
     private static Map<String, String> cqResponseMap = new ConcurrentHashMap<>();
 
     @Autowired
-    private CqController cqController;
+    private top.mothership.cabbage.controller.OneBotMessageHandler oneBotMessageHandler;
     private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(100);
     private Logger log = LogManager.getLogger(this.getClass());
 
@@ -141,7 +139,7 @@ public class OneBotMessageHandler extends TextWebSocketHandler {
                 String decodedString = new String(unicodeBytes, "Unicode");
                 cqMsg.setMessage(decodedString);
             }
-            fixedThreadPool.submit(() -> cqController.doHandle(cqMsg));
+            fixedThreadPool.submit(() -> oneBotMessageHandler.doHandle(cqMsg));
         }
 
     }
