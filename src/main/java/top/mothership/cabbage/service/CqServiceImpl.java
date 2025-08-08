@@ -1288,7 +1288,7 @@ public class CqServiceImpl {
 
             //指定颜色
             g2d.setPaint(Color.BLACK);
-            Font font = new Font("Arial", Font.PLAIN, 48);
+            Font font = new Font("Tahoma", Font.PLAIN, 48);
             //指定字体
             g2d.setFont(font);
             //指定坐标
