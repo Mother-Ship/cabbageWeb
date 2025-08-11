@@ -591,6 +591,10 @@ public class CqServiceImpl {
             oneBotManager.sendMsg(cqMsg);
             return;
         }
+        if (user.getUseLazer()){
+            logger.warn("用户" + user.getQq() + "在lazer模式下使用recent，忽略");
+            return;
+        }
         user.setLastActiveDate(LocalDate.now());
         userDAO.updateUser(user);
         if (user.isBanned()) {
@@ -1007,6 +1011,10 @@ public class CqServiceImpl {
         if (user.isBanned()) {
             cqMsg.setMessage(Tip.USER_IS_BANNED);
             oneBotManager.sendMsg(cqMsg);
+            return;
+        }
+        if (user.getUseLazer()){
+            logger.warn("用户" + user.getQq() + "在lazer模式下使用pr，忽略");
             return;
         }
         userFromAPI = apiManager.getUser(0, user.getUserId());
