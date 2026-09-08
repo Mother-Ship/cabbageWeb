@@ -541,10 +541,7 @@ public class ImgUtil {
 
         BufferedImage bg = webPageManager.getBG(beatmap);
         if (bg == null) {
-            bg = webPageManager.getBGBackup(beatmap);
-            if (bg == null) {
-                bg = getRandomBg();
-            }
+            bg = getRandomBg();
         }
         //2017-11-3 17:51:47这里有莫名的空指针，比较迷，在webPageManager.getBG里加一个判断为空则抛出空指针看看
         Graphics2D g2 = (Graphics2D) bg.getGraphics();
@@ -995,10 +992,7 @@ public class ImgUtil {
 
         BufferedImage bg = webPageManager.getBG(beatmap);
         if (bg == null) {
-            bg = webPageManager.getBGBackup(beatmap);
-            if (bg == null) {
-                bg = getRandomBg();
-            }
+            bg = getRandomBg();
         }
         //缩略图
 
@@ -1225,10 +1219,7 @@ public class ImgUtil {
         modsMap.remove("None");
         BufferedImage bg = webPageManager.getBG(beatmap);
         if (bg == null) {
-            bg = webPageManager.getBGBackup(beatmap);
-            if (bg == null) {
-                bg = getRandomBg();
-            }
+            bg = getRandomBg();
         }
         //缩略图
         bg2 = webPageManager.resizeImg(getCopyImage(bg), 161, 121);

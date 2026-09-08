@@ -9,7 +9,7 @@ public class SimpleTest {
     public void Test() throws IOException {
         Beatmap beatmap = new Beatmap();
 
-    new WebPageManager().getBGBackup(beatmap);
+    new WebPageManager().getBG(beatmap);
 
 //        String test = "osu file format v12\n" +
 //                "\n" +
