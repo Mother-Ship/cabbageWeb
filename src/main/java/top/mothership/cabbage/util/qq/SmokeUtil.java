@@ -11,6 +11,8 @@ import top.mothership.cabbage.mapper.UserDAO;
 import top.mothership.cabbage.pojo.User;
 import top.mothership.cabbage.pojo.coolq.CqMsg;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -70,42 +72,61 @@ public class SmokeUtil {
             //如果是开启禁言的群,并且该条触发了禁言
             int countRepeat = msgQueue.countRepeat();
             if ((REPEAT_SMOKE_GROUP.contains(String.valueOf(cqMsg.getGroupId())) && countRepeat >= 6)) {
-                logger.info("触发复读禁言，正在记录案发现场：" + new Gson().toJson(msgQueue.getRepeatList()));
-                // 由于onebot实现改造，尽量减少API对接行为，去掉获取群管
+                //136312506群不再必触发，改为概率禁言：第n次复读的禁言概率为 1 - 0.5^n
+                //（n = countRepeat - 5，即第6次50%、第7次75%、第8次87.5%……）
+                boolean rateSmokeGroup = "136312506".equals(String.valueOf(cqMsg.getGroupId()));
+                int smokeRound = countRepeat - 5;
+                double smokeRate = rateSmokeGroup ? 1 - Math.pow(0.5, smokeRound) : 1D;
+                //本该被禁言的人因为这套概率机制没触发，@一下提醒对方在多少概率下逃过一劫
+                if (rateSmokeGroup && Math.random() >= smokeRate) {
+                    logger.info("检测到最近消息中{}发送第{}条复读，禁言概率{}%，本次未触发禁言",
+                            cqMsg.getUserId(), countRepeat, formatPercent(smokeRate));
+                    CqMsg escapeMsg = new CqMsg();
+                    escapeMsg.setSelfId(cqMsg.getSelfId());
+                    escapeMsg.setGroupId(cqMsg.getGroupId());
+                    escapeMsg.setMessageType("group");
+                    escapeMsg.setMessage("[CQ:at,qq=" + cqMsg.getUserId() + "] 你在"
+                            + formatPercent(smokeRate) + "%的禁言概率下逃过一劫，下一次复读的禁言概率就是"
+                            + formatPercent(1 - Math.pow(0.5, smokeRound + 1)) + "%了。");
+                    oneBotManager.sendMsg(escapeMsg);
+                } else {
+                    logger.info("触发复读禁言，正在记录案发现场：" + new Gson().toJson(msgQueue.getRepeatList()));
+                    // 由于onebot实现改造，尽量减少API对接行为，去掉获取群管
 //                if (GROUP_ADMIN_LIST.get(cqMsg.getGroupId()).contains(cqMsg.getUserId())) {
 //                    logger.info("检测到群管" + cqMsg.getUserId() + "的复读行为");
 //                    cqMsg.setMessage("[CQ:at,qq=" + cqManager.getOwner(cqMsg.getGroupId()) + "] 检测到群管" + "[CQ:at,qq=" + cqMsg.getUserId() + "] 复读。");
 //                } else {
 
-                int time = (countRepeat - 5) * 600;
-                time = Math.min(time, 8 * 3600);
+                    int time = (countRepeat - 5) * 600;
+                    time = Math.min(time, 8 * 3600);
 
-                if ("136312506".equals(String.valueOf(cqMsg.getGroupId()))
-                        || "693299572".equals(String.valueOf(cqMsg.getGroupId()))) {
-                    // 1 2 4 8 16 24 +24 h
-                    switch ((countRepeat - 5)) {
-                        case 1:
-                        case 2:
-                        case 3:
-                        case 4:
-                        case 5:
-                            time = (int) (Math.pow(2, (countRepeat - 5 - 1)) * 3600);
-                            break;
-                        case 6:
-                            time = 24 * 3600;
-                            break;
-                        default:
-                            time = (countRepeat - 5 - 5) * 24 * 3600;
-                            break;
+                    if ("136312506".equals(String.valueOf(cqMsg.getGroupId()))
+                            || "693299572".equals(String.valueOf(cqMsg.getGroupId()))) {
+                        // 1 2 4 8 16 24 +24 h
+                        switch ((countRepeat - 5)) {
+                            case 1:
+                            case 2:
+                            case 3:
+                            case 4:
+                            case 5:
+                                time = (int) (Math.pow(2, (countRepeat - 5 - 1)) * 3600);
+                                break;
+                            case 6:
+                                time = 24 * 3600;
+                                break;
+                            default:
+                                time = (countRepeat - 5 - 5) * 24 * 3600;
+                                break;
+                        }
+                        time = Math.min(time, 30 * 24 * 3600);
                     }
-                    time = Math.min(time, 30 * 24 * 3600);
-                }
-                logger.info("检测到最近100条消息中{}发送第{}条复读，正在尝试禁言 {}秒", cqMsg.getUserId(), countRepeat, time);
+                    logger.info("检测到最近100条消息中{}发送第{}条复读，正在尝试禁言 {}秒", cqMsg.getUserId(), countRepeat, time);
 
-                cqMsg.setDuration(time);
-                cqMsg.setMessageType("smoke");
+                    cqMsg.setDuration(time);
+                    cqMsg.setMessageType("smoke");
 //                }
-                oneBotManager.sendMsg(cqMsg);
+                    oneBotManager.sendMsg(cqMsg);
+                }
 
             }
             if (REPEAT_RECORD_GROUP.contains(String.valueOf(cqMsg.getGroupId()))) {
@@ -121,5 +142,18 @@ public class SmokeUtil {
                 }
             }
         }
+    }
+
+    /**
+     * 把0-1的概率转成百分比字符串展示，顺便去掉末尾多余的0（50、75、87.5……）
+     *
+     * @param rate 概率，取值0-1
+     * @return 百分比字符串
+     */
+    private String formatPercent(double rate) {
+        return BigDecimal.valueOf(rate * 100)
+                .setScale(3, RoundingMode.HALF_UP)
+                .stripTrailingZeros()
+                .toPlainString();
     }
 }
