@@ -542,7 +542,7 @@ public class ScoreUtil {
 
     private CalcResult getCalcResult(CalculateByBidRequest request) {
         try {
-            return new RestTemplate().postForObject("http://k3.mothership.top:5000/api/PPCalc/CalculateByBeatmapId", request, CalcResult.class);
+            return new RestTemplate().postForObject("http://192.168.4.34:5000/api/PPCalc/CalculateByBeatmapId", request, CalcResult.class);
         } catch (Exception e) {
             return null;
         }
