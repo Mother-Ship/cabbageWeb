@@ -173,7 +173,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-email</artifactId>
-            <version>1.4</version>
+            <version>1.5</version>
         </dependency>
         <!--7) lzma(想用来解析.osr的 但是实际上没用)-->
         <dependency>
