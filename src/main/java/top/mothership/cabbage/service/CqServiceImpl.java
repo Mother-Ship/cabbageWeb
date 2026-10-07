@@ -407,15 +407,16 @@ public class CqServiceImpl {
                 oneBotManager.sendMsg(cqMsg);
                 return;
             }
-            if (todayBP.size() == 1) {
-                argument.setMode((int) todayBP.get(0).getMode());
-            }
+
             byte lastTodayBpMode = todayBP.get(0).getMode();
             for (Score aList : todayBP) {
                 //如果今日bp里出现了不同的模式，就设allmode为true
                 if (!aList.getMode().equals(lastTodayBpMode)) {
                     mixedMode = true;
                 }
+            }
+            if (!mixedMode) {
+                argument.setMode((int) todayBP.get(0).getMode());
             }
         } else {
             if (argument.getMode() == null && user != null) {

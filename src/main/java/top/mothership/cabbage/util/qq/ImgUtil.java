@@ -87,6 +87,10 @@ public class ImgUtil {
 
     public BufferedImage get(String name) {
         byte[] data = (byte[]) resDAO.getImage(name);
+        if (data == null) {
+            logger.error("图片{}不存在", name);
+            return null;
+        }
         try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
             return ImageIO.read(in);
         } catch (IOException e) {
@@ -368,7 +372,7 @@ public class ImgUtil {
      * @return the string
      */
     public String drawUserBP(Userinfo userFromAPI, List<Score> list, Integer mode, boolean mixedmode) {
-
+        logger.info("绘制用户BP图片 {}", list);
         //计算最终宽高
         int height = get("bptop.png").getHeight();
         int heightpoint = 0;
